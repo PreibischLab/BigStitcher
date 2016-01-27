@@ -103,7 +103,7 @@ public class BlendedExtendedMirroredRandomAccesible <T extends RealType<T>>imple
 	public static void main(String[] args) {
 		
 		new ImageJ();
-		Img<FloatType> img1 = ImgLib2Util.openAs32Bit(new File("src/main/resources/img8.tif"));
+		Img<FloatType> img1 = ImgLib2Util.openAs32Bit(new File("src/main/resources/img1.tif"));
 		long[] dims = new long[img1.numDimensions()];
 
 		BlendedExtendedMirroredRandomAccesible<FloatType> ext = new BlendedExtendedMirroredRandomAccesible<FloatType>(img1, new int[]{100, 100, 5});
