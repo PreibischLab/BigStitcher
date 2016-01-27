@@ -63,13 +63,14 @@ public class BlendedExtendedMirroredRandomAccesible <T extends RealType<T>>imple
 			super(img.numDimensions());
 		}
 
+		RandomAccess<T> imgRA = Views.extendMirrorSingle(img).randomAccess();
+		RealRandomAccess<FloatType> blendRA = blending.realRandomAccess();
+		T val = imgRA.get().createVariable();
+
 		@Override
 		public T get() {
-			RandomAccess<T> imgRA = Views.extendMirrorSingle(img).randomAccess();
 			imgRA.setPosition(position);
-			RealRandomAccess<FloatType> blendRA = blending.realRandomAccess();
 			blendRA.setPosition(position);
-			T val = imgRA.get().createVariable();
 			val.setReal(imgRA.get().getRealFloat() * blendRA.get().getRealFloat());
 			return val;
 		}
