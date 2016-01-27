@@ -76,7 +76,7 @@ public class BlendedExtendedMirroredRandomAccesible <T extends RealType<T>>imple
 
 		@Override
 		public Sampler<T> copy() {
-			return copy();
+			return copyRandomAccess();
 		}
 
 		@Override
