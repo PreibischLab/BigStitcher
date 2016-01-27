@@ -57,6 +57,10 @@ public class BlendedExtendedMirroredRandomAccesible <T extends RealType<T>>imple
 		return extDims;
 	}
 
+	/**
+	 * TODO: For efficiency reasons we should implement it as a RandomAccess that actually updates the underlying
+	 * imgRA for every move. This way, the outofbounds can work very efficiently when it is iterated through Views.iterable().cursor()
+	 */
 	public class BlendedRandomAccess extends Point implements RandomAccess<T>
 	{
 		public BlendedRandomAccess() {
@@ -112,7 +116,8 @@ public class BlendedExtendedMirroredRandomAccesible <T extends RealType<T>>imple
 		ext.getExtInterval().dimensions(dims);
 		
 		Img<FloatType> img2 = ArrayImgs.floats(dims);
-		
+
+		// TODO: For efficiency reasons we should now also iterate the BlendedExtendedMirroredRandomAccesible and not the image
 		Cursor<FloatType> c = img2.cursor();
 		RandomAccess<FloatType> ra = ext.randomAccess();
 		while (c.hasNext())
