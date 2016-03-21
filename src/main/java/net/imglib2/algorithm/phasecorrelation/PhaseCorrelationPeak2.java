@@ -118,7 +118,7 @@ public class PhaseCorrelationPeak2 {
 			if (ccCompare != 0){
 				return ccCompare;
 			} else {
-				return Long.compare(o1.nPixel, o2.nPixel);
+				return (int)(o1.nPixel - o2.nPixel);
 			}
 		}
 	}
