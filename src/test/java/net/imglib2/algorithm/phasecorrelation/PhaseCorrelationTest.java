@@ -1,0 +1,52 @@
+package net.imglib2.algorithm.phasecorrelation;
+
+import static org.junit.Assert.*;
+
+import java.util.Random;
+import java.util.concurrent.Executors;
+
+import org.junit.Test;
+
+import net.imglib2.FinalInterval;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.type.numeric.complex.ComplexFloatType;
+import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Intervals;
+import net.imglib2.view.Views;
+
+public class PhaseCorrelationTest {
+
+	@Test
+	public void testPC() {
+		Img< FloatType > img = ArrayImgs.floats( 100, 100 );
+		Random rnd = new Random( System.currentTimeMillis() );
+		
+		for( FloatType t : img )
+			t.set( rnd.nextFloat());
+		
+		long shiftX = 12;
+		long shiftY = 32;
+		
+		FinalInterval interval1 = new FinalInterval(new long[] {50, 50});
+		FinalInterval interval2 = Intervals.translate(interval1, shiftX, 0);
+		interval2 = Intervals.translate(interval2, shiftY, 1);
+
+		
+		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(Views.interval(img, interval1), Views.zeroMin(Views.interval(img, interval2)), 0.1, new ArrayImgFactory<FloatType>(), 
+				new FloatType(), new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		
+		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.interval(img, interval1), Views.zeroMin(Views.interval(img, interval2)));
+		
+		long[] expected = new long[]{shiftX, shiftY};
+		long[] found = new long[img.numDimensions()];
+		
+		shiftPeak.getShift().localize(found);
+		
+		assertArrayEquals(expected, found);
+		
+	}
+
+}
