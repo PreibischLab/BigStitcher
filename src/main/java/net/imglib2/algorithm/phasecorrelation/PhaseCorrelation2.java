@@ -182,8 +182,8 @@ public class PhaseCorrelation2 {
 			RandomAccessibleInterval<T> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, int nHighestPeaks,
 			Dimensions minOverlap, ExecutorService service)
 	{
-		List<PhaseCorrelationPeak2> peaks = PhaseCorrelation2Util.getPCMMaxima(pcm);
-		peaks = PhaseCorrelation2Util.getHighestPCMMaxima(peaks, nHighestPeaks);
+		List<PhaseCorrelationPeak2> peaks = PhaseCorrelation2Util.getPCMMaxima(pcm, service, nHighestPeaks);
+		//peaks = PhaseCorrelation2Util.getHighestPCMMaxima(peaks, nHighestPeaks);
 		PhaseCorrelation2Util.expandPeakListToPossibleShifts(peaks, pcm, img1, img2);		
 		PhaseCorrelation2Util.calculateCrossCorrParallel(peaks, img1, img2, minOverlap, service);		
 		Collections.sort(peaks, Collections.reverseOrder(new PhaseCorrelationPeak2.ComparatorByCrossCorrelation()));

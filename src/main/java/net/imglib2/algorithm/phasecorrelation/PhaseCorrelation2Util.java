@@ -190,9 +190,10 @@ public class PhaseCorrelation2Util {
 	 * find local maxima in PCM
 	 * @param pcm
 	 * @param service
+	 * @param maxN 
 	 * @return
 	 */
-	public static <T extends RealType<T>> List<PhaseCorrelationPeak2> getPCMMaxima(RandomAccessibleInterval<T> pcm, ExecutorService service){
+	public static <T extends RealType<T>> List<PhaseCorrelationPeak2> getPCMMaxima(RandomAccessibleInterval<T> pcm, ExecutorService service, int maxN){
 		
 		// TODO: 4-neigborhood simple peak test, multithreaded
 		
@@ -204,26 +205,11 @@ public class PhaseCorrelation2Util {
 //		List<Point> maxima = LocalExtrema.findLocalExtrema(pcm, new LocalExtrema.MaximumCheck<T>(thresh), service);
 		
 		List<PhaseCorrelationPeak2> res = new ArrayList<PhaseCorrelationPeak2>();
-		RandomAccess<T> raPCM = pcm.randomAccess();
 		
-		List<Point> maxima = new ArrayList<Point>();			
-		Cursor<T> cPcm = Views.iterable(pcm).cursor();
-		
-		RectangleShape shape = new RectangleShape(1, true);
-		for (Neighborhood<T> neighborhood : shape.neighborhoods(Views.interval(Views.extendPeriodic(pcm), pcm))){
-			cPcm.fwd();
-			boolean maximum = true;
-			for (T f : neighborhood){
-				maximum = maximum && (f.compareTo(cPcm.get()) < 0);
-			}
-			if (maximum){
-				maxima.add(new Point(cPcm));
-			}
-		}		
-		
-		for (Point p: maxima){
-			raPCM.setPosition(p);
-			res.add(new PhaseCorrelationPeak2(p, raPCM.get().getRealDouble() ));
+		ArrayList<Pair<Localizable, Double>> maxima = FourNeighborhoodExtrema.findMaxMT(Views.extendPeriodic(pcm), pcm, maxN, service);
+				
+		for (Pair<Localizable, Double> p: maxima){
+			res.add(new PhaseCorrelationPeak2(p.getA(), p.getB()));
 		}
 		return res;		
 	}
@@ -231,11 +217,12 @@ public class PhaseCorrelation2Util {
 	/**
 	 * find maxima in PCM, use a temporary thread pool for calculation
 	 * @param pcm
+	 * @param nMax 
 	 * @return
 	 */
-	public static <T extends RealType<T>> List<PhaseCorrelationPeak2> getPCMMaxima(RandomAccessibleInterval<T> pcm){
+	public static <T extends RealType<T>> List<PhaseCorrelationPeak2> getPCMMaxima(RandomAccessibleInterval<T> pcm, int nMax){
 		ExecutorService tExecService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-		List<PhaseCorrelationPeak2> res = getPCMMaxima(pcm, tExecService);
+		List<PhaseCorrelationPeak2> res = getPCMMaxima(pcm, tExecService, nMax);
 		tExecService.shutdown();
 		return res;
 	}
@@ -246,6 +233,7 @@ public class PhaseCorrelation2Util {
 	 * @param nToKeep
 	 * @return
 	 */
+	@Deprecated
 	public static List<PhaseCorrelationPeak2> getHighestPCMMaxima(List<PhaseCorrelationPeak2> rawPeaks, long nToKeep){
 		Collections.sort(rawPeaks, Collections.reverseOrder( new PhaseCorrelationPeak2.ComparatorByPhaseCorrelation()));
 		List<PhaseCorrelationPeak2> res = new ArrayList<PhaseCorrelationPeak2>();
