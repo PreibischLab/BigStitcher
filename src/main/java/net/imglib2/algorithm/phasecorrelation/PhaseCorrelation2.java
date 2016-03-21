@@ -12,6 +12,7 @@ import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.fft2.FFT;
 import net.imglib2.algorithm.fft2.FFTMethods;
+import net.imglib2.exception.IncompatibleTypeException;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgFactory;
 import net.imglib2.img.array.ArrayImgFactory;
@@ -37,29 +38,22 @@ public class PhaseCorrelation2 {
 	public static <T extends ComplexType<T>, S extends ComplexType<S>, R extends RealType<R>> void calculatePCMInPlace(
 			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<S> fft2, RandomAccessibleInterval<R> pcm)
 	{
-		// normalize in place
-		PhaseCorrelation2Util.normalizeInterval(fft1, fft1);
-		PhaseCorrelation2Util.normalizeInterval(fft2, fft2);
-		// conjugate in place
-		PhaseCorrelation2Util.complexConjInterval(fft2, fft2);
-		// in-place multiplication
-		PhaseCorrelation2Util.multiplyComplexIntervals(fft1, fft2, fft1);
-		FFT.complexToReal(fft1, pcm);
-		
+		calculatePCM( fft1, fft1, fft2, fft2, pcm );
 	}
 	
 	/**
 	 * calculate the phase correlation of fft1 and fft2, save result to res
 	 * fft1 and fft2 will NOT be altered by the function
 	 * @param fft1
+	 * @param ff1Copy - a temporary image same size as fft1 & fft2
 	 * @param fft2
+	 * @param ff2Copy - a temporary image same size as fft1 & fft2
 	 * @param pcm
 	 */
-	public static <T extends ComplexType<T> & NativeType<T>, S extends ComplexType<S> & NativeType<S>, R extends RealType<R>> void calculatePCM(
-			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<S> fft2, RandomAccessibleInterval<R> pcm)
+	public static <T extends ComplexType<T>, S extends ComplexType<S>, R extends RealType<R>> void calculatePCM(
+			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<T> fft1Copy, RandomAccessibleInterval<S> fft2, RandomAccessibleInterval<S> fft2Copy, RandomAccessibleInterval<R> pcm)
 	{
-		RandomAccessibleInterval<T> fft1Copy = new ArrayImgFactory<T>().create(fft1, Views.iterable(fft1).firstElement().createVariable());
-		RandomAccessibleInterval<S> fft2Copy = new ArrayImgFactory<S>().create(fft2, Views.iterable(fft2).firstElement().createVariable());
+		// TODO: multithreaded & check for cursor vs randomaccess
 		
 		// normalize, save to copies
 		PhaseCorrelation2Util.normalizeInterval(fft1, fft1Copy);
@@ -69,7 +63,6 @@ public class PhaseCorrelation2 {
 		// in-place multiplication
 		PhaseCorrelation2Util.multiplyComplexIntervals(fft1Copy, fft2Copy, fft1Copy);
 		FFT.complexToReal(fft1Copy, pcm);
-		
 	}
 	
 	
@@ -108,7 +101,23 @@ public class PhaseCorrelation2 {
 		FFTMethods.dimensionsComplexToRealFast(fft1, paddedDimensions, realSize);
 		RandomAccessibleInterval<R> res = factory.create(realSize, type);
 		
-		calculatePCM(fft1, fft2, res);
+		final T typeT = Views.iterable(fft1).firstElement().createVariable();
+		final S typeS = Views.iterable(fft2).firstElement().createVariable();
+		RandomAccessibleInterval< T > fft1Copy;
+		RandomAccessibleInterval< S > fft2Copy;
+
+		try
+		{
+			fft1Copy = factory.imgFactory( typeT ).create(fft1, typeT );
+			fft2Copy = factory.imgFactory( typeS ).create(fft2, typeS );
+		}
+		catch ( IncompatibleTypeException e )
+		{
+			throw new RuntimeException( "Cannot instantiate Img for type " + typeS.getClass().getSimpleName() + " or " + typeT.getClass().getSimpleName() );
+		}
+		
+		
+		calculatePCM(fft1, fft1Copy, fft2, fft2Copy, res);
 		
 		return res;
 	}
@@ -122,6 +131,10 @@ public class PhaseCorrelation2 {
 	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>, C extends ComplexType<C>> RandomAccessibleInterval<R> calculatePCM(
 			RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, double extensionFactor,
 			ImgFactory<R> factory, R type, ImgFactory<C> fftFactory, C fftType){
+
+		
+		// TODO: Extension absolute per dimension in pixels, i.e. int[] extension
+		// TODO: not bigger than the image dimension because the second mirroring is identical to the image
 		
 		Dimensions extSize = PhaseCorrelation2Util.getExtendedSize(img1, img2, extensionFactor);
 		long[] paddedDimensions = new long[extSize.numDimensions()];

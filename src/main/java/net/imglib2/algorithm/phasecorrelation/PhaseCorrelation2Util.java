@@ -159,6 +159,8 @@ public class PhaseCorrelation2Util {
 	 */
 	public static <T extends RealType<T>> List<PhaseCorrelationPeak2> getPCMMaxima(RandomAccessibleInterval<T> pcm, ExecutorService service){
 		
+		// TODO: 4-neigborhood simple peak test, multithreaded
+		
 		// FIXME: LocalExtrema.findLocalExtrema does not return correct maxima??
 		// minimum value of maxima is 0
 //		T thresh = Views.iterable(pcm).firstElement().createVariable();
@@ -471,7 +473,7 @@ public class PhaseCorrelation2Util {
 	public static <T extends ComplexType<T>, S extends ComplexType<S>>void normalizeInterval(
 			RandomAccessibleInterval<T> img, RandomAccessibleInterval<S> res, double normalizationThreshold) 
 	{
-		Cursor<S> cRes = Views.iterable(res).cursor();
+		Cursor<S> cRes = Views.iterable(res).localizingCursor();
 		RandomAccess<T> raImg = img.randomAccess();
 		
 		while (cRes.hasNext()){
@@ -498,6 +500,7 @@ public class PhaseCorrelation2Util {
 	 */
 	public static <T extends RealType<T>> double getMean(RandomAccessibleInterval<T> img)
 	{
+		// TODO: if #pixels > ???? else RealSum
 		double sum = 0.0;
 		long n = 0;
 		for (T pix: Views.iterable(img)){
