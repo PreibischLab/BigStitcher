@@ -36,9 +36,9 @@ public class PhaseCorrelation2 {
 	 * @param pcm
 	 */
 	public static <T extends ComplexType<T>, S extends ComplexType<S>, R extends RealType<R>> void calculatePCMInPlace(
-			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<S> fft2, RandomAccessibleInterval<R> pcm)
+			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<S> fft2, RandomAccessibleInterval<R> pcm, ExecutorService service)
 	{
-		calculatePCM( fft1, fft1, fft2, fft2, pcm );
+		calculatePCM( fft1, fft1, fft2, fft2, pcm , service);
 	}
 	
 	/**
@@ -51,18 +51,19 @@ public class PhaseCorrelation2 {
 	 * @param pcm
 	 */
 	public static <T extends ComplexType<T>, S extends ComplexType<S>, R extends RealType<R>> void calculatePCM(
-			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<T> fft1Copy, RandomAccessibleInterval<S> fft2, RandomAccessibleInterval<S> fft2Copy, RandomAccessibleInterval<R> pcm)
+			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<T> fft1Copy, RandomAccessibleInterval<S> fft2, RandomAccessibleInterval<S> fft2Copy, RandomAccessibleInterval<R> pcm,
+			ExecutorService service)
 	{
 		// TODO: multithreaded & check for cursor vs randomaccess
 		
 		// normalize, save to copies
-		PhaseCorrelation2Util.normalizeInterval(fft1, fft1Copy);
-		PhaseCorrelation2Util.normalizeInterval(fft2, fft2Copy);
+		PhaseCorrelation2Util.normalizeInterval(fft1, fft1Copy, service);
+		PhaseCorrelation2Util.normalizeInterval(fft2, fft2Copy, service);
 		// conjugate
-		PhaseCorrelation2Util.complexConjInterval(fft2Copy, fft2Copy);
+		PhaseCorrelation2Util.complexConjInterval(fft2Copy, fft2Copy, service);
 		// in-place multiplication
-		PhaseCorrelation2Util.multiplyComplexIntervals(fft1Copy, fft2Copy, fft1Copy);
-		FFT.complexToReal(fft1Copy, pcm);
+		PhaseCorrelation2Util.multiplyComplexIntervals(fft1Copy, fft2Copy, fft1Copy, service);
+		FFT.complexToReal(fft1Copy, pcm, service);
 	}
 	
 	
@@ -73,7 +74,7 @@ public class PhaseCorrelation2 {
 	 * @return
 	 */
 	public static <T extends ComplexType<T>, S extends ComplexType<S>, R extends RealType<R>> RandomAccessibleInterval<R> calculatePCMInPlace(
-			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<S> fft2, ImgFactory<R> factory, R type){
+			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<S> fft2, ImgFactory<R> factory, R type, ExecutorService service){
 		
 		long[] paddedDimensions = new long[fft1.numDimensions()];
 		long[] realSize = new long[fft1.numDimensions()];
@@ -81,7 +82,7 @@ public class PhaseCorrelation2 {
 		FFTMethods.dimensionsComplexToRealFast(fft1, paddedDimensions, realSize);
 		RandomAccessibleInterval<R> res = factory.create(realSize, type);
 		
-		calculatePCMInPlace(fft1, fft2, res);
+		calculatePCMInPlace(fft1, fft2, res, service);
 		
 		return res;
 	}
@@ -93,7 +94,7 @@ public class PhaseCorrelation2 {
 	 * @return
 	 */
 	public static <T extends ComplexType<T> & NativeType<T>, S extends ComplexType<S> & NativeType <S>, R extends RealType<R>> RandomAccessibleInterval<R> calculatePCM(
-			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<S> fft2, ImgFactory<R> factory, R type){
+			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<S> fft2, ImgFactory<R> factory, R type, ExecutorService service){
 		
 		long[] paddedDimensions = new long[fft1.numDimensions()];
 		long[] realSize = new long[fft1.numDimensions()];
@@ -117,7 +118,7 @@ public class PhaseCorrelation2 {
 		}
 		
 		
-		calculatePCM(fft1, fft1Copy, fft2, fft2Copy, res);
+		calculatePCM(fft1, fft1Copy, fft2, fft2Copy, res, service);
 		
 		return res;
 	}
@@ -130,7 +131,7 @@ public class PhaseCorrelation2 {
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>, C extends ComplexType<C>> RandomAccessibleInterval<R> calculatePCM(
 			RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, double extensionFactor,
-			ImgFactory<R> factory, R type, ImgFactory<C> fftFactory, C fftType){
+			ImgFactory<R> factory, R type, ImgFactory<C> fftFactory, C fftType, ExecutorService service){
 
 		
 		// TODO: Extension absolute per dimension in pixels, i.e. int[] extension
@@ -145,11 +146,11 @@ public class PhaseCorrelation2 {
 		RandomAccessibleInterval<C> fft2 = fftFactory.create(fftSize, fftType);
 		
 		FFT.realToComplex(Views.interval(PhaseCorrelation2Util.extendImageByFactor(img1, extensionFactor), 
-				FFTMethods.paddingIntervalCentered(img1, new FinalInterval(paddedDimensions))), fft1);
+				FFTMethods.paddingIntervalCentered(img1, new FinalInterval(paddedDimensions))), fft1, service);
 		FFT.realToComplex(Views.interval(PhaseCorrelation2Util.extendImageByFactor(img2, extensionFactor), 
-				FFTMethods.paddingIntervalCentered(img2, new FinalInterval(paddedDimensions))), fft2);
+				FFTMethods.paddingIntervalCentered(img2, new FinalInterval(paddedDimensions))), fft2, service);
 		
-		RandomAccessibleInterval<R> pcm = calculatePCMInPlace(fft1, fft2, factory, type);
+		RandomAccessibleInterval<R> pcm = calculatePCMInPlace(fft1, fft2, factory, type, service);
 		return pcm;
 		
 	}
@@ -162,8 +163,8 @@ public class PhaseCorrelation2 {
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>, C extends ComplexType<C>> RandomAccessibleInterval<R> calculatePCM(
 			RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, ImgFactory<R> factory, R type,
-			ImgFactory<C> fftFactory, C fftType) {
-		return calculatePCM(img1, img2, 0.1, factory, type, fftFactory, fftType);
+			ImgFactory<C> fftFactory, C fftType, ExecutorService service) {
+		return calculatePCM(img1, img2, 0.1, factory, type, fftFactory, fftType, service);
 	}
 	
 	
@@ -215,12 +216,14 @@ public class PhaseCorrelation2 {
 		Img<FloatType> img1 = ImgLib2Util.openAs32Bit(new File("src/main/resources/img1.tif"));
 		Img<FloatType> img2 = ImgLib2Util.openAs32Bit(new File("src/main/resources/img2small.tif"));
 		
+		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		
 		RandomAccessibleInterval<FloatType> pcm = calculatePCM(img1, img2, new ArrayImgFactory<FloatType>(), new FloatType(),
-				new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType());
+				new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), service );
 		
 		PhaseCorrelationPeak2 shiftPeak = getShift(pcm, img1, img2);
 		
-		RandomAccessibleInterval<FloatType> res = PhaseCorrelation2Util.dummyFuse(img1, img2, shiftPeak);
+		RandomAccessibleInterval<FloatType> res = PhaseCorrelation2Util.dummyFuse(img1, img2, shiftPeak,service);
 				
 		ImageJFunctions.show(res);
 	}
