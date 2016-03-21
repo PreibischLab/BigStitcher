@@ -173,7 +173,7 @@ public class PhaseCorrelation2Util {
 		Cursor<T> cPcm = Views.iterable(pcm).cursor();
 		
 		RectangleShape shape = new RectangleShape(1, true);
-		for (Neighborhood<T> neighborhood : shape.neighborhoods(Views.interval(Views.extendMirrorSingle(pcm), pcm))){
+		for (Neighborhood<T> neighborhood : shape.neighborhoods(Views.interval(Views.extendPeriodic(pcm), pcm))){
 			cPcm.fwd();
 			boolean maximum = true;
 			for (T f : neighborhood){
