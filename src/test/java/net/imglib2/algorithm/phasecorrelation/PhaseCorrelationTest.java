@@ -21,14 +21,17 @@ public class PhaseCorrelationTest {
 
 	@Test
 	public void testPC() {
-		Img< FloatType > img = ArrayImgs.floats( 100, 100 );
+		
+		// TODO: very large shifts (nearly no overlap) lead to incorrect shift determination (as expected)
+		// maybe we can optimize behaviour in this situation
+		Img< FloatType > img = ArrayImgs.floats( 200, 200 );
 		Random rnd = new Random( System.currentTimeMillis() );
 		
 		for( FloatType t : img )
 			t.set( rnd.nextFloat());
 		
-		long shiftX = 12;
-		long shiftY = 32;
+		long shiftX = 28;
+		long shiftY = 0;
 		
 		FinalInterval interval1 = new FinalInterval(new long[] {50, 50});
 		FinalInterval interval2 = Intervals.translate(interval1, shiftX, 0);
@@ -38,10 +41,12 @@ public class PhaseCorrelationTest {
 		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(Views.interval(img, interval1), Views.zeroMin(Views.interval(img, interval2)), 0.1, new ArrayImgFactory<FloatType>(), 
 				new FloatType(), new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 		
-		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.interval(img, interval1), Views.zeroMin(Views.interval(img, interval2)));
+		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.interval(img, interval1), Views.zeroMin(Views.interval(img, interval2)), 20, null, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 		
 		long[] expected = new long[]{shiftX, shiftY};
 		long[] found = new long[img.numDimensions()];
+		
+		
 		
 		shiftPeak.getShift().localize(found);
 		
@@ -49,4 +54,39 @@ public class PhaseCorrelationTest {
 		
 	}
 
+	
+	@Test
+	public void testPCNegativeShift() {
+		
+		// TODO: very large shifts (nearly no overlap) lead to incorrect shift determination (as expected)
+		// maybe we can optimize behaviour in this situation
+		Img< FloatType > img = ArrayImgs.floats( 200, 200 );
+		Random rnd = new Random( System.currentTimeMillis() );
+		
+		for( FloatType t : img )
+			t.set( rnd.nextFloat());
+		
+		long shiftX = -20;
+		long shiftY = -2;
+		
+		FinalInterval interval2 = new FinalInterval(new long[] {50, 50});
+		FinalInterval interval1 = Intervals.translate(interval2, -shiftX, 0);
+		interval1 = Intervals.translate(interval1, -shiftY, 1);
+
+		
+		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(Views.zeroMin(Views.interval(img, interval1)), Views.zeroMin(Views.interval(img, interval2)), 0.1, new ArrayImgFactory<FloatType>(), 
+				new FloatType(), new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		
+		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.zeroMin(Views.interval(img, interval1)), Views.zeroMin(Views.interval(img, interval2)), 20, null, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		
+		long[] expected = new long[]{shiftX, shiftY};
+		long[] found = new long[img.numDimensions()];
+		
+		
+		
+		shiftPeak.getShift().localize(found);
+		
+		assertArrayEquals(expected, found);
+		
+	}
 }

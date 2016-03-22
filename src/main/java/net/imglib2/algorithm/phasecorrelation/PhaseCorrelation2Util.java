@@ -195,18 +195,10 @@ public class PhaseCorrelation2Util {
 	 */
 	public static <T extends RealType<T>> List<PhaseCorrelationPeak2> getPCMMaxima(RandomAccessibleInterval<T> pcm, ExecutorService service, int maxN){
 		
-		// TODO: 4-neigborhood simple peak test, multithreaded
-		
-		// FIXME: LocalExtrema.findLocalExtrema does not return correct maxima??
-		// minimum value of maxima is 0
-//		T thresh = Views.iterable(pcm).firstElement().createVariable();
-//		thresh.setReal(thresh.getMinValue());
-//		thresh.setZero();
-//		List<Point> maxima = LocalExtrema.findLocalExtrema(pcm, new LocalExtrema.MaximumCheck<T>(thresh), service);
-		
 		List<PhaseCorrelationPeak2> res = new ArrayList<PhaseCorrelationPeak2>();
 		
 		ArrayList<Pair<Localizable, Double>> maxima = FourNeighborhoodExtrema.findMaxMT(Views.extendPeriodic(pcm), pcm, maxN, service);
+		//ArrayList<Pair<Localizable, Double>> maxima = FourNeighborhoodExtrema.findMax(Views.extendPeriodic(pcm), pcm, maxN);
 				
 		for (Pair<Localizable, Double> p: maxima){
 			res.add(new PhaseCorrelationPeak2(p.getA(), p.getB()));
@@ -581,7 +573,7 @@ public class PhaseCorrelation2Util {
 	 * @param res
 	 */
 	public static <R extends ComplexType<R>, S extends ComplexType<S>> void normalize( R c1, S res){
-		normalize(c1, res, 1E-5);
+		normalize(c1, res, 1e-5);
 	}	
 
 
