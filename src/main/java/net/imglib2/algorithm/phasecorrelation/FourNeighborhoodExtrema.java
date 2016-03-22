@@ -44,10 +44,17 @@ public class FourNeighborhoodExtrema
 		
 			int activeLists = 0;
 			int maxList = 0;
+			for (int i = 0; i<hasMore.length; i++){
+				if (hasMore[i]){
+					maxList=i;
+					break;
+				}
+			}
+			
 			for (int i = 0; i< lists.size(); i++){
 				if(!hasMore[i]){ continue;}
 				activeLists++;
-				if (compare.compare(lists.get(i).get(idxs[i]),(lists.get(maxList).get(idxs[maxList]))) > 0){
+				if (compare.compare(lists.get(i).get(idxs[i]),(lists.get(maxList).get(idxs[maxList]))) >= 0){
 					maxList = i;
 				}
 			}
