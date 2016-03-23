@@ -4,10 +4,17 @@ import ij.ImagePlus;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
+import spim.fiji.plugin.Apply_Transformation;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHints;
+import mpicbg.spim.data.registration.ViewRegistration;
+import mpicbg.spim.data.registration.ViewRegistrations;
+import mpicbg.spim.data.registration.ViewTransform;
+import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
@@ -30,6 +37,8 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
 
@@ -38,6 +47,7 @@ public class GenerateSpimData
 	public static SpimData grid3x2()
 	{
 		final ArrayList< ViewSetup > setups = new ArrayList< ViewSetup >();
+		final ArrayList< ViewRegistration > registrations = new ArrayList< ViewRegistration >();
 
 		final Channel c0 = new Channel( 0, "RFP" );
 		final Channel c1 = new Channel( 1, "YFP" );
@@ -47,9 +57,9 @@ public class GenerateSpimData
 		final Illumination i0 = new Illumination( 0 );
 
 		final Tile t0 = new Tile( 0, "Tile0", new double[]{ 0.0, 0.0, 0.0 } );
-		final Tile t1 = new Tile( 0, "Tile1", new double[]{ 450.0, 0.0, 0.0 } );
-		final Tile t2 = new Tile( 0, "Tile2", new double[]{ 0.0, 450.0, 0.0 } );
-		final Tile t3 = new Tile( 0, "Tile3", new double[]{ 450.0, 450.0, 0.0 } );
+		final Tile t1 = new Tile( 1, "Tile1", new double[]{ 450.0, 0.0, 0.0 } );
+		final Tile t2 = new Tile( 2, "Tile2", new double[]{ 0.0, 450.0, 0.0 } );
+		final Tile t3 = new Tile( 3, "Tile3", new double[]{ 450.0, 450.0, 0.0 } );
 
 		final Dimensions d0 = new FinalDimensions( 512l, 512l, 86l );
 		final VoxelDimensions vd0 = new FinalVoxelDimensions( "px", 0.4566360, 0.4566360, 2.0000000 );
@@ -85,12 +95,48 @@ public class GenerateSpimData
 			}
 		};
 
-		final SequenceDescription sd = new SequenceDescription( timepoints, setups, imgLoader, missingViews );
+		for ( final ViewSetup vs : setups )
+		{
+			final ViewRegistration vr = new ViewRegistration( t.get( 0 ).getId(), vs.getId() );
 
-		return new SpimData( new File( "" ), sd, null );
+			final Tile tile = vs.getTile();
+
+			final AffineTransform3D translation = new AffineTransform3D();
+
+			if ( tile.hasLocation() )
+			{
+				translation.set( tile.getLocation()[ 0 ], 0, 3 );
+				translation.set( tile.getLocation()[ 1 ], 1, 3 );
+				translation.set( tile.getLocation()[ 2 ], 2, 3 );
+			}
+
+			vr.concatenateTransform( new ViewTransformAffine( "Translation", translation ) );
+
+			final double minResolution = Math.min( Math.min( vs.getVoxelSize().dimension( 0 ), vs.getVoxelSize().dimension( 1 ) ), vs.getVoxelSize().dimension( 2 ) );
+			
+			final double calX = vs.getVoxelSize().dimension( 0 ) / minResolution;
+			final double calY = vs.getVoxelSize().dimension( 1 ) / minResolution;
+			final double calZ = vs.getVoxelSize().dimension( 2 ) / minResolution;
+			
+			final AffineTransform3D m = new AffineTransform3D();
+			m.set( calX, 0.0f, 0.0f, 0.0f, 
+				   0.0f, calY, 0.0f, 0.0f,
+				   0.0f, 0.0f, calZ, 0.0f );
+			final ViewTransform vt = new ViewTransformAffine( "Calibration", m );
+			vr.preconcatenateTransform( vt );
+
+			registrations.add( vr );
+		}
+
+		final SequenceDescription sd = new SequenceDescription( timepoints, setups, imgLoader, missingViews );
+		final SpimData data = new SpimData( new File( "" ), sd, new ViewRegistrations( registrations ) );
+
+		return data;
 	}
 
-	public static class MySetupImgLoader implements SetupImgLoader< FloatType >
+	final static HashMap< String, ImagePlus > openImgs = new HashMap<>();
+
+	public static class MySetupImgLoader implements SetupImgLoader< UnsignedShortType >
 	{
 		final int setupId;
 
@@ -100,14 +146,38 @@ public class GenerateSpimData
 		}
 
 		@Override
-		public RandomAccessibleInterval< FloatType > getImage(
+		public RandomAccessibleInterval< UnsignedShortType > getImage(
 				int timepointId, ImgLoaderHint... hints )
 		{
-			return getFloatImage( timepointId, false, hints );
+			ImagePlus imp;
+			String file;
+			
+			if ( setupId % 4 == 0 )
+				file = "73.tif.zip";
+			else if ( setupId % 4 == 1 )
+				file = "74.tif.zip";
+			else if ( setupId % 4 == 2 )
+				file = "75.tif.zip";
+			else 
+				file = "76.tif.zip";
+
+			if ( openImgs.containsKey( file ) )
+			{
+				imp = openImgs.get( file );
+			}
+			else
+			{
+				imp = new ImagePlus( file );
+				openImgs.put( file, imp );
+			}
+
+			Img< UnsignedShortType > img = copyChannelUSST( imp, setupId / 4 );
+
+			return img;
 		}
 
 		@Override
-		public FloatType getImageType() { return new FloatType(); }
+		public UnsignedShortType getImageType() { return new UnsignedShortType(); }
 
 		@Override
 		public RandomAccessibleInterval< FloatType > getFloatImage(
@@ -136,6 +206,32 @@ public class GenerateSpimData
 
 		@Override
 		public VoxelDimensions getVoxelSize( int timepointId ) { return null; }
+	}
+
+	public static Img< UnsignedShortType > copyChannelUSST( final ImagePlus imp, final int channel )
+	{
+		final int w, h, d;
+
+		Img< UnsignedShortType > img = ArrayImgs.unsignedShorts( w = imp.getWidth(), h = imp.getHeight(), d = imp.getNSlices() );
+		
+		final Cursor< UnsignedShortType > c = img.cursor();
+
+		for ( int z = 0; z < d; ++z )
+		{
+			final int[] pixels = (int[])imp.getStack().getProcessor( z + 1 ).getPixels();
+			
+			for ( int i = 0; i < w*h; ++i )
+			{
+				if ( channel == 0 )
+					c.next().set( ( pixels[ i ] & 0xff0000) >> 16 );
+				else if ( channel == 1 )
+					c.next().set( ( pixels[ i ] & 0xff00 ) >> 8 );
+				else
+					c.next().set( pixels[ i ] & 0xff );
+			}
+		}
+		
+		return img;
 	}
 
 	public static Img< FloatType > copyChannel( final ImagePlus imp, final int channel )
@@ -185,7 +281,7 @@ public class GenerateSpimData
 			else
 				System.out.println( "Loading: " + t.getName() + " (unknown location) " + vd.getViewSetup().getChannel().getName() );
 			
-			ImageJFunctions.show( sil.getFloatImage( tpId, false, ImgLoaderHints.LOAD_COMPLETELY ) );
+			ImageJFunctions.show( (RandomAccessibleInterval< UnsignedShortType >)sil.getImage( tpId, ImgLoaderHints.LOAD_COMPLETELY ) ).resetDisplayRange();
 		}
 	}
 }
