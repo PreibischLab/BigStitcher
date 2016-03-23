@@ -43,5 +43,10 @@
   		<groupId>sc.fiji</groupId>
   		<artifactId>SPIM_Registration</artifactId>
   	</dependency>
+  	<dependency>
+  		<groupId>sc.fiji</groupId>
+  		<artifactId>spim_data</artifactId>
+  		<version>2.1.0</version>
+  	</dependency>
   </dependencies>
 </project>
