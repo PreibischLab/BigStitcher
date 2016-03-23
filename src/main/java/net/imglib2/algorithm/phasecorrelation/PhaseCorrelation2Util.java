@@ -1,5 +1,6 @@
 package net.imglib2.algorithm.phasecorrelation;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,13 +22,16 @@ import net.imglib2.Point;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealPoint;
 import net.imglib2.algorithm.neighborhood.Neighborhood;
 import net.imglib2.algorithm.neighborhood.RectangleShape;
+import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.ComplexType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
+import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 import spim.process.fusion.FusionHelper;
@@ -279,21 +283,28 @@ public class PhaseCorrelation2Util {
 	public static List<PhaseCorrelationPeak2> expandPeakToPossibleShifts(
 			PhaseCorrelationPeak2 peak, Dimensions pcmDims, Dimensions img1Dims, Dimensions img2Dims)
 	{
-		int[] originalPeakWithShift = new int[pcmDims.numDimensions()];
-		peak.getPcmLocation().localize(originalPeakWithShift);
+		int n = pcmDims.numDimensions();
+		double[] subpixelDiff = new double[n];
 		
+		if (peak.getSubpixelPcmLocation() != null)
+			for (int i = 0; i < n; i++)
+				subpixelDiff[i] = peak.getSubpixelPcmLocation().getDoublePosition( i ) - peak.getPcmLocation().getIntPosition( i );
+
+		int[] originalPCMPeakWithOffset = new int[n];
+		peak.getPcmLocation().localize(originalPCMPeakWithOffset);
+
 		int[] extensionImg1 = getSizeDifference(img1Dims, pcmDims);
 		int[] extensionImg2 = getSizeDifference(img2Dims, pcmDims);
 		int[] offset = new int[pcmDims.numDimensions()];
 		for(int i = 0; i < offset.length; i++){
 			offset[i] = (extensionImg2[i] - extensionImg1[i] ) / 2;
-			originalPeakWithShift[i] += offset[i];
-			originalPeakWithShift[i] %= pcmDims.dimension(i); 
+			originalPCMPeakWithOffset[i] += offset[i];
+			originalPCMPeakWithOffset[i] %= pcmDims.dimension(i); 
 		}		
 		
 		List<PhaseCorrelationPeak2> shiftedPeaks = new ArrayList<PhaseCorrelationPeak2>();
 		for (int i = 0; i < Math.pow(2, pcmDims.numDimensions()); i++){
-			int[] possibleShift = originalPeakWithShift.clone();
+			int[] possibleShift = originalPCMPeakWithOffset.clone();
 			PhaseCorrelationPeak2 peakWithShift = new PhaseCorrelationPeak2(peak);
 			for (int d = 0; d < pcmDims.numDimensions(); d++){
 				/*
@@ -305,9 +316,18 @@ public class PhaseCorrelation2Util {
 				}
 			}
 			peakWithShift.setShift(new Point(possibleShift));
+
+			if (peakWithShift.getSubpixelPcmLocation() != null)
+			{
+				double[] subpixelShift = new double[n];
+				for (int j =0; j<n;j++){
+					subpixelShift[i] = possibleShift[i] + subpixelDiff[i];
+				}
+
+				peakWithShift.setSubpixelShift( new RealPoint( subpixelShift ) );
+			}
 			shiftedPeaks.add(peakWithShift);
-		}
-		
+		}		
 		return shiftedPeaks;
 	}
 	
@@ -765,4 +785,27 @@ public class PhaseCorrelation2Util {
 		
 	}
 
+	public static void main( String[] args )
+	{
+		final Point p = new Point( 90, 90 ); // identical to (-10,-10), so subpixel localization can move on periodic condition outofbounds
+		PhaseCorrelationPeak2 pcp = new PhaseCorrelationPeak2( p, 5 );
+		
+		Dimensions pcmDims = new FinalDimensions( 100, 100 );
+		Dimensions p1 = new FinalDimensions( 80, 81 );
+		Dimensions p2 = new FinalDimensions( 91, 90 );
+		
+		final List<PhaseCorrelationPeak2> peaks = expandPeakToPossibleShifts( pcp, pcmDims, p1, p2 );
+		
+		for ( final PhaseCorrelationPeak2 pc : peaks )
+			System.out.println( Util.printCoordinates( pc.getShift() ) );
+
+		Img< FloatType > a = ImgLib2Util.openAs32Bit( new File( "a.tif" ) );
+		Img< FloatType > b = ImgLib2Util.openAs32Bit( new File( "a0.25.tif" ) );
+		Img< FloatType > c = ImgLib2Util.openAs32Bit( new File( "a0.5.tif" ) );
+		
+		System.out.println( getCorrelation ( a, a ) );
+		System.out.println( getCorrelation ( a, b ) );
+		System.out.println( getCorrelation ( a, c ) );
+		System.out.println( getCorrelation ( b, c ) );
+	}
 }

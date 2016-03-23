@@ -21,9 +21,11 @@ import net.imglib2.Localizable;
 public class PhaseCorrelationPeak2 {
 	
 	Localizable pcmLocation; // location in the raw PCM
+	RealLocalizable subpixelPcmLocation; // subpixel localized PCM location
+
 	Localizable shift; // corresponding shift between images
-	RealLocalizable subpixelShift; // subpixel localized shift
-	
+	RealLocalizable subpixelShift; // corresponding subpixel accurate shift between images
+
 	double phaseCorr; // value in PCM
 	double crossCorr; // crosscorrelation bewtween imgs
 	long nPixel; // number of overlapping pixels
@@ -42,6 +44,14 @@ public class PhaseCorrelationPeak2 {
 
 	public void setShift(Localizable shift) {
 		this.shift = shift;
+	}
+
+	public RealLocalizable getSubpixelPcmLocation() {
+		return subpixelPcmLocation;
+	}
+
+	public void setSubpixelPcmLocation(RealLocalizable subpixelPcmLocation) {
+		this.subpixelPcmLocation = subpixelPcmLocation;
 	}
 
 	public RealLocalizable getSubpixelShift() {
@@ -83,9 +93,10 @@ public class PhaseCorrelationPeak2 {
 	 */
 	public PhaseCorrelationPeak2(Localizable pcmPosition, double phaseCorr)
 	{
-		this.pcmLocation = new Point(pcmPosition);
-		this.shift = new Point(pcmPosition);
-		this.subpixelShift = new RealPoint(pcmPosition);
+		this.pcmLocation = new Point( pcmPosition );
+		this.shift = null;
+		this.subpixelPcmLocation = null;
+		this.subpixelShift = null;
 		this.phaseCorr = phaseCorr;
 		this.crossCorr = 0.0;
 		this.nPixel = 0;
@@ -97,8 +108,9 @@ public class PhaseCorrelationPeak2 {
 	 */
 	public PhaseCorrelationPeak2(PhaseCorrelationPeak2 src){
 		this.pcmLocation = new Point(src.pcmLocation);
-		this.shift = new Point(src.shift);
-		this.subpixelShift = new RealPoint(src.subpixelShift);
+		this.shift = src.shift == null? null : new Point(src.shift);
+		this.subpixelPcmLocation = src.subpixelPcmLocation == null ? null : new RealPoint( src.subpixelPcmLocation );
+		this.subpixelShift = src.subpixelShift == null ? null : new RealPoint( src.subpixelShift );
 		this.phaseCorr = src.phaseCorr;
 		this.crossCorr = src.crossCorr;
 		this.nPixel = src.nPixel;
@@ -180,30 +192,37 @@ public class PhaseCorrelationPeak2 {
 		List<Point> peaks = new ArrayList<Point>();
 		peaks.add(new Point(pcmLocation));
 		
-		boolean[] allowedToMoveInDim = new boolean[pcm.numDimensions()];
+		final int n = pcm.numDimensions();
+
+		boolean[] allowedToMoveInDim = new boolean[ n ];
 		for (int i = 0; i< allowedToMoveInDim.length; i++){
 			allowedToMoveInDim[i]=false;
 		}
-		// TODO: It doesnt look like this does anything? Subpixel peaks are just regular peaks as RealPoint		
-		List<RefinedPeak<Point>> res = SubpixelLocalization.refinePeaks(peaks, Views.extendMirrorSingle(pcm), pcm, true,
-					0, false, 0.0f, allowedToMoveInDim);
-		
-		double[] subpixelShift = new double[pcm.numDimensions()];
-		long[] pcmPos = new long[pcm.numDimensions()];
-		long[] shift = new long[pcm.numDimensions()];
-		
-		res.get(0).localize(subpixelShift);
-		this.pcmLocation.localize(pcmPos);
-		this.shift.localize(shift);
-		
-		for (int i = 0; i<pcm.numDimensions(); i++){
-			subpixelShift[i] += (shift[i] - pcmPos[i]);
+
+		// TODO: It doesnt look like this does anything? Subpixel peaks are just regular peaks as RealPoint - with maxNumMoves == 1 it should now :)
+		// subpixel localization can move on periodic condition outofbounds
+		List<RefinedPeak<Point>> res = SubpixelLocalization.refinePeaks(peaks, Views.extendPeriodic( pcm ), null, true,
+					1, false, 0.0f, allowedToMoveInDim);
+
+		final RefinedPeak< Point > rp = res.get( 0 );
+		this.subpixelPcmLocation = new RealPoint( rp );
+
+		double maxDist = 0.0;
+
+		for ( int d = 0; d < n; ++d )
+			maxDist = Math.max( maxDist, Math.abs( rp.getOriginalPeak().getDoublePosition( d ) - this.subpixelPcmLocation.getDoublePosition( d ) ) );
+
+		// not a stable peak
+		if ( maxDist > 0.5 )
+		{
+			this.subpixelPcmLocation = null;
 		}
-		
-		this.subpixelShift = new RealPoint(subpixelShift);
+		else
+		{
+			this.phaseCorr = rp.getValue();
+		}
 	}
-		
-	
+
 	public static void main(String[] args) {
 		
 		PhaseCorrelationPeak2 peaks = new PhaseCorrelationPeak2(new Point(new int[] {10, 10, 10}), 1.0);
