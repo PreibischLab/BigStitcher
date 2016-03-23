@@ -3,14 +3,23 @@ package net.imglib2.algorithm.phasecorrelation;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
 import net.imglib2.Point;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
+import net.imglib2.RealRandomAccessible;
 import net.imglib2.algorithm.localextrema.RefinedPeak;
 import net.imglib2.algorithm.localextrema.SubpixelLocalization;
+import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
+import net.imglib2.realtransform.InverseRealTransform;
+import net.imglib2.realtransform.InvertibleRealTransform;
+import net.imglib2.realtransform.RealViews;
+import net.imglib2.realtransform.Translation2D;
+import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Pair;
 import net.imglib2.view.Views;
@@ -149,7 +158,6 @@ public class PhaseCorrelationPeak2 {
 	public <T extends RealType<T>, S extends RealType<S>> void calculateCrossCorr(RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, 
 			Dimensions minOverlapPx)
 	{
-
 		Pair<Interval, Interval> intervals = PhaseCorrelation2Util.getOverlapIntervals(img1, img2, shift);
 		
 		// no overlap found
@@ -169,7 +177,26 @@ public class PhaseCorrelationPeak2 {
 			
 			nPixel *= intervals.getA().dimension(i);
 		}
-		
+
+		// for subpixel move the underlying Img2 by the subpixel offset
+		if ( subpixelShift != null )
+		{
+			RealRandomAccessible< S > rra = Views.interpolate( Views.extendMirrorSingle( img2 ), new NLinearInterpolatorFactory< S >() );
+			
+			InvertibleRealTransform transform = null;
+			
+			// e.g. subpixel = (-0.4, 0.1, -0.145)
+			final double tx = subpixelShift.getDoublePosition( 0 ) - shift.getDoublePosition( 0 );
+			final double ty = subpixelShift.getDoublePosition( 1 ) - shift.getDoublePosition( 1 );
+
+			if ( rra.numDimensions() == 2 )
+				transform = new Translation2D( -tx, -ty ); // -relative subpixel shift only
+			else if ( rra.numDimensions() == 3 )
+				transform = new Translation3D( -tx, -ty, shift.getDoublePosition( 2 ) - subpixelShift.getDoublePosition( 2 ) ); // -relative subpixel shift only
+	
+			img2 = Views.interval( Views.raster( RealViews.transform( rra, transform ) ), img2 );
+		}
+
 		crossCorr = PhaseCorrelation2Util.getCorrelation(Views.zeroMin(Views.interval(img1, intervals.getA())), Views.zeroMin(Views.interval(img2, intervals.getB())));
 		
 	}
