@@ -101,35 +101,49 @@ public class PhaseCorrelation2Util {
 	
 	/**
 	 * calculate the size of an extended image big enough to hold dim1 and dim2
-	 * with each dimension also enlarged by extensionFactor times its size (rounded up the next even number)
+	 * with each dimension also enlarged by extension pixels on each side (but at most by the original image size)
 	 * @param dim1
 	 * @param dim2
-	 * @param extensionFactor
+	 * @param extension: number of pixels to add at each side in each dimension
 	 * @return
 	 */
-	public static FinalDimensions getExtendedSize(Dimensions dim1, Dimensions dim2, double extensionFactor) {
+	public static FinalDimensions getExtendedSize(Dimensions dim1, Dimensions dim2, int [] extension) {
 		long[] extDims = new long[dim1.numDimensions()];
 		for (int i = 0; i <dim1.numDimensions(); i++){
 			extDims[i] = dim1.dimension(i) > dim2.dimension(i) ? dim1.dimension(i) : dim2.dimension(i);
-			long extEachSide = (long) Math.ceil(extensionFactor/2 * extDims[i]);
-			extDims[i] += 2*extEachSide;
+			long extBothSides = extDims[i] < extension[i] ? extDims[i] * 2 : extension[i] * 2;
+			extDims[i] += extBothSides;
 		}
 		return new FinalDimensions(extDims);		
 	}
 	
 	/**
-	 * return a BlendedExtendedMirroredRandomAccesible of img extended by extension Factor in each dimension
+	 * return a BlendedExtendedMirroredRandomAccesible of img extended extension pixels on each side (but at most by the original image size)
 	 * @param img
-	 * @param extensionFactor
+	 * @param extension: number of blending pixels to add at each side in each dimension
 	 * @return
 	 */
-	public static <T extends RealType<T>> RandomAccessible<T> extendImageByFactor(RandomAccessibleInterval<T> img, double extensionFactor)
+	public static <T extends RealType<T>> RandomAccessible<T> extendImageByFactor(RandomAccessibleInterval<T> img, int [] extension)
 	{
 		int[] extEachSide = new int[img.numDimensions()];
 		for (int i = 0; i <img.numDimensions(); i++){
-			extEachSide[i] = (int) Math.ceil(extensionFactor/2 * img.dimension(i));			
+			extEachSide[i] = (int) (img.dimension(i) < extension[i] ? img.dimension(i) : extension[i]);	
 		}
 		return new BlendedExtendedMirroredRandomAccesible2<T>(img, extEachSide);
+	}
+	
+	/**
+	 * returns the extension at each side if an image is enlarged by a factor of extensionFactor at each side
+	 * @param dims
+	 * @param extensionFactor
+	 * @return
+	 */
+	public static int[] extensionByFactor(Dimensions dims, double extensionFactor){
+		int[] res = new int[dims.numDimensions()];
+		for (int i = 0; i< dims.numDimensions(); i++){
+			res[i] = (int) (dims.dimension(i)*extensionFactor);
+		}
+		return res;
 	}
 	
 	

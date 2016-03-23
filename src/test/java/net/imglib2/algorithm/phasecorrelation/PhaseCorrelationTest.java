@@ -2,6 +2,7 @@ package net.imglib2.algorithm.phasecorrelation;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.Executors;
 
@@ -38,7 +39,10 @@ public class PhaseCorrelationTest {
 		interval2 = Intervals.translate(interval2, shiftY, 1);
 
 		
-		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(Views.interval(img, interval1), Views.zeroMin(Views.interval(img, interval2)), 0.1, new ArrayImgFactory<FloatType>(), 
+		int [] extension = new int[img.numDimensions()];
+		Arrays.fill(extension, 10);
+		
+		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(Views.interval(img, interval1), Views.zeroMin(Views.interval(img, interval2)), extension, new ArrayImgFactory<FloatType>(), 
 				new FloatType(), new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 		
 		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.interval(img, interval1), Views.zeroMin(Views.interval(img, interval2)), 20, null, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
@@ -73,8 +77,10 @@ public class PhaseCorrelationTest {
 		FinalInterval interval1 = Intervals.translate(interval2, -shiftX, 0);
 		interval1 = Intervals.translate(interval1, -shiftY, 1);
 
+		int [] extension = new int[img.numDimensions()];
+		Arrays.fill(extension, 10);
 		
-		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(Views.zeroMin(Views.interval(img, interval1)), Views.zeroMin(Views.interval(img, interval2)), 0.1, new ArrayImgFactory<FloatType>(), 
+		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(Views.zeroMin(Views.interval(img, interval1)), Views.zeroMin(Views.interval(img, interval2)), extension, new ArrayImgFactory<FloatType>(), 
 				new FloatType(), new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 		
 		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.zeroMin(Views.interval(img, interval1)), Views.zeroMin(Views.interval(img, interval2)), 20, null, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
