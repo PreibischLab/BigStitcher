@@ -19,6 +19,7 @@ import mpicbg.spim.data.sequence.SetupImgLoader;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.TimePoints;
+import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.data.sequence.ViewSetup;
 import mpicbg.spim.data.sequence.VoxelDimensions;
@@ -30,6 +31,7 @@ import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Util;
 
 public class GenerateSpimData
 {
@@ -165,11 +167,25 @@ public class GenerateSpimData
 	public static void main( String[] args )
 	{
 		SpimData spimData = grid3x2();
-		ImgLoader i = spimData.getSequenceDescription().getImgLoader();
-		
+		SequenceDescription sd = spimData.getSequenceDescription();
+		ImgLoader i = sd.getImgLoader();
+
+		TimePoint firstTp = sd.getTimePoints().getTimePointsOrdered().get( 0 );
+		int tpId = firstTp.getId();
+
 		for ( final ViewSetup vs: spimData.getSequenceDescription().getViewSetups().values() )
 		{
-			ImageJFunctions.show( i.getSetupImgLoader( vs.getId() ).getFloatImage( spimData.getSequenceDescription().getTimePoints().getTimePointsOrdered().get( 0 ).getId(), false, ImgLoaderHints.LOAD_COMPLETELY ) );
+			SetupImgLoader< ? > sil = i.getSetupImgLoader( vs.getId() );
+			ViewDescription vd = sd.getViewDescription( tpId, vs.getId() );
+			
+			Tile t = vd.getViewSetup().getTile();
+
+			if ( t.hasLocation() )
+				System.out.println( "Loading: " + t.getName() + " " + Util.printCoordinates( t.getLocation() ) + " " + vd.getViewSetup().getChannel().getName() );
+			else
+				System.out.println( "Loading: " + t.getName() + " (unknown location) " + vd.getViewSetup().getChannel().getName() );
+			
+			ImageJFunctions.show( sil.getFloatImage( tpId, false, ImgLoaderHints.LOAD_COMPLETELY ) );
 		}
 	}
 }
