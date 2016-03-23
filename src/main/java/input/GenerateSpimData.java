@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
+import mpicbg.spim.data.generic.sequence.ImgLoaderHints;
 import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
@@ -27,6 +28,7 @@ import net.imglib2.FinalDimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.real.FloatType;
 
 public class GenerateSpimData
@@ -162,6 +164,12 @@ public class GenerateSpimData
 
 	public static void main( String[] args )
 	{
+		SpimData spimData = grid3x2();
+		ImgLoader i = spimData.getSequenceDescription().getImgLoader();
 		
+		for ( final ViewSetup vs: spimData.getSequenceDescription().getViewSetups().values() )
+		{
+			ImageJFunctions.show( i.getSetupImgLoader( vs.getId() ).getFloatImage( spimData.getSequenceDescription().getTimePoints().getTimePointsOrdered().get( 0 ).getId(), false, ImgLoaderHints.LOAD_COMPLETELY ) );
+		}
 	}
 }
