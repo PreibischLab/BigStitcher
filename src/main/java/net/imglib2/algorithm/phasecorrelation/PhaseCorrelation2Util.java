@@ -211,15 +211,21 @@ public class PhaseCorrelation2Util {
 	 * @param maxN 
 	 * @return
 	 */
-	public static <T extends RealType<T>> List<PhaseCorrelationPeak2> getPCMMaxima(RandomAccessibleInterval<T> pcm, ExecutorService service, int maxN){
+	public static <T extends RealType<T>> List<PhaseCorrelationPeak2> getPCMMaxima(RandomAccessibleInterval<T> pcm, ExecutorService service, int maxN, boolean subpixelAccuracy){
 		
 		List<PhaseCorrelationPeak2> res = new ArrayList<PhaseCorrelationPeak2>();
 		
 		ArrayList<Pair<Localizable, Double>> maxima = FourNeighborhoodExtrema.findMaxMT(Views.extendPeriodic(pcm), pcm, maxN, service);
 		//ArrayList<Pair<Localizable, Double>> maxima = FourNeighborhoodExtrema.findMax(Views.extendPeriodic(pcm), pcm, maxN);
+		
+		
 				
 		for (Pair<Localizable, Double> p: maxima){
-			res.add(new PhaseCorrelationPeak2(p.getA(), p.getB()));
+			PhaseCorrelationPeak2 pcp = new PhaseCorrelationPeak2(p.getA(), p.getB());
+			if (subpixelAccuracy)
+				pcp.calculateSubpixelLocalization(pcm);
+
+			res.add(pcp);
 		}
 		return res;		
 	}
@@ -230,9 +236,9 @@ public class PhaseCorrelation2Util {
 	 * @param nMax 
 	 * @return
 	 */
-	public static <T extends RealType<T>> List<PhaseCorrelationPeak2> getPCMMaxima(RandomAccessibleInterval<T> pcm, int nMax){
+	public static <T extends RealType<T>> List<PhaseCorrelationPeak2> getPCMMaxima(RandomAccessibleInterval<T> pcm, int nMax, boolean subpixelAccuracy){
 		ExecutorService tExecService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-		List<PhaseCorrelationPeak2> res = getPCMMaxima(pcm, tExecService, nMax);
+		List<PhaseCorrelationPeak2> res = getPCMMaxima(pcm, tExecService, nMax, subpixelAccuracy);
 		tExecService.shutdown();
 		return res;
 	}
@@ -321,7 +327,7 @@ public class PhaseCorrelation2Util {
 			{
 				double[] subpixelShift = new double[n];
 				for (int j =0; j<n;j++){
-					subpixelShift[i] = possibleShift[i] + subpixelDiff[i];
+					subpixelShift[j] = possibleShift[j] + subpixelDiff[j];
 				}
 
 				peakWithShift.setSubpixelShift( new RealPoint( subpixelShift ) );

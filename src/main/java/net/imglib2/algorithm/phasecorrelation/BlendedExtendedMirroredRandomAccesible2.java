@@ -193,7 +193,7 @@ public class BlendedExtendedMirroredRandomAccesible2 <T extends RealType<T>>impl
 		Img<FloatType> img1 = ImgLib2Util.openAs32Bit(new File("src/main/resources/img1.tif"));
 		long[] dims = new long[img1.numDimensions()];
 
-		BlendedExtendedMirroredRandomAccesible2<FloatType> ext = new BlendedExtendedMirroredRandomAccesible2<FloatType>(img1, new int[]{100, 100, 5});
+		BlendedExtendedMirroredRandomAccesible2<FloatType> ext = new BlendedExtendedMirroredRandomAccesible2<FloatType>(img1, new int[]{100, 100, 10});
 		
 		ext.getExtInterval().dimensions(dims);		
 		Img<FloatType> img2 = ArrayImgs.floats(dims);

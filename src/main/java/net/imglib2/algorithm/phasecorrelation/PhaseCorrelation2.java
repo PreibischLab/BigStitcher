@@ -183,10 +183,10 @@ public class PhaseCorrelation2 {
 	 * @return
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>> PhaseCorrelationPeak2 getShift(
-			RandomAccessibleInterval<T> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, int nHighestPeaks,
-			Dimensions minOverlap, ExecutorService service)
+			RandomAccessibleInterval<R> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, int nHighestPeaks,
+			Dimensions minOverlap, boolean subpixelAccuracy, ExecutorService service)
 	{
-		List<PhaseCorrelationPeak2> peaks = PhaseCorrelation2Util.getPCMMaxima(pcm, service, nHighestPeaks);
+		List<PhaseCorrelationPeak2> peaks = PhaseCorrelation2Util.getPCMMaxima(pcm, service, nHighestPeaks, subpixelAccuracy);
 		//peaks = PhaseCorrelation2Util.getHighestPCMMaxima(peaks, nHighestPeaks);
 		PhaseCorrelation2Util.expandPeakListToPossibleShifts(peaks, pcm, img1, img2);		
 		PhaseCorrelation2Util.calculateCrossCorrParallel(peaks, img1, img2, minOverlap, service);		
@@ -203,10 +203,10 @@ public class PhaseCorrelation2 {
 	 * @return
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>> PhaseCorrelationPeak2 getShift(
-			RandomAccessibleInterval<T> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2)
+			RandomAccessibleInterval<R> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2)
 	{
 		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-		PhaseCorrelationPeak2 res = getShift(pcm, img1, img2, 5, null, service);
+		PhaseCorrelationPeak2 res = getShift(pcm, img1, img2, 5, null, true, service);
 		service.shutdown();
 		return res;		
 	}	
