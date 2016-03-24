@@ -1,4 +1,4 @@
-package alorithm;
+package algorithm;
 
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;

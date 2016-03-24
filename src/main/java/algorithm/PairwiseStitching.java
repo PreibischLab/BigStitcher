@@ -1,4 +1,4 @@
-package alorithm;
+package algorithm;
 
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AbstractTranslation;
