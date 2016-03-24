@@ -13,8 +13,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Vector;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -41,7 +43,7 @@ import spim.fiji.spimdata.explorer.popup.BDVPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayViewPopup;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.explorer.popup.LabelPopUp;
-import spim.fiji.spimdata.explorer.popup.MaxProjectPopup;
+import gui.popup.StitchPairwisePopup;
 import spim.fiji.spimdata.explorer.popup.Separator;
 import spim.fiji.spimdata.explorer.util.ColorStream;
 import spim.fiji.spimdata.interestpoints.InterestPointList;
@@ -246,12 +248,21 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 			}
 		});
 
+		Vector<?> tps = new Vector<>(data.getSequenceDescription().getViewSetupsOrdered());
+		
 		final JPanel buttons = new JPanel( new BorderLayout() );
 		buttons.add( info, BorderLayout.WEST );
 		buttons.add( save, BorderLayout.EAST );
+		
+		
+		
 
 		final JPanel header = new JPanel( new BorderLayout() );
 		header.add( new JLabel( "XML: " + xml ), BorderLayout.WEST );
+		
+		header.add(new JComboBox<>(tps), BorderLayout.CENTER);
+		
+		
 		header.add( buttons, BorderLayout.EAST );
 		this.add( header, BorderLayout.NORTH );
 		this.add( new JScrollPane( table ), BorderLayout.CENTER );
@@ -527,10 +538,10 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		popups.add( new LabelPopUp( " Displaying" ) );
 		popups.add( new BDVPopup() );
 		popups.add( new DisplayViewPopup() );
-		popups.add( new MaxProjectPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Processing" ) );
+		popups.add( new StitchPairwisePopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
