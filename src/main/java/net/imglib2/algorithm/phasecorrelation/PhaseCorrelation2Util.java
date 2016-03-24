@@ -722,23 +722,26 @@ public class PhaseCorrelation2Util {
 	 * @return
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>> double getCorrelation (
-			RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2)
+			final RandomAccessibleInterval<T> img1, final RandomAccessibleInterval<S> img2)
 	{
-		double m1 = getMean(img1);
-		double m2 = getMean(img2);
+		final double m1 = getMean(img1);
+		final double m2 = getMean(img2);
 		
 		// square sums
 		double sum11 = 0.0, sum22 = 0.0, sum12 = 0.0; 
 		
-		Cursor<T> c1 = Views.iterable(img1).cursor();
-		RandomAccess<S> r2 = img2.randomAccess();
+		final Cursor<T> c1 = Views.iterable(img1).cursor();
+		final RandomAccess<S> r2 = img2.randomAccess();
 		
 		while (c1.hasNext()){
-			c1.fwd();
+			final double c = c1.next().getRealDouble();
 			r2.setPosition(c1);
-			sum11 += (c1.get().getRealDouble() - m1) * (c1.get().getRealDouble() - m1);
-			sum22 += (r2.get().getRealDouble() - m2) * (r2.get().getRealDouble() - m2);
-			sum12 += (c1.get().getRealDouble() - m1) * (r2.get().getRealDouble() - m2);
+
+			final double r = r2.get().getRealDouble();
+
+			sum11 += (c - m1) * (c - m1);
+			sum22 += (r - m2) * (r - m2);
+			sum12 += (c - m1) * (r - m2);
 		}
 		
 		// all pixels had the same color....
