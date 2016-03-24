@@ -45,7 +45,7 @@ public class PhaseCorrelationTest {
 		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(Views.interval(img, interval1), Views.zeroMin(Views.interval(img, interval2)), extension, new ArrayImgFactory<FloatType>(), 
 				new FloatType(), new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 		
-		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.interval(img, interval1), Views.zeroMin(Views.interval(img, interval2)), 20, null, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.interval(img, interval1), Views.zeroMin(Views.interval(img, interval2)), 20, null, false, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 		
 		long[] expected = new long[]{shiftX, shiftY};
 		long[] found = new long[img.numDimensions()];
@@ -83,7 +83,7 @@ public class PhaseCorrelationTest {
 		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(Views.zeroMin(Views.interval(img, interval1)), Views.zeroMin(Views.interval(img, interval2)), extension, new ArrayImgFactory<FloatType>(), 
 				new FloatType(), new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 		
-		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.zeroMin(Views.interval(img, interval1)), Views.zeroMin(Views.interval(img, interval2)), 20, null, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.zeroMin(Views.interval(img, interval1)), Views.zeroMin(Views.interval(img, interval2)), 20, null, false, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 		
 		long[] expected = new long[]{shiftX, shiftY};
 		long[] found = new long[img.numDimensions()];
