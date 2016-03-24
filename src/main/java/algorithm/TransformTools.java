@@ -26,7 +26,7 @@ public class TransformTools {
 	 * @param overlap
 	 * @return
 	 */
-	public static FinalRealInterval getLocalOverlapVector(RealInterval img, RealInterval overlap){
+	public static FinalRealInterval getLocalOverlap(RealInterval img, RealInterval overlap){
 		final int n = img.numDimensions();
 		final double [] min = new double [n];
 		final double [] max = new double [n];
@@ -45,7 +45,7 @@ public class TransformTools {
 	 * @param overlap
 	 * @return
 	 */
-	public static FinalInterval getLocalOverlap(RealInterval overlap)
+	public static FinalInterval getLocalRasterOverlap(RealInterval overlap)
 	{
 		final int n = overlap.numDimensions();
 		final long [] min = new long [n];

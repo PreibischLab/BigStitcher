@@ -6,8 +6,9 @@ import java.util.List;
 
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
+import net.imglib2.Interval;
+import net.imglib2.Localizable;
 import net.imglib2.Point;
-import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
@@ -15,7 +16,6 @@ import net.imglib2.RealRandomAccessible;
 import net.imglib2.algorithm.localextrema.RefinedPeak;
 import net.imglib2.algorithm.localextrema.SubpixelLocalization;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
-import net.imglib2.realtransform.InverseRealTransform;
 import net.imglib2.realtransform.InvertibleRealTransform;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.realtransform.Translation2D;
@@ -23,8 +23,6 @@ import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Pair;
 import net.imglib2.view.Views;
-import net.imglib2.Interval;
-import net.imglib2.Localizable;
 
 
 public class PhaseCorrelationPeak2 {
@@ -162,7 +160,7 @@ public class PhaseCorrelationPeak2 {
 		
 		// no overlap found
 		if (intervals == null) {
-			crossCorr = 0.0;
+			crossCorr = Double.NEGATIVE_INFINITY;
 			nPixel = 0;
 			return;
 		}
@@ -170,7 +168,7 @@ public class PhaseCorrelationPeak2 {
 		nPixel = 1;
 		for (int i = 0; i< intervals.getA().numDimensions(); i++){
 			if (minOverlapPx != null && intervals.getA().dimension(i) < minOverlapPx.dimension(i)){
-				crossCorr = 0.0;
+				crossCorr = Double.NEGATIVE_INFINITY;
 				nPixel = 0;
 				return;
 			}
@@ -252,6 +250,20 @@ public class PhaseCorrelationPeak2 {
 
 	public static void main(String[] args) {
 		
+		double o1 = 6;
+		double o2 = Double.NEGATIVE_INFINITY;
+		int np1 = 30;
+		int np2 = 20;
+
+		System.out.println( Double.isInfinite( o2 ));
+
+		int ccCompare = Double.compare(o1, o2);
+		if (ccCompare != 0)
+			System.out.println( ccCompare );
+		else 
+			System.out.println( (int)(np1 - np2) );
+		
+		System.exit( 0 );
 		PhaseCorrelationPeak2 peaks = new PhaseCorrelationPeak2(new Point(new int[] {10, 10, 10}), 1.0);
 		Dimensions pcmDims = new FinalDimensions(new int[] {50, 50, 50});
 		Dimensions imgDims = new FinalDimensions(new int[] {30, 30, 30});
