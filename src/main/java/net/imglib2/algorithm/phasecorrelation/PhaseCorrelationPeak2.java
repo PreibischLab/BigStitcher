@@ -238,7 +238,7 @@ public class PhaseCorrelationPeak2 {
 			maxDist = Math.max( maxDist, Math.abs( rp.getOriginalPeak().getDoublePosition( d ) - this.subpixelPcmLocation.getDoublePosition( d ) ) );
 
 		// not a stable peak
-		if ( maxDist > 0.5 )
+		if ( maxDist > 0.55 )
 		{
 			this.subpixelPcmLocation = null;
 		}
