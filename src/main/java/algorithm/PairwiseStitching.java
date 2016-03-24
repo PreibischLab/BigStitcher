@@ -22,6 +22,7 @@ import net.imglib2.view.Views;
 public class PairwiseStitching {
 
 	/**
+	 * The absolute shift of input2 relative to after PCM input1 (without t1 and t2 - they just help to speed it up)
 	 * 
 	 * @param img1 - zero-min interval, starting at (0,0,...)
 	 * @param img2 - zero-min interval, starting at (0,0,...)
@@ -32,7 +33,7 @@ public class PairwiseStitching {
 	 * @param service
 	 * @return
 	 */
-	public static <T extends RealType<T>, S extends RealType<S>> Pair< RealLocalizable, Double > getShift(
+	public static <T extends RealType<T>, S extends RealType<S>> Pair< double[], Double > getShift(
 			final RandomAccessibleInterval<T> input1,
 			final RandomAccessibleInterval<S> input2,
 			final AbstractTranslation t1,
@@ -114,24 +115,22 @@ public class PairwiseStitching {
 			shift = shiftPeak.getSubpixelShift();
 
 		// adapt shift for the entire image, not only the overlapping parts
-		//interval1, interval2
 		final double[] entireIntervalShift = new double[ img1.numDimensions() ];
 
 		for ( int d = 0; d < img1.numDimensions(); ++d )
 		{
+			// correct for the int/real coordinate mess
 			final double intervalSubpixelOffset1 = interval1.realMin( d ) - localOverlap1.realMin( d ); // a_s
 			final double intervalSubpixelOffset2 = interval2.realMin( d ) - localOverlap2.realMin( d ); // b_s
-			
-			final double intervalOffset1 = localOverlap1.realMin( d ); // a_v
-			final double intervalOffset2 = localOverlap2.realMin( d ); // b_v
-			
+
 			final double localRasterShift = shift.getDoublePosition( d ); // d'
-			
-			final double globalShift = localRasterShift - intervalOffset2 - intervalSubpixelOffset2 + intervalOffset1 + intervalSubpixelOffset1;
+			final double localRelativeShift = localRasterShift + ( intervalSubpixelOffset2 - intervalSubpixelOffset1 );
+
+			// correct for the initial shift between the two inputs
+			entireIntervalShift[ d ] = ( transformed2.realMin( d ) - transformed1.realMin( d ) ) + localRelativeShift;
 		}
 		
-		return new ValuePair<>( shift, shiftPeak.getCrossCorr() );
-		
+		return new ValuePair<>( entireIntervalShift, shiftPeak.getCrossCorr() );
 	}
 	
 }
