@@ -706,6 +706,7 @@ public class PhaseCorrelation2Util {
 	public static <T extends RealType<T>> double getMean(RandomAccessibleInterval<T> img)
 	{
 		// TODO: if #pixels > ???? else RealSum
+		// TODO: integral image?
 		double sum = 0.0;
 		long n = 0;
 		for (T pix: Views.iterable(img)){

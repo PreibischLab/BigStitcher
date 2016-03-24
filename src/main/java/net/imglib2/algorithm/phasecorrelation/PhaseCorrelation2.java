@@ -186,12 +186,19 @@ public class PhaseCorrelation2 {
 			RandomAccessibleInterval<R> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, int nHighestPeaks,
 			Dimensions minOverlap, boolean subpixelAccuracy, ExecutorService service)
 	{
+		System.out.println( "PCM" );
 		List<PhaseCorrelationPeak2> peaks = PhaseCorrelation2Util.getPCMMaxima(pcm, service, nHighestPeaks, subpixelAccuracy);
 		//peaks = PhaseCorrelation2Util.getHighestPCMMaxima(peaks, nHighestPeaks);
-		PhaseCorrelation2Util.expandPeakListToPossibleShifts(peaks, pcm, img1, img2);		
-		PhaseCorrelation2Util.calculateCrossCorrParallel(peaks, img1, img2, minOverlap, service);		
+		System.out.println( "expand" );
+		PhaseCorrelation2Util.expandPeakListToPossibleShifts(peaks, pcm, img1, img2);
+		System.out.print( "cross " );
+		long t = System.currentTimeMillis();
+		PhaseCorrelation2Util.calculateCrossCorrParallel(peaks, img1, img2, minOverlap, service);
+		System.out.println( (System.currentTimeMillis() - t) );
+		System.out.println( "sort" );
 		Collections.sort(peaks, Collections.reverseOrder(new PhaseCorrelationPeak2.ComparatorByCrossCorrelation()));
-		
+		System.out.println( "done" );
+
 		return peaks.get(0);
 	}
 	

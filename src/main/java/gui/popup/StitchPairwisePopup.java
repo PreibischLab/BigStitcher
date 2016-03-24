@@ -107,7 +107,7 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 			AbstractTranslation t1 = TransformTools.getInitialTranslation( v0, false );
 			AbstractTranslation t2 = TransformTools.getInitialTranslation( v1, false );
 
-			final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, t1, t2, doSubpixel, null, service );
+			final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, t1, t2, nPeaks, doSubpixel, null, service );
 
 			System.out.println("integer shift: " + Util.printCoordinates(result.getA()));
 			System.out.print("cross-corr: " + result.getB());

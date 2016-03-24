@@ -41,6 +41,7 @@ public class PairwiseStitching {
 			final RandomAccessibleInterval<S> input2,
 			final AbstractTranslation t1,
 			final AbstractTranslation t2,
+			final int numPeaks,
 			final boolean subpixelShift,
 			final Dimensions minOverlap,
 			final ExecutorService service )
@@ -104,6 +105,7 @@ public class PairwiseStitching {
 		//ImageJFunctions.show( Views.zeroMin( Views.interval( img1, interval1 ) ) );
 		//ImageJFunctions.show( Views.zeroMin( Views.interval( img2, interval2 ) ) );
 
+		System.out.println( "FFT" );
 		// TODO: Do not extend by mirror inside, but do that out here on the full image,
 		//       so we feed it RandomAccessible + an Interval we want to use for the PCM > also zero-min inside
 		final RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(
@@ -119,7 +121,7 @@ public class PairwiseStitching {
 				pcm,
 				Views.zeroMin( Views.interval( img1, interval1 ) ),
 				Views.zeroMin( Views.interval( img2, interval2 ) ),
-				20,
+				numPeaks,
 				minOverlap,
 				subpixelShift,
 				service );
