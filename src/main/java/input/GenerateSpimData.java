@@ -125,6 +125,8 @@ public class GenerateSpimData
 			final ViewTransform vt = new ViewTransformAffine( "Calibration", m );
 			vr.preconcatenateTransform( vt );
 
+			vr.updateModel();		
+			
 			registrations.add( vr );
 		}
 
