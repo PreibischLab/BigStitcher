@@ -11,11 +11,14 @@ import net.imglib2.RealLocalizable;
 import net.imglib2.algorithm.phasecorrelation.PhaseCorrelation2;
 import net.imglib2.algorithm.phasecorrelation.PhaseCorrelationPeak2;
 import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
+import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 
@@ -56,10 +59,19 @@ public class PairwiseStitching {
 		else
 			img2 = input2;
 
+		//ImageJFunctions.show( img1 );
+		//ImageJFunctions.show( img2 );
+		
 		final RealInterval transformed1 = TransformTools.applyTranslation( img1, t1 );
 		final RealInterval transformed2 = TransformTools.applyTranslation( img2, t2 );
 
+		System.out.println( "1: " + Util.printInterval( img1 ) );
+		System.out.println( "1: " + TransformTools.printRealInterval( transformed1 ));
+		System.out.println( "2: " + Util.printInterval( img2 ) );
+		System.out.println( "2: " + TransformTools.printRealInterval( transformed2 ));
+
 		final RealInterval overlap = TransformTools.getOverlap( transformed1, transformed2 );
+		System.out.println( "O: " + TransformTools.printRealInterval( overlap ));
 
 		// not overlapping
 		if ( overlap == null )
@@ -70,6 +82,12 @@ public class PairwiseStitching {
 
 		final Interval interval1 = TransformTools.getLocalRasterOverlap( localOverlap1 );
 		final Interval interval2 = TransformTools.getLocalRasterOverlap( localOverlap2 );
+		
+		System.out.println( "1: " + TransformTools.printRealInterval( localOverlap1 ));
+		System.out.println( "1: " + Util.printInterval( interval1 ) );
+		System.out.println( "2: " + TransformTools.printRealInterval( localOverlap2 ));
+		System.out.println( "2: " + Util.printInterval( interval2 ) );
+		
 
 		// test if the overlap is too small to begin with
 		if ( minOverlap != null )
@@ -82,6 +100,9 @@ public class PairwiseStitching {
 		//
 		final int [] extension = new int[ img1.numDimensions() ];
 		Arrays.fill( extension, 10 );
+
+		//ImageJFunctions.show( Views.zeroMin( Views.interval( img1, interval1 ) ) );
+		//ImageJFunctions.show( Views.zeroMin( Views.interval( img2, interval2 ) ) );
 
 		// TODO: Do not extend by mirror inside, but do that out here on the full image,
 		//       so we feed it RandomAccessible + an Interval we want to use for the PCM > also zero-min inside

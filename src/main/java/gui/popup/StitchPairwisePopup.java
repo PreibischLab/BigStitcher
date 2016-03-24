@@ -9,10 +9,15 @@ import java.util.concurrent.Executors;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
+import algorithm.PairwiseStitching;
+import algorithm.TransformTools;
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.registration.ViewRegistration;
+import mpicbg.spim.data.registration.ViewRegistrations;
+import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.RandomAccessibleInterval;
@@ -20,11 +25,13 @@ import net.imglib2.algorithm.phasecorrelation.PhaseCorrelation2;
 import net.imglib2.algorithm.phasecorrelation.PhaseCorrelationPeak2;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import spim.fiji.plugin.Max_Project;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
@@ -86,12 +93,26 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 			
 			ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 			
+			AbstractSequenceDescription< ?, ?, ? > sd = panel.getSpimData().getSequenceDescription();
 			
 			// TODO: what is a smart way to find out the type here
-			RandomAccessibleInterval<UnsignedShortType> img1 = (RandomAccessibleInterval<UnsignedShortType>) panel.getSpimData().getSequenceDescription().getImgLoader().getSetupImgLoader(viewIds.get(0).getViewSetupId()).getImage(tp, null);
-			RandomAccessibleInterval<UnsignedShortType> img2 = (RandomAccessibleInterval<UnsignedShortType>) panel.getSpimData().getSequenceDescription().getImgLoader().getSetupImgLoader(viewIds.get(1).getViewSetupId()).getImage(tp, null);
-						
-						
+			final RandomAccessibleInterval<UnsignedShortType> img1 = (RandomAccessibleInterval<UnsignedShortType>) sd.getImgLoader().getSetupImgLoader(viewIds.get(0).getViewSetupId()).getImage(tp, null);
+			final RandomAccessibleInterval<UnsignedShortType> img2 = (RandomAccessibleInterval<UnsignedShortType>) sd.getImgLoader().getSetupImgLoader(viewIds.get(1).getViewSetupId()).getImage(tp, null);
+
+			final ViewRegistrations vrs = panel.getSpimData().getViewRegistrations();
+			final ViewRegistration v0 = vrs.getViewRegistration( viewIds.get(0) );
+			final ViewRegistration v1 = vrs.getViewRegistration( viewIds.get(1) );
+
+			// TODO: Test if 2d, and if then reduce dimensionality and ask for a 2d translation
+			AbstractTranslation t1 = TransformTools.getInitialTranslation( v0, false );
+			AbstractTranslation t2 = TransformTools.getInitialTranslation( v1, false );
+
+			final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, t1, t2, doSubpixel, null, service );
+
+			System.out.println("integer shift: " + Util.printCoordinates(result.getA()));
+			System.out.print("cross-corr: " + result.getB());
+
+			/*
 			RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(img1, img2, new ArrayImgFactory<FloatType>(), new FloatType(), 
 					new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), service);
 			
@@ -104,7 +125,7 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 			} else {
 				System.out.println("could not calculate subpixel shift.");
 			}
-			
+			*/
 			
 		}
 	}
