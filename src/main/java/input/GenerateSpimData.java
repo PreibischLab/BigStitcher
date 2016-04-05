@@ -55,7 +55,7 @@ public class GenerateSpimData
 		final Illumination i0 = new Illumination( 0 );
 
 		final Tile t0 = new Tile( 0, "Tile0", new double[]{ 0.0, 0.0, 0.0 } );
-		final Tile t1 = new Tile( 1, "Tile1", new double[]{ 400.0, 0.0, 0.0 } );
+		final Tile t1 = new Tile( 1, "Tile1", new double[]{ 450.0, 0.0, 0.0 } );
 		final Tile t2 = new Tile( 2, "Tile2", new double[]{ 0.0, 450.0, 0.0 } );
 		final Tile t3 = new Tile( 3, "Tile3", new double[]{ 450.0, 450.0, 0.0 } );
 

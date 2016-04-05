@@ -32,6 +32,8 @@ import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
+import mpicbg.spim.data.sequence.Channel;
+import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
@@ -57,9 +59,9 @@ import bdv.tools.brightness.ConverterSetup;
 import bdv.viewer.DisplayMode;
 import bdv.viewer.VisibilityAndGrouping;
 
-public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > > extends JPanel implements ExplorerWindow< AS, X >
+public class FilteredAndGroupedExporerPanel< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > > extends JPanel implements ExplorerWindow< AS, X >
 {
-	public static StitchingExplorerPanel< ?, ? > currentInstance = null;
+	public static FilteredAndGroupedExporerPanel< ?, ? > currentInstance = null;
 
 	final ArrayList< ExplorerWindowSetable > popups;
 
@@ -71,10 +73,10 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 	private static final long serialVersionUID = -3767947754096099774L;
 	
 	protected JTable table;
-	protected StitchingExplorerTableModel< AS > tableModel;
+	protected FilteredAndGroupedTableModel< AS > tableModel;
 	protected ArrayList< SelectedViewDescriptionListener< AS > > listeners;
 	protected AS data;
-	protected StitchingExplorer< AS, X > explorer;
+	protected FilteredAndGroupedExplorer< AS, X > explorer;
 	final String xml;
 	final X io;
 	final boolean isMac;
@@ -83,7 +85,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 	final protected HashSet< BasicViewDescription< ? extends BasicViewSetup > > selectedRows;
 	protected BasicViewDescription< ? extends BasicViewSetup > firstSelectedVD;
 
-	public StitchingExplorerPanel( final StitchingExplorer< AS, X > explorer, final AS data, final String xml, final X io )
+	public FilteredAndGroupedExporerPanel( final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml, final X io )
 	{
 		popups = initPopups();
 
@@ -131,14 +133,14 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 	public boolean colorMode() { return colorMode; }
 	@Override
 	public BasicViewDescription< ? extends BasicViewSetup > firstSelectedVD() { return firstSelectedVD; }
-	public StitchingExplorerTableModel< AS > getTableModel() { return tableModel; }
+	public FilteredAndGroupedTableModel< AS > getTableModel() { return tableModel; }
 	
 	@Override
 	public AS getSpimData() { return data; }
 	@Override
 	public String xml() { return xml; }
 	public X io() { return io; }
-	public StitchingExplorer< AS, X > explorer() { return explorer; }
+	public FilteredAndGroupedExplorer< AS, X > explorer() { return explorer; }
 
 	@SuppressWarnings("unchecked")
 	public void setSpimData( final Object data ) { this.data = (AS)data; }
@@ -173,16 +175,20 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 	{
 		this.listeners.add( listener );
 		
+		// TODO: does this break anything?
 		// update it with the currently selected row
-		if ( table.getSelectedRow() != -1 )
-			listener.seletedViewDescription( tableModel.getElements().get( table.getSelectedRow() ) );
+//		if ( table.getSelectedRow() != -1 )
+//			listener.seletedViewDescription( tableModel.getElements().get( table.getSelectedRow() ) );
 	}
 
 	public ArrayList< SelectedViewDescriptionListener< AS > > getListeners() { return listeners; }
 
 	public void initComponent()
 	{
-		tableModel = new StitchingExplorerTableModel< AS >( this );
+		tableModel = new FilteredAndGroupedTableModel< AS >( this );
+		
+		tableModel.addGroupingFactor(Channel.class);
+		
 
 		table = new JTable();
 		table.setModel( tableModel );
@@ -209,7 +215,8 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 				if (index >= 0)
 				{
 					int row = table.getSelectedRow();
-					tableModel.sortByColumn( index );
+					// TODO: implement sorting of columns
+					//tableModel.sortByColumn( index );
 					table.clearSelection();
 					table.getSelectionModel().setSelectionInterval( row, row );
 				}
@@ -249,24 +256,43 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 			}
 		});
 
-		Vector<?> tps = new Vector<>(data.getSequenceDescription().getViewSetupsOrdered());
+		final HashSet<Tile> tiles = new HashSet<>();
+		for (BasicViewSetup vs : data.getSequenceDescription().getViewSetupsOrdered())
+		{
+			tiles.add(vs.getAttribute(Tile.class));
+		}
+		Vector<?> vTiles = new Vector<>(tiles);
 		
 		final JPanel buttons = new JPanel( new BorderLayout() );
 		buttons.add( info, BorderLayout.WEST );
 		buttons.add( save, BorderLayout.EAST );
 		
-		
-		
+			
 
 		final JPanel header = new JPanel( new BorderLayout() );
 		header.add( new JLabel( "XML: " + xml ), BorderLayout.WEST );
 		
-		header.add(new JComboBox<>(tps), BorderLayout.CENTER);
+		
 		
 		
 		header.add( buttons, BorderLayout.EAST );
 		this.add( header, BorderLayout.NORTH );
-		this.add( new JScrollPane( table ), BorderLayout.CENTER );
+		this.add( new JScrollPane( table ), BorderLayout.CENTER );	
+		
+		final JPanel footer = new JPanel( new BorderLayout() );
+		final JComboBox<?> tileCBox = new JComboBox<>(vTiles);
+		tileCBox.addActionListener( new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				ArrayList<Tile> selectedTiles = new ArrayList<>();				
+				selectedTiles.add((Tile) tileCBox.getSelectedItem());
+				tableModel.addFilter(Tile.class, selectedTiles);
+			}
+		});
+		footer.add(tileCBox, BorderLayout.CENTER);
+		this.add(footer, BorderLayout.SOUTH);
+		
 
 		table.getSelectionModel().setSelectionInterval( 0, 0 );
 
@@ -297,9 +323,10 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 					for ( final int row : table.getSelectedRows() )
 					{
 						if ( firstSelectedVD == null )
-							firstSelectedVD = tableModel.getElements().get( row );
+							// TODO: is this okay? only adding first vd of potentially multiple per row
+							firstSelectedVD = tableModel.getElements().get( row ).get( 0 );
 
-						selectedRows.add( tableModel.getElements().get( row ) );
+						selectedRows.addAll( tableModel.getElements().get( row ) );
 					}
 
 				}
@@ -312,14 +339,15 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 						lastRow = row;
 
 						// not using an iterator allows that listeners can close the frame and remove all listeners while they are called
-						final BasicViewDescription< ? extends BasicViewSetup > vd = tableModel.getElements().get( row );
+						final List<BasicViewDescription< ? extends BasicViewSetup >> vds = tableModel.getElements().get( row );
+						
 						for ( int i = 0; i < listeners.size(); ++i )
-							listeners.get( i ).seletedViewDescription( vd );
+							listeners.get( i ).seletedViewDescription( null );
 
 						selectedRows.clear();
-						selectedRows.add( vd );
+						selectedRows.addAll( vds );
 
-						firstSelectedVD = vd;
+						firstSelectedVD = vds.get( 0 );
 					}
 				}
 
@@ -552,3 +580,4 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		return popups;
 	}
 }
+
