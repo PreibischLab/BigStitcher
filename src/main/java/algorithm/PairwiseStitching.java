@@ -17,9 +17,9 @@ import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.Pair;
+import spim.fiji.ImgLib2Temp.Pair;
 import net.imglib2.util.Util;
-import net.imglib2.util.ValuePair;
+import spim.fiji.ImgLib2Temp.ValuePair;
 import net.imglib2.view.Views;
 
 public class PairwiseStitching {

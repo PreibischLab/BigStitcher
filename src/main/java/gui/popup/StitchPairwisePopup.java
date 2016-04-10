@@ -31,8 +31,8 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
+import spim.fiji.ImgLib2Temp.Pair;
 import spim.fiji.plugin.Max_Project;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -57,6 +57,7 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 		this.panel = panel;
 		return this;
 	}
+
 
 	public class MyActionListener implements ActionListener
 	{
