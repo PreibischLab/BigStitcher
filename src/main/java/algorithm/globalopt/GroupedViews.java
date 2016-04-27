@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import mpicbg.spim.data.generic.base.Entity;
+import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
@@ -26,6 +27,7 @@ public class GroupedViews extends ViewId
 
 		this.group = group;
 	}
+
 
 	public List< ViewId > getViewIds() { return group; }
 
