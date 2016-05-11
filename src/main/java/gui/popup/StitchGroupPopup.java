@@ -3,48 +3,53 @@ package gui.popup;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
+import algorithm.StitchingResults;
 import algorithm.TransformTools;
 import algorithm.globalopt.GlobalOpt;
 import algorithm.globalopt.GroupedViews;
 import algorithm.globalopt.PairwiseStitchingResult;
 import algorithm.globalopt.PairwiseStrategyTools;
 import algorithm.globalopt.TransformationTools;
-import gui.popup.StitchPairwisePopup.MyActionListener;
+import gui.GroupedRowWindow;
+import gui.StitchingResultsSettable;
 import ij.gui.GenericDialog;
-import input.GenerateSpimData;
 import mpicbg.models.Tile;
 import mpicbg.models.TranslationModel3D;
-import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.Channel;
-import mpicbg.spim.data.sequence.ImgLoader;
-import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineTransform3D;
 import spim.fiji.ImgLib2Temp.Pair;
+import spim.fiji.ImgLib2Temp.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 
-public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
+public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
 {
 	
-	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2850312360148574353L;
+	public static final String[] ds = { "1", "2", "4", "8" };
 
+	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	StitchingResults res;
+	
 	public StitchGroupPopup()
 	{
 		super( "Stitch group..." );
@@ -59,27 +64,29 @@ public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
 		return this;
 	}
 	
-	public class MyActionListener<V extends BasicViewSetup, D extends BasicViewDescription< V >, AS extends AbstractSequenceDescription< V ,D ,? >> implements ActionListener
+	public class MyActionListener implements ActionListener
 	{
 
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			final AbstractSpimData< AS > d = (AbstractSpimData< AS >) panel.getSpimData();
-			final AS sd = d.getSequenceDescription();
+			final AbstractSpimData< ? > d =  panel.getSpimData();
+			final AbstractSequenceDescription< ?, ?, ? > sd = d.getSequenceDescription();
 			final ViewRegistrations vr = d.getViewRegistrations();
 
 			final boolean is2d = false;
-			final boolean doSubpixel = true;
-
 
 			// take together all views where the all attributes are the same except channel (i.e. group the channels)
 			// they are now represented by the channel of the first ID (e.g. channelId=0)
-			final List< ViewId > viewIds = panel.selectedRowsViewId();
+			final ArrayList< GroupedViews > viewIds = new ArrayList<>();
+						
+			for (List<ViewId> vidl : ((GroupedRowWindow)panel).selectedRowsViewIdGroups())
+				viewIds.add( new GroupedViews( vidl ) );
 			
 			ArrayList< String > channelNames = new ArrayList<>();
 			channelNames.add( "average all" );
-			GroupedViews gv = (GroupedViews) viewIds.get( 0 );
+			
+			GroupedViews gv = viewIds.get( 0 );
 			for (ViewId vid : gv.getViewIds())
 			{
 				channelNames.add( sd.getViewDescriptions().get( vid ).getViewSetup().getAttribute( Channel.class ).getName() );
@@ -87,29 +94,41 @@ public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
 			
 			GenericDialog gd = new GenericDialog("Stitching options");
 			gd.addChoice( "channel to use",channelNames.toArray( new String[0] ), "average all" );
+			gd.addCheckbox( "subpixel accuracy", true );
+			gd.addChoice( "downsample x", ds, ds[0] );
+			gd.addChoice( "downsample y", ds, ds[0] );
+			gd.addChoice( "downsample z", ds, ds[0] );
 			gd.showDialog();
 			
 			if (gd.wasCanceled())
 				return;
 			
 			String channel = gd.getNextChoice();
+			final boolean doSubpixel = gd.getNextBoolean();
 			
-			int channelIdxInGroup = channelNames.indexOf( channel ) - 1;
+			int channelIdxInGroup = channelNames.indexOf( channel ) - 1;			
+			boolean doGrouped = channelIdxInGroup < 0 ;
 			
-			if ( channelIdxInGroup < 0 )
-			{
-				//TODO: implement it
-				System.out.println( "Averaging not implemented yet." );
-				return;
-			}
+			
+			int [] downSamplingFactors = new int[3];
+			downSamplingFactors[0] = Integer.parseInt( gd.getNextChoice() );
+			downSamplingFactors[1] = Integer.parseInt( gd.getNextChoice() );
+			downSamplingFactors[2] = Integer.parseInt( gd.getNextChoice() );
 			
 			final ArrayList< ViewId > viewIdsSelectedChannel = new ArrayList<>();
 			
-			for (ViewId vid : viewIds)
+			// get only one channel from grouped views
+			if ( !doGrouped ) {
+				for (GroupedViews g : viewIds)
+				{
+					viewIdsSelectedChannel.add( g.getViewIds().get( channelIdxInGroup ) );
+				}
+			}
+			// keep GroupedViews
+			else
 			{
-				GroupedViews g = (GroupedViews) vid;
-				viewIdsSelectedChannel.add( g.getViewIds().get( channelIdxInGroup ) );
-			}			
+				viewIdsSelectedChannel.addAll( viewIds );
+			}
 			
 
 			// define fixed tiles
@@ -126,7 +145,7 @@ public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
 			for ( final ViewId viewId : viewIdsSelectedChannel )
 			{
 				vd.put( viewId, sd.getViewDescriptions().get( viewId ).getViewSetup().getSize() );
-				vl.put( viewId, TransformTools.getInitialTranslation( vr.getViewRegistration( viewId ), is2d ) );
+				vl.put( viewId, TransformTools.getInitialTranslation( vr.getViewRegistration( viewId ), is2d , downSamplingFactors) );
 			}
 
 			final List< Pair< ViewId, ViewId > > pairs = PairwiseStrategyTools.overlappingTiles(
@@ -134,8 +153,18 @@ public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
 					fixedViews, groupedViews );
 					
 			// compute them
-			final ArrayList< PairwiseStitchingResult > results = TransformationTools.computePairs( pairs, 5, doSubpixel, d.getViewRegistrations(), (ImgLoader) d.getSequenceDescription().getImgLoader() );
+			final ArrayList< PairwiseStitchingResult > results = TransformationTools.computePairs( pairs, 5, doSubpixel, d.getViewRegistrations(), (BasicImgLoader) d.getSequenceDescription().getImgLoader(), doGrouped, downSamplingFactors );
 
+			
+			// update StitchingResults with Results
+			// TODO: for all in group
+			for (final PairwiseStitchingResult psr : results)
+			{
+				Pair< ViewId, ViewId > key = 
+						psr.pair().getA().compareTo( psr.pair().getB() ) < 0 ? psr.pair() : new ValuePair<ViewId, ViewId>(psr.pair().getB(), psr.pair().getA());
+				res.getPairwiseResults().put( key, psr );						
+			}
+			
 			// add correspondences
 			
 			for ( final ViewId v : fixedViews )
@@ -172,6 +201,12 @@ public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
 			
 		}
 		
+	}
+
+	@Override
+	public void setStitchingResults(StitchingResults res)
+	{
+		this.res = res;		
 	}
 
 }

@@ -53,5 +53,10 @@
   		<groupId>junit</groupId>
   		<artifactId>junit</artifactId>
   	</dependency>
+  	<dependency>
+  		<groupId>sc.fiji</groupId>
+  		<artifactId>bigdataviewer-core</artifactId>
+  		<version>2.2.0</version>
+  	</dependency>
   </dependencies>
 </project>

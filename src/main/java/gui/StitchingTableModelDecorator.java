@@ -2,11 +2,14 @@ package gui;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 
+import algorithm.StitchingResults;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
@@ -16,13 +19,17 @@ import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.realtransform.AffineGet;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 
-public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > extends AbstractTableModel implements ISpimDataTableModel<AS> {
+public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > extends AbstractTableModel implements ISpimDataTableModel<AS>, StitchingResultsSettable{
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	private ISpimDataTableModel<AS> decorated;
+	
+	StitchingResults res;
+	
+	static final List< String > columnNames = Arrays.asList( new String [] {"Location", "Avg. r"} );
 	
 	public StitchingTableModelDecorator(ISpimDataTableModel<AS> decorated) {
 		this.decorated = decorated;
@@ -36,7 +43,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 	@Override
 	public int getColumnCount() {
 		// TODO implement for real
-		return decorated.getColumnCount() + 1;
+		return decorated.getColumnCount() + columnNames.size();
 	}
 
 	@Override
@@ -45,7 +52,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 		if (columnIndex < decorated.getColumnCount())
 			return decorated.getColumnName(columnIndex);
 		else
-			return "Location";
+			return columnNames.get( columnIndex - decorated.getColumnCount() );
 	}
 
 	@Override
@@ -65,7 +72,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 		// TODO Auto-generated method stub
 		if (columnIndex < decorated.getColumnCount())
 			return decorated.getValueAt(rowIndex, columnIndex);
-		else
+		else if (columnIndex - decorated.getColumnCount() == 0) 
 		{
 			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
 			final ViewRegistration vr = decorated.getPanel().getSpimData().getViewRegistrations().getViewRegistration(vid);
@@ -85,6 +92,17 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 			res.append(df.format( tr.asAffine3D().get(2, 3)) );
 			return res.toString();
 		}
+		else 
+		{
+			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
+
+			DecimalFormat df = new DecimalFormat( "#.###" );
+			df.setRoundingMode( RoundingMode.HALF_UP );
+			
+			return df.format( res.getAvgCorrelation( vid ) );
+			
+		}
+		
 	}
 
 	@Override
@@ -122,5 +140,11 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 
 	@Override
 	public ExplorerWindow<AS, ?> getPanel() { return decorated.getPanel(); }
+
+	@Override
+	public void setStitchingResults(StitchingResults res)
+	{
+		this.res = res;		
+	}
 
 }

@@ -48,7 +48,7 @@ public class TransformTools {
 		return translation;
 	}
 
-	public static AbstractTranslation getInitialTranslation( final ViewRegistration vr, final boolean is2d )
+	public static AbstractTranslation getInitialTranslation( final ViewRegistration vr, final boolean is2d , final int[] downsamplingFactors)
 	{
 		// this one should be the translation
 		ViewTransform vt = vr.getTransformList().get( vr.getTransformList().size() - 1 );
@@ -62,9 +62,12 @@ public class TransformTools {
 		final AffineGet affine = vt.asAffine3D();
 
 		if ( is2d )
-			return new Translation2D( affine.get( 0, 3 ), affine.get( 1, 3 ) );
+			return new Translation2D( 	affine.get( 1, 3 ) * 1.0 / downsamplingFactors[0], 
+										affine.get( 2, 3 ) * 1.0 / downsamplingFactors[1]);
 		else
-			return new Translation3D( affine.get( 0, 3 ), affine.get( 1, 3 ), affine.get( 2, 3 ) );
+			return new Translation3D( 	affine.get( 0, 3 ) * 1.0 / downsamplingFactors[0],
+										affine.get( 1, 3 ) * 1.0 / downsamplingFactors[1], 
+										affine.get( 2, 3 ) * 1.0 / downsamplingFactors[2]);
 	}
 
 	public static FinalRealInterval applyTranslation(RealInterval img, AbstractTranslation translation){

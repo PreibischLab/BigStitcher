@@ -11,8 +11,10 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.JButton;
@@ -29,6 +31,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import algorithm.SpimDataTools;
+import algorithm.StitchingResults;
 import algorithm.globalopt.GroupedViews;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -50,23 +53,29 @@ import spim.fiji.spimdata.explorer.popup.BDVPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayViewPopup;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.explorer.popup.LabelPopUp;
+import gui.popup.BDVPopupStitching;
 import gui.popup.StitchGroupPopup;
 import gui.popup.StitchPairwisePopup;
+import gui.popup.TestDownsamplePopup;
 import gui.popup.TestPopup;
+import input.GenerateSpimData;
 import spim.fiji.spimdata.explorer.popup.Separator;
 import spim.fiji.spimdata.explorer.util.ColorStream;
 import spim.fiji.spimdata.interestpoints.InterestPointList;
 import spim.fiji.spimdata.interestpoints.ViewInterestPointLists;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
 import bdv.BigDataViewer;
+import bdv.ViewerImgLoader;
 import bdv.img.hdf5.Hdf5ImageLoader;
 import bdv.tools.InitializeViewerState;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.viewer.DisplayMode;
+import bdv.viewer.SourceAndConverter;
+import bdv.viewer.ViewerOptions;
 import bdv.viewer.VisibilityAndGrouping;
 
 public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS >>
-		extends JPanel implements ExplorerWindow< AS, X >
+		extends JPanel implements ExplorerWindow< AS, X >, GroupedRowWindow
 {
 	public static FilteredAndGroupedExporerPanel< ?, ? > currentInstance = null;
 
@@ -88,6 +97,10 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 	final X io;
 	final boolean isMac;
 	protected boolean colorMode = true;
+	
+	StitchingResults stitchingResults;
+	
+	HashMap<Channel, ARGBType> colorMap;
 
 	final protected HashSet< List<BasicViewDescription< ? extends BasicViewSetup >> > selectedRows;
 	protected BasicViewDescription< ? extends BasicViewSetup > firstSelectedVD;
@@ -95,6 +108,7 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 	public FilteredAndGroupedExporerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data,
 			final String xml, final X io)
 	{
+		this.stitchingResults = new StitchingResults();
 		popups = initPopups();
 
 		this.explorer = explorer;
@@ -105,7 +119,13 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 		this.isMac = System.getProperty( "os.name" ).toLowerCase().contains( "mac" );
 		this.selectedRows = new HashSet<>();
 		this.firstSelectedVD = null;
-
+		
+		// FIXME: just a default
+		colorMap = new HashMap<>();
+		colorMap.put( new Channel( 0 ), new ARGBType( ARGBType.rgba( 255, 0, 0, 0 ) ) );
+		colorMap.put( new Channel( 1 ), new ARGBType( ARGBType.rgba( 0, 255, 0, 0 ) ) );
+		colorMap.put( new Channel( 2 ), new ARGBType( ARGBType.rgba( 0, 0, 255, 0 ) ) );
+		
 		initComponent();
 
 		if ( Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) )
@@ -114,7 +134,17 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 
 			if ( bdvpopup != null )
 			{
-				bdvpopup.bdv = new BigDataViewer( getSpimData(), xml(), null );
+				//bdvpopup.bdv = new BigDataViewer( getSpimData(), xml(), null );
+				
+				bdvpopup.bdv = new BigDataViewer( 	new ArrayList< ConverterSetup >(),
+									new ArrayList< SourceAndConverter< ? > >(),
+									getSpimData(),
+									getSpimData().getSequenceDescription().getTimePoints().size(), 
+									( ( ViewerImgLoader ) getSpimData().getSequenceDescription().getImgLoader() ).getCache(),
+									xml(),
+									null, 
+									ViewerOptions.options().accumulateProjectorFactory( AveragingProjectorARGB.factory ) );
+
 
 				// if ( !bdv.tryLoadSettings( panel.xml() ) ) TODO: this should
 				// work, but currently tryLoadSettings is protected. fix that.
@@ -238,6 +268,7 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 	{
 		tableModel = new FilteredAndGroupedTableModel< AS >( this );
 		tableModel = new StitchingTableModelDecorator< >( tableModel );
+		((StitchingTableModelDecorator< AS >)tableModel).setStitchingResults( stitchingResults );
 
 		tableModel.addGroupingFactor( Channel.class );
 
@@ -447,14 +478,15 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 				}
 
 				if ( b != null && b.bdv != null )
-					updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows );
+					updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows, colorMap);
 			}
 		};
 	}
 
 	public static void updateBDV(final BigDataViewer bdv, final boolean colorMode, final AbstractSpimData< ? > data,
 			BasicViewDescription< ? extends BasicViewSetup > firstVD,
-			final Collection< List< BasicViewDescription< ? extends BasicViewSetup >> > selectedRows)
+			final Collection< List< BasicViewDescription< ? extends BasicViewSetup >> > selectedRows,
+			Map<Channel, ARGBType> channelColors)
 	{
 		// we always set the fused mode
 		setFusedModeSimple( bdv, data );
@@ -478,7 +510,7 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 			}
 
 		if ( selectedRows.size() > 1 && colorMode )
-			colorSources( bdv.getSetupAssignments().getConverterSetups(), 0 );
+			colorSources( bdv.getSetupAssignments().getConverterSetups(), data, channelColors);
 		else
 			whiteSources( bdv.getSetupAssignments().getConverterSetups() );
 
@@ -490,6 +522,8 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 		if ( bdv == null )
 			return;
 
+		
+		
 		if ( bdv.getViewer().getVisibilityAndGrouping().getDisplayMode() != DisplayMode.FUSED )
 		{
 			final boolean[] active = new boolean[data.getSequenceDescription().getViewSetupsOrdered().size()];
@@ -499,10 +533,13 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 		}
 	}
 
-	public static void colorSources(final List< ConverterSetup > cs, final long j)
+	public static void colorSources(final List< ConverterSetup > cs, AbstractSpimData< ? > data, Map<Channel, ARGBType> channelColors)
 	{
 		for ( int i = 0; i < cs.size(); ++i )
-			cs.get( i ).setColor( new ARGBType( ColorStream.get( i + j ) ) );
+		{			
+			Channel ch = data.getSequenceDescription().getViewSetups().get(cs.get( i ).getSetupId()).getAttribute( Channel.class );			
+			cs.get( i ).setColor( channelColors.get( ch ) );
+		}
 	}
 
 	public static void whiteSources(final List< ConverterSetup > cs)
@@ -616,7 +653,7 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 
 					final BDVPopup p = bdvPopup();
 					if ( p != null && p.bdv != null && p.bdv.getViewerFrame().isVisible() )
-						updateBDV( p.bdv, colorMode, data, null, selectedRows );
+						updateBDV( p.bdv, colorMode, data, null, selectedRows , colorMap);
 				}
 			}
 
@@ -666,19 +703,46 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 		final ArrayList< ExplorerWindowSetable > popups = new ArrayList< ExplorerWindowSetable >();
 
 		popups.add( new LabelPopUp( " Displaying" ) );
-		popups.add( new BDVPopup() );
+		popups.add( new BDVPopupStitching() );
 		popups.add( new DisplayViewPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Processing" ) );
-		popups.add( new StitchPairwisePopup() );
-		popups.add( new StitchGroupPopup() );
+		
+		StitchPairwisePopup stitchPairwisePopup = new StitchPairwisePopup();
+		stitchPairwisePopup.setStitchingResults( stitchingResults );
+		popups.add( stitchPairwisePopup );
+		
+		StitchGroupPopup stitchGroupPopup = new StitchGroupPopup();
+		stitchGroupPopup.setStitchingResults( stitchingResults );
+		popups.add( stitchGroupPopup );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
 		popups.add( new TestPopup() );
+		popups.add( new TestDownsamplePopup() );
 		popups.add( new Separator() );
 
 		return popups;
+	}
+
+	@Override
+	public Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedRowsGroups()
+	{
+		return selectedRows;
+	}
+
+	@Override
+	public List< List< ViewId > > selectedRowsViewIdGroups()
+	{
+		final ArrayList< List<ViewId >> list = new ArrayList<>();
+		for (List<BasicViewDescription< ? >> vds : selectedRows)
+		{
+			ArrayList< ViewId > vids = new ArrayList<>();
+			vids.addAll( vds );
+			list.add( vids);
+		}
+		//Collections.sort( list );
+		return list;
 	}
 }

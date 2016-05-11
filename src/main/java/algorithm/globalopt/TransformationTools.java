@@ -14,59 +14,110 @@ import mpicbg.models.TranslationModel2D;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.ImgLoader;
 import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AbstractTranslation;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Util;
+import net.imglib2.view.Views;
 import spim.fiji.ImgLib2Temp.Pair;
+import algorithm.AveragedRandomAccessible;
+import algorithm.DownsampleTools;
 import algorithm.PairwiseStitching;
 import algorithm.TransformTools;
 
 public class TransformationTools
 {
-	public static Pair< double[], Double > computeStitching(
+	public static < T extends RealType< T > > Pair< double[], Double > computeStitching(
 			final ViewId viewIdA,
 			final ViewId viewIdB,
 			final ViewRegistration vA,
 			final ViewRegistration vB,
 			final int nPeaks,
 			final boolean doSubpixel,
-			final ImgLoader imgLoader )
+			final BasicImgLoader imgLoader,
+			final boolean averageGrouped,
+			final int[] downsampleFactors)
 	{
 		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-		//final AbstractSequenceDescription< ?, ?, ? > sd;
-
-		// TODO: what is a smart way to find out the type here
-		final RandomAccessibleInterval<UnsignedShortType> img1 = (RandomAccessibleInterval<UnsignedShortType>) imgLoader.getSetupImgLoader(viewIdA.getViewSetupId()).getImage(viewIdA.getTimePointId(), null);
-		final RandomAccessibleInterval<UnsignedShortType> img2 = (RandomAccessibleInterval<UnsignedShortType>) imgLoader.getSetupImgLoader(viewIdB.getViewSetupId()).getImage(viewIdB.getTimePointId(), null);
+		final RandomAccessibleInterval<T> img1;
+		final RandomAccessibleInterval<T> img2;
+		if (averageGrouped)
+		{
+			// TODO: 2-d?
+			AveragedRandomAccessible< T > avg1 = new AveragedRandomAccessible<>( 3 );
+			AveragedRandomAccessible< T > avg2 = new AveragedRandomAccessible<>( 3 );
+			
+			Interval interval = null;
+			
+			for(int i = 0; i < ((GroupedViews) viewIdA).getViewIds().size(); i++)
+			{
+				ViewId tVid1 = ((GroupedViews) viewIdA).getViewIds().get( i );
+				ViewId tVid2 = ((GroupedViews) viewIdB).getViewIds().get( i );
+				RandomAccessibleInterval<T> tImg1 = DownsampleTools.openAndDownsample( imgLoader, tVid1, downsampleFactors );
+						//(RandomAccessibleInterval<T>) imgLoader.getSetupImgLoader(tVid1.getViewSetupId()).getImage(tVid1.getTimePointId(), null);
+				RandomAccessibleInterval<T> tImg2 = DownsampleTools.openAndDownsample( imgLoader, tVid2, downsampleFactors );
+						//(RandomAccessibleInterval<T>) imgLoader.getSetupImgLoader(tVid2.getViewSetupId()).getImage(tVid2.getTimePointId(), null);
+				
+				// TODO: shifts between channels are not handled at the moment
+				if (interval == null){
+					interval = new FinalInterval( tImg1 );
+				}
+				
+				//ImageJFunctions.show( tImg1 );
+				
+				avg1.addRAble( Views.extendZero( tImg1 ) );
+				avg2.addRAble( Views.extendZero( tImg2 ) );
+			}
+			
+			img1 = Views.interval( avg1, interval );	
+			img2 = Views.interval( avg2, interval );
+			
+		}
+		else
+		{
+			img1 = DownsampleTools.openAndDownsample( imgLoader, viewIdA, downsampleFactors );
+			img2 = DownsampleTools.openAndDownsample( imgLoader, viewIdB, downsampleFactors );
+		}
 
 		// TODO: Test if 2d, and if then reduce dimensionality and ask for a 2d translation
-		AbstractTranslation t1 = TransformTools.getInitialTranslation( vA, false );
-		AbstractTranslation t2 = TransformTools.getInitialTranslation( vB, false );
+		AbstractTranslation t1 = TransformTools.getInitialTranslation( vA, false, downsampleFactors);
+		AbstractTranslation t2 = TransformTools.getInitialTranslation( vB, false, downsampleFactors );
 
 		final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, t1, t2, nPeaks, doSubpixel, null, service );
 
+		for (int i = 0; i< result.getA().length; ++i)
+			result.getA()[i] *= downsampleFactors[i];		
+		
 		System.out.println("integer shift: " + Util.printCoordinates(result.getA()));
 		System.out.print("cross-corr: " + result.getB());
 
 		return result;
 	}
 
-	public static ArrayList< PairwiseStitchingResult > computePairs( final List< Pair< ViewId, ViewId > > pairs, final int nPeaks, final boolean doSubpixel, final ViewRegistrations vrs, final ImgLoader imgLoader )
+	public static ArrayList< PairwiseStitchingResult > computePairs( 	final List< Pair< ViewId, ViewId > > pairs, 
+																		final int nPeaks, final boolean doSubpixel, 
+																		final ViewRegistrations vrs, 
+																		final BasicImgLoader imgLoader, 
+																		final boolean averageGrouped,
+																		final int[] downsamplingFactors)
 	{
 		final ArrayList< PairwiseStitchingResult > results = new ArrayList<>();
 
 		for ( final Pair< ViewId, ViewId > p : pairs )
 		{
 			System.out.println( "Compute pairwise: " + p.getA() + " <> " + p.getB() );
-			final Pair< double[], Double > result = computeStitching( p.getA(), p.getB(), vrs.getViewRegistration( p.getA() ), vrs.getViewRegistration( p.getB() ), nPeaks, doSubpixel, imgLoader );
+			final Pair< double[], Double > result = computeStitching( p.getA(), p.getB(), vrs.getViewRegistration( p.getA() ), vrs.getViewRegistration( p.getB() ), nPeaks, doSubpixel, imgLoader , averageGrouped, downsamplingFactors);
 			
 			results.add( new PairwiseStitchingResult( p, result.getA(), result.getB() ) );
 		}
@@ -101,11 +152,13 @@ public class TransformationTools
 		// find all pairwise matchings that we need to compute
 		final HashMap< ViewId, Dimensions > vd = new HashMap<>();
 		final HashMap< ViewId, AbstractTranslation > vl = new HashMap<>();
+		
+		final int[] downsamplingFactors = new int[] {1,1,1};
 
 		for ( final ViewId viewId : viewIds )
 		{
 			vd.put( viewId, sd.getViewDescription( viewId ).getViewSetup().getSize() );
-			vl.put( viewId, TransformTools.getInitialTranslation( vr.getViewRegistration( viewId ), is2d ) );
+			vl.put( viewId, TransformTools.getInitialTranslation( vr.getViewRegistration( viewId ), is2d, downsamplingFactors) );
 		}
 
 		final List< Pair< ViewId, ViewId > > pairs = PairwiseStrategyTools.overlappingTiles(
@@ -113,7 +166,7 @@ public class TransformationTools
 				fixedViews, groupedViews );
 				
 		// compute them
-		final ArrayList< PairwiseStitchingResult > results = computePairs( pairs, 5, false, d.getViewRegistrations(), d.getSequenceDescription().getImgLoader() );
+		final ArrayList< PairwiseStitchingResult > results = computePairs( pairs, 5, false, d.getViewRegistrations(), d.getSequenceDescription().getImgLoader() , false, downsamplingFactors);
 
 		// add correspondences
 		
