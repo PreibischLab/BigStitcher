@@ -126,8 +126,8 @@ public class PairwiseStitching {
 				subpixelShift,
 				service );
 
-		// the best peak is horrible, return null
-		if ( Double.isInfinite( shiftPeak.getCrossCorr() ) )
+		// the best peak is horrible or no peaks were found at all, return null
+		if (shiftPeak == null || Double.isInfinite( shiftPeak.getCrossCorr() ) )
 			return null;
 
 		final RealLocalizable shift;

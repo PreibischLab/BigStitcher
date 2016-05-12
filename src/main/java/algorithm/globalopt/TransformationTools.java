@@ -96,6 +96,10 @@ public class TransformationTools
 
 		final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, t1, t2, nPeaks, doSubpixel, null, service );
 
+		if (result == null)
+			return null;
+		
+		
 		for (int i = 0; i< result.getA().length; ++i)
 			result.getA()[i] *= downsampleFactors[i];		
 		
@@ -119,7 +123,8 @@ public class TransformationTools
 			System.out.println( "Compute pairwise: " + p.getA() + " <> " + p.getB() );
 			final Pair< double[], Double > result = computeStitching( p.getA(), p.getB(), vrs.getViewRegistration( p.getA() ), vrs.getViewRegistration( p.getB() ), nPeaks, doSubpixel, imgLoader , averageGrouped, downsamplingFactors);
 			
-			results.add( new PairwiseStitchingResult( p, result.getA(), result.getB() ) );
+			if (result != null)
+				results.add( new PairwiseStitchingResult( p, result.getA(), result.getB() ) );
 		}
 
 		return results;

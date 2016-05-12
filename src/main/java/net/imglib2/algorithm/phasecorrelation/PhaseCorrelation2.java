@@ -199,7 +199,10 @@ public class PhaseCorrelation2 {
 		Collections.sort(peaks, Collections.reverseOrder(new PhaseCorrelationPeak2.ComparatorByCrossCorrelation()));
 		System.out.println( "done" );
 
-		return peaks.get(0);
+		if (peaks.size() > 0)
+			return peaks.get(0);
+		else
+			return null;
 	}
 	
 	/**
