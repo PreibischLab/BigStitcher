@@ -1,7 +1,8 @@
 package algorithm.globalopt;
 
 import mpicbg.spim.data.sequence.ViewId;
-import spim.fiji.ImgLib2Temp.Pair;
+import net.imglib2.util.Pair;
+
 
 public class PairwiseStitchingResult
 {

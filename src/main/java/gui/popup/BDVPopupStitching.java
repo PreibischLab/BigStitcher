@@ -18,6 +18,7 @@ import gui.AveragingProjectorARGB;
 import gui.FilteredAndGroupedExporerPanel;
 import gui.GroupedRowWindow;
 import gui.MaximumProjectorARGB;
+import gui.overlay.LinkOverlay;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.type.numeric.ARGBType;
@@ -35,9 +36,9 @@ public class BDVPopupStitching extends BDVPopup
 	private static final long serialVersionUID = -8852442192041303045L;
 
 	static HashMap<Channel, ARGBType> colorMap;
+	static LinkOverlay lo;
 	
-	
-	public BDVPopupStitching()
+	public BDVPopupStitching(LinkOverlay lo1)
 	{
 		super();
 		this.removeActionListener( this.getActionListeners()[0] );
@@ -47,6 +48,8 @@ public class BDVPopupStitching extends BDVPopup
 		colorMap.put( new Channel( 0 ), new ARGBType( ARGBType.rgba( 255, 0, 0, 0 ) ) );
 		colorMap.put( new Channel( 1 ), new ARGBType( ARGBType.rgba( 0, 255, 0, 0 ) ) );
 		colorMap.put( new Channel( 2 ), new ARGBType( ARGBType.rgba( 0, 0, 255, 0 ) ) );
+		
+		lo = lo1;
 	}
 	
 	
@@ -138,6 +141,10 @@ public class BDVPopupStitching extends BDVPopup
 		
 		FilteredAndGroupedExporerPanel.updateBDV( bdv, panel.colorMode(), panel.getSpimData(), panel.firstSelectedVD(), ((GroupedRowWindow)panel).selectedRowsGroups(), colorMap );
 
+		bdv.getViewer().addRenderTransformListener( lo );
+		bdv.getViewer().getDisplay().addOverlayRenderer( lo );
+		
+		
 //		final ArrayList< InterestPointSource > interestPointSources = new ArrayList< InterestPointSource >();
 //		interestPointSources.add( new InterestPointSource()
 //		{

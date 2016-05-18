@@ -29,7 +29,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 	
 	StitchingResults res;
 	
-	static final List< String > columnNames = Arrays.asList( new String [] {"Location", "Avg. r"} );
+	static final List< String > columnNames = Arrays.asList( new String [] {"Location", "Avg. r", "# of links", "Errors (mean/min/max)"} );
 	
 	public StitchingTableModelDecorator(ISpimDataTableModel<AS> decorated) {
 		this.decorated = decorated;
@@ -69,9 +69,12 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		// TODO Auto-generated method stub
+		
+		// pass on to decorated
 		if (columnIndex < decorated.getColumnCount())
 			return decorated.getValueAt(rowIndex, columnIndex);
+		
+		// get location
 		else if (columnIndex - decorated.getColumnCount() == 0) 
 		{
 			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
@@ -92,7 +95,9 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 			res.append(df.format( tr.asAffine3D().get(2, 3)) );
 			return res.toString();
 		}
-		else 
+		
+		// get avg. correlation
+		else if (columnIndex - decorated.getColumnCount() == 1)
 		{
 			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
 
@@ -102,6 +107,47 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 			return df.format( res.getAvgCorrelation( vid ) );
 			
 		}
+		
+		//get no. of links
+		else if (columnIndex - decorated.getColumnCount() == 2)
+		{
+			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
+			return(res.getAllPairwiseResultsForViewId( vid ).size());
+		}
+		
+		
+		//get errors
+		else if (columnIndex - decorated.getColumnCount() == 3)
+		{
+			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
+			final ArrayList< Double > errors = res.getErrors( vid );
+			DecimalFormat df = new DecimalFormat( "#.###" );
+			df.setRoundingMode( RoundingMode.HALF_UP );
+			
+			if (errors.size() < 1) {return "-";}
+			
+			Double max = new Double(0);
+			Double min = Double.MAX_VALUE;
+			Double mean = new Double(0);
+			for (Double d : errors){
+				if(d > max ) {max = d;}
+				if(d < min ) {min = d;}
+				mean += d;
+			}
+			mean /= errors.size();
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append(df.format( mean));
+			sb.append( ", " );
+			sb.append(df.format( min ) );
+			sb.append( ", " );
+			sb.append(df.format( max ));
+			
+			return sb.toString();
+		}
+		
+		// should never be reached
+		return null;
 		
 	}
 

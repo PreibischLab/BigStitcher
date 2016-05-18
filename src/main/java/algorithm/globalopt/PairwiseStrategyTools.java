@@ -5,13 +5,25 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AbstractTranslation;
-import spim.fiji.ImgLib2Temp.Pair;
-import spim.fiji.ImgLib2Temp.ValuePair;
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 
 public class PairwiseStrategyTools
 {
+	
+	// shorthand for when we do not care about fixed views or groups, but just want all (overlapping) pairs
+	public static < V > List< Pair< V, V > > overlappingTiles(
+			final HashMap< V, Dimensions > vd,
+			final HashMap< V, AbstractTranslation > vl,
+			final List< ? extends V > views )
+	{
+		return overlappingTiles( vd, vl, views, new ArrayList< V >(), new ArrayList< ArrayList< V > >() );		
+	}
+	
+	
 	public static < V > List< Pair< V, V > > overlappingTiles(
 			final HashMap< V, Dimensions > vd,
 			final HashMap< V, AbstractTranslation > vl,

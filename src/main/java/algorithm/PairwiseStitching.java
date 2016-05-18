@@ -11,15 +11,13 @@ import net.imglib2.RealLocalizable;
 import net.imglib2.algorithm.phasecorrelation.PhaseCorrelation2;
 import net.imglib2.algorithm.phasecorrelation.PhaseCorrelationPeak2;
 import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.type.numeric.real.FloatType;
-import spim.fiji.ImgLib2Temp.Pair;
+import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
-import spim.fiji.ImgLib2Temp.ValuePair;
+import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 
 public class PairwiseStitching {

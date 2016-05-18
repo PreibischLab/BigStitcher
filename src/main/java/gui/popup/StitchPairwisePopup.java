@@ -8,6 +8,7 @@ import java.util.List;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
+
 import algorithm.StitchingResults;
 import algorithm.globalopt.GroupedViews;
 import algorithm.globalopt.PairwiseStitchingResult;
@@ -25,9 +26,9 @@ import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
-import spim.fiji.ImgLib2Temp.Pair;
-import spim.fiji.ImgLib2Temp.ValuePair;
+import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 

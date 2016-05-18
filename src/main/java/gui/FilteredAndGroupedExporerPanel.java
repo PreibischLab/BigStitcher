@@ -53,7 +53,11 @@ import spim.fiji.spimdata.explorer.popup.BDVPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayViewPopup;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.explorer.popup.LabelPopUp;
+import gui.overlay.LinkOverlay;
 import gui.popup.BDVPopupStitching;
+import gui.popup.CalculatePCPopup;
+import gui.popup.OptimizeGloballyPopup;
+import gui.popup.SimpleRemoveLinkPopup;
 import gui.popup.StitchGroupPopup;
 import gui.popup.StitchPairwisePopup;
 import gui.popup.TestDownsamplePopup;
@@ -97,6 +101,7 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 	final X io;
 	final boolean isMac;
 	protected boolean colorMode = true;
+	private LinkOverlay linkOverlay;
 	
 	StitchingResults stitchingResults;
 	
@@ -109,7 +114,7 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 			final String xml, final X io)
 	{
 		this.stitchingResults = new StitchingResults();
-		popups = initPopups();
+		
 
 		this.explorer = explorer;
 		this.listeners = new ArrayList< SelectedViewDescriptionListener< AS > >();
@@ -126,6 +131,8 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 		colorMap.put( new Channel( 1 ), new ARGBType( ARGBType.rgba( 0, 255, 0, 0 ) ) );
 		colorMap.put( new Channel( 2 ), new ARGBType( ARGBType.rgba( 0, 0, 255, 0 ) ) );
 		
+		linkOverlay = new LinkOverlay( stitchingResults, data );
+		popups = initPopups();
 		initComponent();
 
 		if ( Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) )
@@ -703,7 +710,7 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 		final ArrayList< ExplorerWindowSetable > popups = new ArrayList< ExplorerWindowSetable >();
 
 		popups.add( new LabelPopUp( " Displaying" ) );
-		popups.add( new BDVPopupStitching() );
+		popups.add( new BDVPopupStitching(linkOverlay) );
 		popups.add( new DisplayViewPopup() );
 		popups.add( new Separator() );
 
@@ -716,6 +723,19 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 		StitchGroupPopup stitchGroupPopup = new StitchGroupPopup();
 		stitchGroupPopup.setStitchingResults( stitchingResults );
 		popups.add( stitchGroupPopup );
+		
+		CalculatePCPopup calculatePCPopup = new CalculatePCPopup();
+		calculatePCPopup.setStitchingResults( stitchingResults );
+		popups.add( calculatePCPopup );
+		
+		OptimizeGloballyPopup optimizePopup = new OptimizeGloballyPopup();
+		optimizePopup.setStitchingResults( stitchingResults );
+		popups.add( optimizePopup );
+		
+		SimpleRemoveLinkPopup removeLinkPopup = new SimpleRemoveLinkPopup();
+		removeLinkPopup.setStitchingResults( stitchingResults );
+		popups.add( removeLinkPopup );
+		
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
