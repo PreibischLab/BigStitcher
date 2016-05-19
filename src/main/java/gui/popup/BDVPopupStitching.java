@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JOptionPane;
@@ -29,6 +30,7 @@ import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.BDVPopup;
 import spim.fiji.spimdata.explorer.popup.BDVPopup.MyActionListener;
+import spim.fiji.spimdata.explorer.util.ColorStream;
 import spim.fiji.spimdata.imgloaders.AbstractImgLoader;
 
 public class BDVPopupStitching extends BDVPopup
@@ -38,7 +40,7 @@ public class BDVPopupStitching extends BDVPopup
 	 */
 	private static final long serialVersionUID = -8852442192041303045L;
 
-	static HashMap<Channel, ARGBType> colorMap;
+//	static HashMap<Channel, ARGBType> colorMap;
 	static LinkOverlay lo;
 	
 	public BDVPopupStitching(LinkOverlay lo1)
@@ -46,11 +48,11 @@ public class BDVPopupStitching extends BDVPopup
 		super();
 		this.removeActionListener( this.getActionListeners()[0] );
 		this.addActionListener( new MyActionListener() );
-		// FIXME: just a default
-		colorMap = new HashMap<>();
-		colorMap.put( new Channel( 0 ), new ARGBType( ARGBType.rgba( 255, 0, 0, 0 ) ) );
-		colorMap.put( new Channel( 1 ), new ARGBType( ARGBType.rgba( 0, 255, 0, 0 ) ) );
-		colorMap.put( new Channel( 2 ), new ARGBType( ARGBType.rgba( 0, 0, 255, 0 ) ) );
+//		// FIXME: just a default
+//		colorMap = new HashMap<>();
+//		colorMap.put( new Channel( 0 ), new ARGBType( ARGBType.rgba( 255, 0, 0, 0 ) ) );
+//		colorMap.put( new Channel( 1 ), new ARGBType( ARGBType.rgba( 0, 255, 0, 0 ) ) );
+//		colorMap.put( new Channel( 2 ), new ARGBType( ARGBType.rgba( 0, 0, 255, 0 ) ) );
 		
 		lo = lo1;
 	}
@@ -133,6 +135,29 @@ public class BDVPopupStitching extends BDVPopup
 		}
 		
 	}
+	
+	public static void colorByChannel(BigDataViewer bdv, AbstractSpimData< ? > data)
+	{
+		// group ConverterSetups according to Channel
+		HashMap< Channel, ArrayList< ConverterSetup > > groups = new HashMap<>();
+		for (ConverterSetup cs : bdv.getSetupAssignments().getConverterSetups())
+		{
+			Channel key = data.getSequenceDescription().getViewSetups().get( cs.getSetupId() ).getAttribute( Channel.class );
+			if (!groups.containsKey( key ))
+				groups.put( key, new ArrayList< ConverterSetup >() );
+			groups.get( key ).add( cs );
+		}
+		
+		Iterator< ARGBType > colorIt = ColorStream.iterator();
+		
+		for (ArrayList< ConverterSetup > csg : groups.values())
+		{
+			ARGBType color = colorIt.next();
+			for (ConverterSetup cs : csg)
+				cs.setColor( color );
+		}
+	}
+	
 
 	public static BigDataViewer createBDV( final ExplorerWindow< ?, ? > panel )
 	{
@@ -177,9 +202,11 @@ public class BDVPopupStitching extends BDVPopup
 //		if ( !bdv.tryLoadSettings( panel.xml() ) ) TODO: this should work, but currently tryLoadSettings is protected. fix that.
 		//	InitializeViewerState.initBrightness( 0.001, 0.999, bdv.getViewer(), bdv.getSetupAssignments() );
 		
-		groupByChannel( bdv, panel.getSpimData() );
 			
-		FilteredAndGroupedExporerPanel.updateBDV( bdv, panel.colorMode(), panel.getSpimData(), panel.firstSelectedVD(), ((GroupedRowWindow)panel).selectedRowsGroups(), colorMap );
+		groupByChannel( bdv, panel.getSpimData() );
+		colorByChannel( bdv, panel.getSpimData() );
+			
+		FilteredAndGroupedExporerPanel.updateBDV( bdv, panel.colorMode(), panel.getSpimData(), panel.firstSelectedVD(), ((GroupedRowWindow)panel).selectedRowsGroups());
 
 		bdv.getViewer().addRenderTransformListener( lo );
 		bdv.getViewer().getDisplay().addOverlayRenderer( lo );

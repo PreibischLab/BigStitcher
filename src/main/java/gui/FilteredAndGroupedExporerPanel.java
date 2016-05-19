@@ -105,7 +105,7 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 	
 	StitchingResults stitchingResults;
 	
-	HashMap<Channel, ARGBType> colorMap;
+//	HashMap<Channel, ARGBType> colorMap;
 
 	final protected HashSet< List<BasicViewDescription< ? extends BasicViewSetup >> > selectedRows;
 	protected BasicViewDescription< ? extends BasicViewSetup > firstSelectedVD;
@@ -125,11 +125,11 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 		this.selectedRows = new HashSet<>();
 		this.firstSelectedVD = null;
 		
-		// FIXME: just a default
-		colorMap = new HashMap<>();
-		colorMap.put( new Channel( 0 ), new ARGBType( ARGBType.rgba( 255, 0, 0, 0 ) ) );
-		colorMap.put( new Channel( 1 ), new ARGBType( ARGBType.rgba( 0, 255, 0, 0 ) ) );
-		colorMap.put( new Channel( 2 ), new ARGBType( ARGBType.rgba( 0, 0, 255, 0 ) ) );
+//		// FIXME: just a default
+//		colorMap = new HashMap<>();
+//		colorMap.put( new Channel( 0 ), new ARGBType( ARGBType.rgba( 255, 0, 0, 0 ) ) );
+//		colorMap.put( new Channel( 1 ), new ARGBType( ARGBType.rgba( 0, 255, 0, 0 ) ) );
+//		colorMap.put( new Channel( 2 ), new ARGBType( ARGBType.rgba( 0, 0, 255, 0 ) ) );
 		
 		linkOverlay = new LinkOverlay( stitchingResults, data );
 		popups = initPopups();
@@ -485,15 +485,14 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 				}
 
 				if ( b != null && b.bdv != null )
-					updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows, colorMap);
+					updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows);
 			}
 		};
 	}
 
 	public static void updateBDV(final BigDataViewer bdv, final boolean colorMode, final AbstractSpimData< ? > data,
 			BasicViewDescription< ? extends BasicViewSetup > firstVD,
-			final Collection< List< BasicViewDescription< ? extends BasicViewSetup >> > selectedRows,
-			Map<Channel, ARGBType> channelColors)
+			final Collection< List< BasicViewDescription< ? extends BasicViewSetup >> > selectedRows)
 	{
 		// we always set the fused mode
 		setFusedModeSimple( bdv, data );
@@ -516,10 +515,10 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 					active[getBDVSourceIndex( vd.getViewSetup(), data )] = true;
 			}
 
-		if ( selectedRows.size() > 1 && colorMode )
-			colorSources( bdv.getSetupAssignments().getConverterSetups(), data, channelColors);
-		else
-			whiteSources( bdv.getSetupAssignments().getConverterSetups() );
+//		if ( selectedRows.size() > 1 && colorMode )
+//			colorSources( bdv.getSetupAssignments().getConverterSetups(), data, channelColors);
+//		else
+//			whiteSources( bdv.getSetupAssignments().getConverterSetups() );
 
 		setVisibleSources( bdv.getViewer().getVisibilityAndGrouping(), active );
 	}
@@ -660,7 +659,7 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 
 					final BDVPopup p = bdvPopup();
 					if ( p != null && p.bdv != null && p.bdv.getViewerFrame().isVisible() )
-						updateBDV( p.bdv, colorMode, data, null, selectedRows , colorMap);
+						updateBDV( p.bdv, colorMode, data, null, selectedRows);
 				}
 			}
 
