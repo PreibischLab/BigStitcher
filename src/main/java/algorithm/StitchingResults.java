@@ -7,6 +7,7 @@ import java.util.Map;
 
 
 import algorithm.globalopt.PairwiseStitchingResult;
+import algorithm.VectorUtil;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
@@ -62,20 +63,6 @@ public class StitchingResults
 		return res;
 	}
 	
-	double getVectorLength(double[] vec){
-		double res = 0;
-		for (int i = 0; i<vec.length; i++)
-			res += vec[i] * vec[i];
-		return Math.sqrt( res );
-	}
-	
-	double[] getVectorDiff(double[] a, double[] b)
-	{
-		double[] res = new double[a.length];
-		for (int i = 0; i<a.length; i++)
-			res[i] = b[i] - a[i];
-		return res;
-	}
 	
 	public ArrayList< Double > getErrors(ViewId vid)
 	{
@@ -85,8 +72,8 @@ public class StitchingResults
 		{
 			if (globalShifts.containsKey( psr.pair().getA()) && globalShifts.containsKey( psr.pair().getB() ))
 			{
-				double[] relativeGlobal = getVectorDiff( globalShifts.get( psr.pair().getA() ), globalShifts.get( psr.pair().getB() ) );
-				res.add( new Double(getVectorLength(  getVectorDiff( relativeGlobal, psr.relativeVector() ) )) );
+				double[] relativeGlobal = VectorUtil.getVectorDiff( globalShifts.get( psr.pair().getA() ), globalShifts.get( psr.pair().getB() ) );
+				res.add( new Double(VectorUtil.getVectorLength(  VectorUtil.getVectorDiff( relativeGlobal, psr.relativeVector() ) )) );
 			}
 				
 		}
