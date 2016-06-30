@@ -68,18 +68,21 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 			spimData.getSequenceDescription().getViewDescriptions().get( p.getA() ).getViewSetup().getSize().dimensions( sizeA );
 			spimData.getSequenceDescription().getViewDescriptions().get( p.getB() ).getViewSetup().getSize().dimensions( sizeB );
 			
-			ViewTransform vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA() ).getTransformList().get( 1 );
-			//AffineTransform3D vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA() ).getModel();
-			ViewTransform vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB() ).getTransformList().get( 1 );
-			//AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB() ).getModel();
+			//ViewTransform vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA() ).getTransformList().get( 1 );
+			AffineTransform3D vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA() ).getModel();
+			//ViewTransform vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB() ).getTransformList().get( 1 );
+			AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB() ).getModel();
 			
 			final AffineTransform3D transform = new AffineTransform3D();
 			transform.preConcatenate( viewerTransform );
 			
 			for(int i = 0; i < 3; i++)
 			{
-				lPos1[i] = vt1.asAffine3D().get( i, 3 );
-				lPos2[i] = vt2.asAffine3D().get( i, 3 );
+				lPos1[i] = vt1.get( i, 3 );
+				lPos2[i] = vt2.get( i, 3 );
+				
+				sizeA[i] *= vt1.get( i, i );
+				sizeB[i] *= vt2.get( i, i );
 				
 				// start from middle of view
 				lPos1[i] += sizeA[i] / 2;

@@ -1,6 +1,8 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -29,6 +32,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 
 import algorithm.SpimDataTools;
 import algorithm.StitchingResults;
@@ -36,6 +40,7 @@ import algorithm.globalopt.GroupedViews;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
+import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.Angle;
@@ -288,8 +293,9 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
 
 		// center all columns
-		for ( int column = 0; column < tableModel.getColumnCount(); ++column )
+		for ( int column = 0; column < tableModel.getColumnCount(); ++column ){
 			table.getColumnModel().getColumn( column ).setCellRenderer( centerRenderer );
+		}
 
 		// add listener to which row is selected
 		table.getSelectionModel().addListSelectionListener( getSelectionListener() );

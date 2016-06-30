@@ -7,7 +7,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+
 import javax.swing.JOptionPane;
+
+
 
 import bdv.BigDataViewer;
 import bdv.ViewerImgLoader;
@@ -208,7 +211,7 @@ public class BDVPopupStitching extends BDVPopup
 			
 		FilteredAndGroupedExporerPanel.updateBDV( bdv, panel.colorMode(), panel.getSpimData(), panel.firstSelectedVD(), ((GroupedRowWindow)panel).selectedRowsGroups());
 
-		bdv.getViewer().addRenderTransformListener( lo );
+		bdv.getViewer().addTransformListener( lo );
 		bdv.getViewer().getDisplay().addOverlayRenderer( lo );
 		
 		

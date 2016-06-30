@@ -207,6 +207,7 @@ public class FilteredAndGroupedTableModel < AS extends AbstractSpimData< ? > > e
 		}
 		List<Entity> sorted = new ArrayList<>(entries);
 		Entity.sortById(sorted);
+
 		
 		final ArrayList<String> entryNames = new ArrayList<>();
 		
