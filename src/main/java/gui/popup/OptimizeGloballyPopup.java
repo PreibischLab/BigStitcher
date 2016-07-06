@@ -16,6 +16,7 @@ import algorithm.globalopt.GroupedViews;
 import algorithm.globalopt.PairwiseStitchingResult;
 import gui.GroupedRowWindow;
 import gui.StitchingResultsSettable;
+import ij.gui.GenericDialog;
 import mpicbg.models.Tile;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -61,7 +62,19 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 		public void actionPerformed(ActionEvent e)
 		{
 			
-			final GlobalOptimizationParameters params = new GlobalOptimizationParameters();
+			GenericDialog gd = new GenericDialog("Global optimization options");
+			gd.addNumericField( "cross-correlation threshold", 0.0, 3 );
+			gd.addNumericField( "relative error threshold", 2.5, 3 );
+			gd.addNumericField( "absolute error threshold", 3.5, 3 );
+			gd.showDialog();
+			
+			if (gd.wasCanceled())
+				return;
+			double ccTh = gd.getNextNumber();
+			double relTh = gd.getNextNumber();
+			double absTh = gd.getNextNumber();
+			
+			final GlobalOptimizationParameters params = new GlobalOptimizationParameters(ccTh, relTh, absTh);
 			
 			final AbstractSpimData< ? > d =  panel.getSpimData();
 			final AbstractSequenceDescription< ?, ?, ? > sd = d.getSequenceDescription();
