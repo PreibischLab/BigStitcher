@@ -44,7 +44,7 @@ public class TransformationTools
 			final boolean doSubpixel,
 			final BasicImgLoader imgLoader,
 			final boolean averageGrouped,
-			final int[] downsampleFactors)
+			final long[] downsampleFactors)
 	{
 		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
@@ -112,7 +112,7 @@ public class TransformationTools
 																		final ViewRegistrations vrs, 
 																		final BasicImgLoader imgLoader, 
 																		final boolean averageGrouped,
-																		final int[] downsamplingFactors)
+																		final long[] downsamplingFactors)
 	{
 		final ArrayList< PairwiseStitchingResult > results = new ArrayList<>();
 
@@ -156,7 +156,7 @@ public class TransformationTools
 		final HashMap< ViewId, Dimensions > vd = new HashMap<>();
 		final HashMap< ViewId, AbstractTranslation > vl = new HashMap<>();
 		
-		final int[] downsamplingFactors = new int[] {1,1,1};
+		final long[] downsamplingFactors = new long[] {1,1,1};
 
 		for ( final ViewId viewId : viewIds )
 		{
@@ -176,9 +176,11 @@ public class TransformationTools
 		for ( final ViewId v : fixedViews )
 			System.out.println( "Fixed: " + v );
 
+		
+		GlobalOptimizationParameters params = new GlobalOptimizationParameters();
 		// global opt
 		final HashMap< ViewId, Tile< TranslationModel3D > > models =
-				GlobalOpt.compute( new TranslationModel3D(), results, fixedViews, groupedViews );
+				GlobalOpt.compute( new TranslationModel3D(), results, fixedViews, groupedViews , params);
 
 		/*
 		// save the corresponding detections and output result

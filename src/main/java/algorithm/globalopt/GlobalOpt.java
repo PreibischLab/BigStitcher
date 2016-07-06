@@ -20,6 +20,7 @@ import mpicbg.models.PointMatch;
 import mpicbg.models.RigidModel3D;
 import mpicbg.models.Tile;
 import mpicbg.models.TileConfiguration;
+import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import mpicbg.spim.mpicbg.PointMatchGeneric;
@@ -43,7 +44,8 @@ public class GlobalOpt
 			final M model,
 			final List< PairwiseStitchingResult > pairs,
 			final Collection< ViewId > fixedViews,
-			final List< ? extends List< ViewId > > groups )
+			final List< ? extends List< ViewId > > groups,
+			final GlobalOptimizationParameters params)
 	{
 		// assemble all views and corresponding points
 		final HashSet< ViewId > tmpSet = new HashSet< ViewId >();
@@ -62,7 +64,9 @@ public class GlobalOpt
 
 		// assign the pointmatches to all the tiles
 		for ( PairwiseStitchingResult pair : pairs )
-			GlobalOpt.addPointMatches( pair, map.get( pair.pair().getA() ), map.get( pair.pair().getB() ) );
+			// only add pointmatch if correlation is high enough
+			if (pair.r() > params.correlationT)
+				GlobalOpt.addPointMatches( pair, map.get( pair.pair().getA() ), map.get( pair.pair().getB() ) );
 
 		// add and fix tiles as defined in the GlobalOptimizationType
 		final TileConfiguration tc = addAndFixTiles( views, map, fixedViews, groups );
@@ -74,31 +78,47 @@ public class GlobalOpt
 		}
 		
 		// now perform the global optimization
-		try 
-		{
-			int unaligned = tc.preAlign().size();
-			if ( unaligned > 0 )
-				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): pre-aligned all tiles but " + unaligned );
-			else
-				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): prealigned all tiles" );
-
-			tc.optimize( 10, 10000, 200 );
-
-			IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Global optimization of " + 
-				tc.getTiles().size() +  " view-tiles (Model=" + model.getClass().getSimpleName()  + "):" );
-			IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "):    Avg Error: " + tc.getError() + "px" );
-			IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "):    Min Error: " + tc.getMinError() + "px" );
-			IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "):    Max Error: " + tc.getMaxError() + "px" );
-		}
-		catch (NotEnoughDataPointsException e)
-		{
-			IOFunctions.println( "Global optimization failed: " + e );
-			e.printStackTrace();
-		}
-		catch (IllDefinedDataPointsException e)
-		{
-			IOFunctions.println( "Global optimization failed: " + e );
-			e.printStackTrace();
+		boolean finished = false;
+		
+		while (!finished){
+			try 
+			{
+				int unaligned = tc.preAlign().size();
+				if ( unaligned > 0 )
+					IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): pre-aligned all tiles but " + unaligned );
+				else
+					IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): prealigned all tiles" );
+	
+				tc.optimize( 10, 10000, 200 );				
+				
+				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Global optimization of " + 
+					tc.getTiles().size() +  " view-tiles (Model=" + model.getClass().getSimpleName()  + "):" );
+				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "):    Avg Error: " + tc.getError() + "px" );
+				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "):    Min Error: " + tc.getMinError() + "px" );
+				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "):    Max Error: " + tc.getMaxError() + "px" );
+			}
+			catch (NotEnoughDataPointsException e)
+			{
+				IOFunctions.println( "Global optimization failed: " + e );
+				e.printStackTrace();
+			}
+			catch (IllDefinedDataPointsException e)
+			{
+				IOFunctions.println( "Global optimization failed: " + e );
+				e.printStackTrace();
+			}
+			
+			finished = true;			
+			
+			// re-do if errors are too big
+			double avgErr = tc.getError();
+			double maxErr = tc.getMaxError();			
+			if ( ( ( avgErr*params.relativeThreshold < maxErr && maxErr > 0.95 ) || avgErr > params.absoluteThreshold ) )
+			{
+				finished = false;
+				removeWeakestLink( tc );				
+			}
+							
 		}
 		
 		IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Transformation Models:" );
@@ -112,6 +132,31 @@ public class GlobalOpt
 		}
 		
 		return map;
+	}
+	
+	public static void removeWeakestLink(TileConfiguration tc)
+	{
+		double worstDistance = Double.MIN_VALUE;
+		Tile<?> worstTile1 = null;
+		Tile<?> worstTile2 = null;
+		
+		for (Tile<?> t : tc.getTiles())
+		{
+			for (PointMatch pm : t.getMatches())
+			{
+				if (pm.getDistance() > worstDistance)
+				{
+					worstDistance = pm.getDistance();
+								
+					worstTile1 = t;
+					worstTile2 = t.findConnectedTile( pm );
+				}
+			}
+		}
+		
+		worstTile1.removeConnectedTile( worstTile2 );
+		worstTile2.removeConnectedTile( worstTile1 );
+		
 	}
 
 	public static String printAffine3D( final Affine3D< ? > model )
@@ -214,7 +259,7 @@ public class GlobalOpt
 		return map;
 	}
 
-	protected static void addPointMatches( final PairwiseStitchingResult pair, final Tile<?> tileA, final Tile<?> tileB )
+	protected static void addPointMatches( final PairwiseStitchingResult pair, final Tile<?> tileA, final Tile<?> tileB)
 	{
 		final ArrayList< PointMatch > pm = new ArrayList< PointMatch >();
 

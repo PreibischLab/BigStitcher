@@ -9,6 +9,7 @@ public class PairwiseStitchingResult
 	final private Pair< ViewId, ViewId > pair;
 	final private double[] relativeVector;
 	final private double r;
+	
 
 	public PairwiseStitchingResult( final Pair< ViewId, ViewId > pair, final double[] relativeVector, final double r )
 	{
