@@ -104,7 +104,7 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 			boolean doSubpixel = gd.getNextBoolean();
 			String channel = gd.getNextChoice();
 			
-			int [] downSamplingFactors = new int[3];
+			long [] downSamplingFactors = new long[3];
 			downSamplingFactors[0] = Integer.parseInt( gd.getNextChoice() );
 			downSamplingFactors[1] = Integer.parseInt( gd.getNextChoice() );
 			downSamplingFactors[2] = Integer.parseInt( gd.getNextChoice() );

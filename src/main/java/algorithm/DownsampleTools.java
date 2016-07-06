@@ -12,6 +12,7 @@ import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
+import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgFactory;
@@ -19,6 +20,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.view.Views;
 import spim.fiji.spimdata.SpimData2;
 import spim.process.interestpointdetection.Downsample;
 
@@ -30,16 +32,16 @@ public class DownsampleTools
 	public static < T extends RealType<T> > RandomAccessibleInterval< T > openAndDownsample(
 			final BasicImgLoader imgLoader,
 			final ViewId vd,
-			int[] downsampleFactors)
+			long[] downsampleFactors)
 	{
 		IOFunctions.println(
 				"(" + new Date(System.currentTimeMillis()) + "): "
 				+ "Requesting Img from ImgLoader (tp=" + vd.getTimePointId() + ", setup=" + vd.getViewSetupId() + ")" );
 
 
-		int dsx = downsampleFactors[0];
-		int dsy = downsampleFactors[1];
-		int dsz = downsampleFactors[2];
+		long dsx = downsampleFactors[0];
+		long dsy = downsampleFactors[1];
+		long dsz = downsampleFactors[2];
 
 		RandomAccessibleInterval< T > input = null;
 
@@ -84,9 +86,14 @@ public class DownsampleTools
 			input =  (RandomAccessibleInterval< T >) imgLoader.getSetupImgLoader( vd.getViewSetupId() ).getImage( vd.getTimePointId(), LOAD_COMPLETELY );
 		}
 
+		return downsample( input, downsampleFactors );
+		
+		
+		/*
 		final ImgFactory< T > f = ((Img<T>)input).factory();
 
 
+		
 		for ( ;dsx > 1; dsx /= 2 )
 			input = Downsample.simple2x( input, f, new boolean[]{ true, false, false } );
 
@@ -97,6 +104,22 @@ public class DownsampleTools
 			input = Downsample.simple2x( input, f, new boolean[]{ false, false, true } );
 
 		return input;
+		*/
+
+
+	}
+	
+	/**
+	 * downsample a RAI by the given factors, return result
+	 * @param rai
+	 * @param downsampleFactors
+	 * @return
+	 */
+	public static < T extends RealType<T> > RandomAccessibleInterval< T > downsample(
+			final RandomAccessibleInterval< T > rai,
+			long[] downsampleFactors)
+	{
+		return  (RandomAccessibleInterval< T >) Views.subsample( rai, downsampleFactors);
 	}
 
 	private static final boolean contains( final int i, final int[] values )

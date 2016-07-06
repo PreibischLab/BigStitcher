@@ -19,6 +19,7 @@ import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
+import net.imglib2.RealLocalizable;
 import net.imglib2.realtransform.AffineTransform3D;
 
 public class FilteredAndGroupedExplorer< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > >
@@ -78,21 +79,26 @@ public class FilteredAndGroupedExplorer< AS extends AbstractSpimData< ? >, X ext
 		
 		// shift and scale the fractal
 		final AffineTransform3D m = new AffineTransform3D();
-		double scale = 500;
+		double scale = 700;
 		m.set( scale, 0.0f, 0.0f, 0.0f, 
 			   0.0f, scale, 0.0f, 0.0f,
 			   0.0f, 0.0f, scale, 0.0f );
 		final AffineTransform3D mShift = new AffineTransform3D();
-		mShift.set( 1.0f, 0.0f, 0.0f, 1.0f, 
-			   0.0f, 1.0f, 0.0f, 1.0f,
+		double shift = 0.5;
+		mShift.set( 1.0f, 0.0f, 0.0f, shift, 
+			   0.0f, 1.0f, 0.0f, shift,
 			   0.0f, 0.0f, 1.0f, 0.0f );
 		
 		m.concatenate( mShift );
 		
-		Interval start = new FinalInterval( new long[] {0,0,0},  new long[] {400, 400, 1});
+		Interval start = new FinalInterval( new long[] {0,0,0},  new long[] {399, 399, 4});
 		List<Interval> intervals = FractalSpimDataGenerator.generateTileList( 
 				start, 3, 3, 0.2f );
-		SpimData sd = new FractalSpimDataGenerator( m ).generateSpimData( intervals );
+		
+		List<RealLocalizable> falseStarts = FractalSpimDataGenerator.getTileMins(
+														FractalSpimDataGenerator.generateTileList( start, 3, 3, 0.3f ));
+		
+		SpimData sd = new FractalSpimDataGenerator( m ).generateSpimData( intervals , falseStarts);
 
 		
 		

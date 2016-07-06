@@ -103,7 +103,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			String channel = gd.getNextChoice();
 			final boolean doSubpixel = gd.getNextBoolean();
 			
-			int [] downSamplingFactors = !is2d ? new int[3] : new int[2];
+			long [] downSamplingFactors = !is2d ? new long[3] : new long[2];
 			downSamplingFactors[0] = Integer.parseInt( gd.getNextChoice() );
 			downSamplingFactors[1] = Integer.parseInt( gd.getNextChoice() );
 			if (!is2d) { downSamplingFactors[2] = Integer.parseInt( gd.getNextChoice() ); }

@@ -12,6 +12,7 @@ import javax.swing.JMenuItem;
 import algorithm.StitchingResults;
 import algorithm.TransformTools;
 import algorithm.globalopt.GlobalOpt;
+import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GroupedViews;
 import algorithm.globalopt.PairwiseStitchingResult;
 import algorithm.globalopt.PairwiseStrategyTools;
@@ -69,6 +70,9 @@ public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
+			
+			GlobalOptimizationParameters params = new GlobalOptimizationParameters();
+			
 			final AbstractSpimData< ? > d =  panel.getSpimData();
 			final AbstractSequenceDescription< ?, ?, ? > sd = d.getSequenceDescription();
 			final ViewRegistrations vr = d.getViewRegistrations();
@@ -105,7 +109,7 @@ public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
 			String channel = gd.getNextChoice();
 			final boolean doSubpixel = gd.getNextBoolean();
 			
-			int [] downSamplingFactors = new int[3];
+			long [] downSamplingFactors = new long[3];
 			downSamplingFactors[0] = Integer.parseInt( gd.getNextChoice() );
 			downSamplingFactors[1] = Integer.parseInt( gd.getNextChoice() );
 			downSamplingFactors[2] = Integer.parseInt( gd.getNextChoice() );
@@ -170,7 +174,7 @@ public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
 
 			// global opt
 			final HashMap< ViewId, Tile< TranslationModel3D > > models =
-					GlobalOpt.compute( new TranslationModel3D(), results, fixedViews, groupedViews );
+					GlobalOpt.compute( new TranslationModel3D(), results, fixedViews, groupedViews , params);
 			
 			for (ViewId vid : models.keySet())
 			{

@@ -49,7 +49,7 @@ public class TestDownsamplePopup extends JMenuItem implements ExplorerWindowSeta
 			}
 			
 			BasicViewDescription< ? > vd = panel.firstSelectedVD();
-			RandomAccessibleInterval< UnsignedShortType > rable = DownsampleTools.openAndDownsample( panel.getSpimData().getSequenceDescription().getImgLoader(), vd, new int[] {2,2,2} );
+			RandomAccessibleInterval< UnsignedShortType > rable = DownsampleTools.openAndDownsample( panel.getSpimData().getSequenceDescription().getImgLoader(), vd, new long[] {2,2,2} );
 			ImageJFunctions.show( rable );
 			
 		}

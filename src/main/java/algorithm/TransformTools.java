@@ -48,7 +48,7 @@ public class TransformTools {
 		return translation;
 	}
 
-	public static AbstractTranslation getInitialTranslation( final ViewRegistration vr, final boolean is2d , final int[] downsamplingFactors)
+	public static AbstractTranslation getInitialTranslation( final ViewRegistration vr, final boolean is2d , final long[] downsamplingFactors)
 	{
 		// this one should be the translation
 		ViewTransform vt = vr.getTransformList().get( vr.getTransformList().size() - 1 );

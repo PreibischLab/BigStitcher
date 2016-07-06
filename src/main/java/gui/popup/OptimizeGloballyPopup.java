@@ -11,6 +11,7 @@ import javax.swing.JMenuItem;
 
 import algorithm.StitchingResults;
 import algorithm.globalopt.GlobalOpt;
+import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GroupedViews;
 import algorithm.globalopt.PairwiseStitchingResult;
 import gui.GroupedRowWindow;
@@ -59,6 +60,9 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
+			
+			final GlobalOptimizationParameters params = new GlobalOptimizationParameters();
+			
 			final AbstractSpimData< ? > d =  panel.getSpimData();
 			final AbstractSequenceDescription< ?, ?, ? > sd = d.getSequenceDescription();
 			final ViewRegistrations vr = d.getViewRegistrations();
@@ -79,7 +83,7 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			final ArrayList< PairwiseStitchingResult > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
 			
 			final HashMap< ViewId, Tile< TranslationModel3D > > models =
-					GlobalOpt.compute( new TranslationModel3D(), results, fixedViews, groupedViews );
+					GlobalOpt.compute( new TranslationModel3D(), results, fixedViews, groupedViews, params );
 			
 			for (ViewId vid : models.keySet())
 			{
