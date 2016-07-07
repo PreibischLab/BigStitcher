@@ -269,9 +269,9 @@ public class PhaseCorrelationPeak2 {
 			System.out.println( (int)(np1 - np2) );
 		
 		System.exit( 0 );
-		PhaseCorrelationPeak2 peaks = new PhaseCorrelationPeak2(new Point(new int[] {10, 10, 10}), 1.0);
-		Dimensions pcmDims = new FinalDimensions(new int[] {50, 50, 50});
-		Dimensions imgDims = new FinalDimensions(new int[] {30, 30, 30});
+		PhaseCorrelationPeak2 peaks = new PhaseCorrelationPeak2(new Point(new int[] {10, 10}), 1.0);
+		Dimensions pcmDims = new FinalDimensions(new int[] {50, 50});
+		Dimensions imgDims = new FinalDimensions(new int[] {30, 30});
 		PhaseCorrelation2Util.expandPeakToPossibleShifts(peaks, pcmDims, imgDims, imgDims);
 		
 	}

@@ -69,8 +69,6 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			final AbstractSequenceDescription< ?, ?, ? > sd = d.getSequenceDescription();
 			final ViewRegistrations vr = d.getViewRegistrations();
 
-			final boolean is2d = false;
-
 			// take together all views where the all attributes are the same except channel (i.e. group the channels)
 			// they are now represented by the channel of the first ID (e.g. channelId=0)
 			final ArrayList< GroupedViews > viewIds = new ArrayList<>();
@@ -88,6 +86,8 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			{
 				channelNames.add( sd.getViewDescriptions().get( vid ).getViewSetup().getAttribute( Channel.class ).getName() );
 			}
+			
+			boolean is2d = sd.getViewDescriptions().get( gv ).getViewSetup().getSize().numDimensions() == 2;
 			
 			GenericDialog gd = new GenericDialog("Stitching options");
 			gd.addChoice( "channel to use",channelNames.toArray( new String[0] ), "average all" );

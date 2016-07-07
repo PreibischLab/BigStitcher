@@ -62,26 +62,13 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 		public void actionPerformed(ActionEvent e)
 		{
 			
-			GenericDialog gd = new GenericDialog("Global optimization options");
-			gd.addNumericField( "cross-correlation threshold", 0.0, 3 );
-			gd.addNumericField( "relative error threshold", 2.5, 3 );
-			gd.addNumericField( "absolute error threshold", 3.5, 3 );
-			gd.showDialog();
-			
-			if (gd.wasCanceled())
+			GlobalOptimizationParameters params = GlobalOptimizationParameters.askUserForParameters();
+			if (params == null)
 				return;
-			double ccTh = gd.getNextNumber();
-			double relTh = gd.getNextNumber();
-			double absTh = gd.getNextNumber();
-			
-			final GlobalOptimizationParameters params = new GlobalOptimizationParameters(ccTh, relTh, absTh);
 			
 			final AbstractSpimData< ? > d =  panel.getSpimData();
-			final AbstractSequenceDescription< ?, ?, ? > sd = d.getSequenceDescription();
-			final ViewRegistrations vr = d.getViewRegistrations();
 			
-			final ArrayList< GroupedViews > viewIds = new ArrayList<>();
-			
+			final ArrayList< GroupedViews > viewIds = new ArrayList<>();			
 			for (List<ViewId> vidl : ((GroupedRowWindow)panel).selectedRowsViewIdGroups())
 				viewIds.add( new GroupedViews( vidl ) );
 			
@@ -97,6 +84,8 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			
 			final HashMap< ViewId, Tile< TranslationModel3D > > models =
 					GlobalOpt.compute( new TranslationModel3D(), results, fixedViews, groupedViews, params );
+			
+			
 			
 			for (ViewId vid : models.keySet())
 			{

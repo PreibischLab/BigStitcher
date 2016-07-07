@@ -52,22 +52,23 @@ public class JuliaRealRandomAccessible implements RealRandomAccessible< LongType
 	final protected ComplexDoubleType c;
 	long maxIterations;
 	double maxAmplitude;
+	final int numDismensions;
 
 	public JuliaRealRandomAccessible()
 	{
-		c = new ComplexDoubleType();
-		maxIterations = 50;
-		maxAmplitude = 4096;
+		this(new ComplexDoubleType(),50,4096,2);
 	}
 
 	public JuliaRealRandomAccessible(
 			final ComplexDoubleType c,
 			final int maxIterations,
-			final int maxAmplitude )
+			final int maxAmplitude,
+			final int numDimensions)
 	{
 		this.c = c;
 		this.maxIterations = maxIterations;
 		this.maxAmplitude = maxAmplitude;
+		this.numDismensions = numDimensions;
 	}
 
 	public void setC( final ComplexDoubleType c )
@@ -97,7 +98,7 @@ public class JuliaRealRandomAccessible implements RealRandomAccessible< LongType
 
 		public JuliaRealRandomAccess()
 		{
-			super( 3 );
+			super( numDismensions );
 			a = new ComplexDoubleType();
 			t = new LongType();
 		}
@@ -142,7 +143,7 @@ public class JuliaRealRandomAccessible implements RealRandomAccessible< LongType
 	@Override
 	public int numDimensions()
 	{
-		return 3;
+		return numDismensions;
 	}
 
 	@Override

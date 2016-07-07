@@ -25,6 +25,8 @@ import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineGet;
+import net.imglib2.realtransform.AffineSet;
+import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
@@ -80,6 +82,8 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 						"You need to select two images to perform pairwise stitching" );
 			}
 			
+			
+			
 			ArrayList< String > channelNames = new ArrayList<>();
 			channelNames.add( "average all" );
 			GroupedViews gv = new GroupedViews( ((GroupedRowWindow)panel).selectedRowsViewIdGroups().get( 0 ));
@@ -88,13 +92,25 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 				channelNames.add( sd.getViewDescriptions().get( vid ).getViewSetup().getAttribute( Channel.class ).getName() );
 			}
 			
+			// find out number of dimensions
+			int numD = sd.getViewDescriptions().get( gv ).getViewSetup().getSize().numDimensions();
+			boolean is2d = numD == 2;
+			if (numD != 2 && numD != 3){
+				JOptionPane.showMessageDialog(
+						null,
+						"Image Data needs to be 2D or 3D for this to work" );
+			}
+			
+			
+			
 			GenericDialog gd = new GenericDialog("Pairwise stitching options");
 			gd.addStringField("number of PCM peaks to check", "5");
 			gd.addCheckbox("Subpixel accuracy", true);
 			gd.addChoice( "channel to use",channelNames.toArray( new String[0] ), "average all" );
 			gd.addChoice( "downsample x", ds, ds[0] );
 			gd.addChoice( "downsample y", ds, ds[0] );
-			gd.addChoice( "downsample z", ds, ds[0] );
+			if (!is2d)
+				gd.addChoice( "downsample z", ds, ds[0] );
 			gd.showDialog();
 			
 			if (gd.wasCanceled())
@@ -104,10 +120,11 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 			boolean doSubpixel = gd.getNextBoolean();
 			String channel = gd.getNextChoice();
 			
-			long [] downSamplingFactors = new long[3];
+			long [] downSamplingFactors = new long[is2d ? 2 : 3];
 			downSamplingFactors[0] = Integer.parseInt( gd.getNextChoice() );
 			downSamplingFactors[1] = Integer.parseInt( gd.getNextChoice() );
-			downSamplingFactors[2] = Integer.parseInt( gd.getNextChoice() );
+			if (!is2d)
+				downSamplingFactors[2] = Integer.parseInt( gd.getNextChoice() );
 			
 			int channelIdxInGroup = channelNames.indexOf( channel ) - 1;
 			
@@ -143,11 +160,21 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 			// update the registration of the second tile to:
 			// registration of first tile + calculated shift
 			AffineGet tile1Reg = vrs.getViewRegistration( viewIds.get( 0 ) ).getTransformList().get( 1 ).asAffine3D();
-			AffineTransform3D shiftTransform = new AffineTransform3D();
-			shiftTransform.set( new double[]   {1.0, 0.0, 0.0, tile1Reg.get( 0, 4 ) + stitchingResult.getA()[0],
-												0.0, 1.0, 0.0, tile1Reg.get( 1, 4 ) + stitchingResult.getA()[1],
-												0.0, 0.0, 1.0, tile1Reg.get( 2, 4 ) + stitchingResult.getA()[2]} );
+			AffineTransform3D shiftTransform;
 			
+			if (!is2d){
+				shiftTransform = new AffineTransform3D();
+				shiftTransform.set( new double[]   {1.0, 0.0, 0.0, tile1Reg.get( 0, 4 ) + stitchingResult.getA()[0],
+													0.0, 1.0, 0.0, tile1Reg.get( 1, 4 ) + stitchingResult.getA()[1],
+													0.0, 0.0, 1.0, tile1Reg.get( 2, 4 ) + stitchingResult.getA()[2]} );
+			}
+			else
+			{
+				shiftTransform = new AffineTransform3D();
+				shiftTransform.set( new double[]   {1.0, 0.0, 0.0, tile1Reg.get( 0, 4 ) + stitchingResult.getA()[0],
+													0.0, 1.0, 0.0, tile1Reg.get( 1, 4 ) + stitchingResult.getA()[1],
+													0.0, 0.0, 1.0, tile1Reg.get( 2, 4 )}); 
+			}
 			// apply registration to all views in GroupedViews
 			for (ViewId vid : ((GroupedViews) viewIds.get( 1 )).getViewIds())
 			{

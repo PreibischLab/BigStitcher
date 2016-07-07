@@ -52,9 +52,8 @@ public class TransformationTools
 		final RandomAccessibleInterval<T> img2;
 		if (averageGrouped)
 		{
-			// TODO: 2-d?
-			AveragedRandomAccessible< T > avg1 = new AveragedRandomAccessible<>( 3 );
-			AveragedRandomAccessible< T > avg2 = new AveragedRandomAccessible<>( 3 );
+			AveragedRandomAccessible< T > avg1 = null;
+			AveragedRandomAccessible< T > avg2 = null;
 			
 			Interval interval = null;
 			
@@ -66,6 +65,12 @@ public class TransformationTools
 						//(RandomAccessibleInterval<T>) imgLoader.getSetupImgLoader(tVid1.getViewSetupId()).getImage(tVid1.getTimePointId(), null);
 				RandomAccessibleInterval<T> tImg2 = DownsampleTools.openAndDownsample( imgLoader, tVid2, downsampleFactors );
 						//(RandomAccessibleInterval<T>) imgLoader.getSetupImgLoader(tVid2.getViewSetupId()).getImage(tVid2.getTimePointId(), null);
+				
+				// initialize averaged RA with correct numDimensions
+				if (avg1 == null){
+					avg1 = new AveragedRandomAccessible<>( tImg1.numDimensions() );
+					avg2 = new AveragedRandomAccessible<>( tImg2.numDimensions() );
+				}
 				
 				// TODO: shifts between channels are not handled at the moment
 				if (interval == null){
@@ -88,9 +93,12 @@ public class TransformationTools
 			img2 = DownsampleTools.openAndDownsample( imgLoader, viewIdB, downsampleFactors );
 		}
 
+		boolean is2d = img1.numDimensions() == 2;
+		
+		
 		// TODO: Test if 2d, and if then reduce dimensionality and ask for a 2d translation
-		AbstractTranslation t1 = TransformTools.getInitialTranslation( vA, false, downsampleFactors);
-		AbstractTranslation t2 = TransformTools.getInitialTranslation( vB, false, downsampleFactors );
+		AbstractTranslation t1 = TransformTools.getInitialTranslation( vA, is2d, downsampleFactors);
+		AbstractTranslation t2 = TransformTools.getInitialTranslation( vB, is2d, downsampleFactors );
 
 		final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, t1, t2, nPeaks, doSubpixel, null, service );
 

@@ -4,25 +4,13 @@ import static mpicbg.spim.data.generic.sequence.ImgLoaderHints.LOAD_COMPLETELY;
 
 import java.util.Date;
 
-import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.BasicImgLoader;
-import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.sequence.ImgLoader;
 import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
-import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
-import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
-import net.imglib2.img.ImgFactory;
-import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.type.Type;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
-import spim.fiji.spimdata.SpimData2;
-import spim.process.interestpointdetection.Downsample;
 
 public class DownsampleTools
 {
@@ -34,6 +22,9 @@ public class DownsampleTools
 			final ViewId vd,
 			long[] downsampleFactors)
 	{
+		
+		boolean is2d = downsampleFactors.length == 2;
+		
 		IOFunctions.println(
 				"(" + new Date(System.currentTimeMillis()) + "): "
 				+ "Requesting Img from ImgLoader (tp=" + vd.getTimePointId() + ", setup=" + vd.getViewSetupId() + ")" );
@@ -41,7 +32,9 @@ public class DownsampleTools
 
 		long dsx = downsampleFactors[0];
 		long dsy = downsampleFactors[1];
-		long dsz = downsampleFactors[2];
+		long dsz = 1;
+		if (!is2d)
+			dsz = downsampleFactors[2];
 
 		RandomAccessibleInterval< T > input = null;
 

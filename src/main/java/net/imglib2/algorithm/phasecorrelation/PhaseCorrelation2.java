@@ -227,8 +227,8 @@ public class PhaseCorrelation2 {
 		
 		new ImageJ();
 		
-		Img<FloatType> img1 = ImgLib2Util.openAs32Bit(new File("src/main/resources/img1.tif"));
-		Img<FloatType> img2 = ImgLib2Util.openAs32Bit(new File("src/main/resources/img2small.tif"));
+		Img<FloatType> img1 = ImgLib2Util.openAs32Bit(new File("src/main/resources/img1singleplane.tif"));
+		Img<FloatType> img2 = ImgLib2Util.openAs32Bit(new File("src/main/resources/img2singleplane.tif"));
 		
 		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 		

@@ -66,14 +66,15 @@ public class FractalSpimDataGenerator
 {
 	private RealRandomAccessible< LongType > ra;
 	private JuliaRealRandomAccessible fractalRA;
+	private int numDimensions;
 	
 	private OpService ops;
 	
 	public FractalSpimDataGenerator(AffineGet transform){
-		fractalRA = new JuliaRealRandomAccessible(new ComplexDoubleType( -0.4, 0.6 ), 300, 300);
+		fractalRA = new JuliaRealRandomAccessible(new ComplexDoubleType( -0.4, 0.6 ), 300, 300, transform.numDimensions());
 		ra = RealViews.affineReal( fractalRA, transform );
 		ops = new Context(OpService.class).getService( OpService.class );
-		
+		this.numDimensions = transform.numDimensions();		
 	}
 	
 	public Img< LongType > getImageAtInterval(Interval interval){
@@ -228,7 +229,7 @@ public class FractalSpimDataGenerator
 			{
 				translation.set( tile.getLocation()[ 0 ], 0, 3 );
 				translation.set( tile.getLocation()[ 1 ], 1, 3 );
-				translation.set( tile.getLocation()[ 2 ], 2, 3 );
+				if (numDimensions > 2) translation.set( tile.getLocation()[ 2 ], 2, 3 );
 			}
 
 			vr.concatenateTransform( new ViewTransformAffine( "Translation", translation ) );
@@ -237,7 +238,7 @@ public class FractalSpimDataGenerator
 			
 			final double calX = vs.getVoxelSize().dimension( 0 ) / minResolution;
 			final double calY = vs.getVoxelSize().dimension( 1 ) / minResolution;
-			final double calZ = vs.getVoxelSize().dimension( 2 ) / minResolution;
+			final double calZ = numDimensions > 2 ? vs.getVoxelSize().dimension( 2 ) / minResolution : 1.0;
 			
 			final AffineTransform3D m = new AffineTransform3D();
 			m.set( calX, 0.0f, 0.0f, 0.0f, 
