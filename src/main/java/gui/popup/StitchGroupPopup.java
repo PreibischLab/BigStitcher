@@ -9,6 +9,7 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
+import algorithm.PairwiseStitchingParameters;
 import algorithm.StitchingResults;
 import algorithm.TransformTools;
 import algorithm.globalopt.GlobalOpt;
@@ -97,7 +98,6 @@ public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
 			
 			GenericDialog gd = new GenericDialog("Stitching options");
 			gd.addChoice( "channel to use",channelNames.toArray( new String[0] ), "average all" );
-			gd.addCheckbox( "subpixel accuracy", true );
 			gd.addChoice( "downsample x", ds, ds[0] );
 			gd.addChoice( "downsample y", ds, ds[0] );
 			gd.addChoice( "downsample z", ds, ds[0] );
@@ -107,12 +107,15 @@ public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
 				return;
 			
 			String channel = gd.getNextChoice();
-			final boolean doSubpixel = gd.getNextBoolean();
 			
 			long [] downSamplingFactors = new long[3];
 			downSamplingFactors[0] = Integer.parseInt( gd.getNextChoice() );
 			downSamplingFactors[1] = Integer.parseInt( gd.getNextChoice() );
 			downSamplingFactors[2] = Integer.parseInt( gd.getNextChoice() );
+			
+			PairwiseStitchingParameters pairwiseParams = PairwiseStitchingParameters.askUserForParameters();
+			if (pairwiseParams == null)
+				return;
 			
 			final ArrayList< ViewId > viewIdsSelectedChannel = new ArrayList<>();
 			
@@ -155,12 +158,12 @@ public class StitchGroupPopup extends JMenuItem implements ExplorerWindowSetable
 					fixedViews, groupedViews );
 					
 			// compute them
-			final ArrayList< PairwiseStitchingResult > results = TransformationTools.computePairs( pairs, 5, doSubpixel, d.getViewRegistrations(), (BasicImgLoader) d.getSequenceDescription().getImgLoader(), doGrouped, downSamplingFactors );
+			final ArrayList< PairwiseStitchingResult <ViewId>> results = TransformationTools.computePairs( pairs, pairwiseParams, d.getViewRegistrations(), (BasicImgLoader) d.getSequenceDescription().getImgLoader(), doGrouped, downSamplingFactors );
 
 			
 			// update StitchingResults with Results
 			// TODO: for all in group
-			for (final PairwiseStitchingResult psr : results)
+			for (final PairwiseStitchingResult<ViewId> psr : results)
 			{
 				Pair< ViewId, ViewId > key = 
 						psr.pair().getA().compareTo( psr.pair().getB() ) < 0 ? psr.pair() : new ValuePair<>(psr.pair().getB(), psr.pair().getA());

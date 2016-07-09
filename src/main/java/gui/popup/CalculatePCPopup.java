@@ -9,6 +9,7 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
+import algorithm.PairwiseStitchingParameters;
 import algorithm.StitchingResults;
 import algorithm.TransformTools;
 import algorithm.globalopt.GroupedViews;
@@ -91,7 +92,6 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			
 			GenericDialog gd = new GenericDialog("Stitching options");
 			gd.addChoice( "channel to use",channelNames.toArray( new String[0] ), "average all" );
-			gd.addCheckbox( "subpixel accuracy", true );
 			gd.addChoice( "downsample x", ds, ds[0] );
 			gd.addChoice( "downsample y", ds, ds[0] );
 			if (!is2d) { gd.addChoice( "downsample z", ds, ds[0] ); }
@@ -101,12 +101,15 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 				return;
 			
 			String channel = gd.getNextChoice();
-			final boolean doSubpixel = gd.getNextBoolean();
 			
 			long [] downSamplingFactors = !is2d ? new long[3] : new long[2];
 			downSamplingFactors[0] = Integer.parseInt( gd.getNextChoice() );
 			downSamplingFactors[1] = Integer.parseInt( gd.getNextChoice() );
 			if (!is2d) { downSamplingFactors[2] = Integer.parseInt( gd.getNextChoice() ); }
+			
+			PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
+			if (params == null)
+				return;
 			
 			final ArrayList< ViewId > viewIdsSelectedChannel = new ArrayList<>();
 			
@@ -140,10 +143,10 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					vd, vl, viewIdsSelectedChannel );
 
 			// compute them
-			final ArrayList< PairwiseStitchingResult > results = TransformationTools.computePairs( pairs, 5, doSubpixel, d.getViewRegistrations(), (BasicImgLoader) d.getSequenceDescription().getImgLoader(), doGrouped, downSamplingFactors );
+			final ArrayList< PairwiseStitchingResult<ViewId> > results = TransformationTools.computePairs( pairs, params, d.getViewRegistrations(), (BasicImgLoader) d.getSequenceDescription().getImgLoader(), doGrouped, downSamplingFactors );
 
 			// update StitchingResults with Results
-			for (final PairwiseStitchingResult psr : results)
+			for (final PairwiseStitchingResult <ViewId > psr : results)
 			{
 				// find the ViewId of the GroupedViews that the results belong to
 				ViewId gvA = null;

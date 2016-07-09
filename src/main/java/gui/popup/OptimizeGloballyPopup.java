@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -12,6 +13,7 @@ import javax.swing.JMenuItem;
 import algorithm.StitchingResults;
 import algorithm.globalopt.GlobalOpt;
 import algorithm.globalopt.GlobalOptimizationParameters;
+import algorithm.globalopt.GlobalTileOptimization;
 import algorithm.globalopt.GroupedViews;
 import algorithm.globalopt.PairwiseStitchingResult;
 import gui.GroupedRowWindow;
@@ -25,7 +27,10 @@ import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.ViewId;
+import net.imglib2.realtransform.AbstractTranslation;
+import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.Translation3D;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 
@@ -77,19 +82,36 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			fixedViews.add( viewIds.get( 0 ) );
 
 			// define groups (no checks in between Tiles of a group, they are transformed together)
-			final ArrayList< ArrayList< ViewId > > groupedViews = new ArrayList< ArrayList< ViewId > >();
+			//final ArrayList< ArrayList< ViewId > > groupedViews = new ArrayList< ArrayList< ViewId > >();
 			
 			// TODO: use only selected views?
-			final ArrayList< PairwiseStitchingResult > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
+			final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
 			
-			final HashMap< ViewId, Tile< TranslationModel3D > > models =
-					GlobalOpt.compute( new TranslationModel3D(), results, fixedViews, groupedViews, params );
+			//final HashMap< ViewId, Tile< TranslationModel3D > > models =
+			//		GlobalOpt.compute( new TranslationModel3D(), results, fixedViews, groupedViews, params );
 			
+			final Map<ViewId, AbstractTranslation> translations = new HashMap<>();
+			
+			for (ViewId id : viewIds){
+				AffineGet a3d = d.getViewRegistrations().getViewRegistration( id ).getTransformList().get( 1 ).asAffine3D();
+				Translation3D tr = new Translation3D( a3d.get( 0, 4 ),
+						a3d.get( 1, 4 ), a3d.get( 2, 4 ) );
+				translations.put( id, tr );
+			}
+			
+			
+			Map< ViewId, double[] > models = GlobalTileOptimization.twoRoundGlobalOptimization( 
+														3,
+														viewIds,
+														fixedViews,
+														translations,
+														results, 
+														params );
 			
 			
 			for (ViewId vid : models.keySet())
 			{
-				double[] tr = models.get( vid ).getModel().getTranslation();
+				double[] tr = models.get( vid );//.getModel().getTranslation();
 				AffineTransform3D at = new AffineTransform3D();
 				at.set( new double []  {1.0, 0.0, 0.0, tr[0],
 										0.0, 1.0, 0.0, tr[1],

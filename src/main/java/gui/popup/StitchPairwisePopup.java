@@ -8,7 +8,7 @@ import java.util.List;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-
+import algorithm.PairwiseStitchingParameters;
 import algorithm.StitchingResults;
 import algorithm.globalopt.GroupedViews;
 import algorithm.globalopt.PairwiseStitchingResult;
@@ -104,8 +104,6 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 			
 			
 			GenericDialog gd = new GenericDialog("Pairwise stitching options");
-			gd.addStringField("number of PCM peaks to check", "5");
-			gd.addCheckbox("Subpixel accuracy", true);
 			gd.addChoice( "channel to use",channelNames.toArray( new String[0] ), "average all" );
 			gd.addChoice( "downsample x", ds, ds[0] );
 			gd.addChoice( "downsample y", ds, ds[0] );
@@ -116,8 +114,6 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 			if (gd.wasCanceled())
 				return;
 			
-			int nPeaks = Integer.parseInt(gd.getNextString());
-			boolean doSubpixel = gd.getNextBoolean();
 			String channel = gd.getNextChoice();
 			
 			long [] downSamplingFactors = new long[is2d ? 2 : 3];
@@ -125,6 +121,11 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 			downSamplingFactors[1] = Integer.parseInt( gd.getNextChoice() );
 			if (!is2d)
 				downSamplingFactors[2] = Integer.parseInt( gd.getNextChoice() );
+			
+			
+			PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
+			if (params == null)
+				return;
 			
 			int channelIdxInGroup = channelNames.indexOf( channel ) - 1;
 			
@@ -141,14 +142,14 @@ public class StitchPairwisePopup extends JMenuItem implements ExplorerWindowSeta
 			if ( channelIdxInGroup < 0 )
 			{
 				// TODO: handle 2-d
-				stitchingResult = TransformationTools.computeStitching( vid0, vid1, v0, v1, nPeaks, doSubpixel, panel.getSpimData().getSequenceDescription().getImgLoader(), true, downSamplingFactors );
+				stitchingResult = TransformationTools.computeStitching( vid0, vid1, v0, v1, params, panel.getSpimData().getSequenceDescription().getImgLoader(), true, downSamplingFactors );
 			}
 			else
 			// use only selected channel
 			{
 				vid0 = ((GroupedViews) viewIds.get( 0 )).getViewIds().get( channelIdxInGroup );
 				vid1 = ((GroupedViews) viewIds.get( 1 )).getViewIds().get( channelIdxInGroup );
-				stitchingResult = TransformationTools.computeStitching( vid0, vid1, v0, v1, nPeaks, doSubpixel, panel.getSpimData().getSequenceDescription().getImgLoader(), false, downSamplingFactors );
+				stitchingResult = TransformationTools.computeStitching( vid0, vid1, v0, v1, params, panel.getSpimData().getSequenceDescription().getImgLoader(), false, downSamplingFactors );
 
 			}			
 						
