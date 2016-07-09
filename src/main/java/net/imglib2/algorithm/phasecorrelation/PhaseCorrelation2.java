@@ -184,7 +184,7 @@ public class PhaseCorrelation2 {
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>> PhaseCorrelationPeak2 getShift(
 			RandomAccessibleInterval<R> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, int nHighestPeaks,
-			Dimensions minOverlap, boolean subpixelAccuracy, ExecutorService service)
+			long minOverlap, boolean subpixelAccuracy, ExecutorService service)
 	{
 		System.out.println( "PCM" );
 		List<PhaseCorrelationPeak2> peaks = PhaseCorrelation2Util.getPCMMaxima(pcm, service, nHighestPeaks, subpixelAccuracy);
@@ -216,7 +216,7 @@ public class PhaseCorrelation2 {
 			RandomAccessibleInterval<R> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2)
 	{
 		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-		PhaseCorrelationPeak2 res = getShift(pcm, img1, img2, 5, null, true, service);
+		PhaseCorrelationPeak2 res = getShift(pcm, img1, img2, 5, 0, true, service);
 		service.shutdown();
 		return res;		
 	}	

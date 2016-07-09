@@ -177,7 +177,7 @@ public class PhaseCorrelation2Util {
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>> void calculateCrossCorrParallel(
 			List<PhaseCorrelationPeak2> peaks, final RandomAccessibleInterval<T> img1, final RandomAccessibleInterval<S> img2,
-			final Dimensions minOverlapPx, ExecutorService service)
+			final long minOverlapPx, ExecutorService service)
 	{
 		List<Future<?>> futures = new ArrayList<Future<?>>();
 		

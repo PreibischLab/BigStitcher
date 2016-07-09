@@ -154,7 +154,7 @@ public class PhaseCorrelationPeak2 {
 	 */
 	
 	public <T extends RealType<T>, S extends RealType<S>> void calculateCrossCorr(RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, 
-			Dimensions minOverlapPx)
+			long minOverlapPx)
 	{
 		Pair<Interval, Interval> intervals = PhaseCorrelation2Util.getOverlapIntervals(img1, img2, shift);
 		
@@ -166,14 +166,14 @@ public class PhaseCorrelationPeak2 {
 		}
 		
 		nPixel = 1;
-		for (int i = 0; i< intervals.getA().numDimensions(); i++){
-			if (minOverlapPx != null && intervals.getA().dimension(i) < minOverlapPx.dimension(i)){
-				crossCorr = Double.NEGATIVE_INFINITY;
-				nPixel = 0;
-				return;
-			}
-			
+		for (int i = 0; i< intervals.getA().numDimensions(); i++){			
 			nPixel *= intervals.getA().dimension(i);
+		}
+		
+		if (nPixel < minOverlapPx){
+			crossCorr = Double.NEGATIVE_INFINITY;
+			nPixel = 0;
+			return;
 		}
 
 		// for subpixel move the underlying Img2 by the subpixel offset
@@ -210,7 +210,7 @@ public class PhaseCorrelationPeak2 {
 	 * @param img2
 	 */
 	public <T extends RealType<T>, S extends RealType<S>> void calculateCrossCorr(RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2){
-		calculateCrossCorr(img1, img2, null);
+		calculateCrossCorr(img1, img2, 0);
 	}
 	
 	/**
