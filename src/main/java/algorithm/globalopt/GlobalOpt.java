@@ -42,14 +42,14 @@ public class GlobalOpt
 	 */
 	public static < M extends Model< M > > HashMap< ViewId, Tile< M > > compute(
 			final M model,
-			final List< PairwiseStitchingResult > pairs,
+			final List< PairwiseStitchingResult<ViewId> > pairs,
 			final Collection< ViewId > fixedViews,
 			final List< ? extends List< ViewId > > groups,
 			final GlobalOptimizationParameters params)
 	{
 		// assemble all views and corresponding points
 		final HashSet< ViewId > tmpSet = new HashSet< ViewId >();
-		for ( PairwiseStitchingResult pair : pairs )
+		for ( PairwiseStitchingResult<ViewId> pair : pairs )
 		{
 			tmpSet.add( pair.pair().getA() );
 			tmpSet.add( pair.pair().getB() );

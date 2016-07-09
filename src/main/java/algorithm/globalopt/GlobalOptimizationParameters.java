@@ -10,7 +10,7 @@ public class GlobalOptimizationParameters
 	
 	public GlobalOptimizationParameters()
 	{
-		this(0, 2.5, 3.5);		
+		this(0.4, 2.5, 3.5);		
 	}
 	
 	public GlobalOptimizationParameters(double correlationThreshold, double relativeThreshold, double absoluteThreshold)
@@ -24,7 +24,7 @@ public class GlobalOptimizationParameters
 	{
 		// ask user for parameters
 		GenericDialog gd = new GenericDialog("Global optimization options");
-		gd.addNumericField( "cross-correlation threshold", 0.0, 3 );
+		gd.addNumericField( "cross-correlation threshold", 0.4, 3 );
 		gd.addNumericField( "relative error threshold", 2.5, 3 );
 		gd.addNumericField( "absolute error threshold", 3.5, 3 );
 		gd.showDialog();

@@ -16,6 +16,7 @@ import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
+import mpicbg.spim.data.sequence.ImgLoader;
 import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
@@ -23,6 +24,7 @@ import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AbstractTranslation;
+import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
@@ -31,7 +33,9 @@ import net.imglib2.util.Pair;
 import algorithm.AveragedRandomAccessible;
 import algorithm.DownsampleTools;
 import algorithm.PairwiseStitching;
+import algorithm.PairwiseStitchingParameters;
 import algorithm.TransformTools;
+import bdv.spimdata.WrapBasicImgLoader;
 
 public class TransformationTools
 {
@@ -40,14 +44,28 @@ public class TransformationTools
 			final ViewId viewIdB,
 			final ViewRegistration vA,
 			final ViewRegistration vB,
-			final int nPeaks,
-			final boolean doSubpixel,
+			final PairwiseStitchingParameters params,
 			final BasicImgLoader imgLoader,
 			final boolean averageGrouped,
 			final long[] downsampleFactors)
 	{
 		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
+		
+		// TODO: check if overlapping, else return immediately
+		// TODO: can we ensure we have a ImgLoader here (BDV wraps ImgLoader into a BasicImgLaoder??)
+		if (ImgLoader.class.isInstance( imgLoader ))
+		{
+			Translation3D trA = new Translation3D( vA.getModel().getTranslation());
+			Translation3D trB = new Translation3D( vB.getModel().getTranslation());
+			Dimensions dimsA = ((ImgLoader)imgLoader).getSetupImgLoader( viewIdA.getViewSetupId() ).getImageSize( viewIdA.getTimePointId() );
+			Dimensions dimsB = ((ImgLoader)imgLoader).getSetupImgLoader( viewIdB.getViewSetupId() ).getImageSize( viewIdB.getTimePointId() );
+			
+			if (!PairwiseStrategyTools.overlaps( dimsA, dimsB, trA, trB ))
+				return null;
+		}
+		
+		
 		final RandomAccessibleInterval<T> img1;
 		final RandomAccessibleInterval<T> img2;
 		if (averageGrouped)
@@ -100,7 +118,7 @@ public class TransformationTools
 		AbstractTranslation t1 = TransformTools.getInitialTranslation( vA, is2d, downsampleFactors);
 		AbstractTranslation t2 = TransformTools.getInitialTranslation( vB, is2d, downsampleFactors );
 
-		final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, t1, t2, nPeaks, doSubpixel, null, service );
+		final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, t1, t2, params, service );
 
 		if (result == null)
 			return null;
@@ -115,22 +133,22 @@ public class TransformationTools
 		return result;
 	}
 
-	public static ArrayList< PairwiseStitchingResult > computePairs( 	final List< Pair< ViewId, ViewId > > pairs, 
-																		final int nPeaks, final boolean doSubpixel, 
+	public static ArrayList< PairwiseStitchingResult<ViewId> > computePairs( 	final List< Pair< ViewId, ViewId > > pairs, 
+																		final PairwiseStitchingParameters params, 
 																		final ViewRegistrations vrs, 
 																		final BasicImgLoader imgLoader, 
 																		final boolean averageGrouped,
 																		final long[] downsamplingFactors)
 	{
-		final ArrayList< PairwiseStitchingResult > results = new ArrayList<>();
+		final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>();
 
 		for ( final Pair< ViewId, ViewId > p : pairs )
 		{
 			System.out.println( "Compute pairwise: " + p.getA() + " <> " + p.getB() );
-			final Pair< double[], Double > result = computeStitching( p.getA(), p.getB(), vrs.getViewRegistration( p.getA() ), vrs.getViewRegistration( p.getB() ), nPeaks, doSubpixel, imgLoader , averageGrouped, downsamplingFactors);
+			final Pair< double[], Double > result = computeStitching( p.getA(), p.getB(), vrs.getViewRegistration( p.getA() ), vrs.getViewRegistration( p.getB() ), params, imgLoader , averageGrouped, downsamplingFactors);
 			
 			if (result != null)
-				results.add( new PairwiseStitchingResult( p, result.getA(), result.getB() ) );
+				results.add( new PairwiseStitchingResult<ViewId>( p, result.getA(), result.getB() ) );
 		}
 
 		return results;
@@ -177,7 +195,7 @@ public class TransformationTools
 				fixedViews, groupedViews );
 				
 		// compute them
-		final ArrayList< PairwiseStitchingResult > results = computePairs( pairs, 5, false, d.getViewRegistrations(), d.getSequenceDescription().getImgLoader() , false, downsamplingFactors);
+		final ArrayList< PairwiseStitchingResult <ViewId>> results = computePairs( pairs, new PairwiseStitchingParameters(), d.getViewRegistrations(), d.getSequenceDescription().getImgLoader() , false, downsamplingFactors);
 
 		// add correspondences
 		

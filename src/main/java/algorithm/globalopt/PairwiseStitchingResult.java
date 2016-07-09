@@ -4,21 +4,21 @@ import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
 
 
-public class PairwiseStitchingResult
+public class PairwiseStitchingResult <C extends Comparable< C >>
 {
-	final private Pair< ViewId, ViewId > pair;
+	final private Pair< C, C > pair;
 	final private double[] relativeVector;
 	final private double r;
 	
 
-	public PairwiseStitchingResult( final Pair< ViewId, ViewId > pair, final double[] relativeVector, final double r )
+	public PairwiseStitchingResult( final Pair< C, C > pair, final double[] relativeVector, final double r )
 	{
 		this.pair = pair;
 		this.relativeVector = relativeVector;
 		this.r = r;
 	}
 
-	public Pair< ViewId, ViewId > pair() { return pair; }
+	public Pair< C, C > pair() { return pair; }
 	public double[] relativeVector() { return relativeVector; }
 	public double r() { return r; }
 

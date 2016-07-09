@@ -15,7 +15,7 @@ import net.imglib2.util.ValuePair;
 
 public class StitchingResults
 {
-	Map<Pair<ViewId, ViewId>, PairwiseStitchingResult> pairwiseResults;
+	Map<Pair<ViewId, ViewId>, PairwiseStitchingResult<ViewId>> pairwiseResults;
 	Map<ViewId, double[]> globalShifts;
 	
 	public StitchingResults()
@@ -24,7 +24,7 @@ public class StitchingResults
 		globalShifts = new HashMap<>();
 	}
 
-	public Map< Pair< ViewId, ViewId >, PairwiseStitchingResult > getPairwiseResults() { return pairwiseResults; }
+	public Map< Pair< ViewId, ViewId >, PairwiseStitchingResult<ViewId> > getPairwiseResults() { return pairwiseResults; }
 	
 	public Map< ViewId, double[] > getGlobalShifts() { return globalShifts;	}
 	
@@ -34,12 +34,12 @@ public class StitchingResults
 	 * @param pair
 	 * @param res
 	 */
-	public void setPairwiseResultForPair(Pair<ViewId, ViewId> pair, PairwiseStitchingResult res )
+	public void setPairwiseResultForPair(Pair<ViewId, ViewId> pair, PairwiseStitchingResult<ViewId> res )
 	{
 		Pair< ViewId, ViewId > key = pair.getA().compareTo( pair.getB() ) < 0 ? pair : new ValuePair<>(pair.getB(), pair.getA());
 		pairwiseResults.put( key, res );
 	}	
-	public PairwiseStitchingResult getPairwiseResultsForPair(Pair<ViewId, ViewId> pair)
+	public PairwiseStitchingResult<ViewId> getPairwiseResultsForPair(Pair<ViewId, ViewId> pair)
 	{
 		Pair< ViewId, ViewId > key = pair.getA().compareTo( pair.getB() ) < 0 ? pair : new ValuePair<>(pair.getB(), pair.getA());
 		return pairwiseResults.get( key );
@@ -51,9 +51,9 @@ public class StitchingResults
 	}
 	
 	
-	public ArrayList< PairwiseStitchingResult > getAllPairwiseResultsForViewId(ViewId vid)
+	public ArrayList< PairwiseStitchingResult<ViewId> > getAllPairwiseResultsForViewId(ViewId vid)
 	{
-		ArrayList< PairwiseStitchingResult > res = new ArrayList<>();
+		ArrayList< PairwiseStitchingResult<ViewId> > res = new ArrayList<>();
 		for (Pair< ViewId, ViewId > p : pairwiseResults.keySet())
 		{
 			if (p.getA().equals( vid ) || p.getB().equals( vid )){
@@ -66,9 +66,9 @@ public class StitchingResults
 	
 	public ArrayList< Double > getErrors(ViewId vid)
 	{
-		List<PairwiseStitchingResult> psrs = getAllPairwiseResultsForViewId( vid );
+		List<PairwiseStitchingResult<ViewId>> psrs = getAllPairwiseResultsForViewId( vid );
 		ArrayList< Double > res = new ArrayList<>();
-		for (PairwiseStitchingResult psr : psrs)
+		for (PairwiseStitchingResult <ViewId>psr : psrs)
 		{
 			if (globalShifts.containsKey( psr.pair().getA()) && globalShifts.containsKey( psr.pair().getB() ))
 			{
@@ -85,7 +85,7 @@ public class StitchingResults
 	{
 		double sum = 0.0;
 		int count = 0;
-		for (PairwiseStitchingResult psr : pairwiseResults.values())
+		for (PairwiseStitchingResult<ViewId> psr : pairwiseResults.values())
 		{
 			if (vid.equals( psr .pair().getA()) || vid.equals( psr .pair().getB()))
 			{
@@ -108,7 +108,7 @@ public class StitchingResults
 		sr.getPairwiseResults().put( new ValuePair<>(new ViewId( 0, 0 ), new ViewId( 0, 1 )), null );
 		sr.getPairwiseResults().put( new ValuePair<>(new ViewId( 0, 1 ), new ViewId( 0, 2 )), null );
 		
-		ArrayList< PairwiseStitchingResult > psr = sr.getAllPairwiseResultsForViewId( new ViewId( 0, 0 ) );
+		ArrayList< PairwiseStitchingResult<ViewId> > psr = sr.getAllPairwiseResultsForViewId( new ViewId( 0, 0 ) );
 		System.out.println( psr.size() );
 	}
 	
