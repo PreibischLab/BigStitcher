@@ -115,7 +115,10 @@ public class JuliaRealRandomAccessible implements RealRandomAccessible< LongType
 				v = a.getPowerDouble();
 				++i;
 			}
-			return i < 0 ? 0 : i > 255 ? 255 : i;
+			long ret =  i < 0 ? 0 : i > 255 ? 255 : i;
+			
+			// quick'n dirty noise
+			return ret + (long) (Math.random() * 5);
 		}
 
 		@Override

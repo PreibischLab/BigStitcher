@@ -8,7 +8,9 @@ import org.scijava.Context;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
+import algorithm.AveragedRandomAccessible;
 import bdv.BigDataViewer;
+import imglib.ops.operator.unary.Abs;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import mpicbg.spim.data.registration.ViewRegistration;
@@ -52,9 +54,13 @@ import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
+import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealViews;
+import net.imglib2.realtransform.Translation2D;
+import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.complex.ComplexDoubleType;
 import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -64,25 +70,30 @@ import net.imglib2.view.Views;
 
 public class FractalSpimDataGenerator
 {
-	private RealRandomAccessible< LongType > ra;
-	private JuliaRealRandomAccessible fractalRA;
-	private int numDimensions;
+
+	private int numDimensions;	
+	private AveragedRandomAccessible< LongType > fractalsRA;
 	
 	private OpService ops;
 	
-	public FractalSpimDataGenerator(AffineGet transform){
-		fractalRA = new JuliaRealRandomAccessible(new ComplexDoubleType( -0.4, 0.6 ), 300, 300, transform.numDimensions());
-		ra = RealViews.affineReal( fractalRA, transform );
+	public FractalSpimDataGenerator(int numD){
+		fractalsRA = new AveragedRandomAccessible<>( numD );
 		ops = new Context(OpService.class).getService( OpService.class );
-		this.numDimensions = transform.numDimensions();		
+		this.numDimensions = numD;		
 	}
 	
-	public Img< LongType > getImageAtInterval(Interval interval){
-		IterableInterval< LongType > raiT = Views.iterable( Views.zeroMin( Views.interval( Views.raster( ra ), interval) ) );
+	public void addFractal(AffineGet transform)
+	{
+		JuliaRealRandomAccessible fractalRA = new JuliaRealRandomAccessible(new ComplexDoubleType( -0.4, 0.6 ), 300, 300, numDimensions);
+		fractalsRA.addRAble(Views.raster( RealViews.affineReal( fractalRA, transform )));
+	}
+	
+	public RandomAccessibleInterval< LongType > getImageAtInterval(Interval interval){
+		RandomAccessibleInterval< LongType > raiT =  Views.zeroMin( Views.interval( fractalsRA, interval) );
 		// we want a Img here, so that we can downsaple later
 		Img<LongType> resImg = new ArrayImgFactory<LongType>().create( raiT, new LongType() );
 		
-		ops.copy().iterableInterval( resImg, raiT );
+		ops.copy().rai( resImg, raiT );
 		//ImgLib2Util.copyRealImage(raiT, resImg) ;
 		return resImg;
 	}
@@ -119,6 +130,24 @@ public class FractalSpimDataGenerator
 			mins.add( min );
 		}
 		return mins;
+	}
+	
+	public static List<AbstractTranslation> getTileTranslations(List<Interval> intervals)
+	{
+		final List< AbstractTranslation > tr = new ArrayList<>();
+		for(Interval iv : intervals)
+		{
+			double[] min = new double[iv.numDimensions()];
+			iv.realMin( min );
+
+			if (iv.numDimensions() == 2)
+				tr.add( new Translation2D( min ) );
+			else
+				tr.add( new Translation3D( min ) );
+
+		}
+		return tr;		
+		
 	}
 	
 	/**
@@ -273,7 +302,10 @@ public class FractalSpimDataGenerator
 			   0.0f, scale, 0.0f, 0.0f,
 			   0.0f, 0.0f, scale, 0.0f );
 		
-		new BigDataViewer( new FractalSpimDataGenerator( m).generateSpimData( res ),
+		FractalSpimDataGenerator fsdg = new FractalSpimDataGenerator(3);
+		fsdg.addFractal( m );
+		
+		new BigDataViewer( fsdg.generateSpimData( res ),
 				"", null );
 		
 		/*
