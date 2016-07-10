@@ -26,12 +26,12 @@ import net.imglib2.realtransform.AffineTransform3D;
 public class FilteredAndGroupedExplorer< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > >
 {
 	final JFrame frame;
-	FilteredAndGroupedExporerPanel<AS, X> panel;
+	FilteredAndGroupedExplorerPanel<AS, X> panel;
 	
 	public FilteredAndGroupedExplorer( final AS data, final String xml, final X io )
 	{
 		frame = new JFrame( "Stitching Explorer" );
-		panel = new FilteredAndGroupedExporerPanel< AS, X >( this, data, xml, io );
+		panel = new FilteredAndGroupedExplorerPanel< AS, X >( this, data, xml, io );
 
 		frame.add( panel, BorderLayout.CENTER );
 		frame.setSize( panel.getPreferredSize() );
@@ -67,7 +67,7 @@ public class FilteredAndGroupedExplorer< AS extends AbstractSpimData< ? >, X ext
 	}
 	
 	public AS getSpimData() { return panel.getSpimData(); }
-	public FilteredAndGroupedExporerPanel< AS, X > getPanel() { return panel; }
+	public FilteredAndGroupedExplorerPanel< AS, X > getPanel() { return panel; }
 	public JFrame getFrame() { return frame; }
 	public void addListener( final SelectedViewDescriptionListener< AS > listener ) { panel.addListener( listener ); }
 	public ArrayList< SelectedViewDescriptionListener< AS > > getListeners() { return panel.getListeners(); }
@@ -130,7 +130,7 @@ public class FilteredAndGroupedExplorer< AS extends AbstractSpimData< ? >, X ext
 
 		
 		
-		//new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( GenerateSpimData.grid3x2(), null, null );
-		new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( sd, null, null );
+		new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( GenerateSpimData.grid3x2(), null, null );
+		//new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( sd, null, null );
 	}
 }

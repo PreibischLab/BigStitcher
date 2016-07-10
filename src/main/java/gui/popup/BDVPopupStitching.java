@@ -17,7 +17,7 @@ import bdv.tools.brightness.MinMaxGroup;
 import bdv.viewer.SourceAndConverter;
 import bdv.viewer.ViewerOptions;
 import gui.AveragingProjectorARGB;
-import gui.FilteredAndGroupedExporerPanel;
+import gui.FilteredAndGroupedExplorerPanel;
 import gui.GroupedRowWindow;
 import gui.MaximumProjectorARGB;
 import gui.overlay.LinkOverlay;
@@ -191,7 +191,7 @@ public class BDVPopupStitching extends BDVPopup
 			// work, but currently tryLoadSettings is protected. fix that.
 		InitializeViewerState.initBrightness( 0.001, 0.999, bdv.getViewer(), bdv.getSetupAssignments() );
 
-		FilteredAndGroupedExporerPanel.setFusedModeSimple( bdv, panel.getSpimData() );
+		FilteredAndGroupedExplorerPanel.setFusedModeSimple( bdv, panel.getSpimData() );
 //		if ( !bdv.tryLoadSettings( panel.xml() ) ) TODO: this should work, but currently tryLoadSettings is protected. fix that.
 		//	InitializeViewerState.initBrightness( 0.001, 0.999, bdv.getViewer(), bdv.getSetupAssignments() );
 		
@@ -199,7 +199,7 @@ public class BDVPopupStitching extends BDVPopup
 		groupByChannel( bdv, panel.getSpimData() );
 		colorByChannel( bdv, panel.getSpimData() );
 			
-		FilteredAndGroupedExporerPanel.updateBDV( bdv, panel.colorMode(), panel.getSpimData(), panel.firstSelectedVD(), ((GroupedRowWindow)panel).selectedRowsGroups());
+		FilteredAndGroupedExplorerPanel.updateBDV( bdv, panel.colorMode(), panel.getSpimData(), panel.firstSelectedVD(), ((GroupedRowWindow)panel).selectedRowsGroups());
 
 		bdv.getViewer().addTransformListener( lo );
 		bdv.getViewer().getDisplay().addOverlayRenderer( lo );

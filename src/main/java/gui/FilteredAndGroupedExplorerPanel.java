@@ -83,10 +83,10 @@ import bdv.viewer.SourceAndConverter;
 import bdv.viewer.ViewerOptions;
 import bdv.viewer.VisibilityAndGrouping;
 
-public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS >>
+public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS >>
 		extends JPanel implements ExplorerWindow< AS, X >, GroupedRowWindow
 {
-	public static FilteredAndGroupedExporerPanel< ?, ? > currentInstance = null;
+	public static FilteredAndGroupedExplorerPanel< ?, ? > currentInstance = null;
 
 	final ArrayList< ExplorerWindowSetable > popups;
 
@@ -115,7 +115,7 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 	final protected HashSet< List<BasicViewDescription< ? extends BasicViewSetup >> > selectedRows;
 	protected BasicViewDescription< ? extends BasicViewSetup > firstSelectedVD;
 
-	public FilteredAndGroupedExporerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data,
+	public FilteredAndGroupedExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data,
 			final String xml, final X io)
 	{
 		this.stitchingResults = new StitchingResults();
@@ -284,7 +284,6 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 
 		tableModel.addGroupingFactor( Channel.class );
 		tableModel.addGroupingFactor( Illumination.class );
-		
 
 		table = new JTable();
 		table.setModel( tableModel );
