@@ -5,10 +5,15 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
+import algorithm.GroupedViewAggregator;
+import algorithm.GroupedViewAggregator.ActionType;
+import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
 import algorithm.StitchingResults;
 import algorithm.TransformTools;
@@ -22,11 +27,15 @@ import ij.gui.GenericDialog;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicImgLoader;
+import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Channel;
+import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AbstractTranslation;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
@@ -111,11 +120,12 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			if (params == null)
 				return;
 			
-			final ArrayList< ViewId > viewIdsSelectedChannel = new ArrayList<>();
+			//final ArrayList< ViewId > viewIdsSelectedChannel = new ArrayList<>();
 			
 			int channelIdxInGroup = channelNames.indexOf( channel ) - 1;			
 			boolean doGrouped = channelIdxInGroup < 0 ;
 			
+			/*
 			// get only one channel from grouped views
 			if ( !doGrouped ) {
 				for (GroupedViews g : viewIds)
@@ -128,23 +138,46 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			{
 				viewIdsSelectedChannel.addAll( viewIds );
 			}
+			*/
 						
 			// find all pairwise matchings that we need to compute
 			final HashMap< ViewId, Dimensions > vd = new HashMap<>();
 			final HashMap< ViewId, AbstractTranslation > vl = new HashMap<>();
 
-			for ( final ViewId viewId : viewIdsSelectedChannel )
+			for ( final ViewId viewId : viewIds )
 			{
 				vd.put( viewId, sd.getViewDescriptions().get( viewId ).getViewSetup().getSize() );
 				vl.put( viewId, TransformTools.getInitialTranslation( vr.getViewRegistration( viewId ), is2d , downSamplingFactors) );
 			}
 
 			final List< Pair< ViewId, ViewId > > pairs = PairwiseStrategyTools.overlappingTiles(
-					vd, vl, viewIdsSelectedChannel );
+					vd, vl, viewIds );
 
 			// compute them
-			final ArrayList< PairwiseStitchingResult<ViewId> > results = TransformationTools.computePairs( pairs, params, d.getViewRegistrations(), (BasicImgLoader) d.getSequenceDescription().getImgLoader(), doGrouped, downSamplingFactors );
+			
+			GroupedViewAggregator groupedViewAggregator = new GroupedViewAggregator();
+			
+			if (doGrouped)
+			{
+				groupedViewAggregator.addAction( ActionType.PICK_BRIGHTEST, Illumination.class, null );
+				groupedViewAggregator.addAction( ActionType.AVERAGE, Channel.class, null );
+			}
+			else
+			{
+				groupedViewAggregator.addAction( ActionType.PICK_BRIGHTEST, Illumination.class, null );
+				Channel c = sd.getViewDescriptions().get( viewIds.get( 0 ) ).getViewSetup().getAttribute( Channel.class );
+				groupedViewAggregator.addAction( ActionType.PICK_SPECIFIC, Channel.class, c );
+			}
+			
+			final ArrayList< PairwiseStitchingResult<ViewId> > results = 
+					TransformationTools.computePairs( pairs,
+												params,
+												d.getViewRegistrations(),
+												d.getSequenceDescription(), 
+												groupedViewAggregator,
+												downSamplingFactors );
 
+			
 			// update StitchingResults with Results
 			for (final PairwiseStitchingResult <ViewId > psr : results)
 			{
@@ -160,6 +193,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			}
 			
 		}
+		
 		
 	}
 
