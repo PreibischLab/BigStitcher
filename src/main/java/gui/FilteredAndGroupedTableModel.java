@@ -108,7 +108,7 @@ public class FilteredAndGroupedTableModel < AS extends AbstractSpimData< ? > > e
 		res.add(ViewSetup.class);
 		//res.add(Angle.class);
 		res.add(Channel.class);
-		//res.add(Illumination.class);
+		res.add(Illumination.class);
 		res.add(Tile.class);		
 		return res;
 	}

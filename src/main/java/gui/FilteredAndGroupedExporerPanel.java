@@ -283,6 +283,8 @@ public class FilteredAndGroupedExporerPanel<AS extends AbstractSpimData< ? >, X 
 		((StitchingTableModelDecorator< AS >)tableModel).setStitchingResults( stitchingResults );
 
 		tableModel.addGroupingFactor( Channel.class );
+		tableModel.addGroupingFactor( Illumination.class );
+		
 
 		table = new JTable();
 		table.setModel( tableModel );
