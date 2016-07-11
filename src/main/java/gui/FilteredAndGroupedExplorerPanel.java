@@ -367,8 +367,6 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 
 		// All instances of Entities in SpimData with "own local coordinate
 		// system"
-		Vector< ? > vIllum = new Vector< >(
-				SpimDataTools.getInstancesOfAttribute( getSpimData().getSequenceDescription(), Illumination.class ) );
 		Vector< ? > vAngle = new Vector< >(
 				SpimDataTools.getInstancesOfAttribute( getSpimData().getSequenceDescription(), Angle.class ) );
 		Vector< ? > vTimepoint = new Vector< >(
@@ -386,17 +384,9 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 				tableModel.addFilter( TimePoint.class, selectedTPs );
 			}
 		} );
-		// "all" checkbox
-		final JCheckBox timePointCheckBox = new JCheckBox( "TimePoint" );
-		timePointCheckBox.addActionListener( new ActionListener()
-		{			
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-		} );
+		if (vTimepoint.size() == 1)
+			timePointCB.setEnabled( false );
+		
 
 		// Angle ComboBox
 		final JComboBox< ? > angleCB = new JComboBox< >( vAngle );
@@ -410,22 +400,20 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 				tableModel.addFilter( Angle.class, selectedAngles );
 			}
 		} );
+		if (vAngle.size() == 1)
+			angleCB.setEnabled( false );
 
-		// Angle ComboBox
-		final JComboBox< ? > illumCB = new JComboBox< >( vIllum );
-		illumCB.addActionListener( new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				ArrayList< Illumination > selectedIllums = new ArrayList< >();
-				selectedIllums.add( (Illumination) illumCB.getSelectedItem() );
-				tableModel.addFilter( Illumination.class, selectedIllums );
-			}
-		} );
+		final JPanel footer_tp = new JPanel( new BorderLayout() );
+		footer_tp.add( new JLabel( "Timepoint:" ), BorderLayout.WEST );
+		footer_tp.add( timePointCB, BorderLayout.EAST );
+		
+		final JPanel footer_angle = new JPanel( new BorderLayout() );
+		footer_angle.add( new JLabel( "Angle:" ), BorderLayout.WEST );
+		footer_angle.add( angleCB, BorderLayout.EAST );
+		
 
-		footer.add( timePointCB, BorderLayout.WEST );
-		//footer.add( angleCB, BorderLayout.WEST );
+		footer.add( footer_tp, BorderLayout.NORTH );
+		footer.add( footer_angle, BorderLayout.SOUTH );
 		//footer.add( illumCB, BorderLayout.WEST );
 
 		this.add( footer, BorderLayout.SOUTH );
