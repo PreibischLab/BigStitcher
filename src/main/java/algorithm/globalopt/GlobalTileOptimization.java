@@ -187,7 +187,7 @@ public class GlobalTileOptimization
 				else
 					IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): prealigned all tiles" );
 
-				tc.optimize( 10, 10000, 200 );				
+				tc.optimize( params.absoluteThreshold, 10000, 200 );				
 
 				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Global optimization of " + 
 						tc.getTiles().size());
