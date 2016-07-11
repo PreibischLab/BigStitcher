@@ -3,6 +3,7 @@ package gui.popup;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,8 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			final ArrayList< GroupedViews > viewIds = new ArrayList<>();			
 			for (List<ViewId> vidl : ((GroupedRowWindow)panel).selectedRowsViewIdGroups())
 				viewIds.add( new GroupedViews( vidl ) );
+			
+			Collections.sort( viewIds );
 			
 			// define fixed tiles
 			final ArrayList< ViewId > fixedViews = new ArrayList< ViewId >();
