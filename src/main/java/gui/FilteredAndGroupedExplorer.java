@@ -12,6 +12,7 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
+import spim.fiji.datasetmanager.LightSheetZ1;
 import spim.fiji.spimdata.explorer.ViewSetupExplorer;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.XmlIoSpimData;
@@ -130,7 +131,10 @@ public class FilteredAndGroupedExplorer< AS extends AbstractSpimData< ? >, X ext
 
 		
 		
-		new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( GenerateSpimData.grid3x2(), null, null );
+		//new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( GenerateSpimData.grid3x2(), null, null );
+		new FilteredAndGroupedExplorer<SpimData, XmlIoSpimData>( new LightSheetZ1().createDataset(), null, null );
 		//new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( sd, null, null );
+	
 	}
+	
 }
