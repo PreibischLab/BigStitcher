@@ -54,7 +54,7 @@ public class TransformationTools
 			final GroupedViewAggregator gva,
 			final long[] downsampleFactors)
 	{
-		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
 
 		
 		// TODO: check if overlapping, else return immediately
@@ -78,8 +78,8 @@ public class TransformationTools
 		
 		if (gva != null && GroupedViews.class.isInstance( viewIdA ))
 		{
-			img1 = gva.aggregate( (GroupedViews) viewIdA, sd );	
-			img2 = gva.aggregate( (GroupedViews) viewIdB, sd );
+			img1 = gva.aggregate( (GroupedViews) viewIdA, sd, downsampleFactors );	
+			img2 = gva.aggregate( (GroupedViews) viewIdB, sd, downsampleFactors );
 		}
 		else
 		{
@@ -106,6 +106,9 @@ public class TransformationTools
 		System.out.println("integer shift: " + Util.printCoordinates(result.getA()));
 		System.out.print("cross-corr: " + result.getB());
 
+		
+		service.shutdown();
+		
 		return result;
 	}
 

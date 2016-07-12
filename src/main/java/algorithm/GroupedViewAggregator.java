@@ -40,7 +40,11 @@ import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imagej.ops.OpService;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
+import net.imglib2.Interval;
+import net.imglib2.Positionable;
+import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealPositionable;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
@@ -77,6 +81,7 @@ public class GroupedViewAggregator
 			groupingSet.add( entityClass );
 			List< List< BasicViewDescription< ? > > > grouped = 
 					SpimDataTools.groupByAttributes( new ArrayList<>(input.keySet()), groupingSet );
+			
 			
 			Map<BasicViewDescription<?>, RandomAccessibleInterval<T>> res = new HashMap<>();			
 			
@@ -180,7 +185,8 @@ public class GroupedViewAggregator
 	
 	
 	public <T extends RealType<T>> RandomAccessibleInterval< T > aggregate(GroupedViews gv, 
-												AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd){
+												AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd,
+												long[] downsampleFactors){
 		
 		Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> map = new HashMap<>();
 		
@@ -188,7 +194,7 @@ public class GroupedViewAggregator
 		{
 			BasicViewDescription< ? > vd = sd.getViewDescriptions().get( vid );
 			RandomAccessibleInterval< T > rai = 
-					(RandomAccessibleInterval< T >) sd.getImgLoader().getSetupImgLoader( vid.getViewSetupId() ).getImage( vid.getTimePointId(), null );
+					new RAIProxy< T >(sd.getImgLoader(), vid, downsampleFactors); 
 			
 			map.put( vd, rai );		
 		}
@@ -302,9 +308,9 @@ public class GroupedViewAggregator
 		
 		
 		
-		gva.aggregate( gv, sd );
+		gva.aggregate( gv, sd, new long[] {1,1,1} );
 		
-		ImageJFunctions.show( (RandomAccessibleInterval< UnsignedShortType >)gva.aggregate( gv, sd ));
+		ImageJFunctions.show( (RandomAccessibleInterval< UnsignedShortType >)gva.aggregate( gv, sd , new long[] {1,1,1}));
 		
 		new ImageJ();
 		
