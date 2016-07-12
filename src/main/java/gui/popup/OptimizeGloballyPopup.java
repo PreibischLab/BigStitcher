@@ -112,6 +112,9 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 														params );
 			
 			
+			AffineGet vtFixed = 
+					(AffineGet) panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ) ).getTransformList().get( 1 ).asAffine3D().copy();
+			
 			for (ViewId vid : models.keySet())
 			{
 				double[] tr = models.get( vid );//.getModel().getTranslation();
@@ -119,6 +122,9 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 				at.set( new double []  {1.0, 0.0, 0.0, tr[0],
 										0.0, 1.0, 0.0, tr[1],
 										0.0, 0.0, 1.0, tr[2]} );
+				
+				at.concatenate( vtFixed );
+				
 				ViewTransform vt = new ViewTransformAffine( "Translation", at);
 				
 				// set the shift in stitchingResults
@@ -129,7 +135,11 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 					if (((GroupedViews) groupVid).getViewIds().contains( vid ))
 					{
 						for (ViewId vid2 : ((GroupedViews) groupVid).getViewIds()){
-							d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().set( 1, vt );
+							
+							if (d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().size() < 2)
+								d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().add(vt);
+							else
+								d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().set( 1 , vt);
 							d.getViewRegistrations().getViewRegistration( vid2 ).updateModel();
 						}
 					}
