@@ -2,29 +2,48 @@ package gui.popup;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
 
 import javax.swing.JOptionPane;
 
+import algorithm.SpimDataTools;
+import bdv.AbstractSpimSource;
 import bdv.BigDataViewer;
 import bdv.ViewerImgLoader;
 import bdv.spimdata.WrapBasicImgLoader;
 import bdv.tools.InitializeViewerState;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.brightness.MinMaxGroup;
+import bdv.tools.transformation.TransformedSource;
+import bdv.util.BehaviourTransformEventHandlerPlanar.BehaviourTransformEventHandlerPlanarFactory;
 import bdv.viewer.SourceAndConverter;
 import bdv.viewer.ViewerOptions;
+import bdv.viewer.state.SourceGroup;
+import bdv.viewer.state.SourceState;
 import gui.AveragingProjectorARGB;
 import gui.FilteredAndGroupedExplorerPanel;
 import gui.GroupedRowWindow;
 import gui.MaximumProjectorARGB;
 import gui.overlay.LinkOverlay;
 import mpicbg.spim.data.generic.AbstractSpimData;
+import mpicbg.spim.data.generic.base.Entity;
+import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.sequence.Channel;
+import mpicbg.spim.data.sequence.Illumination;
+import mpicbg.spim.data.sequence.ViewDescription;
+import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
+import net.imglib2.ui.TransformListener;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.BDVPopup;
@@ -95,12 +114,13 @@ public class BDVPopupStitching extends BDVPopup
 		}
 	}
 	
-	public static void groupByChannel(BigDataViewer bdv, AbstractSpimData< ? > data)
+	public static void minMaxGroupByChannel(BigDataViewer bdv, AbstractSpimData< ? > data)
 	{
 		// group ConverterSetups according to Channel
 		HashMap< Channel, ArrayList< ConverterSetup > > groups = new HashMap<>();
 		for (ConverterSetup cs : bdv.getSetupAssignments().getConverterSetups())
 		{
+			
 			 Channel key = data.getSequenceDescription().getViewSetups().get( cs.getSetupId() ).getAttribute( Channel.class );
 			 if (!groups.containsKey( key ))
 				 groups.put( key, new ArrayList< ConverterSetup >() );
@@ -127,6 +147,46 @@ public class BDVPopupStitching extends BDVPopup
 			}
 		}
 		
+		
+		
+	}
+
+	public static void groupSourcesByFactors(BigDataViewer bdv, AbstractSpimData< ? > data,
+			Set< Class< ? extends Entity > > groupingFactors)
+	{
+		//  clear source groups		
+		for (int i = 0; i < bdv.getViewer().getState().numSourceGroups(); ++i)
+		{
+			SourceGroup sg = bdv.getViewer().getState().getSourceGroups().get( i );
+			SortedSet< Integer > sourceIds = sg.getSourceIds();
+			for (Integer si: sourceIds)
+				bdv.getViewer().getVisibilityAndGrouping().removeSourceFromGroup( si, i );
+
+		}
+
+		List<BasicViewDescription< ? > > vds = new ArrayList<>();
+		Map<BasicViewDescription< ? >, Integer> vdToSource = new HashMap<>();
+		
+
+		for(int i = 0; i < bdv.getViewer().getState().getSources().size(); ++i)
+		{
+			Integer timepointId = bdv.getViewer().getState().getCurrentTimepoint();
+			BasicViewDescription< ? > vd = data.getSequenceDescription().getViewDescriptions().get( new ViewId( timepointId, i ) );
+			vds.add( vd );
+			vdToSource.put( vd, i );
+		}
+
+		
+		List< List< BasicViewDescription< ? > > > groupByAttributes = SpimDataTools.groupByAttributes( vds, groupingFactors );
+		
+		for (int gi = 0; gi < groupByAttributes.size(); gi ++)
+		{
+			List< BasicViewDescription< ? > > vdsI = groupByAttributes.get( gi );
+			for (BasicViewDescription< ? > vd : vdsI)
+			{
+				bdv.getViewer().getVisibilityAndGrouping().addSourceToGroup( vdToSource.get( vd ), gi );
+			}
+		}
 	}
 	
 	public static void colorByChannel(BigDataViewer bdv, AbstractSpimData< ? > data)
@@ -142,6 +202,8 @@ public class BDVPopupStitching extends BDVPopup
 		}
 		
 		Iterator< ARGBType > colorIt = ColorStream.iterator();
+		
+		
 		
 		for (ArrayList< ConverterSetup > csg : groups.values())
 		{
@@ -165,13 +227,15 @@ public class BDVPopupStitching extends BDVPopup
 				return null;
 		}
 
+		
+		
 		// FIXME: do this somewhere else?
 		WrapBasicImgLoader.wrapImgLoaderIfNecessary( panel.getSpimData() );
 		
 		ArrayList< ConverterSetup > convSetups = new ArrayList<>();
 		ArrayList< SourceAndConverter< ? > > sources = new ArrayList<>();
 		
-		BigDataViewer.initSetups( panel.getSpimData(), convSetups, sources );
+		BigDataViewer.initSetups( panel.getSpimData(), convSetups, sources );		
 		
 		BigDataViewer bdv = new BigDataViewer( 	convSetups,
 												sources,
@@ -180,9 +244,12 @@ public class BDVPopupStitching extends BDVPopup
 												( ( ViewerImgLoader ) panel.getSpimData().getSequenceDescription().getImgLoader() ).getCache(),
 												"BigDataViewer",
 												null, 
-												ViewerOptions.options().accumulateProjectorFactory( MaximumProjectorARGB.factory ) );
-
-
+												ViewerOptions.options().accumulateProjectorFactory( MaximumProjectorARGB.factory ));
+		
+		
+				// For 2D behaviour								.transformEventHandlerFactory(new BehaviourTransformEventHandlerPlanarFactory() ));
+		//ViewerOptions.options().transformEventHandlerFactory(new BehaviourTransformEventHandlerPlanarFactory() );
+		
 		bdv.getViewerFrame().setVisible( true );
 		
 		InitializeViewerState.initTransform( bdv.getViewer() );
@@ -196,8 +263,15 @@ public class BDVPopupStitching extends BDVPopup
 		//	InitializeViewerState.initBrightness( 0.001, 0.999, bdv.getViewer(), bdv.getSetupAssignments() );
 		
 			
-		groupByChannel( bdv, panel.getSpimData() );
+		minMaxGroupByChannel( bdv, panel.getSpimData() );
 		colorByChannel( bdv, panel.getSpimData() );
+		
+		
+		// FIXME: source grouping is quite hacky atm
+		Set<Class<? extends Entity>> groupingFactors = new HashSet<>();
+		groupingFactors.add( Channel.class );
+		groupingFactors.add( Illumination.class );		
+		groupSourcesByFactors( bdv, panel.getSpimData(), groupingFactors );
 			
 		FilteredAndGroupedExplorerPanel.updateBDV( bdv, panel.colorMode(), panel.getSpimData(), panel.firstSelectedVD(), ((GroupedRowWindow)panel).selectedRowsGroups());
 
