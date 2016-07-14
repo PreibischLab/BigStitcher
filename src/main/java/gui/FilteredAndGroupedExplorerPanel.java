@@ -59,6 +59,7 @@ import spim.fiji.spimdata.explorer.popup.DisplayViewPopup;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.explorer.popup.LabelPopUp;
 import gui.overlay.LinkOverlay;
+import gui.popup.ApplyBDVTransformationPopup;
 import gui.popup.BDVPopupStitching;
 import gui.popup.CalculatePCPopup;
 import gui.popup.OptimizeGloballyPopup;
@@ -553,6 +554,7 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 	{
 		for ( int i = 0; i < active.length; ++i )
 			vag.setSourceActive( i, active[i] );
+		
 	}
 
 	public static int getBDVTimePointIndex(final TimePoint t, final AbstractSpimData< ? > data)
@@ -729,6 +731,9 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		SimpleRemoveLinkPopup removeLinkPopup = new SimpleRemoveLinkPopup();
 		removeLinkPopup.setStitchingResults( stitchingResults );
 		popups.add( removeLinkPopup );
+		
+		popups.add( new ApplyBDVTransformationPopup() );
+		
 		
 		popups.add( new Separator() );
 
