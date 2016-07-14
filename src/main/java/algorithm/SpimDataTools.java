@@ -66,6 +66,10 @@ public class SpimDataTools {
 			Set<Class<? extends Entity>> groupingFactors) {
 		Map<List<Entity>, List<BasicViewDescription<?>>> res = new HashMap<>();
 
+		// pre-sort vd List
+		Collections.sort( vds );
+		
+		
 		for (BasicViewDescription<?> vd : vds) {
 			List<Entity> key = new ArrayList<>();
 
@@ -84,7 +88,23 @@ public class SpimDataTools {
 			res.get(key).add(vd);
 		}
 
-		return new ArrayList<List<BasicViewDescription<?>>>(res.values());
+		// sort resulting groups according to the ViewId of their first element
+		ArrayList<List<BasicViewDescription<?>>> resList = new ArrayList<>(res.values());
+		Collections.sort( resList, new Comparator< List<BasicViewDescription<?>> >()
+		{
+			@Override
+			public int compare(List< BasicViewDescription< ? > > o1, List< BasicViewDescription< ? > > o2)
+			{
+				if (o1.size() == 0)
+					return -1;
+				else if (o2.size() == 0)
+					return 1;
+				else
+					return o1.get( 0 ).compareTo( o2.get( 0 ) );
+			}
+		} );
+		
+		return resList;
 	}
 
 	/**
