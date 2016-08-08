@@ -24,11 +24,15 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 	
 	private final AffineTransform3D viewerTransform;
 
-	/** screen pixels [x,y,z] **/
-	private Color getColor( final double[] gPos, double r, double maxr, double minr)
+	/** screen pixels [x,y,z] **/	
+	private static Color getColor( final double corr, final double maxR, final double minR )
 	{
-		double range = maxr - minr;
-		return Color.getHSBColor( (float) ((r-minr)/range), 1.0f, 1.0f );
+		final double r = ( corr - minR ) / ( maxR - minR );
+		
+		final double red = r > 0.5 ? Math.max( 0, (1 - r) * 2 ): 1.0;
+		final double green = r > 0.5 ? 1 : Math.max( 0, 2*r );
+
+		return new Color( (float)red, (float)green, 0.0f, 1.0f);
 	}
 
 	public LinkOverlay( StitchingResults res, AbstractSpimData< ? > spimData)
@@ -92,7 +96,7 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 			transform.apply( lPos1, gPos1 );
 			transform.apply( lPos2, gPos2 );
 						
-			graphics.setColor( getColor( gPos1, stitchingResults.getPairwiseResults().get( p ).r(), maxr, minr ) );
+			graphics.setColor( getColor( stitchingResults.getPairwiseResults().get( p ).r(), maxr, minr ) );
 			
 			graphics.drawLine((int) gPos1[0],(int) gPos1[1],(int) gPos2[0],(int) gPos2[1] );
 		}
@@ -101,4 +105,19 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 	@Override
 	public void setCanvasSize( final int width, final int height )
 	{}
+	
+	public static void main(String[] args)
+	{
+		double maxR = 2;
+		double minR = 1;
+		
+		for (double corr = 2.0; corr >= 1.0; corr -= 0.1) 
+		{
+			final double r = ( corr - minR ) / ( maxR - minR );
+					
+			final double red = r > 0.5 ? Math.max( 0, (1 - r) * 2 ): 1.0;
+			final double green = r > 0.5 ? 1 : Math.max( 0, 2*r );
+			System.out.println( red + " " + green );
+		}
+	}
 }
