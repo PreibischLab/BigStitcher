@@ -106,17 +106,23 @@ public class FractalSpimDataGenerator
 		m2.preConcatenate( mShift2 );
 		m3.preConcatenate( mShift3 );
 		
+		final int tilesX = 3;//7;
+		final int tilesY = 2;//6;
+
+		final float correctOverlap = 0.2f;
+		final float wrongOverlap = 0.3f;
+
 		Interval start = new FinalInterval( new long[] {-399,-399,0},  new long[] {0, 0,1});
 		List<Interval> intervals = FractalSpimDataGenerator.generateTileList( 
-				start, 7, 6, 0.2f );
+				start, tilesX, tilesY, correctOverlap );
 		
 		List<RealLocalizable> falseStarts = FractalSpimDataGenerator.getTileMins(
-														FractalSpimDataGenerator.generateTileList( start, 7, 6, 0.30f ));
+														FractalSpimDataGenerator.generateTileList( start, tilesX, tilesY, wrongOverlap ));
 		
 		FractalSpimDataGenerator fsdg = new FractalSpimDataGenerator( 3 );
 		fsdg.addFractal( m );
-		fsdg.addFractal( m2 );
-		fsdg.addFractal( m3 );
+		//fsdg.addFractal( m2 );
+		//fsdg.addFractal( m3 );
 		
 		return fsdg.generateSpimData( intervals , falseStarts);
 	}
@@ -126,17 +132,7 @@ public class FractalSpimDataGenerator
 		JuliaRealRandomAccessible fractalRA = new JuliaRealRandomAccessible(new ComplexDoubleType( -0.4, 0.6 ), 300, 300, numDimensions);
 		fractalsRA.addRAble(Views.raster( RealViews.affineReal( fractalRA, transform )));
 	}
-	
-	public RandomAccessibleInterval< LongType > getImageAtInterval(Interval interval){
-		RandomAccessibleInterval< LongType > raiT =  Views.zeroMin( Views.interval( fractalsRA, interval) );
-		// we want a Img here, so that we can downsaple later
-		Img<LongType> resImg = new ArrayImgFactory<LongType>().create( raiT, new LongType() );
-		
-		ops.copy().rai( resImg, raiT );
-		//ImgLib2Util.copyRealImage(raiT, resImg) ;
-		return resImg;
-	}
-		
+
 	/**
 	 * 
 	 * @param n number of tiles in x
@@ -239,51 +235,7 @@ public class FractalSpimDataGenerator
 		final ArrayList< ViewId > missing = new ArrayList< ViewId >();
 		final MissingViews missingViews = new MissingViews( missing );
 
-		final ImgLoader imgLoader = new ImgLoader()
-		{
-			@Override
-			public SetupImgLoader< ? > getSetupImgLoader( final int setupId )
-			{
-				return new SetupImgLoader< LongType >()
-				{
-
-					@Override
-					public RandomAccessibleInterval< LongType > getImage(int timepointId, ImgLoaderHint... hints)
-					{
-						return getImageAtInterval( intervals.get( setupId ));
-					}
-
-					@Override
-					public LongType getImageType() {return new LongType();}
-					
-
-					@Override
-					public RandomAccessibleInterval< FloatType > getFloatImage(int timepointId, boolean normalize,
-							ImgLoaderHint... hints)
-					{
-						return Converters.convert( getImage( timepointId, hints ), new Converter< LongType, FloatType >()
-						{
-							@Override
-							public void convert(LongType input, FloatType output){output.setReal( input.getRealDouble() );}
-						}, new FloatType() );
-						
-					}
-
-					@Override
-					public Dimensions getImageSize(int timepointId)
-					{
-						return intervals.get( 0 );
-					}
-
-					@Override
-					public VoxelDimensions getVoxelSize(int timepointId)
-					{
-						return vd0;
-					}
-					
-				};
-			}
-		};
+		final ImgLoader imgLoader = new FractalImgLoader( intervals, vd0, fractalsRA );
 
 		for ( final ViewSetup vs : setups )
 		{

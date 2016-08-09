@@ -68,6 +68,7 @@ import gui.popup.StitchGroupPopup;
 import gui.popup.StitchPairwisePopup;
 import gui.popup.TestDownsamplePopup;
 import gui.popup.TestPopup;
+import input.FractalImgLoader;
 import input.GenerateSpimData;
 import spim.fiji.spimdata.explorer.popup.Separator;
 import spim.fiji.spimdata.explorer.util.ColorStream;
@@ -110,8 +111,6 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 	private LinkOverlay linkOverlay;
 	
 	StitchingResults stitchingResults;
-	
-//	HashMap<Channel, ARGBType> colorMap;
 
 	final protected HashSet< List<BasicViewDescription< ? extends BasicViewSetup >> > selectedRows;
 	protected BasicViewDescription< ? extends BasicViewSetup > firstSelectedVD;
@@ -130,42 +129,15 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		this.isMac = System.getProperty( "os.name" ).toLowerCase().contains( "mac" );
 		this.selectedRows = new HashSet<>();
 		this.firstSelectedVD = null;
-		
-//		// FIXME: just a default
-//		colorMap = new HashMap<>();
-//		colorMap.put( new Channel( 0 ), new ARGBType( ARGBType.rgba( 255, 0, 0, 0 ) ) );
-//		colorMap.put( new Channel( 1 ), new ARGBType( ARGBType.rgba( 0, 255, 0, 0 ) ) );
-//		colorMap.put( new Channel( 2 ), new ARGBType( ARGBType.rgba( 0, 0, 255, 0 ) ) );
-		
+
 		linkOverlay = new LinkOverlay( stitchingResults, data );
 		popups = initPopups();
 		initComponent();
 
-		if ( Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) )
+		if ( Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) ||
+			FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) )
 		{
-			final BDVPopup bdvpopup = bdvPopup();
-
-			if ( bdvpopup != null )
-			{
-				//bdvpopup.bdv = new BigDataViewer( getSpimData(), xml(), null );
-				
-				bdvpopup.bdv = new BigDataViewer( 	new ArrayList< ConverterSetup >(),
-									new ArrayList< SourceAndConverter< ? > >(),
-									getSpimData(),
-									getSpimData().getSequenceDescription().getTimePoints().size(), 
-									( ( ViewerImgLoader ) getSpimData().getSequenceDescription().getImgLoader() ).getCache(),
-									xml(),
-									null, 
-									ViewerOptions.options().accumulateProjectorFactory( AveragingProjectorARGB.factory ) );
-
-
-				// if ( !bdv.tryLoadSettings( panel.xml() ) ) TODO: this should
-				// work, but currently tryLoadSettings is protected. fix that.
-				InitializeViewerState.initBrightness( 0.001, 0.999, bdvpopup.bdv.getViewer(),
-						bdvpopup.bdv.getSetupAssignments() );
-
-				setFusedModeSimple( bdvpopup.bdv, data );
-			}
+			bdvPopup().bdv = BDVPopupStitching.createBDV( this );
 		}
 
 		// for access to the current BDV
