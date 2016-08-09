@@ -25,6 +25,7 @@ import net.imglib2.algorithm.phasecorrelation.PhaseCorrelationPeak2;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.type.numeric.integer.LongType;
@@ -160,10 +161,10 @@ public class PairwiseStitching {
 
 			final double localRasterShift = shift.getDoublePosition( d ); // d'
 			System.out.println( intervalSubpixelOffset1 + "," + intervalSubpixelOffset2 + "," + localRasterShift);
-			final double localRelativeShift = localRasterShift + ( intervalSubpixelOffset2 - intervalSubpixelOffset1 );
+			final double localRelativeShift = localRasterShift - ( intervalSubpixelOffset2 - intervalSubpixelOffset1 );
 
 			// correct for the initial shift between the two inputs
-			entireIntervalShift[ d ] = ( transformed2.realMin( d ) - transformed1.realMin( d ) ) + localRelativeShift;
+			entireIntervalShift[ d ] = (   transformed2.realMin( d )  -  transformed1.realMin( d ) ) + localRelativeShift;
 		}
 		
 		return new ValuePair<>( entireIntervalShift, shiftPeak.getCrossCorr() );
