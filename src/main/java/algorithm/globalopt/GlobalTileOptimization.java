@@ -153,7 +153,7 @@ public class GlobalTileOptimization
 		Collections.sort( actualViews );
 		
 		// assign ViewIds to the individual Tiles (either one tile per view or one tile per group)
-		final HashMap< C, Tile< M > > map = assignViewsToTiles( model, actualViews, groups );
+		final Map< C, Tile< M > > map = assignViewsToTiles( model, actualViews, groups );
 		
 		
 		// assign the pointmatches to all the tiles
@@ -350,7 +350,7 @@ public class GlobalTileOptimization
 	
 	protected static < M extends Model< M >, C extends Comparable< C >> TileConfiguration addAndFixTiles(
 			final List< C > views,
-			final HashMap< C, Tile< M > > map,
+			final Map< C, Tile< M > > map,
 			final Collection< C > fixedViews)
 	{
 		// if no fixed tiles are given, fix the tile of the first view
