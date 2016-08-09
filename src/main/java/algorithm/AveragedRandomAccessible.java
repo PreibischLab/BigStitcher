@@ -3,16 +3,19 @@ package algorithm;
 import java.util.ArrayList;
 
 import net.imglib2.Interval;
+import net.imglib2.Localizable;
 import net.imglib2.Point;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.Sampler;
 import net.imglib2.type.numeric.NumericType;
+import net.imglib2.type.numeric.RealType;
 
-public  class  AveragedRandomAccessible <T extends NumericType<T >> implements RandomAccessible< T >
+// maybe hardcode for 2,3 channels AverageRandomAccess2Channels and AverageRandomAccess3Channels
+public  class  AveragedRandomAccessible <T extends RealType<T >> implements RandomAccessible< T >
 {
-	private int numD;
-	private ArrayList<RandomAccessible< T >> randomAccessibles;
+	final private int numD;
+	final private ArrayList<RandomAccessible< T >> randomAccessibles;
 	
 	public AveragedRandomAccessible(int numD)
 	{
@@ -34,50 +37,51 @@ public  class  AveragedRandomAccessible <T extends NumericType<T >> implements R
 	@Override
 	public RandomAccess< T > randomAccess()
 	{
-		return new AverageRandomAccess();
+		return new AverageRandomAccess(numD);
 	}
 
 	@Override
 	public RandomAccess< T > randomAccess(Interval interval)
 	{
-		return new AverageRandomAccess();
+		return new AverageRandomAccess(numD);
 	}
 	
-	class AverageRandomAccess extends Point implements RandomAccess< T >
+	class AverageRandomAccess /* extends Point */ implements RandomAccess< T >
 	{
-		ArrayList< RandomAccess< T > > RAs;
-		T type;
-		T one;
+		final ArrayList< RandomAccess< T > > RAs;
+		final T type;
 		
-		public AverageRandomAccess()
+		public AverageRandomAccess(int numD)
 		{
-			super(randomAccessibles.get( 0 ).numDimensions());
+			// TODO: this (and methods below) will throw NPE if there are no RAbles
 			RAs = new ArrayList<>();
-			for (RandomAccessible< T > RAbleI : randomAccessibles)
+			type = randomAccessibles.get( 0 ).randomAccess().get().createVariable();
+			for (final RandomAccessible< T > RAbleI : randomAccessibles)
 			{
-				type = RAbleI.randomAccess().get().createVariable();
 				RAs.add( RAbleI.randomAccess() );
 			}
-			one = type.createVariable();
-			one.setOne();
 		}
 		
+		@Override
+		public void fwd( final int dim )
+		{
+			for (final RandomAccess< T > r : RAs )
+				r.fwd( dim );
+		}
 		
 		@Override
 		public T get()
 		{
-			// TODO position on move
-			T sum = type.createVariable();
-			T count = type.createVariable();
-			for (RandomAccess< T > ra : RAs)
+			double sum = 0.0;
+			int count = 0;
+			for (final RandomAccess< T > ra : RAs)
 			{
-				ra.setPosition( this );
-				sum.add( ra.get() );
-				count.add( one );
+				sum += ra.get().getRealDouble();
+				count++;
 			}	
 			
-			sum.div( count );
-			return sum;
+			type.setReal( sum / count );
+			return type;
 		}
 
 		@Override
@@ -89,9 +93,129 @@ public  class  AveragedRandomAccessible <T extends NumericType<T >> implements R
 		@Override
 		public RandomAccess< T > copyRandomAccess()
 		{
-			AverageRandomAccess ra = new AverageRandomAccess();
+			AverageRandomAccess ra = new AverageRandomAccess(numD);
 			ra.setPosition( this );
 			return ra;
+		}
+
+		@Override
+		public void localize(int[] position)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.localize( position );		
+		}
+
+		@Override
+		public void localize(long[] position)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.localize( position );
+		}
+
+		@Override
+		public int getIntPosition(int d){ return RAs.get( 0 ).getIntPosition( d ); }
+		@Override
+		public long getLongPosition(int d) {return RAs.get( 0 ).getLongPosition( d );}
+
+		@Override
+		public void localize(float[] position)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.localize( position );
+		}
+
+		@Override
+		public void localize(double[] position)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.localize( position );
+		}
+
+		@Override
+		public float getFloatPosition(int d) {return RAs.get( 0 ).getFloatPosition( d ); }
+
+		@Override
+		public double getDoublePosition(int d){return RAs.get( 0 ).getDoublePosition( d ); }
+
+		@Override
+		public int numDimensions() {return numD;}
+
+		@Override
+		public void bck(int d)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.bck(d);
+			
+		}
+
+		@Override
+		public void move(int distance, int d)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.move( distance, d );
+		}
+
+		@Override
+		public void move(long distance, int d)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.move( distance, d );
+		}
+
+		@Override
+		public void move(Localizable localizable)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.move( localizable);
+		}
+
+		@Override
+		public void move(int[] distance)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.move( distance);
+		}
+
+		@Override
+		public void move(long[] distance)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.move( distance );
+		}
+
+		@Override
+		public void setPosition(Localizable localizable)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.setPosition( localizable );
+		}
+
+		@Override
+		public void setPosition(int[] position)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.setPosition( position );
+		}
+
+		@Override
+		public void setPosition(long[] position)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.setPosition( position );
+		}
+
+		@Override
+		public void setPosition(int position, int d)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.setPosition( position , d);
+		}
+
+		@Override
+		public void setPosition(long position, int d)
+		{
+			for (final RandomAccess< T > ra : RAs)
+				ra.setPosition( position , d);			
 		}
 		
 	}
