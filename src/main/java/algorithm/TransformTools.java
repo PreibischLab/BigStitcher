@@ -1,5 +1,6 @@
 package algorithm;
 
+import mpicbg.imglib.util.Util;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
@@ -63,11 +64,11 @@ public class TransformTools {
 
 		final AffineGet affine = vt.asAffine3D();
 		
-		final double[] source = new double[]{ affine.get( 0, 3 ), affine.get( 1, 3 ), affine.get( 2, 3 ) };
-		final double[] target = new double[ source.length ];
+		final double[] target = new double[]{ affine.get( 0, 3 ), affine.get( 1, 3 ), affine.get( 2, 3 ) };
 		
 		// we go from big to downsampled, thats why the inverse
-		dsCorrectionT.applyInverse( source, target );
+		dsCorrectionT.applyInverse( target, target );
+		
 		
 		if ( is2d )
 			return new Translation2D( target[ 0 ], target[ 1 ] );
