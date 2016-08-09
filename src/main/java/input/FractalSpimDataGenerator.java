@@ -106,8 +106,9 @@ public class FractalSpimDataGenerator
 		m2.preConcatenate( mShift2 );
 		m3.preConcatenate( mShift3 );
 		
-		final int tilesX = 3;//7;
+		final int tilesX = 2;//7;
 		final int tilesY = 2;//6;
+		m.preConcatenate( new Translation3D( -300, 0, 0 ) );
 
 		final float correctOverlap = 0.2f;
 		final float wrongOverlap = 0.3f;
