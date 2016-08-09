@@ -28,6 +28,7 @@ import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AbstractTranslation;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Util;
@@ -75,24 +76,27 @@ public class TransformationTools
 			
 		final RandomAccessibleInterval<T> img1;
 		final RandomAccessibleInterval<T> img2;
+
+		// the transformation that maps the downsampled image coordinates back to the original input(!) image space
+		final AffineTransform3D dsCorrectionT = new AffineTransform3D();
 		
 		if (gva != null && GroupedViews.class.isInstance( viewIdA ))
 		{
-			img1 = gva.aggregate( (GroupedViews) viewIdA, sd, downsampleFactors );	
-			img2 = gva.aggregate( (GroupedViews) viewIdB, sd, downsampleFactors );
+			img1 = gva.aggregate( (GroupedViews) viewIdA, sd, downsampleFactors, dsCorrectionT );	
+			img2 = gva.aggregate( (GroupedViews) viewIdB, sd, downsampleFactors, dsCorrectionT );
 		}
 		else
 		{
-			img1 = DownsampleTools.openAndDownsample( sd.getImgLoader(), viewIdA, downsampleFactors );
-			img2 = DownsampleTools.openAndDownsample( sd.getImgLoader(), viewIdB, downsampleFactors );
+			img1 = DownsampleTools.openAndDownsample( sd.getImgLoader(), viewIdA, downsampleFactors, dsCorrectionT );
+			img2 = DownsampleTools.openAndDownsample( sd.getImgLoader(), viewIdB, downsampleFactors, dsCorrectionT );
 		}
 
 		boolean is2d = img1.numDimensions() == 2;
 		
 		
 		// TODO: Test if 2d, and if then reduce dimensionality and ask for a 2d translation
-		AbstractTranslation t1 = TransformTools.getInitialTranslation( vA, is2d, downsampleFactors);
-		AbstractTranslation t2 = TransformTools.getInitialTranslation( vB, is2d, downsampleFactors );
+		AbstractTranslation t1 = TransformTools.getInitialTranslation( vA, is2d, dsCorrectionT );
+		AbstractTranslation t2 = TransformTools.getInitialTranslation( vB, is2d, dsCorrectionT );
 
 		final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, t1, t2, params, service );
 
@@ -101,6 +105,7 @@ public class TransformationTools
 		
 		
 		for (int i = 0; i< result.getA().length; ++i)
+			
 			result.getA()[i] *= downsampleFactors[i];		
 		
 		System.out.println("integer shift: " + Util.printCoordinates(result.getA()));
@@ -166,7 +171,7 @@ public class TransformationTools
 		for ( final ViewId viewId : viewIds )
 		{
 			vd.put( viewId, sd.getViewDescription( viewId ).getViewSetup().getSize() );
-			vl.put( viewId, TransformTools.getInitialTranslation( vr.getViewRegistration( viewId ), is2d, downsamplingFactors) );
+			vl.put( viewId, TransformTools.getInitialTranslation( vr.getViewRegistration( viewId ), is2d, new AffineTransform3D()) );
 		}
 
 		final List< Pair< ViewId, ViewId > > pairs = PairwiseStrategyTools.overlappingTiles(

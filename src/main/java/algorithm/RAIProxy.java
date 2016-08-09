@@ -7,6 +7,7 @@ import net.imglib2.Positionable;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPositionable;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
 
 public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterval< T >
@@ -16,19 +17,21 @@ public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterva
 	private BasicImgLoader imgLoader;
 	private ViewId vid;
 	private long[] downsampleFactors;
+	private AffineTransform3D dsCorrectionT;
 	
-	public RAIProxy(BasicImgLoader imgLoader, ViewId vid, long[] downsampleFactors)
+	public RAIProxy(BasicImgLoader imgLoader, ViewId vid, long[] downsampleFactors, AffineTransform3D dsCorrectionT)
 	{
 		this.rai = null;
 		this.downsampleFactors = downsampleFactors;
 		this.imgLoader = imgLoader;
 		this.vid = vid;
+		this.dsCorrectionT = dsCorrectionT;
 	}
 	
 	private void loadIfNecessary()
 	{
 		if (rai == null)
-			rai = DownsampleTools.openAndDownsample( imgLoader, vid, downsampleFactors );
+			rai = DownsampleTools.openAndDownsample( imgLoader, vid, downsampleFactors, dsCorrectionT );
 	}
 	
 	@Override

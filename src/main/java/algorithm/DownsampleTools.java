@@ -9,8 +9,14 @@ import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.img.ImgFactory;
+import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
+import spim.process.interestpointdetection.Downsample;
 
 public class DownsampleTools
 {
@@ -20,10 +26,9 @@ public class DownsampleTools
 	public static < T extends RealType<T> > RandomAccessibleInterval< T > openAndDownsample(
 			final BasicImgLoader imgLoader,
 			final ViewId vd,
-			long[] downsampleFactors)
+			long[] downsampleFactors,
+			final AffineTransform3D t )
 	{
-		
-		boolean is2d = downsampleFactors.length == 2;
 		
 		IOFunctions.println(
 				"(" + new Date(System.currentTimeMillis()) + "): "
@@ -32,9 +37,7 @@ public class DownsampleTools
 
 		long dsx = downsampleFactors[0];
 		long dsy = downsampleFactors[1];
-		long dsz = 1;
-		if (!is2d)
-			dsz = downsampleFactors[2];
+		long dsz = downsampleFactors[2];
 
 		RandomAccessibleInterval< T > input = null;
 
@@ -62,6 +65,7 @@ public class DownsampleTools
 			final int fy = (int)Math.round( mipmapResolutions[ bestLevel ][ 1 ] );
 			final int fz = (int)Math.round( mipmapResolutions[ bestLevel ][ 2 ] );
 
+			t.set( mrImgLoader.getSetupImgLoader( vd.getViewSetupId() ).getMipmapTransforms()[ bestLevel ] );
 			
 			dsx /= fx;
 			dsy /= fy;
@@ -77,15 +81,42 @@ public class DownsampleTools
 		else
 		{
 			input =  (RandomAccessibleInterval< T >) imgLoader.getSetupImgLoader( vd.getViewSetupId() ).getImage( vd.getTimePointId(), LOAD_COMPLETELY );
+			t.identity();
 		}
 
-		return downsample( input, downsampleFactors );
+		return downsample( input, new long[]{ dsx, dsy, dsz } , t);
+	}
+	
+	public static < T extends RealType<T> > RandomAccessibleInterval< T > downsample(
+			RandomAccessibleInterval< T > input,
+			final long[] downsampleFactors,
+			final AffineTransform3D t)
+	{
+		boolean is2d = input.numDimensions() == 2;
 		
+		long dsx = downsampleFactors[0];
+		long dsy = downsampleFactors[1];
+		long dsz = 1;
+		if (!is2d)
+			dsz = downsampleFactors[2];
 		
-		/*
-		final ImgFactory< T > f = ((Img<T>)input).factory();
+		// fix scaling
+		t.set( t.get( 0, 0 ) * dsx, 0, 0 );
+		t.set( t.get( 1, 1 ) * dsy, 1, 1 );
+		t.set( t.get( 2, 2 ) * dsz, 2, 2 );
 
+		// fix translation
+		t.set( t.get( 0, 3 ) * dsx, 0, 3 );
+		t.set( t.get( 1, 3 ) * dsy, 1, 3 );
+		t.set( t.get( 2, 3 ) * dsz, 2, 3 );
 
+		ImgFactory< T > f = null;
+		
+		if ( Img.class.isInstance( input ) )
+			f = ((Img<T>)input).factory();
+		
+		if ( f == null )
+			f = new ArrayImgFactory();
 		
 		for ( ;dsx > 1; dsx /= 2 )
 			input = Downsample.simple2x( input, f, new boolean[]{ true, false, false } );
@@ -97,22 +128,6 @@ public class DownsampleTools
 			input = Downsample.simple2x( input, f, new boolean[]{ false, false, true } );
 
 		return input;
-		*/
-
-
-	}
-	
-	/**
-	 * downsample a RAI by the given factors, return result
-	 * @param rai
-	 * @param downsampleFactors
-	 * @return
-	 */
-	public static < T extends RealType<T> > RandomAccessibleInterval< T > downsample(
-			final RandomAccessibleInterval< T > rai,
-			long[] downsampleFactors)
-	{
-		return  (RandomAccessibleInterval< T >) Views.subsample( rai, downsampleFactors);
 	}
 
 	private static final boolean contains( final int i, final int[] values )

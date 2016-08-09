@@ -186,7 +186,8 @@ public class GroupedViewAggregator
 	
 	public <T extends RealType<T>> RandomAccessibleInterval< T > aggregate(GroupedViews gv, 
 												AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd,
-												long[] downsampleFactors){
+												long[] downsampleFactors,
+												final AffineTransform3D dsCorrectionT){
 		
 		Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> map = new HashMap<>();
 		
@@ -194,7 +195,7 @@ public class GroupedViewAggregator
 		{
 			BasicViewDescription< ? > vd = sd.getViewDescriptions().get( vid );
 			RandomAccessibleInterval< T > rai = 
-					new RAIProxy< T >(sd.getImgLoader(), vid, downsampleFactors); 
+					new RAIProxy< T >(sd.getImgLoader(), vid, downsampleFactors, dsCorrectionT); 
 			
 			map.put( vd, rai );		
 		}
@@ -308,9 +309,9 @@ public class GroupedViewAggregator
 		
 		
 		
-		gva.aggregate( gv, sd, new long[] {1,1,1} );
+		gva.aggregate( gv, sd, new long[] {1,1,1} , new AffineTransform3D());
 		
-		ImageJFunctions.show( (RandomAccessibleInterval< UnsignedShortType >)gva.aggregate( gv, sd , new long[] {1,1,1}));
+		ImageJFunctions.show( (RandomAccessibleInterval< UnsignedShortType >)gva.aggregate( gv, sd , new long[] {1,1,1}, new AffineTransform3D()));
 		
 		new ImageJ();
 		

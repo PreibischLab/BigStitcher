@@ -35,6 +35,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AbstractTranslation;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
@@ -147,7 +148,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			for ( final ViewId viewId : viewIds )
 			{
 				vd.put( viewId, sd.getViewDescriptions().get( viewId ).getViewSetup().getSize() );
-				vl.put( viewId, TransformTools.getInitialTranslation( vr.getViewRegistration( viewId ), is2d , downSamplingFactors) );
+				vl.put( viewId, TransformTools.getInitialTranslation( vr.getViewRegistration( viewId ), is2d , new AffineTransform3D()) );
 			}
 
 			final List< Pair< ViewId, ViewId > > pairs = PairwiseStrategyTools.overlappingTiles(
