@@ -342,6 +342,9 @@ public class GlobalTileOptimization
 
 		pm.add( new PointMatch( p1 , p2 ) );
 
+		// TODO: workaround until mpicbg is fixed with pull request #30
+		pm.add( new PointMatch( p1 , p2 ) );
+
 		tileA.addMatches( pm );
 		tileB.addMatches( PointMatch.flip( pm ) );
 		tileA.addConnectedTile( tileB );
