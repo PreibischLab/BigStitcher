@@ -3,6 +3,7 @@ package spim.fiji.plugin;
 import gui.FilteredAndGroupedExplorer;
 import ij.ImageJ;
 import ij.plugin.PlugIn;
+import input.FractalSpimDataGenerator;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,6 +17,7 @@ import spim.fiji.spimdata.XmlIoSpimData2;
 public class Stitching_Explorer implements PlugIn
 {
 	boolean newDataset = false;
+	boolean useFractal = false;
 
 	@Override
 	public void run( String arg )
@@ -33,7 +35,18 @@ public class Stitching_Explorer implements PlugIn
 			}
 		});
 
-		if ( !result.queryXML( "Stitching Explorer", "", false, false, false, false ) && !newDataset )
+		result.addButton( "Simulated Fractal Example", new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				result.setReturnFalse( true );
+				result.getGenericDialog().dispose();
+				setUseFractal();
+			}
+		});
+
+		if ( !result.queryXML( "Stitching Explorer", "", false, false, false, false ) && !newDataset && !useFractal )
 			return;
 
 		final SpimData2 data;
@@ -51,6 +64,12 @@ public class Stitching_Explorer implements PlugIn
 			xml = dataset.getB();
 			io = new XmlIoSpimData2( "" );
 		}
+		else if ( useFractal )
+		{
+			data = FractalSpimDataGenerator.createVirtualSpimData();
+			xml = null;
+			io = null;
+		}
 		else
 		{
 			data = result.getData();
@@ -67,6 +86,11 @@ public class Stitching_Explorer implements PlugIn
 	protected void setDefineNewDataset()
 	{
 		this.newDataset = true;
+	}
+
+	protected void setUseFractal()
+	{
+		this.useFractal = true;
 	}
 
 	public static void main( String[] args )

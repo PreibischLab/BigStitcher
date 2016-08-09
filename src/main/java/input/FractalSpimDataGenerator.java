@@ -4,13 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.scijava.Context;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import algorithm.AveragedRandomAccessible;
-import bdv.BigDataViewer;
-import imglib.ops.operator.unary.Abs;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import mpicbg.spim.data.registration.ViewRegistration;
@@ -31,32 +24,19 @@ import mpicbg.spim.data.sequence.TimePoints;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.data.sequence.ViewSetup;
 import mpicbg.spim.data.sequence.VoxelDimensions;
-import net.imagej.ops.Op;
 import net.imagej.ops.OpService;
-import net.imagej.ops.Ops;
-import net.imagej.ops.special.computer.BinaryComputerOp;
-import net.imagej.ops.special.computer.Computers;
-import net.imagej.ops.special.computer.UnaryComputerOp;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
-import net.imglib2.IterableInterval;
-import net.imglib2.Localizable;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
-import net.imglib2.RealRandomAccessible;
-import net.imglib2.algorithm.phasecorrelation.ImgLib2Util;
 import net.imglib2.converter.Converter;
 import net.imglib2.converter.Converters;
 import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
-import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.realtransform.Translation2D;
@@ -66,6 +46,12 @@ import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
+
+import org.scijava.Context;
+
+import spim.fiji.spimdata.SpimData2;
+import algorithm.AveragedRandomAccessible;
+import bdv.BigDataViewer;
 
 
 public class FractalSpimDataGenerator
@@ -81,7 +67,60 @@ public class FractalSpimDataGenerator
 		ops = new Context(OpService.class).getService( OpService.class );
 		this.numDimensions = numD;		
 	}
-	
+
+	public static SpimData2 createVirtualSpimData()
+	{
+		// shift and scale the fractal
+		final AffineTransform3D m = new AffineTransform3D();
+		double scale = 200;
+		m.set( scale, 0.0f, 0.0f, 0.0f, 
+			   0.0f, scale, 0.0f, 0.0f,
+			   0.0f, 0.0f, scale, 0.0f);
+		
+		final AffineTransform3D mShift = new AffineTransform3D();
+		double shift = 100;
+		mShift.set( 1.0f, 0.0f, 0.0f, shift, 
+					0.0f, 1.0f, 0.0f, shift,
+					0.0f, 0.0f, 1.0f, shift
+					);
+		final AffineTransform3D mShift2 = new AffineTransform3D();
+		double shift2x = 1200;
+		double shift2y = 300;
+		mShift2.set( 1.0f, 0.0f, 0.0f, shift2x, 
+					0.0f, 1.0f, 0.0f, shift2y,
+					0.0f, 0.0f, 1.0f, 0.0f
+					);
+		
+		final AffineTransform3D mShift3 = new AffineTransform3D();
+		double shift3x = 500;
+		double shift3y = 1300;
+		mShift3.set( 1.0f, 0.0f, 0.0f, shift3x, 
+					0.0f, 1.0f, 0.0f, shift3y,
+					0.0f, 0.0f, 1.0f, 0.0f
+					);
+		
+		
+		AffineTransform3D m2 = m.copy();
+		AffineTransform3D m3 = m.copy();
+		m.preConcatenate( mShift );
+		m2.preConcatenate( mShift2 );
+		m3.preConcatenate( mShift3 );
+		
+		Interval start = new FinalInterval( new long[] {-399,-399,0},  new long[] {0, 0,1});
+		List<Interval> intervals = FractalSpimDataGenerator.generateTileList( 
+				start, 7, 6, 0.2f );
+		
+		List<RealLocalizable> falseStarts = FractalSpimDataGenerator.getTileMins(
+														FractalSpimDataGenerator.generateTileList( start, 7, 6, 0.30f ));
+		
+		FractalSpimDataGenerator fsdg = new FractalSpimDataGenerator( 3 );
+		fsdg.addFractal( m );
+		fsdg.addFractal( m2 );
+		fsdg.addFractal( m3 );
+		
+		return fsdg.generateSpimData( intervals , falseStarts);
+	}
+
 	public void addFractal(AffineGet transform)
 	{
 		JuliaRealRandomAccessible fractalRA = new JuliaRealRandomAccessible(new ComplexDoubleType( -0.4, 0.6 ), 300, 300, numDimensions);
@@ -173,7 +212,7 @@ public class FractalSpimDataGenerator
 	 * @param mins
 	 * @return
 	 */
-	public SpimData generateSpimData(final List<Interval> intervals, final List<RealLocalizable> mins)
+	public SpimData2 generateSpimData(final List<Interval> intervals, final List<RealLocalizable> mins)
 	{
 		final ArrayList< ViewSetup > setups = new ArrayList< ViewSetup >();
 		final ArrayList< ViewRegistration > registrations = new ArrayList< ViewRegistration >();
@@ -282,7 +321,7 @@ public class FractalSpimDataGenerator
 		}
 
 		final SequenceDescription sd = new SequenceDescription( timepoints, setups, imgLoader, missingViews );
-		final SpimData data = new SpimData( new File( "" ), sd, new ViewRegistrations( registrations ) );
+		final SpimData2 data = new SpimData2( new File( "" ), sd, new ViewRegistrations( registrations ), null, null );
 
 		return data;
 		

@@ -77,63 +77,10 @@ public class FilteredAndGroupedExplorer< AS extends AbstractSpimData< ? >, X ext
 	{
 		//new ImageJ();
 		//new ViewSetupExplorer<>( GenerateSpimData.grid3x2(), null, null );
-		
-		
-		// shift and scale the fractal
-		final AffineTransform3D m = new AffineTransform3D();
-		double scale = 200;
-		m.set( scale, 0.0f, 0.0f, 0.0f, 
-			   0.0f, scale, 0.0f, 0.0f,
-			   0.0f, 0.0f, scale, 0.0f);
-		
-		final AffineTransform3D mShift = new AffineTransform3D();
-		double shift = 100;
-		mShift.set( 1.0f, 0.0f, 0.0f, shift, 
-					0.0f, 1.0f, 0.0f, shift,
-					0.0f, 0.0f, 1.0f, shift
-					);
-		final AffineTransform3D mShift2 = new AffineTransform3D();
-		double shift2x = 1200;
-		double shift2y = 300;
-		mShift2.set( 1.0f, 0.0f, 0.0f, shift2x, 
-					0.0f, 1.0f, 0.0f, shift2y,
-					0.0f, 0.0f, 1.0f, 0.0f
-					);
-		
-		final AffineTransform3D mShift3 = new AffineTransform3D();
-		double shift3x = 500;
-		double shift3y = 1300;
-		mShift3.set( 1.0f, 0.0f, 0.0f, shift3x, 
-					0.0f, 1.0f, 0.0f, shift3y,
-					0.0f, 0.0f, 1.0f, 0.0f
-					);
-		
-		
-		AffineTransform3D m2 = m.copy();
-		AffineTransform3D m3 = m.copy();
-		m.preConcatenate( mShift );
-		m2.preConcatenate( mShift2 );
-		m3.preConcatenate( mShift3 );
-		
-		Interval start = new FinalInterval( new long[] {-399,-399,0},  new long[] {0, 0,1});
-		List<Interval> intervals = FractalSpimDataGenerator.generateTileList( 
-				start, 7, 6, 0.2f );
-		
-		List<RealLocalizable> falseStarts = FractalSpimDataGenerator.getTileMins(
-														FractalSpimDataGenerator.generateTileList( start, 7, 6, 0.30f ));
-		
-		FractalSpimDataGenerator fsdg = new FractalSpimDataGenerator( 3 );
-		fsdg.addFractal( m );
-		fsdg.addFractal( m2 );
-		fsdg.addFractal( m3 );
-		
-		SpimData sd = fsdg.generateSpimData( intervals , falseStarts);
 
-		
-		
 		//new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( GenerateSpimData.grid3x2(), null, null );
-		new FilteredAndGroupedExplorer<SpimData, XmlIoSpimData>( new LightSheetZ1().createDataset(), null, null );
-		//new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( sd, null, null );
+		//new FilteredAndGroupedExplorer<SpimData, XmlIoSpimData>( new LightSheetZ1().createDataset(), null, null );
+		new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( FractalSpimDataGenerator.createVirtualSpimData(), null, null );
 	
 	}
 	
