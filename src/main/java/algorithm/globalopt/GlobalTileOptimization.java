@@ -343,7 +343,7 @@ public class GlobalTileOptimization
 		pm.add( new PointMatch( p1 , p2 ) );
 
 		// TODO: workaround until mpicbg is fixed with pull request #30
-		pm.add( new PointMatch( p1 , p2 ) );
+		pm.add( new PointMatch( p1.clone() , p2.clone() ) );
 
 		tileA.addMatches( pm );
 		tileB.addMatches( PointMatch.flip( pm ) );
@@ -397,30 +397,34 @@ public class GlobalTileOptimization
 	
 	public static void removeWeakestLink(TileConfiguration tc)
 	{
-		double worstDistance = Double.MIN_VALUE;
+		double worstDistance = -Double.MAX_VALUE;
 		Tile<?> worstTile1 = null;
 		Tile<?> worstTile2 = null;
 		
 		for (Tile<?> t : tc.getTiles())
 		{
 			// we mustn't disconnect a tile entirely
-			if (t.getConnectedTiles().size() < 2)
+			if (t.getConnectedTiles().size() <= 1)
 				continue;
 			
 			for (PointMatch pm : t.getMatches())
 			{
-				if (pm.getDistance() > worstDistance)
+				
+				if (/*worstTile1 == null || */ pm.getDistance() > worstDistance)
 				{
 					worstDistance = pm.getDistance();
-								
+					
+					
 					worstTile1 = t;
 					worstTile2 = t.findConnectedTile( pm );
 				}
+				
+				//System.out.println( pm.getDistance() + " " + worstDistance + " " + worstTile1 );
 			}
 		}
-		
+
 		worstTile1.removeConnectedTile( worstTile2 );
-		worstTile2.removeConnectedTile( worstTile1 );
+		worstTile2.removeConnectedTile( worstTile1 );			
 		
 	}
 	
@@ -440,7 +444,7 @@ public class GlobalTileOptimization
 		List<Link<Integer>> myList = new ArrayList<>();
 		myList.add(new Link<Integer>(1, 2, new double[] {-2, 2, 1}, LinkType.STRONG));
 		myList.add(new Link<Integer>(1, 3, new double[] {1, 2, 0}, LinkType.STRONG));
-		myList.add(new Link<Integer>(2, 3, new double[] {3, 0, -1}, LinkType.STRONG));
+		myList.add(new Link<Integer>(2, 3, new double[] {3, 25, -1}, LinkType.STRONG));
 		
 		
 		Pair< TileConfiguration, Map< Integer, Tile< TranslationModel3D > > > prepareTileConfiguration = 
@@ -455,6 +459,9 @@ public class GlobalTileOptimization
 		Map< Integer, double[] > optimize = optimize(3, prepareTileConfiguration.getA(), prepareTileConfiguration.getB(), new GlobalOptimizationParameters(), null);
 	
 		System.out.println( optimize );
+		
+		if (true)
+			return;
 		
 		// TEST two connected components
 		myList = new ArrayList<>();
