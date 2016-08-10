@@ -56,7 +56,7 @@ public class JuliaRealRandomAccessible implements RealRandomAccessible< LongType
 
 	public JuliaRealRandomAccessible()
 	{
-		this(new ComplexDoubleType(),50,4096,2);
+		this(new ComplexDoubleType(),50,4096,3);
 	}
 
 	public JuliaRealRandomAccessible(

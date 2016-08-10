@@ -106,7 +106,7 @@ public class FractalSpimDataGenerator
 		m2.preConcatenate( mShift2 );
 		m3.preConcatenate( mShift3 );
 		
-		final int tilesX = 3;//7;
+		final int tilesX = 5;//7;
 		final int tilesY = 2;//6;
 
 		final float correctOverlap = 0.2f;
@@ -121,8 +121,8 @@ public class FractalSpimDataGenerator
 		
 		FractalSpimDataGenerator fsdg = new FractalSpimDataGenerator( 3 );
 		fsdg.addFractal( m );
-		//fsdg.addFractal( m2 );
-		//fsdg.addFractal( m3 );
+		fsdg.addFractal( m2 );
+		fsdg.addFractal( m3 );
 		
 		return fsdg.generateSpimData( intervals , falseStarts);
 	}
