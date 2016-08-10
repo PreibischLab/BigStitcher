@@ -3,6 +3,7 @@ package gui.popup;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -86,6 +87,8 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 						
 			for (List<ViewId> vidl : ((GroupedRowWindow)panel).selectedRowsViewIdGroups())
 				viewIds.add( new GroupedViews( vidl ) );
+			
+			Collections.sort( viewIds );
 			
 			ArrayList< String > channelNames = new ArrayList<>();
 			channelNames.add( "average all" );
