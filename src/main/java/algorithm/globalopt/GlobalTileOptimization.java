@@ -66,6 +66,7 @@ public class GlobalTileOptimization
 		List< Set< C > > connectedComponents = Link.getConnectedComponents( strongLinks, LinkType.STRONG );
 		
 		// create weak links between every pair of views that are not both in a conn.comp.
+		// TODO: we should only connect tiles within a reasonable radius to each other (for performance reasons)
 		List<Link<C>> weakLinks = new ArrayList<>();
 		for (int i = 0; i < views.size(); i++)
 		{
@@ -158,8 +159,6 @@ public class GlobalTileOptimization
 		
 		// assign the pointmatches to all the tiles
 		for ( Link<C> link : links )
-			// TODO: only add pointmatch if correlation is high enough / link is strong
-			// or not, this should probably be done outside of this method
 			addPointMatches( link, map.get(link.getFirst() ), map.get( link.getSecond() ), initialLocations);
 
 		// add and fix tiles as defined in the GlobalOptimizationType
@@ -225,6 +224,7 @@ public class GlobalTileOptimization
 
 		Map<C, double[]> resMap = new HashMap<>();
 		
+		// TODO: move this outside of method 
 		for ( final C viewId : map.keySet() )
 		{
 			final Tile< M > tile = map.get( viewId );
