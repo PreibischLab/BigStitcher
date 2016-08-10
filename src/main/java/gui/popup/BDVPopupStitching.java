@@ -278,6 +278,8 @@ public class BDVPopupStitching extends BDVPopup
 
 		bdv.getViewer().addTransformListener( lo );
 		bdv.getViewer().getDisplay().addOverlayRenderer( lo );
+		
+		bdv.getViewer().requestRepaint();
 
 		return bdv;
 		

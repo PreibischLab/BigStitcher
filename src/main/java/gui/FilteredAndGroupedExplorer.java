@@ -78,9 +78,9 @@ public class FilteredAndGroupedExplorer< AS extends AbstractSpimData< ? >, X ext
 		//new ImageJ();
 		//new ViewSetupExplorer<>( GenerateSpimData.grid3x2(), null, null );
 
-		//new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( GenerateSpimData.grid3x2(), null, null );
+		new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( GenerateSpimData.grid3x2(), null, null );
 		//new FilteredAndGroupedExplorer<SpimData, XmlIoSpimData>( new LightSheetZ1().createDataset(), null, null );
-		new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( FractalSpimDataGenerator.createVirtualSpimData(), null, null );
+		//new FilteredAndGroupedExplorer< SpimData, XmlIoSpimData >( FractalSpimDataGenerator.createVirtualSpimData(), null, null );
 	
 	}
 	

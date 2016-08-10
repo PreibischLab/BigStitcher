@@ -3,7 +3,8 @@ package gui.overlay;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-
+import java.util.ArrayList;
+import java.util.List;
 
 import algorithm.StitchingResults;
 import algorithm.globalopt.PairwiseStitchingResult;
@@ -14,17 +15,41 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.ui.OverlayRenderer;
 import net.imglib2.ui.TransformListener;
 import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 
 
 
 public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTransform3D >
 {
 	private StitchingResults stitchingResults;
-	private AbstractSpimData< ? > spimData;
-	
-	private final AffineTransform3D viewerTransform;
-	
+	private AbstractSpimData< ? > spimData;	
+	private final AffineTransform3D viewerTransform;	
 	public boolean isActive;
+	private ArrayList<Pair<ViewId, ViewId>> activeLinks;
+	private ValuePair<ViewId, ViewId> selectedLink;
+	private ViewId reference;
+	
+	public void clearActiveLinks()
+	{
+		activeLinks.clear();
+		this.reference = null;
+	}
+	
+	public void setActiveLinks(List<Pair<ViewId, ViewId>> vids, ViewId reference)
+	{
+		activeLinks.clear();
+		activeLinks.addAll( vids );
+		this.reference = reference;
+	}
+	
+	public void setSelectedLink(Pair<ViewId, ViewId> link)
+	{
+		if (link == null)
+			selectedLink = null;
+		else
+			selectedLink = new ValuePair< ViewId, ViewId >( link.getA(), link.getB() );
+	}
+	
 
 	/** screen pixels [x,y,z] **/	
 	private static Color getColor( final double corr, final double maxR, final double minR )
@@ -42,7 +67,9 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		this.stitchingResults = res;
 		this.spimData = spimData;
 		viewerTransform = new AffineTransform3D();
-		isActive = true;
+		isActive = false;
+		activeLinks = new ArrayList<>();
+		selectedLink = null;
 	}
 
 	@Override
@@ -54,7 +81,8 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 	@Override
 	public void drawOverlays( final Graphics g )
 	{
-		if (!isActive)
+		// dont do anything if the overlay was set to inactive or we have no Tile selected (no links to display)
+		if (!isActive || activeLinks.size() == 0)
 			return;
 		
 		final Graphics2D graphics = ( Graphics2D ) g;
@@ -65,14 +93,19 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		
 		double maxr = 0.0;
 		double minr = Double.MAX_VALUE;
-		for (PairwiseStitchingResult sr : stitchingResults.getPairwiseResults().values())
+		for (PairwiseStitchingResult<ViewId> sr : stitchingResults.getPairwiseResults().values())
 		{
 			maxr = Math.max( maxr, sr.r() );
 			minr = Math.min( minr, sr.r() );
 		}
 		
+		//System.out.println( activeLinks );
+		
 		for (Pair< ViewId, ViewId > p : stitchingResults.getPairwiseResults().keySet())
 		{
+			if (activeLinks.size() > 0 && !(activeLinks.contains( p )))
+				continue;
+				
 			long[] sizeA = new long[spimData.getSequenceDescription().getViewDescriptions().get( p.getA() ).getViewSetup().getSize().numDimensions()];
 			long[] sizeB = new long[spimData.getSequenceDescription().getViewDescriptions().get( p.getB() ).getViewSetup().getSize().numDimensions()];
 			spimData.getSequenceDescription().getViewDescriptions().get( p.getA() ).getViewSetup().getSize().dimensions( sizeA );
@@ -94,15 +127,34 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 				sizeA[i] *= vt1.get( i, i );
 				sizeB[i] *= vt2.get( i, i );
 				
+				// we are in preview mode and there is a reference Tile set
+				if (activeLinks.size() > 0 && reference != null)
+				{
+					if (reference.equals( p.getA() ))
+					{
+						lPos2[i] = lPos1[i] + stitchingResults.getPairwiseResults().get( p ).relativeVector()[i];
+					}
+					if (reference.equals( p.getB() ))
+					{
+						lPos1[i] = lPos2[i] - stitchingResults.getPairwiseResults().get( p ).relativeVector()[i];
+					}
+				}
+				
 				// start from middle of view
 				lPos1[i] += sizeA[i] / 2;
 				lPos2[i] += sizeB[i] / 2;
+				
+				
 			}
 			
 			transform.apply( lPos1, gPos1 );
 			transform.apply( lPos2, gPos2 );
-						
-			graphics.setColor( getColor( stitchingResults.getPairwiseResults().get( p ).r(), maxr, minr ) );
+			
+			// if we have an active link, color it white, else red->yellow->green depending on the correlation
+			if (p.equals( selectedLink ))
+				graphics.setColor( Color.WHITE );
+			else
+				graphics.setColor( getColor( stitchingResults.getPairwiseResults().get( p ).r(), maxr, minr ) );
 			
 			graphics.drawLine((int) gPos1[0],(int) gPos1[1],(int) gPos2[0],(int) gPos2[1] );
 		}

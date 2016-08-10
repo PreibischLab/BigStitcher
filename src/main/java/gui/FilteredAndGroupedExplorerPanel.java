@@ -10,6 +10,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +25,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -55,6 +58,7 @@ import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
+import net.imglib2.util.Pair;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
@@ -122,9 +126,12 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 	final X io;
 	final boolean isMac;
 	protected boolean colorMode = true;
-	private LinkOverlay linkOverlay;
+	LinkOverlay linkOverlay;
 	
 	StitchingResults stitchingResults;
+	
+	LinkExplorerPanel linkExplorer;
+	JFrame linkFrame;
 
 	final protected HashSet< List<BasicViewDescription< ? extends BasicViewSetup >> > selectedRows;
 	protected BasicViewDescription< ? extends BasicViewSetup > firstSelectedVD;
@@ -134,7 +141,6 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 	{
 		this.stitchingResults = new StitchingResults();
 		
-
 		this.explorer = explorer;
 		this.listeners = new ArrayList< SelectedViewDescriptionListener< AS > >();
 		this.data = data;
@@ -254,11 +260,14 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		
 		if(previewMode)
 		{
+			initLinkExplorer();
 			table.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 			updateBDVPreviewMode();
 		}
 		else
 		{
+			quitLinkExplorer();
+			linkOverlay.clearActiveLinks();
 			table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
 			updateBDV( bdvPopup().bdv, colorMode, data, firstSelectedVD, selectedRows);
 		}
@@ -282,6 +291,9 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 
 	public void initComponent()
 	{
+		// only do that if needed
+		//initLinkExplorer();
+		
 		tableModel = new FilteredAndGroupedTableModel< AS >( this );
 		tableModel = new StitchingTableModelDecorator< >( tableModel );
 		((StitchingTableModelDecorator< AS >)tableModel).setStitchingResults( stitchingResults );
@@ -427,6 +439,32 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		addPopupMenu( table );
 	}
 
+	private void initLinkExplorer()
+	{
+		// we already should have an instance
+		if (linkExplorer != null)
+			return;
+			
+		linkExplorer = new LinkExplorerPanel( stitchingResults, this );
+		// init the LinkExplorer
+		linkFrame = new JFrame( "Link Explorer" );
+		linkFrame.add( linkExplorer, BorderLayout.CENTER );
+		linkFrame.setSize( linkExplorer.getPreferredSize() );
+		
+		linkFrame.addWindowListener( new WindowAdapter()
+		{
+			@Override
+			public void windowClosing( WindowEvent evt )
+			{
+				quitLinkExplorer();
+			}
+		} );
+		
+		linkFrame.pack();
+		linkFrame.setVisible( true );
+		linkFrame.requestFocus();
+	}
+
 	protected ListSelectionListener getSelectionListener()
 	{
 		return new ListSelectionListener()
@@ -542,9 +580,11 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		
 		resetBDVManualTransformations(bdvPopup().bdv);
 		
+		ArrayList< Pair<ViewId, ViewId> > activeLinks = new ArrayList<>();
+		
 		for (PairwiseStitchingResult< ViewId > psr: resultsForId)
 		{
-			
+			activeLinks.add( psr.pair() );
 			
 			for (List<BasicViewDescription< ? >> group : elements)
 			{
@@ -612,10 +652,30 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 			}
 		}
 		
-		bdvPopup().bdv.getViewer().requestRepaint();
-		setVisibleSources( bdvPopup().bdv.getViewer().getVisibilityAndGrouping(), active );
-
+		linkOverlay.setActiveLinks( activeLinks, selectedVid );
+		getLinkExplorer().setActiveLinks( activeLinks );
 		
+		setVisibleSources( bdvPopup().bdv.getViewer().getVisibilityAndGrouping(), active );
+		bdvPopup().bdv.getViewer().requestRepaint();
+		
+	}
+	
+	
+	
+	private LinkExplorerPanel getLinkExplorer()
+	{
+		if (linkExplorer == null)
+			initLinkExplorer();
+		return linkExplorer;
+	}
+	
+	private void quitLinkExplorer()
+	{
+		linkOverlay.setSelectedLink( null );
+		linkFrame.setVisible( false );
+		linkFrame.dispose();
+		linkFrame = null;
+		linkExplorer = null;
 	}
 
 	public static void resetBDVManualTransformations(BigDataViewer bdv)
@@ -664,6 +724,7 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 //			whiteSources( bdv.getSetupAssignments().getConverterSetups() );
 
 		setVisibleSources( bdv.getViewer().getVisibilityAndGrouping(), active );
+		bdv.getViewer().requestRepaint();
 	}
 
 	public static void setFusedModeSimple(final BigDataViewer bdv, final AbstractSpimData< ? > data)
