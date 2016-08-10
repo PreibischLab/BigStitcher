@@ -37,12 +37,14 @@ import javax.swing.table.TableCellRenderer;
 import algorithm.SpimDataTools;
 import algorithm.StitchingResults;
 import algorithm.globalopt.GroupedViews;
+import algorithm.globalopt.PairwiseStitchingResult;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
+import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
@@ -50,6 +52,8 @@ import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
+import net.imglib2.realtransform.AffineGet;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
@@ -68,6 +72,7 @@ import gui.popup.StitchGroupPopup;
 import gui.popup.StitchPairwisePopup;
 import gui.popup.TestDownsamplePopup;
 import gui.popup.TestPopup;
+import gui.popup.TogglePreviewPopup;
 import input.FractalImgLoader;
 import input.GenerateSpimData;
 import spim.fiji.spimdata.explorer.popup.Separator;
@@ -80,10 +85,16 @@ import bdv.ViewerImgLoader;
 import bdv.img.hdf5.Hdf5ImageLoader;
 import bdv.tools.InitializeViewerState;
 import bdv.tools.brightness.ConverterSetup;
+import bdv.tools.transformation.TransformedSource;
+import bdv.util.BdvFunctions;
+import bdv.util.BdvHandle;
+import bdv.util.BdvHandleFrame;
+import bdv.util.BdvHandlePanel;
 import bdv.viewer.DisplayMode;
 import bdv.viewer.SourceAndConverter;
 import bdv.viewer.ViewerOptions;
 import bdv.viewer.VisibilityAndGrouping;
+import bdv.viewer.state.SourceState;
 
 public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS >>
 		extends JPanel implements ExplorerWindow< AS, X >, GroupedRowWindow
@@ -97,6 +108,9 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		IOFunctions.printIJLog = true;
 	}
 
+	// indicates whether we are in link preview mode or not
+	boolean previewMode = false;
+	
 	private static final long serialVersionUID = -3767947754096099774L;
 
 	protected JTable table;
@@ -137,7 +151,7 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		if ( Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) ||
 			FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) )
 		{
-			bdvPopup().bdv = BDVPopupStitching.createBDV( this );
+			bdvPopup().bdv = BDVPopupStitching.createBDV( this, linkOverlay );
 		}
 
 		// for access to the current BDV
@@ -232,6 +246,23 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		Collections.sort( list );
 		return list;
 	}
+	
+	public void togglePreviewMode()
+	{
+		previewMode = !previewMode;
+		linkOverlay.isActive = previewMode;
+		
+		if(previewMode)
+		{
+			table.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
+			updateBDVPreviewMode();
+		}
+		else
+		{
+			table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
+			updateBDV( bdvPopup().bdv, colorMode, data, firstSelectedVD, selectedRows);
+		}
+	}
 
 	public void addListener(final SelectedViewDescriptionListener< AS > listener)
 	{
@@ -262,7 +293,7 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		table.setModel( tableModel );
 		table.setSurrendersFocusOnKeystroke( true );
 		table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
-
+		
 		final DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
 
@@ -453,17 +484,161 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 				}
 
 				if ( b != null && b.bdv != null )
-					updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows);
+				{	
+					if (!previewMode)
+						updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows);
+					else
+						updateBDVPreviewMode();
+				}
+					
+				
 			}
 		};
 	}
 
+	public void updateBDVPreviewMode()
+	{
+		// we always set the fused mode
+		setFusedModeSimple( bdvPopup().bdv, data );
+		
+		if (selectedRowsGroups().size() < 1)
+			return;
+		
+		// in Preview Mode, only one row should be selected
+		List<BasicViewDescription< ? extends BasicViewSetup >> selectedRow = selectedRowsGroups().iterator().next();
+		BasicViewDescription< ? extends BasicViewSetup > firstVD = firstSelectedVD;
+		
+		//System.out.println( selectedRow );
+		
+		if ( selectedRow == null || selectedRow.size() == 0 )
+			return;
+
+		if ( firstVD == null )
+			firstVD = selectedRow.get( 0 );
+		
+		// always use the first timepoint
+		final TimePoint firstTP = firstVD.getTimePoint();
+		bdvPopup().bdv.getViewer().setTimepoint( getBDVTimePointIndex( firstTP, data ) );
+
+		// get all of the rows
+		List< List< BasicViewDescription< ? > > > elements = tableModel.getElements();
+		
+		// get all pairwise results which involve the views of the selected row
+		ViewId selectedVid = selectedRow.get( 0 );
+		ArrayList< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults.getAllPairwiseResultsForViewId( selectedVid );
+		
+		// get the Translations of first View
+		ViewRegistration selectedVr = data.getViewRegistrations().getViewRegistration(selectedVid);
+		AffineGet selectedTranslation = selectedVr.getTransformList().get( 1 ).asAffine3D();
+		
+		
+		final boolean[] active = new boolean[data.getSequenceDescription().getViewSetupsOrdered().size()];
+
+		// set all views of the selected row visible
+		for ( final BasicViewDescription< ? extends BasicViewSetup >  vd : selectedRow )
+				if ( vd.getTimePointId() == firstTP.getId() )
+					active[getBDVSourceIndex( vd.getViewSetup(), data )] = true;
+	
+		
+		resetBDVManualTransformations(bdvPopup().bdv);
+		
+		for (PairwiseStitchingResult< ViewId > psr: resultsForId)
+		{
+			
+			
+			for (List<BasicViewDescription< ? >> group : elements)
+			{
+				// there is a link selected -> other
+				if (psr.pair().getA().equals( selectedVid ) &&  group.contains( psr.pair().getB()))
+				{
+					// set all views of the other group visible
+					for ( final BasicViewDescription< ? >  vd : group )
+							if ( vd.getTimePointId() == firstTP.getId() )
+							{
+								int sourceIdx = getBDVSourceIndex( vd.getViewSetup(), data );
+								SourceState<?> s = bdvPopup().bdv.getViewer().getVisibilityAndGrouping().getSources().get( sourceIdx );
+								active[sourceIdx] = true;
+															
+								// get the Translations of second View
+								ViewRegistration vr = data.getViewRegistrations().getViewRegistration( new ViewId(firstTP.getId(), sourceIdx ));
+								AffineGet otherTranslation = vr.getTransformList().get( 1 ).asAffine3D();
+																
+								// use BDV manual transform to preview 								
+								double viewShiftX = selectedTranslation.get( 0, 3 ) - otherTranslation.get( 0, 3 );
+								double viewShiftY = selectedTranslation.get( 1, 3 ) - otherTranslation.get( 1, 3 );
+								double viewShiftZ = selectedTranslation.get( 2, 3 ) - otherTranslation.get( 2, 3 );
+								
+								AffineTransform3D shift = new AffineTransform3D();
+								shift.set( viewShiftX + psr.relativeVector()[0], 0, 3 );
+								shift.set( viewShiftY + psr.relativeVector()[1], 1, 3 );
+								shift.set( viewShiftZ + psr.relativeVector()[2], 2, 3 );							
+								
+								((TransformedSource< ? >)s.getSpimSource()).setFixedTransform( shift );
+							}
+					
+				}
+				
+				// there is a link other -> selected
+				if (psr.pair().getB().equals( selectedVid ) && group.contains( psr.pair().getA()))
+				{
+					// set all views of the other group visible
+					for ( final BasicViewDescription< ? >  vd : group )
+							if ( vd.getTimePointId() == firstTP.getId() )
+							{
+								int sourceIdx = getBDVSourceIndex( vd.getViewSetup(), data );
+								SourceState<?> s = bdvPopup().bdv.getViewer().getVisibilityAndGrouping().getSources().get( sourceIdx );
+								active[sourceIdx] = true;
+								
+								// get the Translations of second View
+								ViewRegistration vr = data.getViewRegistrations().getViewRegistration( new ViewId(firstTP.getId(), sourceIdx ));
+								AffineGet otherTranslation = vr.getTransformList().get( 1 ).asAffine3D();
+																
+								// use BDV manual transform to preview 								
+								double viewShiftX = selectedTranslation.get( 0, 3 ) - otherTranslation.get( 0, 3 );
+								double viewShiftY = selectedTranslation.get( 1, 3 ) - otherTranslation.get( 1, 3 );
+								double viewShiftZ = selectedTranslation.get( 2, 3 ) - otherTranslation.get( 2, 3 );
+								
+								AffineTransform3D shift = new AffineTransform3D();
+								shift.set( viewShiftX - psr.relativeVector()[0], 0, 3 );
+								shift.set( viewShiftY - psr.relativeVector()[1], 1, 3 );
+								shift.set( viewShiftZ - psr.relativeVector()[2], 2, 3 );							
+								
+								((TransformedSource< ? >)s.getSpimSource()).setFixedTransform( shift );
+								
+							}
+								
+
+				}
+			}
+		}
+		
+		bdvPopup().bdv.getViewer().requestRepaint();
+		setVisibleSources( bdvPopup().bdv.getViewer().getVisibilityAndGrouping(), active );
+
+		
+	}
+
+	public static void resetBDVManualTransformations(BigDataViewer bdv)
+	{
+		if ( bdv == null )
+			return;
+		
+		// reset manual transform for all views
+		for (int sourceIdx = 0; sourceIdx <bdv.getViewer().getVisibilityAndGrouping().getSources().size(); sourceIdx++)
+		{
+			SourceState<?> s = bdv.getViewer().getVisibilityAndGrouping().getSources().get( sourceIdx );
+			((TransformedSource< ? >)s.getSpimSource()).setFixedTransform( new AffineTransform3D() );
+		}
+	}
+	
 	public static void updateBDV(final BigDataViewer bdv, final boolean colorMode, final AbstractSpimData< ? > data,
 			BasicViewDescription< ? extends BasicViewSetup > firstVD,
 			final Collection< List< BasicViewDescription< ? extends BasicViewSetup >> > selectedRows)
 	{
 		// we always set the fused mode
 		setFusedModeSimple( bdv, data );
+		
+		resetBDVManualTransformations( bdv );
 
 		if ( selectedRows == null || selectedRows.size() == 0 )
 			return;
@@ -705,6 +880,7 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		popups.add( removeLinkPopup );
 		
 		popups.add( new ApplyBDVTransformationPopup() );
+		popups.add( new TogglePreviewPopup() );
 		
 		
 		popups.add( new Separator() );

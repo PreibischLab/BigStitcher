@@ -58,15 +58,16 @@ public class BDVPopupStitching extends BDVPopup
 	 */
 	private static final long serialVersionUID = -8852442192041303045L;
 
-	static LinkOverlay lo;
+	private LinkOverlay lo;
 	
-	public BDVPopupStitching(LinkOverlay lo1)
+	public BDVPopupStitching(LinkOverlay lo)
 	{
+
 		super();
+		this.lo = lo;
 		this.removeActionListener( this.getActionListeners()[0] );
 		this.addActionListener( new MyActionListener() );
-		
-		lo = lo1;
+				
 	}
 	
 	
@@ -96,7 +97,7 @@ public class BDVPopupStitching extends BDVPopup
 
 						try
 						{
-							bdv = createBDV( panel );
+							bdv = createBDV( panel, lo );
 						}
 						catch (Exception e)
 						{
@@ -214,7 +215,7 @@ public class BDVPopupStitching extends BDVPopup
 	}
 	
 
-	public static BigDataViewer createBDV( final ExplorerWindow< ?, ? > panel )
+	public static BigDataViewer createBDV( final ExplorerWindow< ?, ? > panel , LinkOverlay lo)
 	{
 		if ( AbstractImgLoader.class.isInstance( panel.getSpimData().getSequenceDescription().getImgLoader() ) )
 		{

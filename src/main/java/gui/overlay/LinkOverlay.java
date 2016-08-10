@@ -23,6 +23,8 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 	private AbstractSpimData< ? > spimData;
 	
 	private final AffineTransform3D viewerTransform;
+	
+	public boolean isActive;
 
 	/** screen pixels [x,y,z] **/	
 	private static Color getColor( final double corr, final double maxR, final double minR )
@@ -40,6 +42,7 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		this.stitchingResults = res;
 		this.spimData = spimData;
 		viewerTransform = new AffineTransform3D();
+		isActive = true;
 	}
 
 	@Override
@@ -51,6 +54,9 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 	@Override
 	public void drawOverlays( final Graphics g )
 	{
+		if (!isActive)
+			return;
+		
 		final Graphics2D graphics = ( Graphics2D ) g;
 		final double[] lPos1 = new double[ 3 ];
 		final double[] lPos2 = new double[ 3 ];

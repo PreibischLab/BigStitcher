@@ -2,38 +2,19 @@ package gui.popup;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-
-import algorithm.PairwiseStitching;
-import algorithm.SpimDataTools;
-import algorithm.TransformTools;
-import gui.popup.StitchPairwisePopup.MyActionListener;
-import ij.gui.GenericDialog;
+import bdv.BigDataViewer;
+import bdv.tools.transformation.TransformedSource;
+import bdv.viewer.state.SourceState;
 import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.data.registration.ViewRegistrations;
-import mpicbg.spim.data.sequence.Channel;
-import mpicbg.spim.data.sequence.Tile;
+import mpicbg.spim.data.registration.ViewTransform;
+import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.realtransform.AbstractTranslation;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.util.Pair;
-import net.imglib2.util.Util;
+import net.imglib2.realtransform.AffineGet;
+import net.imglib2.realtransform.AffineTransform3D;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 
@@ -68,30 +49,44 @@ public class TestPopup extends JMenuItem implements ExplorerWindowSetable {
 				return;
 			}
 
-			ArrayList<Tile> tileFilter = new ArrayList<>();
-			tileFilter.add(new Tile(0));
-			tileFilter.add(new Tile(2));
-			ArrayList<Channel> channelFilter = new ArrayList<>();
-			channelFilter.add(new Channel(1));
-						
-			Map<Class<? extends Entity>, List<? extends Entity>> filters = new HashMap<>();
-			//filters.put(Tile.class, tileFilter);
-			//filters.put(Channel.class, channelFilter);
+			BigDataViewer bdv = panel.bdvPopup().getBDV();
 			
-			List<BasicViewDescription<?>> res = SpimDataTools.getFilteredViewDescriptions(panel.getSpimData().getSequenceDescription(), filters);
-			
-			Set<Class<? extends Entity>> groupingFactors = new HashSet<>();
-			groupingFactors.add(Channel.class);			
-			
-			List<List<BasicViewDescription<?>>> res2 = SpimDataTools.groupByAttributes(res, groupingFactors);
-			
-			
-			for (List<? extends BasicViewDescription<?>> vd2 : res2)
+			if (bdv == null)
 			{
-				System.out.println(vd2);
+				IOFunctions.println( "BigDataViewer is not open. Please start it to access this funtionality." );
+				return;
+			}			
+			
+			
+			for (int i = 0; i < bdv.getViewer().getVisibilityAndGrouping().numSources(); ++i)
+			{
+				Integer tpId = bdv.getViewer().getState().getCurrentTimepoint();
+				SourceState<?> s = bdv.getViewer().getVisibilityAndGrouping().getSources().get( i );
 				
+				// get manual transform
+				AffineTransform3D tAffine = new AffineTransform3D();
+				((TransformedSource< ? >)s.getSpimSource()).getFixedTransform( tAffine );
+				
+				// get old transform
+				ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( new ViewId(tpId, i ));
+				AffineGet old = vr.getTransformList().get( 1 ).asAffine3D();
+				
+				// update transform in ViewRegistrations
+				AffineTransform3D newTransform = new AffineTransform3D();
+				newTransform.set( old.get( 0, 3 ) + tAffine.get( 0, 3 ), 0, 3 );
+				newTransform.set( old.get( 1, 3 ) + tAffine.get( 1, 3 ), 1, 3 );
+				newTransform.set( old.get( 2, 3 ) + tAffine.get( 2, 3 ), 2, 3 );
+				
+				ViewTransform newVt = new ViewTransformAffine( "Translation", newTransform );				
+				vr.getTransformList().set( 1, newVt );
+				vr.updateModel();
+				
+				// reset manual transform
+				((TransformedSource< ? >)s.getSpimSource()).setFixedTransform( new AffineTransform3D() );
+				bdv.getViewer().requestRepaint();
 			}
 			
+			panel.bdvPopup().updateBDV();			
 			
 		}
 	}
