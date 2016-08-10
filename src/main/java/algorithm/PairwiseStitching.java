@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GlobalTileOptimization;
 import algorithm.globalopt.PairwiseStitchingResult;
+import input.FractalImgLoader;
 import input.FractalSpimDataGenerator;
 import mpicbg.models.TranslationModel3D;
 import net.imglib2.FinalInterval;
@@ -258,8 +259,9 @@ public class PairwiseStitching {
 		
 		List< AbstractTranslation > tileTranslations = FractalSpimDataGenerator.getTileTranslations( falseStarts);
 		
+		FractalImgLoader imgLoader = (FractalImgLoader) fsdg.generateSpimData( intervals ).getSequenceDescription().getImgLoader();
 		for (int i = 0; i < intervals.size(); i++){
-			rais.put( i, fsdg.getImageAtInterval( intervals.get( i ) ) );
+			rais.put( i, imgLoader.getImageAtInterval( intervals.get( i ) ) );
 			tr.put( i, tileTranslations.get( i ) );
 		}
 		
