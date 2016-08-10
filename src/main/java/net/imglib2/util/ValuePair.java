@@ -49,22 +49,22 @@ public class ValuePair< A, B > implements Pair< A, B >
 			return true;
 		if ( obj == null )
 			return false;
-		if ( getClass() != obj.getClass() )
+		if ( !(obj instanceof Pair) )
 			return false;
-		ValuePair other = (ValuePair) obj;
+		Pair other = (Pair) obj;
 		if ( a == null )
 		{
-			if ( other.a != null )
+			if ( other.getA() != null )
 				return false;
 		}
-		else if ( !a.equals( other.a ) )
+		else if ( !a.equals( other.getA() ) )
 			return false;
 		if ( b == null )
 		{
-			if ( other.b != null )
+			if ( other.getB() != null )
 				return false;
 		}
-		else if ( !b.equals( other.b ) )
+		else if ( !b.equals( other.getB() ) )
 			return false;
 		return true;
 	}
