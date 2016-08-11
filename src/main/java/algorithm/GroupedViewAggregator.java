@@ -116,10 +116,15 @@ public class GroupedViewAggregator
 			if (rais.size() == 1)
 				return rais.get( 0 );
 			
-			Double max = Double.MIN_VALUE;
-			int maxIdx = 0;
+			Double max = -Double.MAX_VALUE;
+			int maxIdx = -1;
 						
 			for (int i = 0; i < rais.size(); i++){
+				
+				// a view is missing, do not take it into account
+				if (rais.get( i ) == null)
+					continue;
+				
 				Double mean = ops.stats().mean( Views.iterable( rais.get( i ) )).getRealDouble();
 				if (mean > max)
 				{
@@ -128,7 +133,11 @@ public class GroupedViewAggregator
 				}
 			}
 			
-			return rais.get( maxIdx );			
+			// all views were missing
+			if (maxIdx < 0)
+				return null;
+			else
+				return rais.get( maxIdx );			
 		}
 		
 		
@@ -140,15 +149,18 @@ public class GroupedViewAggregator
 				if (entityClass == TimePoint.class)
 				{
 					if (vds.get( i ).getTimePoint() == instance)
-						return rais.get( i );
+						if (vds.get( i ).isPresent())
+							return rais.get( i );
 					
 					continue;
 				}
 				
 				if (vds.get( i ).getViewSetup().getAttribute( entityClass ).equals( instance ))
-					return rais.get( i );
+					if (vds.get( i ).isPresent())
+						return rais.get( i );
 			}
 			
+			// this should only be reached if the requested view is not present
 			return null;
 		}
 		
@@ -156,18 +168,34 @@ public class GroupedViewAggregator
 		public <T extends RealType<T>> RandomAccessibleInterval< T > average(List<BasicViewDescription< ? >> vds,
 				   List<RandomAccessibleInterval< T >> rais)
 		{
-			AveragedRandomAccessible< T > avg = new AveragedRandomAccessible<>( rais.get( 0 ).numDimensions() );
+			AveragedRandomAccessible< T > avg = null;
 			
 			if (rais.size() == 1)
 				return rais.get( 0 );
 			
+			int nPresent = 0;
+			int firstNonNull = -1;
+			
 			for (int i = 0; i< rais.size(); i++)
 			{
+				if (rais.get( i ) == null)
+					continue;
+				
+				if (avg == null)
+				{
+					avg = new AveragedRandomAccessible<>( rais.get( i ).numDimensions() );
+					firstNonNull = i;
+				}
+					
 				RandomAccessibleInterval< T > zerod = Views.zeroMin( rais.get( i ));
-				avg.addRAble( Views.extendZero( zerod ) );				
+				avg.addRAble( Views.extendZero( zerod ) );
+				nPresent++;
 			}
 			
-			RandomAccessibleInterval< T > zerod = Views.zeroMin( rais.get( 0 ));
+			if (nPresent < 1)
+				return null;
+			
+			RandomAccessibleInterval< T > zerod = Views.zeroMin( rais.get( firstNonNull ));
 			return Views.interval( avg, zerod );
 		}
 		
@@ -193,9 +221,12 @@ public class GroupedViewAggregator
 		
 		for (ViewId vid : gv.getViewIds())
 		{
+			
 			BasicViewDescription< ? > vd = sd.getViewDescriptions().get( vid );
-			RandomAccessibleInterval< T > rai = 
-					new RAIProxy< T >(sd.getImgLoader(), vid, downsampleFactors, dsCorrectionT); 
+			
+			// if view is not present, add null as the RAIProxy
+			RandomAccessibleInterval< T > rai = vd.isPresent() ?
+					new RAIProxy< T >(sd.getImgLoader(), vid, downsampleFactors, dsCorrectionT) : null; 
 			
 			map.put( vd, rai );		
 		}
@@ -241,6 +272,7 @@ public class GroupedViewAggregator
 		final TimePoints timepoints = new TimePoints( t );
 		
 		final ArrayList< ViewId > missing = new ArrayList< ViewId >();
+		missing.add( new ViewId(0,0) );
 		final MissingViews missingViews = new MissingViews( missing );
 
 		final ImgLoader imgLoader = new ImgLoader()
@@ -295,10 +327,10 @@ public class GroupedViewAggregator
 		
 		
 		final GroupedViewAggregator gva = new GroupedViewAggregator();
-		gva.addAction( ActionType.PICK_BRIGHTEST, Illumination.class, null );
+		//gva.addAction( ActionType.PICK_SPECIFIC, Illumination.class, new Illumination( 0 ) );
 		//gva.addAction( ActionType.PICK_SPECIFIC, Illumination.class, new Illumination( 1 ) );
-		//gva.addAction( ActionType.PICK_BRIGHTEST, Channel.class, null );
-		gva.addAction( ActionType.AVERAGE, Channel.class, null );
+		gva.addAction( ActionType.PICK_SPECIFIC, Channel.class, c0 );
+		gva.addAction( ActionType.PICK_SPECIFIC, Illumination.class, i0 );
 		
 		List<ViewId> setupsVID = new ArrayList<>();
 		setupsVID.add( new ViewId(0,0) );
