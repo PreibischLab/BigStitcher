@@ -49,7 +49,7 @@ public class FractalImgLoader implements ImgLoader
 			@Override
 			public RandomAccessibleInterval< LongType > getImage(int timepointId, ImgLoaderHint... hints)
 			{
-				return getImageAtInterval( intervals.get( setupId ));
+				return getImageAtInterval( intervals.get( setupId / 2 ));
 			}
 
 			@Override

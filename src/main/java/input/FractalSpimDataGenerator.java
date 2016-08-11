@@ -216,7 +216,8 @@ public class FractalSpimDataGenerator
 
 		final Channel c0 = new Channel( 0 );
 		final Angle a0 = new Angle( 0 );
-		final Illumination i0 = new Illumination( 0 );
+		final Illumination i0 = new Illumination( 0 , "Illum 2");
+		final Illumination i1 = new Illumination( 1 , "Illum 1");
 		
 		final Dimensions d0 = intervals.get(0);
 		final VoxelDimensions vd0 = new FinalVoxelDimensions("px", 1.0, 1.0, 1.0);
@@ -226,7 +227,8 @@ public class FractalSpimDataGenerator
 			double[] pos = new double[intervals.get( 0 ).numDimensions()];
 			mins.get( i ).localize( pos );
 			final Tile t = new Tile( i, "Tile " + i, pos );
-			setups.add( new ViewSetup( i, "setup " + i, d0, vd0, t, c0, a0, i0 ) );
+			setups.add( new ViewSetup( 2*i, "setup " + i, d0, vd0, t, c0, a0, i0 ) );
+			setups.add( new ViewSetup( 2*i + 1, "setup " + i, d0, vd0, t, c0, a0, i1 ) );
 		}
 
 		final ArrayList< TimePoint > t = new ArrayList< TimePoint >();
