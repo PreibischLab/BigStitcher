@@ -23,12 +23,6 @@ import net.imglib2.util.Pair;
 public class LinkExplorerPanel extends JPanel
 {
 	
-	public FilteredAndGroupedExplorerPanel< ?, ? > getParent()
-	{
-		return parent;
-	}
-
-
 
 	public LinkExplorerTableModel getModel()
 	{
@@ -85,7 +79,7 @@ public class LinkExplorerPanel extends JPanel
 		final JPopupMenu popupMenu = new JPopupMenu();
 		LinkExplorerRemoveLinkPopup rlp = new LinkExplorerRemoveLinkPopup(this);
 		rlp.setStitchingResults( results );
-		popupMenu.add( rlp );
+		popupMenu.add( rlp.setExplorerWindow( parent ) );
 		
 		table.setComponentPopupMenu( popupMenu );
 		
