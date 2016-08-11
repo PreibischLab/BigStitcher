@@ -16,6 +16,7 @@ import algorithm.GroupedViewAggregator;
 import algorithm.GroupedViewAggregator.ActionType;
 import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
+import algorithm.SpimDataTools;
 import algorithm.StitchingResults;
 import algorithm.TransformTools;
 import algorithm.globalopt.GroupedViews;
@@ -26,6 +27,8 @@ import gui.GroupedRowWindow;
 import gui.StitchingResultsSettable;
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.generic.AbstractSpimData;
+import mpicbg.spim.data.generic.base.Entity;
+import mpicbg.spim.data.generic.base.NamedEntity;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
@@ -93,6 +96,15 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			ArrayList< String > channelNames = new ArrayList<>();
 			channelNames.add( "average all" );
 			
+			ArrayList< String > illuminationNames = new ArrayList<>();
+			illuminationNames.add( "pick brightest" );
+			
+			List<Entity> illums = SpimDataTools.getInstancesOfAttribute( sd, Illumination.class );
+			for (Entity en: illums)
+				illuminationNames.add( NamedEntity.class.isInstance( en ) ? ((NamedEntity)en).getName() : Integer.toString( en.getId()));
+			
+			
+			
 			// TODO: this (and following code) assumes that all channels are present for all tiles
 			// --> handle MissingViews!
 			GroupedViews gv = viewIds.get( 0 );
@@ -105,6 +117,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			
 			GenericDialog gd = new GenericDialog("Stitching options");
 			gd.addChoice( "channel to use",channelNames.toArray( new String[0] ), "average all" );
+			gd.addChoice( "illumination to use", illuminationNames.toArray( new String[0] ), "pick brightest" );
 			gd.addChoice( "downsample x", ds, ds[0] );
 			gd.addChoice( "downsample y", ds, ds[0] );
 			if (!is2d) { gd.addChoice( "downsample z", ds, ds[0] ); }
@@ -114,6 +127,8 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 				return;
 			
 			String channel = gd.getNextChoice();
+			
+			String illum = gd.getNextChoice();
 			
 			long [] downSamplingFactors = !is2d ? new long[3] : new long[2];
 			downSamplingFactors[0] = Integer.parseInt( gd.getNextChoice() );
@@ -127,7 +142,10 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			//final ArrayList< ViewId > viewIdsSelectedChannel = new ArrayList<>();
 			
 			int channelIdxInGroup = channelNames.indexOf( channel ) - 1;			
-			boolean doGrouped = channelIdxInGroup < 0 ;
+			boolean doChannelAverage = channelIdxInGroup < 0 ;
+			
+			int illumIdxInGroup = illuminationNames.indexOf( illum ) - 1;
+			boolean doIllumBrightest = illumIdxInGroup < 0;
 			
 			/*
 			// get only one channel from grouped views
@@ -161,14 +179,20 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			
 			GroupedViewAggregator groupedViewAggregator = new GroupedViewAggregator();
 			
-			if (doGrouped)
-			{
+			
+			// decide how to handle illuminations
+			if (doIllumBrightest)
 				groupedViewAggregator.addAction( ActionType.PICK_BRIGHTEST, Illumination.class, null );
+			else
+				groupedViewAggregator.addAction( ActionType.PICK_SPECIFIC, Illumination.class, (Illumination)illums.get( illumIdxInGroup ) );
+			
+			// decide how to handle channels
+			if (doChannelAverage)
+			{			
 				groupedViewAggregator.addAction( ActionType.AVERAGE, Channel.class, null );
 			}
 			else
-			{
-				groupedViewAggregator.addAction( ActionType.PICK_BRIGHTEST, Illumination.class, null );
+			{				
 				Channel c = sd.getViewDescriptions().get( viewIds.get( 0 ) ).getViewSetup().getAttribute( Channel.class );
 				groupedViewAggregator.addAction( ActionType.PICK_SPECIFIC, Channel.class, c );
 			}

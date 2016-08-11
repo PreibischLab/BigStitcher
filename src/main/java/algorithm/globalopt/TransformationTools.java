@@ -42,6 +42,7 @@ import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
 import algorithm.TransformTools;
 import bdv.spimdata.WrapBasicImgLoader;
+import ij.IJ;
 
 public class TransformationTools
 {
@@ -91,6 +92,15 @@ public class TransformationTools
 			img2 = DownsampleTools.openAndDownsample( sd.getImgLoader(), viewIdB, downsampleFactors, dsCorrectionT );
 		}
 
+		
+		if (img1 == null || img2 == null)
+		{
+			IJ.log( "WARNING: Tried to open missing View when computing Stitching for " + viewIdA + " and " + 
+						viewIdB + ". No link between those could be determined");
+			return null;
+		}
+		
+		
 		boolean is2d = img1.numDimensions() == 2;
 		
 		
