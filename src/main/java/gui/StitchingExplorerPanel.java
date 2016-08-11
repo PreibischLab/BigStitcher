@@ -542,7 +542,6 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Processing" ) );
-		popups.add( new StitchPairwisePopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );

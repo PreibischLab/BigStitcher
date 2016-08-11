@@ -72,9 +72,6 @@ import gui.popup.BDVPopupStitching;
 import gui.popup.CalculatePCPopup;
 import gui.popup.OptimizeGloballyPopup;
 import gui.popup.SimpleRemoveLinkPopup;
-import gui.popup.StitchGroupPopup;
-import gui.popup.StitchPairwisePopup;
-import gui.popup.TestDownsamplePopup;
 import gui.popup.TestPopup;
 import gui.popup.TogglePreviewPopup;
 import input.FractalImgLoader;
@@ -922,15 +919,7 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Processing" ) );
-		
-		StitchPairwisePopup stitchPairwisePopup = new StitchPairwisePopup();
-		stitchPairwisePopup.setStitchingResults( stitchingResults );
-		popups.add( stitchPairwisePopup );
-		
-		StitchGroupPopup stitchGroupPopup = new StitchGroupPopup();
-		stitchGroupPopup.setStitchingResults( stitchingResults );
-		popups.add( stitchGroupPopup );
-		
+				
 		CalculatePCPopup calculatePCPopup = new CalculatePCPopup();
 		calculatePCPopup.setStitchingResults( stitchingResults );
 		popups.add( calculatePCPopup );
@@ -951,7 +940,6 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
 		popups.add( new TestPopup() );
-		popups.add( new TestDownsamplePopup() );
 		popups.add( new Separator() );
 
 		return popups;
