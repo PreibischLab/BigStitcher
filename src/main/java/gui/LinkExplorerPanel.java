@@ -103,7 +103,10 @@ public class LinkExplorerPanel extends JPanel
 				}
 				Pair< ViewId, ViewId > p = model.getActiveLinks().get( rowIdx );
 				parent.linkOverlay.setSelectedLink( p );
-				parent.bdvPopup().bdv.getViewer().requestRepaint();	
+				
+				// repaint BDV if it is open
+				if (parent.bdvPopup().bdv != null)
+					parent.bdvPopup().bdv.getViewer().requestRepaint();	
 				
 				
 				//System.out.println( p.getA() + "," + p.getB() );

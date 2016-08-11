@@ -533,6 +533,7 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 
 	public void updateBDVPreviewMode()
 	{
+		
 		// we always set the fused mode
 		setFusedModeSimple( bdvPopup().bdv, data );
 		
@@ -582,6 +583,11 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		for (PairwiseStitchingResult< ViewId > psr: resultsForId)
 		{
 			activeLinks.add( psr.pair() );
+			
+			// if we have no BDV open, continue adding active Links, but do not update BDV obviously
+			// TODO: un-tangle this method, BDV update and active link determination should be separate
+			if ( bdvPopup().bdv == null )
+				continue;
 			
 			for (List<BasicViewDescription< ? >> group : elements)
 			{
@@ -653,7 +659,9 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		getLinkExplorer().setActiveLinks( activeLinks );
 		
 		setVisibleSources( bdvPopup().bdv.getViewer().getVisibilityAndGrouping(), active );
-		bdvPopup().bdv.getViewer().requestRepaint();
+
+		if ( bdvPopup().bdv != null )
+			bdvPopup().bdv.getViewer().requestRepaint();
 		
 	}
 	
@@ -695,6 +703,11 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 			BasicViewDescription< ? extends BasicViewSetup > firstVD,
 			final Collection< List< BasicViewDescription< ? extends BasicViewSetup >> > selectedRows)
 	{
+		
+		// bdv is not open
+		if ( bdv == null )
+			return;
+		
 		// we always set the fused mode
 		setFusedModeSimple( bdv, data );
 		
