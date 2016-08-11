@@ -672,10 +672,13 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 	private void quitLinkExplorer()
 	{
 		linkOverlay.setSelectedLink( null );
-		linkFrame.setVisible( false );
-		linkFrame.dispose();
-		linkFrame = null;
-		linkExplorer = null;
+		if (linkFrame != null)
+		{
+			linkFrame.setVisible( false );
+			linkFrame.dispose();
+			linkFrame = null;
+			linkExplorer = null;
+		}
 	}
 
 	public static void resetBDVManualTransformations(BigDataViewer bdv)

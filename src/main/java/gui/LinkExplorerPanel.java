@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
@@ -14,12 +15,33 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import algorithm.StitchingResults;
+import gui.popup.LinkExplorerRemoveLinkPopup;
+import gui.popup.SimpleRemoveLinkPopup;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
 
 public class LinkExplorerPanel extends JPanel
 {
 	
+	public FilteredAndGroupedExplorerPanel< ?, ? > getParent()
+	{
+		return parent;
+	}
+
+
+
+	public LinkExplorerTableModel getModel()
+	{
+		return model;
+	}
+
+
+
+	public JTable getTable()
+	{
+		return table;
+	}
+
 	private StitchingResults results;
 	private FilteredAndGroupedExplorerPanel< ?, ? > parent;
 	LinkExplorerTableModel model;
@@ -30,6 +52,8 @@ public class LinkExplorerPanel extends JPanel
 		model.setActiveLinks( links );
 		model.fireTableDataChanged();
 	}
+	
+	
 	
 	public LinkExplorerPanel (StitchingResults results, FilteredAndGroupedExplorerPanel< ?, ? > parent)
 	{
@@ -57,6 +81,13 @@ public class LinkExplorerPanel extends JPanel
 		
 		this.setLayout( new BorderLayout() );
 		this.add( new JScrollPane( table ), BorderLayout.CENTER );
+		
+		final JPopupMenu popupMenu = new JPopupMenu();
+		LinkExplorerRemoveLinkPopup rlp = new LinkExplorerRemoveLinkPopup(this);
+		rlp.setStitchingResults( results );
+		popupMenu.add( rlp );
+		
+		table.setComponentPopupMenu( popupMenu );
 		
 	}
 

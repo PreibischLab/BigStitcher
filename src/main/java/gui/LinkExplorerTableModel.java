@@ -8,16 +8,19 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import algorithm.StitchingResults;
-import algorithm.globalopt.PairwiseStitchingResult;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
-import net.imglib2.util.Util;
 
 public class LinkExplorerTableModel extends AbstractTableModel implements StitchingResultsSettable
 {
 
 	
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3972623555571460757L;
+
 	public List< Pair< ViewId, ViewId > > getActiveLinks()
 	{
 		return activeLinks;
