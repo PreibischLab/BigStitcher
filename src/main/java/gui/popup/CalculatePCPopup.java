@@ -96,6 +96,11 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			ArrayList< String > channelNames = new ArrayList<>();
 			channelNames.add( "average all" );
 			
+			List<Entity> channels = SpimDataTools.getInstancesOfAttribute( sd, Channel.class );
+			for (Entity en : channels)
+				channelNames.add( NamedEntity.class.isInstance( en ) ? ((NamedEntity)en).getName() : Integer.toString( en.getId()) );
+			
+			
 			ArrayList< String > illuminationNames = new ArrayList<>();
 			illuminationNames.add( "pick brightest" );
 			
@@ -104,15 +109,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 				illuminationNames.add( NamedEntity.class.isInstance( en ) ? ((NamedEntity)en).getName() : Integer.toString( en.getId()));
 			
 			
-			
-			// TODO: this (and following code) assumes that all channels are present for all tiles
-			// --> handle MissingViews!
 			GroupedViews gv = viewIds.get( 0 );
-			for (ViewId vid : gv.getViewIds())
-			{
-				channelNames.add( sd.getViewDescriptions().get( vid ).getViewSetup().getAttribute( Channel.class ).getName() );
-			}
-			
 			boolean is2d = sd.getViewDescriptions().get( gv ).getViewSetup().getSize().numDimensions() == 2;
 			
 			GenericDialog gd = new GenericDialog("Stitching options");
@@ -188,14 +185,9 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			
 			// decide how to handle channels
 			if (doChannelAverage)
-			{			
 				groupedViewAggregator.addAction( ActionType.AVERAGE, Channel.class, null );
-			}
 			else
-			{				
-				Channel c = sd.getViewDescriptions().get( viewIds.get( 0 ) ).getViewSetup().getAttribute( Channel.class );
-				groupedViewAggregator.addAction( ActionType.PICK_SPECIFIC, Channel.class, c );
-			}
+				groupedViewAggregator.addAction( ActionType.PICK_SPECIFIC, Channel.class, (Channel)illums.get( channelIdxInGroup ) );
 			
 			final ArrayList< PairwiseStitchingResult<ViewId> > results = 
 					TransformationTools.computePairs( pairs,
