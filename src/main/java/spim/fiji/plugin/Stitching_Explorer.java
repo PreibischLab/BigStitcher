@@ -4,6 +4,7 @@ import gui.FilteredAndGroupedExplorer;
 import ij.ImageJ;
 import ij.plugin.PlugIn;
 import input.FractalSpimDataGenerator;
+import mpicbg.spim.io.IOFunctions;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -95,6 +96,7 @@ public class Stitching_Explorer implements PlugIn
 
 	public static void main( String[] args )
 	{
+		IOFunctions.printIJLog = true;
 		new ImageJ();
 
 		if ( !System.getProperty("os.name").toLowerCase().contains( "mac" ) )

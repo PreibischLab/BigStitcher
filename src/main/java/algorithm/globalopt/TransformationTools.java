@@ -1,48 +1,43 @@
 package algorithm.globalopt;
 
-import input.GenerateSpimData;
-
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-import mpicbg.models.Tile;
-import mpicbg.models.TranslationModel2D;
-import mpicbg.models.TranslationModel3D;
-import mpicbg.spim.data.SpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import mpicbg.spim.data.generic.sequence.BasicImgLoader;
-import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.data.registration.ViewRegistrations;
-import mpicbg.spim.data.sequence.ImgLoader;
-import mpicbg.spim.data.sequence.SequenceDescription;
-import mpicbg.spim.data.sequence.ViewDescription;
-import mpicbg.spim.data.sequence.ViewId;
-import mpicbg.spim.data.sequence.ViewSetup;
-import net.imglib2.Dimensions;
-import net.imglib2.FinalInterval;
-import net.imglib2.Interval;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.realtransform.AbstractTranslation;
-import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.realtransform.Translation3D;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.util.Util;
-import net.imglib2.view.Views;
-import net.imglib2.util.Pair;
-
-import algorithm.AveragedRandomAccessible;
 import algorithm.DownsampleTools;
 import algorithm.GroupedViewAggregator;
 import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
 import algorithm.TransformTools;
-import bdv.spimdata.WrapBasicImgLoader;
 import ij.IJ;
+import input.GenerateSpimData;
+import mpicbg.models.Tile;
+import mpicbg.models.TranslationModel3D;
+import mpicbg.spim.data.SpimData;
+import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+import mpicbg.spim.data.registration.ViewRegistration;
+import mpicbg.spim.data.registration.ViewRegistrations;
+import mpicbg.spim.data.sequence.SequenceDescription;
+import mpicbg.spim.data.sequence.ViewId;
+import mpicbg.spim.io.IOFunctions;
+import net.imglib2.Cursor;
+import net.imglib2.Dimensions;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.realtransform.AbstractTranslation;
+import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.Pair;
+import net.imglib2.util.Util;
+import net.imglib2.util.ValuePair;
+import spim.Threads;
+import spim.process.fusion.ImagePortion;
 
 public class TransformationTools
 {
@@ -54,11 +49,9 @@ public class TransformationTools
 			final PairwiseStitchingParameters params,
 			final AbstractSequenceDescription< ?,? extends BasicViewDescription<?>, ? > sd,
 			final GroupedViewAggregator gva,
-			final long[] downsampleFactors)
+			final long[] downsampleFactors,
+			final ExecutorService service )
 	{
-		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
-
-		
 		// TODO: check if overlapping, else return immediately
 		// TODO: can we ensure we have a ImgLoader here (BDV wraps ImgLoader into a BasicImgLaoder??)
 		/*
@@ -134,17 +127,71 @@ public class TransformationTools
 																		final GroupedViewAggregator gva,
 																		final long[] downsamplingFactors)
 	{
-		final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>();
+		// set up executor service
+		final ExecutorService serviceGlobal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 2 ) );
+		final ArrayList< Callable< Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > > > tasks = new ArrayList<>();
 
 		for ( final Pair< ViewId, ViewId > p : pairs )
 		{
+			tasks.add( new Callable< Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > >()
+			{
+				@Override
+				public Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > call() throws Exception
+				{
+					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() );
+
+					final ExecutorService serviceLocal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 4 ) );
+
+					final Pair< double[], Double > result = computeStitching(
+							p.getA(),
+							p.getB(),
+							vrs.getViewRegistration( p.getA() ),
+							vrs.getViewRegistration( p.getB() ),
+							params,
+							sd,
+							gva,
+							downsamplingFactors,
+							serviceLocal );
+
+					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": r=" + result.getB() );
+
+					return new ValuePair<>( p,  result );
+				}
+			});
+		}
+
+		final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>();
+
+		try
+		{
+			// invokeAll() returns when all tasks are complete
+			for ( final Future< Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > > future : serviceGlobal.invokeAll( tasks ) )
+			{
+				final Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > result = future.get();
+
+				// TODO: when does that really happen?
+				if ( result.getB() != null)
+					results.add( new PairwiseStitchingResult< ViewId >( result.getA(), result.getB().getA(), result.getB().getB() ) );
+			}
+		}
+		catch ( final Exception e )
+		{
+			IOFunctions.println( "Failed to compute min/max: " + e );
+			e.printStackTrace();
+			return null;
+		}
+
+		/*
+		for ( final Pair< ViewId, ViewId > p : pairs )
+		{
 			System.out.println( "Compute pairwise: " + p.getA() + " <> " + p.getB() );
-			final Pair< double[], Double > result = computeStitching( p.getA(), p.getB(), vrs.getViewRegistration( p.getA() ), vrs.getViewRegistration( p.getB() ), params, sd , gva, downsamplingFactors);
+			final Pair< double[], Double > result = computeStitching( p.getA(), p.getB(), vrs.getViewRegistration( p.getA() ), vrs.getViewRegistration( p.getB() ), params, sd , gva, downsamplingFactors, service );
 			
 			if (result != null)
 				results.add( new PairwiseStitchingResult<ViewId>( p, result.getA(), result.getB() ) );
 		}
-
+		*/
+		
 		return results;
 	}
 

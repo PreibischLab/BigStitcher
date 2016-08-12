@@ -13,6 +13,7 @@ import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccess;
 import net.imglib2.Sampler;
+import net.imglib2.algorithm.phasecorrelation.deprecated.Blending;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
@@ -20,8 +21,6 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
-import spim.process.fusion.weights.Blending;
-
 
 public class BlendedExtendedMirroredRandomAccesible2 <T extends RealType<T>>implements RandomAccessible<T> {
 
