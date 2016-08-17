@@ -154,7 +154,7 @@ public class PhaseCorrelation2Util {
 	/**
 	 * return a BlendedExtendedMirroredRandomAccesible of img extended to extDims
 	 * @param img
-	 * @param extensionFactor
+	 * @param extDims
 	 * @return
 	 */
 	public static <T extends RealType<T>> RandomAccessible<T> extendImageToSize(RandomAccessibleInterval<T> img, Dimensions extDims)
@@ -261,7 +261,6 @@ public class PhaseCorrelation2Util {
 	/**
 	 * expand a list of PCM maxima to to a list containing all possible shifts corresponding to these maxima
 	 * @param peaks
-	 * @param peak
 	 * @param pcmDims
 	 * @param img1Dims
 	 * @param img2Dims

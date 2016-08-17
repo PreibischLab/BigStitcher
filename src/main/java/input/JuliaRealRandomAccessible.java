@@ -45,7 +45,7 @@ import net.imglib2.type.numeric.integer.LongType;
  * A RealRandomAccess that procedurally generates values (iteration count)
  * for the mandelbrot set.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld (saalfeld@mpi-cbg.de)
  */
 public class JuliaRealRandomAccessible implements RealRandomAccessible< LongType >
 {

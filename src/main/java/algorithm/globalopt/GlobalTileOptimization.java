@@ -10,10 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import algorithm.TransformTools;
 import algorithm.VectorUtil;
 import algorithm.globalopt.Link.LinkType;
-import mpicbg.models.CoordinateTransform;
 import mpicbg.models.IllDefinedDataPointsException;
 import mpicbg.models.Model;
 import mpicbg.models.NotEnoughDataPointsException;
@@ -24,7 +22,6 @@ import mpicbg.models.TileConfiguration;
 import mpicbg.models.TranslationModel2D;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.io.IOFunctions;
-import net.imglib2.algorithm.phasecorrelation.PhaseCorrelation2Util;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
@@ -33,8 +30,7 @@ public class GlobalTileOptimization
 {
 	
 	/**
-	 * 
-	 * @param model an instance of the transformation model to be used for optimization
+	 * @param numDimensions
 	 * @param views identifieres of the "views" to be stitched
 	 * @param fixedViews identifieres of the fixed views
 	 * @param initialTranslations approximate initial translations for each view
