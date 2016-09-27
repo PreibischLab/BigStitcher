@@ -14,11 +14,11 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import algorithm.StitchingResults;
 import gui.popup.LinkExplorerRemoveLinkPopup;
 import gui.popup.SimpleRemoveLinkPopup;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
+import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class LinkExplorerPanel extends JPanel
 {

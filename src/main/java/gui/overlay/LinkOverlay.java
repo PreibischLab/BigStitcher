@@ -6,8 +6,7 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import algorithm.StitchingResults;
-import algorithm.globalopt.PairwiseStitchingResult;
+
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.sequence.ViewId;
@@ -16,6 +15,8 @@ import net.imglib2.ui.OverlayRenderer;
 import net.imglib2.ui.TransformListener;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
 
 

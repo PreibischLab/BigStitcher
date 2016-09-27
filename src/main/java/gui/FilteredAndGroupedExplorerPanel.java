@@ -38,9 +38,10 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
 import algorithm.SpimDataTools;
-import algorithm.StitchingResults;
 import algorithm.globalopt.GroupedViews;
-import algorithm.globalopt.PairwiseStitchingResult;
+
+import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
@@ -63,6 +64,7 @@ import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
 import spim.fiji.spimdata.explorer.popup.BDVPopup;
+import spim.fiji.spimdata.explorer.popup.BoundingBoxPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayViewPopup;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.explorer.popup.LabelPopUp;
@@ -71,6 +73,7 @@ import gui.popup.ApplyBDVTransformationPopup;
 import gui.popup.BDVPopupStitching;
 import gui.popup.CalculatePCPopup;
 import gui.popup.OptimizeGloballyPopup;
+import gui.popup.ResavePopup;
 import gui.popup.SimpleRemoveLinkPopup;
 import gui.popup.TestPopup;
 import gui.popup.TogglePreviewPopup;
@@ -81,6 +84,7 @@ import spim.fiji.spimdata.explorer.util.ColorStream;
 import spim.fiji.spimdata.interestpoints.InterestPointList;
 import spim.fiji.spimdata.interestpoints.ViewInterestPointLists;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
+import spim.fiji.spimdata.stitchingresults.StitchingResults;
 import bdv.BigDataViewer;
 import bdv.ViewerImgLoader;
 import bdv.img.hdf5.Hdf5ImageLoader;
@@ -136,7 +140,11 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 	public FilteredAndGroupedExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data,
 			final String xml, final X io)
 	{
-		this.stitchingResults = new StitchingResults();
+		
+		if (data instanceof SpimData2)
+			this.stitchingResults = ( (SpimData2) data ).getStitchingResults();
+		else
+			this.stitchingResults = new StitchingResults();
 		
 		this.explorer = explorer;
 		this.listeners = new ArrayList< SelectedViewDescriptionListener< AS > >();
@@ -953,7 +961,11 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
 		popups.add( new TestPopup() );
+		popups.add( new BoundingBoxPopup() );
 		popups.add( new Separator() );
+		
+		popups.add( new LabelPopUp( " Modifications" ) );
+		popups.add( new ResavePopup() );
 
 		return popups;
 	}

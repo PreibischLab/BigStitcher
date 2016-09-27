@@ -17,10 +17,8 @@ import algorithm.GroupedViewAggregator.ActionType;
 import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
 import algorithm.SpimDataTools;
-import algorithm.StitchingResults;
 import algorithm.TransformTools;
 import algorithm.globalopt.GroupedViews;
-import algorithm.globalopt.PairwiseStitchingResult;
 import algorithm.globalopt.PairwiseStrategyTools;
 import algorithm.globalopt.TransformationTools;
 import gui.GroupedRowWindow;
@@ -45,6 +43,8 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
 {
@@ -111,6 +111,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			
 			GroupedViews gv = viewIds.get( 0 );
 			boolean is2d = sd.getViewDescriptions().get( gv ).getViewSetup().getSize().numDimensions() == 2;
+			//boolean is2d = false;
 			
 			GenericDialog gd = new GenericDialog("Stitching options");
 			gd.addChoice( "channel to use",channelNames.toArray( new String[0] ), "average all" );
@@ -187,7 +188,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 			if (doChannelAverage)
 				groupedViewAggregator.addAction( ActionType.AVERAGE, Channel.class, null );
 			else
-				groupedViewAggregator.addAction( ActionType.PICK_SPECIFIC, Channel.class, (Channel)illums.get( channelIdxInGroup ) );
+				groupedViewAggregator.addAction( ActionType.PICK_SPECIFIC, Channel.class, (Channel)channels.get( channelIdxInGroup ) );
 			
 			final ArrayList< PairwiseStitchingResult<ViewId> > results = 
 					TransformationTools.computePairs( pairs,

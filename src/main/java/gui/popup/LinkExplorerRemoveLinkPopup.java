@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
-import algorithm.StitchingResults;
 import gui.FilteredAndGroupedExplorerPanel;
 import gui.LinkExplorerPanel;
 import gui.StitchingResultsSettable;
@@ -16,6 +15,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class LinkExplorerRemoveLinkPopup extends JMenuItem implements StitchingResultsSettable, ExplorerWindowSetable
 {

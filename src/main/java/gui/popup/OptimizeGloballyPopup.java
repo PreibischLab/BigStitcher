@@ -11,12 +11,10 @@ import java.util.Map;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
-import algorithm.StitchingResults;
 import algorithm.globalopt.GlobalOpt;
 import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GlobalTileOptimization;
 import algorithm.globalopt.GroupedViews;
-import algorithm.globalopt.PairwiseStitchingResult;
 import gui.GroupedRowWindow;
 import gui.StitchingResultsSettable;
 import ij.gui.GenericDialog;
@@ -34,6 +32,8 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Translation3D;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
 {

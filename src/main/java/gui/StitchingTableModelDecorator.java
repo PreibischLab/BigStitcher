@@ -9,7 +9,7 @@ import java.util.List;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 
-import algorithm.StitchingResults;
+
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
@@ -18,6 +18,7 @@ import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.realtransform.AffineGet;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
+import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > extends AbstractTableModel implements ISpimDataTableModel<AS>, StitchingResultsSettable{
 

@@ -7,9 +7,10 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import algorithm.StitchingResults;
+
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
+import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class LinkExplorerTableModel extends AbstractTableModel implements StitchingResultsSettable
 {

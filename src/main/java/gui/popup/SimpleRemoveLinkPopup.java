@@ -8,7 +8,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-import algorithm.StitchingResults;
 import gui.StitchingResultsSettable;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
@@ -16,6 +15,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
 {
