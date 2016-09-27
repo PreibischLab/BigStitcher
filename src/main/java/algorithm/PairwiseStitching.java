@@ -151,14 +151,12 @@ public class PairwiseStitching
 	 * The absolute shift of input2 relative to after PCM input1 (without t1 and
 	 * t2 - they just help to speed it up)
 	 * 
-	 * @param img1
-	 *            - zero-min interval, starting at (0,0,...)
-	 * @param img2
-	 *            - zero-min interval, starting at (0,0,...)
+
+	 * @param input1 - zero-min interval, starting at (0,0,...)
+	 * @param input2 - zero-min interval, starting at (0,0,...)
 	 * @param t1
 	 * @param t2
-	 * @param subpixelShift
-	 * @param minOverlap
+	 * @param params
 	 * @param service
 	 * @return
 	 */

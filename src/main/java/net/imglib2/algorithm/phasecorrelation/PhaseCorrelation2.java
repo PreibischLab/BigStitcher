@@ -46,9 +46,9 @@ public class PhaseCorrelation2 {
 	 * calculate the phase correlation of fft1 and fft2, save result to res
 	 * fft1 and fft2 will NOT be altered by the function
 	 * @param fft1
-	 * @param ff1Copy - a temporary image same size as fft1 & fft2
+	 * @param fft1Copy - a temporary image same size as fft1 and fft2
 	 * @param fft2
-	 * @param ff2Copy - a temporary image same size as fft1 & fft2
+	 * @param fft2Copy - a temporary image same size as fft1 and fft2
 	 * @param pcm
 	 */
 	public static <T extends ComplexType<T>, S extends ComplexType<S>, R extends RealType<R>> void calculatePCM(

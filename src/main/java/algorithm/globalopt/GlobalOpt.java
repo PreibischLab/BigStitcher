@@ -38,8 +38,6 @@ public class GlobalOpt
 	/**
 	 * Computes a global optimization based on the corresponding points
 	 * 
-	 * @param registrationType - to determine which tiles are fixed
-	 * @param subset - to get the correspondences
 	 * @return - list of Tiles containing the final transformation models
 	 */
 	public static < M extends Model< M > > HashMap< ViewId, Tile< M > > compute(

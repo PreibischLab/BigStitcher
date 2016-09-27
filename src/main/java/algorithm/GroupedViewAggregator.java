@@ -245,7 +245,7 @@ public class GroupedViewAggregator
 	
 	public static void main(String[] args)
 	{
-		OpService ops = new Context(OpService.class).getService( OpService.class );
+		final OpService ops = new Context(OpService.class).getService( OpService.class );
 		
 		final ArrayList< ViewSetup > setups = new ArrayList< ViewSetup >();
 		final ArrayList< ViewRegistration > registrations = new ArrayList< ViewRegistration >();
@@ -278,7 +278,7 @@ public class GroupedViewAggregator
 		final ImgLoader imgLoader = new ImgLoader()
 		{
 			@Override
-			public SetupImgLoader< ? > getSetupImgLoader( int setupId )
+			public SetupImgLoader< ? > getSetupImgLoader( final int setupId )
 			{
 				return new SetupImgLoader<UnsignedShortType>()
 				{
