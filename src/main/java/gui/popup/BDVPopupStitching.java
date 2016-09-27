@@ -231,13 +231,20 @@ public class BDVPopupStitching extends BDVPopup
 		
 		
 		// FIXME: do this somewhere else?
-		WrapBasicImgLoader.wrapImgLoaderIfNecessary( panel.getSpimData() );
+		//WrapBasicImgLoader.wrapImgLoaderIfNecessary( panel.getSpimData() );
 		
-		ArrayList< ConverterSetup > convSetups = new ArrayList<>();
-		ArrayList< SourceAndConverter< ? > > sources = new ArrayList<>();
+		//ArrayList< ConverterSetup > convSetups = new ArrayList<>();
+		//ArrayList< SourceAndConverter< ? > > sources = new ArrayList<>();
 		
-		BigDataViewer.initSetups( panel.getSpimData(), convSetups, sources );		
+		// TODO: this loads all views? why?
+		//BigDataViewer.initSetups( panel.getSpimData(), convSetups, sources );		
 		
+		BigDataViewer bdv = BigDataViewer.open( panel.getSpimData(), 
+												"BigDataViewer", 
+												null, 
+												ViewerOptions.options().accumulateProjectorFactory( MaximumProjectorARGB.factory ) );
+
+		/*
 		BigDataViewer bdv = new BigDataViewer( 	convSetups,
 												sources,
 												panel.getSpimData(),
@@ -246,6 +253,7 @@ public class BDVPopupStitching extends BDVPopup
 												"BigDataViewer",
 												null, 
 												ViewerOptions.options().accumulateProjectorFactory( MaximumProjectorARGB.factory ));
+		*/
 		
 		
 				// For 2D behaviour								.transformEventHandlerFactory(new BehaviourTransformEventHandlerPlanarFactory() ));
@@ -263,8 +271,9 @@ public class BDVPopupStitching extends BDVPopup
 //		if ( !bdv.tryLoadSettings( panel.xml() ) ) TODO: this should work, but currently tryLoadSettings is protected. fix that.
 		//	InitializeViewerState.initBrightness( 0.001, 0.999, bdv.getViewer(), bdv.getSetupAssignments() );
 		
-			
-		minMaxGroupByChannel( bdv, panel.getSpimData() );
+		
+		// FIXME: the  minmaxGrouping causes BDV to hang sometimes. Investigate.
+		//minMaxGroupByChannel( bdv, panel.getSpimData() );
 		colorByChannel( bdv, panel.getSpimData() );
 		
 		
