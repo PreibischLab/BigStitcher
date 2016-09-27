@@ -50,6 +50,7 @@ import net.imglib2.view.Views;
 import org.scijava.Context;
 
 import spim.fiji.spimdata.SpimData2;
+import spim.fiji.spimdata.stitchingresults.StitchingResults;
 import algorithm.AveragedRandomAccessible;
 import bdv.BigDataViewer;
 
@@ -276,7 +277,7 @@ public class FractalSpimDataGenerator
 		}
 
 		final SequenceDescription sd = new SequenceDescription( timepoints, setups, imgLoader, missingViews );
-		final SpimData2 data = new SpimData2( new File( "" ), sd, new ViewRegistrations( registrations ), null, null );
+		final SpimData2 data = new SpimData2( new File( "" ), sd, new ViewRegistrations( registrations ), null, null, new StitchingResults() );
 
 		return data;
 		
