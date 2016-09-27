@@ -29,6 +29,8 @@ import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 
+import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+
 public class GlobalTileOptimization
 {
 	

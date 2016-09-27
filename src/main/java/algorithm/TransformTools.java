@@ -76,15 +76,24 @@ public class TransformTools {
 			return new Translation3D( target[ 0 ], target[ 1 ], target[ 2 ] );
 	}
 
-	public static FinalRealInterval applyTranslation(RealInterval img, AbstractTranslation translation){
-		final int n = img.numDimensions();
+	public static FinalRealInterval applyTranslation(RealInterval img, AbstractTranslation translation, boolean[] ignoreDims){
+		int n = 0;
+		for (int d = 0; d < ignoreDims.length; ++d)
+			if (!ignoreDims[d])
+				n++;
+		
 		final double [] min = new double [n];
 		final double [] max = new double [n];
 		
-		for (int i = 0; i< n; i++)
+		int i2 = 0;
+		for (int i = 0; i< img.numDimensions();++i)
 		{
-			min[i] = img.realMin(i) + translation.getTranslation(i);
-			max[i] = img.realMax(i) + translation.getTranslation(i);
+			if (!ignoreDims[i])
+			{
+				min[i2] = img.realMin(i) + translation.getTranslation(i);
+				max[i2] = img.realMax(i) + translation.getTranslation(i);
+				i2++;
+			}
 		}
 		return new FinalRealInterval(min, max);
 	}

@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+
 import net.imglib2.util.Util;
 import mpicbg.models.AbstractAffineModel3D;
 import mpicbg.models.Affine3D;

@@ -2,6 +2,8 @@ package algorithm.globalopt;
 
 import input.GenerateSpimData;
 
+import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -108,7 +110,12 @@ public class TransformationTools
 		AbstractTranslation t1 = TransformTools.getInitialTranslation( vA, is2d, dsCorrectionT );
 		AbstractTranslation t2 = TransformTools.getInitialTranslation( vB, is2d, dsCorrectionT );
 
-		final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, t1, t2, params, service );
+		final Pair< double[], Double > result;
+		
+		if (params.doLucasKanade)
+			result = PairwiseStitching.getShiftLucasKanade( img1, img2, t1, t2, params, service );
+		else
+			result = PairwiseStitching.getShift( img1, img2, t1, t2, params, service );
 
 		if (result == null)
 			return null;
