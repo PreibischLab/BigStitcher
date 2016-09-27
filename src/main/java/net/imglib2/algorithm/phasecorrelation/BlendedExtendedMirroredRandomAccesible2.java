@@ -20,13 +20,13 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
-import spim.process.fusion.weights.Blending;
+import spim.process.fusion.transformed.weights.BlendingRealRandomAccessible;
 
 
 public class BlendedExtendedMirroredRandomAccesible2 <T extends RealType<T>>implements RandomAccessible<T> {
 
 	private RandomAccessibleInterval<T> img;
-	Blending blending;
+	BlendingRealRandomAccessible blending;
 	private int numDimensions;
 	private FinalInterval extDims;
 	
@@ -45,7 +45,7 @@ public class BlendedExtendedMirroredRandomAccesible2 <T extends RealType<T>>impl
 			border2[i] = 0.0f;
 		}
 		
-		this.blending = new Blending(extDims, border2, blendingBorder);
+		this.blending = new BlendingRealRandomAccessible(extDims, border2, blendingBorder);
 	}
 	
 	
