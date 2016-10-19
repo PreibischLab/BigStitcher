@@ -55,7 +55,8 @@ public class GlobalTileOptimization
 		List<Link<C>> strongLinks = new ArrayList<>();
 		for (PairwiseStitchingResult< C > res : pairwiseResults)
 		{
-			if (res.r() > params.correlationT)
+			// only consider Pairs that were also selected
+			if (res.r() > params.correlationT && views.contains( res.pair().getA()) && views.contains( res.pair().getB()))
 			{
 				strongLinks.add( new Link< C >( res.pair().getA(), res.pair().getB(), res.relativeVector(), LinkType.STRONG ) );
 			}
