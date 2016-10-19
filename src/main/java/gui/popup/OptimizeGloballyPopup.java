@@ -81,18 +81,12 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			Collections.sort( viewIds );
 			
 			// define fixed tiles
+			// the first selected Tile will be fixed
 			final ArrayList< ViewId > fixedViews = new ArrayList< ViewId >();
 			fixedViews.add( viewIds.get( 0 ) );
 
-			// define groups (no checks in between Tiles of a group, they are transformed together)
-			//final ArrayList< ArrayList< ViewId > > groupedViews = new ArrayList< ArrayList< ViewId > >();
 			
-			// TODO: use only selected views?
 			final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
-			
-			//final HashMap< ViewId, Tile< TranslationModel3D > > models =
-			//		GlobalOpt.compute( new TranslationModel3D(), results, fixedViews, groupedViews, params );
-			
 			final Map<ViewId, AbstractTranslation> translations = new HashMap<>();
 			
 			for (ViewId id : viewIds){
