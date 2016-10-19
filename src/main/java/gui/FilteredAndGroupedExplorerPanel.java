@@ -46,6 +46,8 @@ import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
+import mpicbg.spim.data.generic.base.NamedEntity;
+import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
@@ -388,10 +390,10 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 
 		// All instances of Entities in SpimData with "own local coordinate
 		// system"
-		Vector< ? > vAngle = new Vector< >(
-				SpimDataTools.getInstancesOfAttribute( getSpimData().getSequenceDescription(), Angle.class ) );
-		Vector< ? > vTimepoint = new Vector< >(
-				SpimDataTools.getInstancesOfAttribute( getSpimData().getSequenceDescription(), TimePoint.class ) );
+		Vector< ? > vAngle = new Vector< >(getEntityNamesOrIds( 
+				SpimDataTools.getInstancesOfAttribute( getSpimData().getSequenceDescription(), Angle.class ) ) );
+		Vector< ? > vTimepoint = new Vector< >( getEntityNamesOrIds( 
+				SpimDataTools.getInstancesOfAttribute( getSpimData().getSequenceDescription(), TimePoint.class ) ) );
 
 		// TimePoint ComboBox
 		final JComboBox< ? > timePointCB = new JComboBox< >( vTimepoint );
@@ -400,13 +402,13 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				ArrayList< TimePoint > selectedTPs = new ArrayList< >();
-				selectedTPs.add( (TimePoint) timePointCB.getSelectedItem() );
-				tableModel.addFilter( TimePoint.class, selectedTPs );
+				updateFilter( TimePoint.class, (TimePoint) getInstanceFromNameOrId( getSpimData().getSequenceDescription(), TimePoint.class, (String) timePointCB.getSelectedItem() ));
 			}
 		} );
 		if (vTimepoint.size() == 1)
 			timePointCB.setEnabled( false );
+		else
+			updateFilter( TimePoint.class, (TimePoint) getInstanceFromNameOrId( getSpimData().getSequenceDescription(), TimePoint.class, (String) timePointCB.getSelectedItem() ));
 		
 
 		// Angle ComboBox
@@ -416,13 +418,13 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				ArrayList< Angle > selectedAngles = new ArrayList< >();
-				selectedAngles.add( (Angle) angleCB.getSelectedItem() );
-				tableModel.addFilter( Angle.class, selectedAngles );
+				updateFilter( Angle.class, (Angle) getInstanceFromNameOrId( getSpimData().getSequenceDescription(), Angle.class, (String) angleCB.getSelectedItem() ));
 			}
 		} );
 		if (vAngle.size() == 1)
 			angleCB.setEnabled( false );
+		else
+			updateFilter( Angle.class, (Angle) getInstanceFromNameOrId( getSpimData().getSequenceDescription(), Angle.class, (String) angleCB.getSelectedItem() ));
 
 		final JPanel footer_tp = new JPanel( new BorderLayout() );
 		footer_tp.add( new JLabel( "Timepoint:" ), BorderLayout.WEST );
@@ -442,6 +444,31 @@ public class FilteredAndGroupedExplorerPanel<AS extends AbstractSpimData< ? >, X
 		table.getSelectionModel().setSelectionInterval( 0, 0 );
 
 		addPopupMenu( table );
+	}
+	
+	private void updateFilter(Class<? extends Entity> entityClass, Entity selectedInstance)
+	{
+		ArrayList<Entity> selectedInstances = new ArrayList<>();
+		selectedInstances.add( selectedInstance );
+		tableModel.addFilter( entityClass, selectedInstances );		
+	}
+	
+	private static List<String> getEntityNamesOrIds(List<? extends Entity> entities)
+	{
+		ArrayList<String> names = new ArrayList<>();
+		
+		for (Entity e : entities)
+			names.add( NamedEntity.class.isInstance( e ) ? ((NamedEntity)e).getName() : Integer.toString( e.getId()));
+		
+		return names;
+	}
+	
+	private static Entity getInstanceFromNameOrId(AbstractSequenceDescription<?,?,?> sd, Class<? extends Entity> entityClass, String nameOrId)
+	{
+		for (Entity e : SpimDataTools.getInstancesOfAttribute( sd, entityClass ))
+			if (NamedEntity.class.isInstance( e ) && ((NamedEntity)e).getName().equals( nameOrId ) || Integer.toString( e.getId()).equals( nameOrId ))
+				return e;
+		return null;
 	}
 
 	private void initLinkExplorer()
