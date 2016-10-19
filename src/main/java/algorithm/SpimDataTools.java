@@ -61,9 +61,21 @@ public class SpimDataTools {
 
 		return res;
 	}
-
+	
 	public static List<List<BasicViewDescription<?>>> groupByAttributes(List<BasicViewDescription<?>> vds,
-			Set<Class<? extends Entity>> groupingFactors) {
+			Set<Class<? extends Entity>> groupingFactors)
+	{
+		return groupOrCollapseByAttributes( vds, groupingFactors, true );
+	}
+	
+	public static List<List<BasicViewDescription<?>>> collapseByAttributes(List<BasicViewDescription<?>> vds,
+			Set<Class<? extends Entity>> groupingFactors)
+	{
+		return groupOrCollapseByAttributes( vds, groupingFactors, false );
+	}
+
+	public static List<List<BasicViewDescription<?>>> groupOrCollapseByAttributes(List<BasicViewDescription<?>> vds,
+			Set<Class<? extends Entity>> groupingFactors, boolean group) {
 		Map<List<Entity>, List<BasicViewDescription<?>>> res = new HashMap<>();
 
 		// pre-sort vd List
@@ -73,12 +85,12 @@ public class SpimDataTools {
 		for (BasicViewDescription<?> vd : vds) {
 			List<Entity> key = new ArrayList<>();
 
-			if (!groupingFactors.contains(TimePoint.class)) {
+			if ((group && !groupingFactors.contains(TimePoint.class)) || (!group && groupingFactors.contains(TimePoint.class))) {
 				key.add(vd.getTimePoint());
 			}
 
 			for (Entity e : vd.getViewSetup().getAttributes().values()) {
-				if (!groupingFactors.contains(e.getClass()))
+				if ((group && !groupingFactors.contains(e.getClass())) || (!group && groupingFactors.contains(e.getClass())) )
 					key.add(e);
 			}
 
