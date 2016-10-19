@@ -44,6 +44,8 @@ import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.ui.TransformListener;
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.BDVPopup;
@@ -83,11 +85,13 @@ public class BDVPopupStitching extends BDVPopup
 				return;
 			}
 
+			
 			new Thread( new Runnable()
 			{
 				@Override
 				public void run()
 				{
+				
 					// if BDV was closed by the user
 					if ( bdv != null && !bdv.getViewerFrame().isVisible() )
 						bdv = null;
@@ -99,10 +103,10 @@ public class BDVPopupStitching extends BDVPopup
 						{
 							bdv = createBDV( panel, lo );
 						}
-						catch (Exception e)
+						catch (Exception ex)
 						{
-							IOFunctions.println( "Could not run BigDataViewer: " + e );
-							e.printStackTrace();
+							IOFunctions.println( "Could not run BigDataViewer: " + ex );
+							ex.printStackTrace();
 							bdv = null;
 						}
 					}
@@ -110,36 +114,57 @@ public class BDVPopupStitching extends BDVPopup
 					{
 						closeBDV();
 					}
+					
 				}
 			}).start();
+
 		}
 	}
 	
-	public static void minMaxGroupByChannel(BigDataViewer bdv, AbstractSpimData< ? > data)
+	public static void minMaxGroupByChannels(BigDataViewer bdv, AbstractSpimData< ? > data)
 	{
-		// group ConverterSetups according to Channel
-		HashMap< Channel, ArrayList< ConverterSetup > > groups = new HashMap<>();
+		Set< Class< ? extends Entity> > groupingFactors = new HashSet<>();
+		groupingFactors.add( Channel.class );
+		groupingFactors.add( Illumination.class );
+		minMaxGroupByFactors( bdv, data, groupingFactors );
+	}
+	
+	public static void minMaxGroupByFactors(BigDataViewer bdv, AbstractSpimData< ? > data, Set<Class<? extends Entity>> groupingFactors)
+	{
+		List<BasicViewDescription< ? > > vds = new ArrayList<>();
+		Map<BasicViewDescription< ? >, ConverterSetup> vdToCs = new HashMap<>();
+		
 		for (ConverterSetup cs : bdv.getSetupAssignments().getConverterSetups())
 		{
-			
-			 Channel key = data.getSequenceDescription().getViewSetups().get( cs.getSetupId() ).getAttribute( Channel.class );
-			 if (!groups.containsKey( key ))
-				 groups.put( key, new ArrayList< ConverterSetup >() );
-			 groups.get( key ).add( cs );
+			Integer timepointId = bdv.getViewer().getState().getCurrentTimepoint();
+			BasicViewDescription< ? > vd = data.getSequenceDescription().getViewDescriptions().get( new ViewId( timepointId, cs.getSetupId() ) );
+			vds.add( vd );
+			vdToCs.put( vd, cs );
 		}
 		
-		ArrayList<Channel> keyList = new ArrayList<>(groups.keySet());
+		List< List< BasicViewDescription< ? > > > vdGroups = SpimDataTools.collapseByAttributes( vds, groupingFactors );
 		
 		// nothing to group
-		if (keyList.size() <= 1)
+		if (vdGroups.size() <= 1)
 			return;
+		List<ArrayList<ConverterSetup>> groups =  new ArrayList<>();
 		
-		for (int i = 1; i < keyList.size(); ++i)
+		for (List< BasicViewDescription< ? > > lVd : vdGroups)
 		{
-			ArrayList< ConverterSetup > cs = groups.get( keyList.get( i ) );
-			
+			ArrayList< ConverterSetup > lCs = new ArrayList<>();
+			for (BasicViewDescription< ? > vd : lVd)
+				lCs.add( vdToCs.get( vd ) );
+			groups.add( lCs );
+		}
+	
+					
+		for (int i = 1; i < groups.size(); i++)
+		{
+		
+			ArrayList<ConverterSetup> cs = groups.get( i );
 			// remove first setup from its group (group 0), creating a new one
 			bdv.getSetupAssignments().removeSetupFromGroup( cs.get( 0 ), bdv.getSetupAssignments().getMinMaxGroups().get( 0 ));
+				
 			
 			// move all other setups in group to the new MinMaxGroup (group i)
 			for (int j = 1; j < cs.size(); ++j)
@@ -147,8 +172,7 @@ public class BDVPopupStitching extends BDVPopup
 				bdv.getSetupAssignments().moveSetupToGroup( cs.get( j ), bdv.getSetupAssignments().getMinMaxGroups().get( i ) );
 			}
 		}
-		
-		
+			
 		
 	}
 
@@ -190,23 +214,45 @@ public class BDVPopupStitching extends BDVPopup
 		}
 	}
 	
-	public static void colorByChannel(BigDataViewer bdv, AbstractSpimData< ? > data)
+	public static void colorByChannels(BigDataViewer bdv, AbstractSpimData< ? > data)
 	{
-		// group ConverterSetups according to Channel
-		HashMap< Channel, ArrayList< ConverterSetup > > groups = new HashMap<>();
+		Set< Class< ? extends Entity> > groupingFactors = new HashSet<>();
+		groupingFactors.add( Channel.class );
+		groupingFactors.add( Illumination.class );
+		colorByFactors( bdv, data, groupingFactors );
+	}
+	
+	public static void colorByFactors(BigDataViewer bdv, AbstractSpimData< ? > data, Set<Class<? extends Entity>> groupingFactors)
+	{
+		List<BasicViewDescription< ? > > vds = new ArrayList<>();
+		Map<BasicViewDescription< ? >, ConverterSetup> vdToCs = new HashMap<>();
+		
 		for (ConverterSetup cs : bdv.getSetupAssignments().getConverterSetups())
 		{
-			Channel key = data.getSequenceDescription().getViewSetups().get( cs.getSetupId() ).getAttribute( Channel.class );
-			if (!groups.containsKey( key ))
-				groups.put( key, new ArrayList< ConverterSetup >() );
-			groups.get( key ).add( cs );
+			Integer timepointId = bdv.getViewer().getState().getCurrentTimepoint();
+			BasicViewDescription< ? > vd = data.getSequenceDescription().getViewDescriptions().get( new ViewId( timepointId, cs.getSetupId() ) );
+			vds.add( vd );
+			vdToCs.put( vd, cs );
 		}
 		
+		List< List< BasicViewDescription< ? > > > vdGroups = SpimDataTools.collapseByAttributes( vds, groupingFactors );
+		
+		// nothing to group
+		if (vdGroups.size() <= 1)
+			return;
+		List<ArrayList<ConverterSetup>> groups =  new ArrayList<>();
+		
+		for (List< BasicViewDescription< ? > > lVd : vdGroups)
+		{
+			ArrayList< ConverterSetup > lCs = new ArrayList<>();
+			for (BasicViewDescription< ? > vd : lVd)
+				lCs.add( vdToCs.get( vd ) );
+			groups.add( lCs );
+		}
+				
 		Iterator< ARGBType > colorIt = ColorStream.iterator();
-		
-		
-		
-		for (ArrayList< ConverterSetup > csg : groups.values())
+				
+		for (ArrayList< ConverterSetup > csg : groups)
 		{
 			ARGBType color = colorIt.next();
 			for (ConverterSetup cs : csg)
@@ -259,10 +305,9 @@ public class BDVPopupStitching extends BDVPopup
 				// For 2D behaviour								.transformEventHandlerFactory(new BehaviourTransformEventHandlerPlanarFactory() ));
 		//ViewerOptions.options().transformEventHandlerFactory(new BehaviourTransformEventHandlerPlanarFactory() );
 		
-		bdv.getViewerFrame().setVisible( true );
-		
-		InitializeViewerState.initTransform( bdv.getViewer() );
-		
+
+
+		InitializeViewerState.initTransform( bdv.getViewer() );		
 			// if ( !bdv.tryLoadSettings( panel.xml() ) ) TODO: this should
 			// work, but currently tryLoadSettings is protected. fix that.
 		InitializeViewerState.initBrightness( 0.001, 0.999, bdv.getViewer(), bdv.getSetupAssignments() );
@@ -272,9 +317,8 @@ public class BDVPopupStitching extends BDVPopup
 		//	InitializeViewerState.initBrightness( 0.001, 0.999, bdv.getViewer(), bdv.getSetupAssignments() );
 		
 		
-		// FIXME: the  minmaxGrouping causes BDV to hang sometimes. Investigate.
-		//minMaxGroupByChannel( bdv, panel.getSpimData() );
-		colorByChannel( bdv, panel.getSpimData() );
+		minMaxGroupByChannels( bdv, panel.getSpimData() );
+		colorByChannels( bdv, panel.getSpimData() );
 		
 		
 		// FIXME: source grouping is quite hacky atm
@@ -288,6 +332,7 @@ public class BDVPopupStitching extends BDVPopup
 		bdv.getViewer().addTransformListener( lo );
 		bdv.getViewer().getDisplay().addOverlayRenderer( lo );
 		
+		bdv.getViewerFrame().setVisible( true );		
 		bdv.getViewer().requestRepaint();
 
 		return bdv;
