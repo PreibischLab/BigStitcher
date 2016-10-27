@@ -28,15 +28,16 @@ import spim.fiji.spimdata.explorer.ExplorerWindow;
 
 public class FilteredAndGroupedTableModel < AS extends AbstractSpimData< ? > > extends AbstractTableModel implements ISpimDataTableModel<AS>
 {
+	
+	
 	private static final long serialVersionUID = -6526338840427674269L;
 
 	protected List< List< BasicViewDescription< ? > >> elements = null;
 	
 	final ExplorerWindow< AS, ? > panel;
-	//final ArrayList< String > columnNames;
 	Set<Class<? extends Entity>> groupingFactors;
 	Map<Class<? extends Entity>, List<? extends Entity>> filters;
-	ArrayList<Class<? extends Entity>> columnClasses;
+	List<Class<? extends Entity>> columnClasses;
 	List<Class<? extends Entity>> sortingFactors;
 	
 	
@@ -101,7 +102,7 @@ public class FilteredAndGroupedTableModel < AS extends AbstractSpimData< ? > > e
 		fireTableDataChanged();
 	}
 	
-	public ArrayList<Class<? extends Entity>> defaultColumnClasses()
+	public static ArrayList<Class<? extends Entity>> defaultColumnClassesStitching()
 	{
 		ArrayList<Class <? extends Entity>> res = new ArrayList<>();
 		res.add(TimePoint.class);
@@ -113,12 +114,26 @@ public class FilteredAndGroupedTableModel < AS extends AbstractSpimData< ? > > e
 		return res;
 	}
 	
+	public static ArrayList<Class<? extends Entity>> defaultColumnClassesMV()
+	{
+		ArrayList<Class <? extends Entity>> res = new ArrayList<>();
+		res.add(TimePoint.class);
+		res.add(ViewSetup.class);
+		res.add(Illumination.class);
+		res.add(Channel.class);
+		res.add(Angle.class);		
+		res.add(Tile.class);		
+		return res;
+	}
+	
+	
+	
 	public FilteredAndGroupedTableModel( final ExplorerWindow< AS, ? > panel )
 	{
 		groupingFactors = new HashSet<>();
 		filters = new HashMap<>();
 		this.panel = panel;
-		columnClasses = defaultColumnClasses();
+		columnClasses = defaultColumnClassesStitching();
 		
 		sortingFactors = new ArrayList<>();
 		// default: sort by ViewSetup, then by TimePoint
@@ -233,5 +248,18 @@ public class FilteredAndGroupedTableModel < AS extends AbstractSpimData< ? > > e
 	public String getColumnName( final int column )
 	{
 		return columnClasses.get( column ).getSimpleName();
+	}
+
+
+	public void setColumnClasses(List< Class< ? extends Entity > > columnClasses)
+	{
+		this.columnClasses = columnClasses;
+	}
+
+
+	@Override
+	public int getSpecialColumn(gui.ISpimDataTableModel.SpecialColumnType type)
+	{
+		return -1;
 	}
 }

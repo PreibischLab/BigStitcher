@@ -11,22 +11,31 @@ import spim.fiji.spimdata.explorer.ExplorerWindow;
 
 public interface ISpimDataTableModel<AS extends AbstractSpimData<?>> extends TableModel {
 	
+	public enum SpecialColumnType{
+		INTEREST_POINT_COLUMN,
+		VIEW_REGISTRATION_COLUMN
+	}
+	
+	public int getSpecialColumn(SpecialColumnType type);
+	
 	public ExplorerWindow< AS, ? > getPanel();
 	
-	void clearSortingFactors();
+	public void clearSortingFactors();
 
-	void addSortingFactor(Class<? extends Entity> factor);
+	public void addSortingFactor(Class<? extends Entity> factor);
 
-	void clearGroupingFactors();
+	public void clearGroupingFactors();
 
-	void addGroupingFactor(Class<? extends Entity> factor);
+	public void addGroupingFactor(Class<? extends Entity> factor);
 
-	void clearFilters();
+	public void clearFilters();
 
-	void addFilter(Class<? extends Entity> cl, List<? extends Entity> instances);
+	public void addFilter(Class<? extends Entity> cl, List<? extends Entity> instances);
 	
 	public List<List< BasicViewDescription< ?  >> > getElements();
 	
 	public void sortByColumn( final int column );
+	
+	public void setColumnClasses(List< Class< ? extends Entity > > columnClasses);
 
 }
