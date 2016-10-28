@@ -29,8 +29,6 @@ import bdv.viewer.ViewerOptions;
 import bdv.viewer.state.SourceGroup;
 import bdv.viewer.state.SourceState;
 import gui.AveragingProjectorARGB;
-import gui.FilteredAndGroupedExplorerPanel;
-import gui.GroupedRowWindow;
 import gui.MaximumProjectorARGB;
 import gui.overlay.LinkOverlay;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -47,6 +45,8 @@ import net.imglib2.ui.TransformListener;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
+import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
+import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.BDVPopup;
 import spim.fiji.spimdata.explorer.popup.BDVPopup.MyActionListener;
@@ -136,7 +136,7 @@ public class BDVPopupStitching extends BDVPopup
 		
 		for (ConverterSetup cs : bdv.getSetupAssignments().getConverterSetups())
 		{
-			Integer timepointId = bdv.getViewer().getState().getCurrentTimepoint();
+			Integer timepointId = data.getSequenceDescription().getTimePoints().getTimePointsOrdered().get( bdv.getViewer().getState().getCurrentTimepoint()).getId();
 			BasicViewDescription< ? > vd = data.getSequenceDescription().getViewDescriptions().get( new ViewId( timepointId, cs.getSetupId() ) );
 			vds.add( vd );
 			vdToCs.put( vd, cs );
@@ -195,7 +195,7 @@ public class BDVPopupStitching extends BDVPopup
 
 		for(int i = 0; i < bdv.getViewer().getState().getSources().size(); ++i)
 		{
-			Integer timepointId = bdv.getViewer().getState().getCurrentTimepoint();
+			Integer timepointId = data.getSequenceDescription().getTimePoints().getTimePointsOrdered().get( bdv.getViewer().getState().getCurrentTimepoint()).getId();
 			BasicViewDescription< ? > vd = data.getSequenceDescription().getViewDescriptions().get( new ViewId( timepointId, i ) );
 			vds.add( vd );
 			vdToSource.put( vd, i );
@@ -229,7 +229,7 @@ public class BDVPopupStitching extends BDVPopup
 		
 		for (ConverterSetup cs : bdv.getSetupAssignments().getConverterSetups())
 		{
-			Integer timepointId = bdv.getViewer().getState().getCurrentTimepoint();
+			Integer timepointId = data.getSequenceDescription().getTimePoints().getTimePointsOrdered().get( bdv.getViewer().getState().getCurrentTimepoint()).getId();
 			BasicViewDescription< ? > vd = data.getSequenceDescription().getViewDescriptions().get( new ViewId( timepointId, cs.getSetupId() ) );
 			vds.add( vd );
 			vdToCs.put( vd, cs );
@@ -305,8 +305,6 @@ public class BDVPopupStitching extends BDVPopup
 				// For 2D behaviour								.transformEventHandlerFactory(new BehaviourTransformEventHandlerPlanarFactory() ));
 		//ViewerOptions.options().transformEventHandlerFactory(new BehaviourTransformEventHandlerPlanarFactory() );
 		
-
-
 		InitializeViewerState.initTransform( bdv.getViewer() );		
 			// if ( !bdv.tryLoadSettings( panel.xml() ) ) TODO: this should
 			// work, but currently tryLoadSettings is protected. fix that.
