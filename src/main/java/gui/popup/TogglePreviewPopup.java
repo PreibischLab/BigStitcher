@@ -9,7 +9,7 @@ import javax.swing.JMenuItem;
 import bdv.BigDataViewer;
 import bdv.tools.transformation.TransformedSource;
 import bdv.viewer.state.SourceState;
-import gui.FilteredAndGroupedExplorerPanel;
+import gui.StitchingExplorerPanel;
 import gui.popup.TestPopup.MyActionListener;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
@@ -53,7 +53,7 @@ public class TogglePreviewPopup extends JMenuItem implements ExplorerWindowSetab
 				return;
 			}
 
-			((FilteredAndGroupedExplorerPanel< ?, ? >) panel).togglePreviewMode();	
+			((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode();	
 			
 		}
 	}

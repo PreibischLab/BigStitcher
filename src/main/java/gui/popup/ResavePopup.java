@@ -26,13 +26,14 @@ import spim.fiji.plugin.resave.Resave_TIFF;
 import spim.fiji.plugin.resave.Resave_TIFF.Parameters;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
+import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.imgloaders.AbstractImgFactoryImgLoader;
 import spim.fiji.spimdata.imgloaders.MicroManagerImgLoader;
 import bdv.export.ExportMipmapInfo;
 import bdv.export.ProgressWriter;
-import gui.FilteredAndGroupedExplorerPanel;
+
 
 public class ResavePopup extends JMenu implements ExplorerWindowSetable
 {

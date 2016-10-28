@@ -13,6 +13,8 @@ import java.util.List;
 import javax.swing.JFrame;
 
 import spim.fiji.datasetmanager.LightSheetZ1;
+import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
+import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import spim.fiji.spimdata.explorer.ViewSetupExplorer;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.XmlIoSpimData;
@@ -24,15 +26,16 @@ import net.imglib2.RealLocalizable;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.realtransform.AffineTransform3D;
 
-public class FilteredAndGroupedExplorer< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > >
+public class FilteredAndGroupedExplorer< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > > extends ViewSetupExplorer< AS, X >
 {
 	final JFrame frame;
 	FilteredAndGroupedExplorerPanel<AS, X> panel;
 	
 	public FilteredAndGroupedExplorer( final AS data, final String xml, final X io )
 	{
+		super(data, xml, io);
 		frame = new JFrame( "Stitching Explorer" );
-		panel = new FilteredAndGroupedExplorerPanel< AS, X >( this, data, xml, io );
+		panel = new StitchingExplorerPanel< AS, X >( this, data, xml, io );
 
 		frame.add( panel, BorderLayout.CENTER );
 		frame.setSize( panel.getPreferredSize() );

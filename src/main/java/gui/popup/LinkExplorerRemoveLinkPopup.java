@@ -6,8 +6,8 @@ import java.awt.event.ActionListener;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
-import gui.FilteredAndGroupedExplorerPanel;
 import gui.LinkExplorerPanel;
+import gui.StitchingExplorerPanel;
 import gui.StitchingResultsSettable;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
@@ -38,7 +38,7 @@ public class LinkExplorerRemoveLinkPopup extends JMenuItem implements StitchingR
 			{
 				Pair< ViewId, ViewId > pair = panel.getModel().getActiveLinks().get( panel.getTable().getSelectedRow() );
 				results.removePairwiseResultForPair( pair );
-				((FilteredAndGroupedExplorerPanel< ?, ? >)stitchingExplorer).updateBDVPreviewMode();
+				((StitchingExplorerPanel< ?, ? >)stitchingExplorer).updateBDVPreviewMode();
 				panel.getModel().fireTableDataChanged();
 			}
 

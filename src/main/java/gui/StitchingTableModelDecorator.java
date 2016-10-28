@@ -18,6 +18,7 @@ import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.realtransform.AffineGet;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
+import spim.fiji.spimdata.explorer.ISpimDataTableModel;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > extends AbstractTableModel implements ISpimDataTableModel<AS>, StitchingResultsSettable{
@@ -192,6 +193,18 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 	public void setStitchingResults(StitchingResults res)
 	{
 		this.res = res;		
+	}
+
+	@Override
+	public int getSpecialColumn(SpecialColumnType type)
+	{
+		return -1;
+	}
+
+	@Override
+	public void setColumnClasses(List< Class< ? extends Entity > > columnClasses)
+	{
+		decorated.setColumnClasses( columnClasses );		
 	}
 
 }

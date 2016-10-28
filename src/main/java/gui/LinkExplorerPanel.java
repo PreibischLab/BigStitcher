@@ -37,7 +37,7 @@ public class LinkExplorerPanel extends JPanel
 	}
 
 	private StitchingResults results;
-	private FilteredAndGroupedExplorerPanel< ?, ? > parent;
+	private StitchingExplorerPanel< ?, ? > parent;
 	LinkExplorerTableModel model;
 	protected JTable table;
 	
@@ -49,7 +49,7 @@ public class LinkExplorerPanel extends JPanel
 	
 	
 	
-	public LinkExplorerPanel (StitchingResults results, FilteredAndGroupedExplorerPanel< ?, ? > parent)
+	public LinkExplorerPanel (StitchingResults results, StitchingExplorerPanel< ?, ? > parent)
 	{
 		this.results = results;
 		this.parent = parent;

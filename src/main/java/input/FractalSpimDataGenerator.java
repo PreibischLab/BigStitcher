@@ -300,8 +300,7 @@ public class FractalSpimDataGenerator
 		FractalSpimDataGenerator fsdg = new FractalSpimDataGenerator(3);
 		fsdg.addFractal( m );
 		
-		new BigDataViewer( fsdg.generateSpimData( res ),
-				"", null );
+		BigDataViewer.open(  fsdg.generateSpimData( res ), "", null, null );
 		
 		/*
 		new ImageJ();
