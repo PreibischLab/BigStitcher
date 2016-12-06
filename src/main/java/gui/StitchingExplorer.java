@@ -10,6 +10,8 @@ import java.util.ArrayList;
 
 import javax.swing.JFrame;
 
+import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
+import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import spim.fiji.spimdata.explorer.ViewSetupExplorer;
 import mpicbg.spim.data.SpimData;
@@ -17,10 +19,8 @@ import mpicbg.spim.data.XmlIoSpimData;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
 
-public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > >
+public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > > extends FilteredAndGroupedExplorer< AS, X >
 {
-	final JFrame frame;
-	StitchingExplorerPanel< AS, X > panel;
 	
 	public StitchingExplorer( final AS data, final String xml, final X io )
 	{
@@ -61,7 +61,7 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 	}
 	
 	public AS getSpimData() { return panel.getSpimData(); }
-	public StitchingExplorerPanel< AS, X > getPanel() { return panel; }
+	public FilteredAndGroupedExplorerPanel< AS, X > getPanel() { return panel; }
 	public JFrame getFrame() { return frame; }
 	public void addListener( final SelectedViewDescriptionListener< AS > listener ) { panel.addListener( listener ); }
 	public ArrayList< SelectedViewDescriptionListener< AS > > getListeners() { return panel.getListeners(); }
