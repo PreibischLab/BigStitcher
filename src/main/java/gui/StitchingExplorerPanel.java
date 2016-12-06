@@ -17,7 +17,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Vector;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -34,6 +36,7 @@ import algorithm.SpimDataTools;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
+import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
@@ -49,9 +52,11 @@ import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.util.Pair;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
+import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedTableModel;
 import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
+import spim.fiji.spimdata.explorer.ViewSetupExplorer;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
 import spim.fiji.spimdata.explorer.popup.BDVPopup;
 import spim.fiji.spimdata.explorer.popup.BoundingBoxPopup;
@@ -241,7 +246,8 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		this.add( header, BorderLayout.NORTH );
 		this.add( new JScrollPane( table ), BorderLayout.CENTER );
 
-		final JPanel footer = new JPanel( new BorderLayout() );
+		final JPanel footer = new JPanel();
+		footer.setLayout( new BoxLayout( footer, BoxLayout.PAGE_AXIS ) );
 
 		// All instances of Entities in SpimData with "own local coordinate
 		// system"
@@ -281,17 +287,75 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		else
 			updateFilter( Angle.class, (Angle) getInstanceFromNameOrId( getSpimData().getSequenceDescription(), Angle.class, (String) angleCB.getSelectedItem() ));
 
-		final JPanel footer_tp = new JPanel( new BorderLayout() );
-		footer_tp.add( new JLabel( "Timepoint:" ), BorderLayout.WEST );
-		footer_tp.add( timePointCB, BorderLayout.EAST );
+		final JPanel footer_tp = new JPanel();
+		footer_tp.setLayout( new BoxLayout( footer_tp, BoxLayout.LINE_AXIS ) );
+		footer_tp.add( new JLabel( "Timepoint:" ) );
+		footer_tp.add( timePointCB);
 		
-		final JPanel footer_angle = new JPanel( new BorderLayout() );
-		footer_angle.add( new JLabel( "Angle:" ), BorderLayout.WEST );
-		footer_angle.add( angleCB, BorderLayout.EAST );
+		final JPanel footer_angle = new JPanel( );
+		footer_angle.setLayout( new BoxLayout( footer_angle, BoxLayout.LINE_AXIS ) );
+		footer_angle.add( new JLabel( "Angle:" ));
+		footer_angle.add( angleCB );
 		
+		
+		// checkbox to toggle channel grouping
+		final JPanel footerGroupChannels = new JPanel();
+		footerGroupChannels.setLayout( new BoxLayout( footerGroupChannels, BoxLayout.LINE_AXIS ) );
+		footerGroupChannels.add( new JLabel( "Group Channels:" ) );
+		final JCheckBox checkboxGroupChannels = new JCheckBox( "Group Channels", true );
+		checkboxGroupChannels.addActionListener( new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				HashSet< Class< ? extends Entity > > groupingOld = new HashSet<>(tableModel.getGroupingFactors());
+				if (checkboxGroupChannels.isSelected())
+					groupingOld.add( Channel.class );
+				else
+					groupingOld.remove( Channel.class );
+				tableModel.clearGroupingFactors();
+				
+				for (Class<? extends Entity> c : groupingOld)
+					tableModel.addGroupingFactor( c );
+				
+				
+			}
+		} );		
+		footerGroupChannels.add( checkboxGroupChannels );
+		
+		// checkbox to toggle illumination grouping
+		final JPanel footerGroupIllums = new JPanel();
+		footerGroupIllums.setLayout( new BoxLayout( footerGroupIllums, BoxLayout.LINE_AXIS ) );
+		footerGroupIllums.add( new JLabel( "Group Illuminations:" ) );
+		final JCheckBox checkboxGroupIllums = new JCheckBox( "Group Illuminations", true );
+		checkboxGroupIllums.addActionListener( new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				HashSet< Class< ? extends Entity > > groupingOld = new HashSet<>(tableModel.getGroupingFactors());
+				if (checkboxGroupIllums.isSelected())
+					groupingOld.add( Illumination.class );
+				else
+					groupingOld.remove( Illumination.class );
+				tableModel.clearGroupingFactors();
+				
+				for (Class<? extends Entity> c : groupingOld)
+					tableModel.addGroupingFactor( c );
+				
+				
+			}
+		} );		
+		footerGroupIllums.add( checkboxGroupIllums );
 
-		footer.add( footer_tp, BorderLayout.NORTH );
-		footer.add( footer_angle, BorderLayout.SOUTH );
+		footer.add( footer_tp );
+		footer.add( footer_angle);
+		footer.add( footerGroupChannels );
+		footer.add( footerGroupIllums );
+		//footer.add( footer_tp, BorderLayout.NORTH );
+		//footer.add( footer_angle, BorderLayout.SOUTH );
 		//footer.add( illumCB, BorderLayout.WEST );
 
 		this.add( footer, BorderLayout.SOUTH );
@@ -313,12 +377,31 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 			{
 				BDVPopup b = bdvPopup();
 
+				selectedRows.clear();
+				firstSelectedVD = null;
+				for ( final int row : table.getSelectedRows() )
+				{
+					if ( firstSelectedVD == null )
+						firstSelectedVD = tableModel.getElements().get( row ).get( 0 );
+
+					selectedRows.add( tableModel.getElements().get( row ) );
+				}
+				
+				List<List<BasicViewDescription< ? extends BasicViewSetup >>> selectedList = new ArrayList<>();
+				for (List<BasicViewDescription< ? extends BasicViewSetup >> selectedI : selectedRows)
+					selectedList.add( selectedI );
+								
+				for ( int i = 0; i < listeners.size(); ++i )
+					listeners.get( i ).selectedViewDescriptions( selectedList );
+				
+				/*
+
 				if ( table.getSelectedRowCount() != 1 )
 				{
 					lastRow = -1;
 
 					for ( int i = 0; i < listeners.size(); ++i )
-						listeners.get( i ).seletedViewDescription( null );
+						listeners.get( i ).firstSelectedViewDescriptions( null );
 
 					selectedRows.clear();
 
@@ -349,7 +432,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 								.get( row );
 
 						for ( int i = 0; i < listeners.size(); ++i )
-							listeners.get( i ).seletedViewDescription( null );
+							listeners.get( i ).firstSelectedViewDescriptions( null );
 
 						selectedRows.clear();
 						selectedRows.add( vds );
@@ -357,6 +440,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 						firstSelectedVD = vds.get( 0 );
 					}
 				}
+				*/
 
 				if ( b != null && b.bdv != null )
 				{	
