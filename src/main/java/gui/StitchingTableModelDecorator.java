@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
@@ -206,5 +207,8 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 	{
 		decorated.setColumnClasses( columnClasses );		
 	}
+
+	@Override
+	public Set< Class< ? extends Entity > > getGroupingFactors(){return decorated.getGroupingFactors();}
 
 }
