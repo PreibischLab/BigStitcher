@@ -1,6 +1,6 @@
 package spim.fiji.plugin;
 
-import gui.FilteredAndGroupedExplorer;
+
 import ij.ImageJ;
 import ij.plugin.PlugIn;
 import input.FractalSpimDataGenerator;
@@ -9,6 +9,7 @@ import mpicbg.spim.io.IOFunctions;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import gui.StitchingExplorer;
 import spim.fiji.ImgLib2Temp.Pair;
 import spim.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import spim.fiji.plugin.queryXML.LoadParseQueryXML;
@@ -78,8 +79,8 @@ public class Stitching_Explorer implements PlugIn
 			io = result.getIO();
 		}
 
-		final FilteredAndGroupedExplorer< SpimData2, XmlIoSpimData2 > explorer =
-				new FilteredAndGroupedExplorer< SpimData2, XmlIoSpimData2 >( data, xml, io );
+		final StitchingExplorer< SpimData2, XmlIoSpimData2 > explorer =
+				new StitchingExplorer< SpimData2, XmlIoSpimData2 >( data, xml, io );
 
 		explorer.getFrame().toFront();
 	}
