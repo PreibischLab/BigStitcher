@@ -355,12 +355,16 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 					
 
 					ViewRegistration vr = parent.getSpimData().getViewRegistrations().getViewRegistration( vd );
-					AffineTransform3D invAndCalib = vr.getModel().inverse();
-					//invAndCalib.concatenate( vr.getTransformList().get( 0 ).asAffine3D() );
+					AffineTransform3D inv = vr.getModel().inverse();
+					AffineTransform3D calib = new AffineTransform3D();
+					calib.set( vr.getTransformList().get( 0 ).asAffine3D().getRowPackedCopy() );
+							
+					//invAndCalib.preConcatenate( vr.getTransformList().get( 0 ).asAffine3D() );
 
 					AffineTransform3D gridTransform = ( i < generateRegularGrid.size() )
-							? generateRegularGrid.get( i ).copy().preConcatenate( invAndCalib ) : invAndCalib.copy();
+							? generateRegularGrid.get( i ).copy().concatenate( inv ) : inv.copy();
 
+					gridTransform.preConcatenate( calib );
 					//System.out.println( gridTransform );
 						
 					
@@ -384,7 +388,37 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	private void applyButtonClicked()
 	{
 		String message1 = "<html><strong>WARNING:</strong> this will overwrite all tranformations but the calibration with the new translations</html>";
-		JOptionPane.showConfirmDialog( this, message1, "Apply to dataset", JOptionPane.OK_CANCEL_OPTION );
+		String message2 = "<html>apply to all TimePoints?</html>";
+		int confirm1 = JOptionPane.showConfirmDialog( this, message1, "Apply to dataset", JOptionPane.OK_CANCEL_OPTION );
+		
+		if (confirm1 == JOptionPane.CANCEL_OPTION)
+			return;
+		
+		int confirm2 = JOptionPane.showConfirmDialog( this, message2, "Apply to dataset", JOptionPane.YES_NO_CANCEL_OPTION );
+		
+		if (confirm2 == JOptionPane.CANCEL_OPTION)
+			return;
+		
+		boolean allTPs = confirm2 == JOptionPane.YES_OPTION;
+		
+		RegularTranslationParameters params = new RegularTranslationParameters();
+		params.nDimensions = 3;
+		params.alternating = alternating;
+		params.dimensionOrder = dimensionOrder;
+		params.increasing = increasing;
+		params.overlaps = overlaps;
+		params.nSteps = steps;
+		
+		applyToSpimData( parent.getSpimData() , selectedVDs, params, allTPs );
+		
+		// reset viewer transform to recall to current transform & update with new sources
+		parent.bdvPopup().getBDV().getViewer().getState().getViewerTransform( oldViewerTransform );
+		parent.bdvPopup().updateBDV();
+		
+		// close the window
+		((JFrame)this.getTopLevelAncestor()).dispose();
+		quit();
+		
 	}
 	
 	public static <AS extends AbstractSpimData<?> > void applyToSpimData(
@@ -426,8 +460,17 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 					ViewTransform calibration = vr.getTransformList().get( 0 );
 					vr.getTransformList().clear();
 					vr.getTransformList().add( calibration );
-					vr.preconcatenateTransform( new ViewTransformAffine( "translation", generateRegularGrid.get( i ) ) );
 					vr.updateModel();
+					
+					// get translation and multiply shift with calibration
+					AffineTransform3D translation = generateRegularGrid.get( i ).copy();
+					translation.set( translation.get( 0, 3 ) * calibration.asAffine3D().get( 0, 0 ), 0, 3 );
+					translation.set( translation.get( 1, 3 ) * calibration.asAffine3D().get( 1, 1 ), 1, 3 );
+					translation.set( translation.get( 2, 3 ) * calibration.asAffine3D().get( 2, 2 ), 2, 3 );
+					vr.preconcatenateTransform( new ViewTransformAffine( "translation", translation ));
+					vr.updateModel();
+					
+					System.out.println(translation);
 				}
 				
 			}

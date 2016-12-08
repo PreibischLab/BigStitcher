@@ -110,11 +110,11 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		else
 			this.stitchingResults = new StitchingResults();
 		
-		popups = initPopups();		
-		initComponent();
-		
 		linkOverlay = new LinkOverlay( stitchingResults, data );
 		
+		popups = initPopups();		
+		initComponent();
+				
 		if ( Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) ||
 				FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) )
 			{
