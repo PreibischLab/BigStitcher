@@ -515,6 +515,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		
 		popups.add( new ApplyBDVTransformationPopup() );
 		popups.add( new TogglePreviewPopup() );
+		popups.add( new BoundingBoxPopup() );
 		
 		
 		popups.add( new Separator() );
