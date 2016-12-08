@@ -1,12 +1,19 @@
 package gui.popup;
 
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import bdv.BigDataViewer;
 import bdv.tools.transformation.TransformedSource;
 import bdv.viewer.state.SourceState;
+import gui.PreviewRegularGridPanel;
 import mpicbg.spim.data.generic.AbstractSpimData;
+import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
@@ -16,6 +23,8 @@ import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
+import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
+import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 
 public class TestPopup extends JMenuItem implements ExplorerWindowSetable {
@@ -24,6 +33,7 @@ public class TestPopup extends JMenuItem implements ExplorerWindowSetable {
 	public static boolean showWarning = true;
 
 	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	PreviewRegularGridPanel< ? > regularGridPanel;
 
 	public TestPopup() 
 	{
@@ -37,6 +47,7 @@ public class TestPopup extends JMenuItem implements ExplorerWindowSetable {
 		this.panel = panel;
 		return this;
 	}
+	 
 
 	public class MyActionListener implements ActionListener
 	{
@@ -49,15 +60,36 @@ public class TestPopup extends JMenuItem implements ExplorerWindowSetable {
 				return;
 			}
 
+			/*
 			BigDataViewer bdv = panel.bdvPopup().getBDV();
 			
 			if (bdv == null)
 			{
 				IOFunctions.println( "BigDataViewer is not open. Please start it to access this funtionality." );
 				return;
-			}			
+			}
+			*/		
 			
+			regularGridPanel = new PreviewRegularGridPanel<>( panel );
+									
+			JFrame frame = new JFrame( "Link Explorer" );
+			frame.add( regularGridPanel, BorderLayout.CENTER );
+			frame.setSize( regularGridPanel.getPreferredSize() );
 			
+			frame.addWindowListener( new WindowAdapter()
+			{
+				@Override
+				public void windowClosing( WindowEvent evt )
+				{
+					regularGridPanel.quit();
+				}
+			} );
+			
+			frame.pack();
+			frame.setVisible( true );
+			frame.requestFocus();
+			
+			/*
 			for (int i = 0; i < bdv.getViewer().getVisibilityAndGrouping().numSources(); ++i)
 			{
 				Integer tpId = bdv.getViewer().getState().getCurrentTimepoint();
@@ -88,6 +120,7 @@ public class TestPopup extends JMenuItem implements ExplorerWindowSetable {
 			
 			panel.bdvPopup().updateBDV();			
 			
+			*/
 		}
 	}
 
