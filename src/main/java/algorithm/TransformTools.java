@@ -1,5 +1,7 @@
 package algorithm;
 
+import org.apache.commons.math3.linear.RealMatrix;
+
 import mpicbg.imglib.util.Util;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
@@ -7,7 +9,9 @@ import mpicbg.spim.data.registration.ViewTransformAffine;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
+import net.imglib2.Point;
 import net.imglib2.RealInterval;
+import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -155,6 +159,60 @@ public class TransformTools {
 		}
 		
 		return new FinalRealInterval(min, max);
+	}
+	
+	public static void main(String[] args)
+	{
+		AffineTransform3D scale = new AffineTransform3D();
+		
+		scale.scale( 2.0 );
+		//scale.rotate( 0, 45 );
+		
+		AffineTransform3D translate = new AffineTransform3D();
+		translate.translate( new double[] {100.0, 100.0, 100.0} );
+		AffineTransform3D translate2 = new AffineTransform3D();
+		translate2.translate( new double[] {200.0, 200.0, 200.0} );
+		
+		AffineTransform3D conc = scale.copy().preConcatenate( translate );
+		AffineTransform3D conc2 = scale.copy().preConcatenate( translate2 );
+		//System.out.println( scale );
+		//System.out.println( translate );
+		System.out.println( conc );
+		System.out.println( conc2 );
+		
+		RealPoint p1 = new RealPoint( 3 );
+		conc.apply( p1, p1 );
+		RealPoint p2 = new RealPoint( 3 );
+		conc2.apply( p2, p2 );
+		
+		System.out.println( p1 );
+		System.out.println( p2 );
+		
+		AffineTransform3D everythingbuttraslation = conc.copy();
+		everythingbuttraslation.set( 0, 0, 3 );
+		everythingbuttraslation.set( 0, 1, 3 );
+		everythingbuttraslation.set( 0, 2, 3 );
+		
+		AffineTransform3D everythingbuttraslation2 = conc2.copy();
+		everythingbuttraslation2.set( 0, 0, 3 );
+		everythingbuttraslation2.set( 0, 1, 3 );
+		everythingbuttraslation2.set( 0, 2, 3 );
+		
+		double[] trans1 = conc.getTranslation();
+		double[] trans2 = conc2.getTranslation();
+		
+		everythingbuttraslation.inverse().apply( trans1, trans1 );
+		everythingbuttraslation2.inverse().apply( trans2, trans2 );
+		
+		System.out.println( new RealPoint( trans1 ) );
+		System.out.println( new RealPoint( trans2 ) );
+		
+		
+
+		
+		
+		
+		
 	}
 	
 	
