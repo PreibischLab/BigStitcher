@@ -1,5 +1,7 @@
 package gui;
 
+import java.awt.Image;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,7 +12,9 @@ import java.util.TimerTask;
 import java.util.stream.Collectors;
 import java.util.Timer;
 
+import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
@@ -35,6 +39,7 @@ import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
+import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -159,11 +164,38 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	
 	public PreviewRegularGridPanel(ExplorerWindow< AS, ? > parent)
 	{
+		int iconSizeX = 64;
+		int iconSizeY = 64;
+		
+		Image imColumn1 = null;
+		Image imColumn2;
+		Image imColumn3;
+		Image imColumn4;
+		try
+		{
+			imColumn1 = ImageIO.read( getClass().getResource( "/images/column1.png" ) ).getScaledInstance( iconSizeX, iconSizeY, Image.SCALE_SMOOTH );
+			imColumn2 = ImageIO.read( getClass().getResource( "/images/column2.png" ) ).getScaledInstance( iconSizeX, iconSizeY, Image.SCALE_DEFAULT );
+			imColumn3 = ImageIO.read( getClass().getResource( "/images/column2.png" ) ).getScaledInstance( iconSizeX, iconSizeY, Image.SCALE_DEFAULT );
+			imColumn4 = ImageIO.read( getClass().getResource( "/images/column2.png" ) ).getScaledInstance( iconSizeX, iconSizeY, Image.SCALE_DEFAULT );
+		}
+		catch (IOException e)
+		{
+			IOFunctions.printErr( "WARNING: Could not load preset icons" );
+		}
+		
 		this.parent = parent;
 		
 		saveOldTransformAndMoveToOriginIfNecessary();
 				
 		this.setLayout( new BoxLayout( this, BoxLayout.PAGE_AXIS ) );
+		
+		
+		// preset Icon panel
+		JPanel presetPanel = new JPanel();
+		presetPanel.setLayout( new BoxLayout( presetPanel, BoxLayout.LINE_AXIS ) );
+		presetPanel.add( new JLabel( new ImageIcon( imColumn1 ) ) );
+		this.add( presetPanel );
+		
 		
 		// checkboxes to set wether the grid alternates along a given axis
 		alternatingCheckboxes = new ArrayList<>();
@@ -357,7 +389,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 					ViewRegistration vr = parent.getSpimData().getViewRegistrations().getViewRegistration( vd );
 					AffineTransform3D inv = vr.getModel().inverse();
 					AffineTransform3D calib = new AffineTransform3D();
-					calib.set( vr.getTransformList().get( 0 ).asAffine3D().getRowPackedCopy() );
+					calib.set( vr.getTransformList().get( vr.getTransformList().size() - 1 ).asAffine3D().getRowPackedCopy() );
 							
 					//invAndCalib.preConcatenate( vr.getTransformList().get( 0 ).asAffine3D() );
 
