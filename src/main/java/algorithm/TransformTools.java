@@ -1,11 +1,17 @@
 package algorithm;
 
+import java.util.ArrayList;
+
 import org.apache.commons.math3.linear.RealMatrix;
 
 import mpicbg.imglib.util.Util;
+import mpicbg.models.Affine3D;
+import mpicbg.models.AffineModel3D;
+import mpicbg.models.PointMatch;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
+import mpicbg.spim.io.IOFunctions;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.Interval;
@@ -22,6 +28,59 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 
 public class TransformTools {
+	
+	public static AffineGet mapBackTransform(AffineGet m1, AffineGet m2)
+	{
+		
+		final double[][] p = new double[][]{
+			{ 0, 0, 0 },
+			{ 1, 0, 0 },
+			{ 0, 1, 0 },
+			{ 1, 1, 0 },
+			{ 0, 0, 1 },
+			{ 1, 0, 1 },
+			{ 0, 1, 1 },
+			{ 1, 1, 1 }};
+
+		final double[][] pa = new double[8][3];
+		final double[][] pb = new double[8][3];
+		
+		for ( int i = 0; i < p.length; ++i )
+			m1.apply( p[ i ], pa[ i ] );
+		
+		for ( int i = 0; i < p.length; ++i )
+			m2.apply( p[ i ], pb[ i ] );
+		
+		// compute the model that maps pb >> pa
+		AffineModel3D mapBackModel = new AffineModel3D();
+		
+		try
+		{
+			final ArrayList< PointMatch > pm = new ArrayList< PointMatch >();
+
+			for ( int i = 0; i < p.length; ++i )
+				pm.add( new PointMatch( new mpicbg.models.Point( pb[i] ), new mpicbg.models.Point( pa[i] ) ) );
+
+			mapBackModel.fit( pm );
+		}
+		catch ( Exception e )
+		{
+			IOFunctions.println( "Could not compute model for mapping back: " + e );
+			e.printStackTrace();
+			return null;
+		}
+
+		final AffineTransform3D mapBack = new AffineTransform3D();
+		final double[][] m = new double[3][4];
+		( (Affine3D< ? >) mapBackModel ).toMatrix( m );
+
+		mapBack.set( m[0][0], m[0][1], m[0][2], +m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2],
+				m[2][3] );
+
+
+		return mapBack;
+		
+	}
 	
 	public static String printRealInterval( final RealInterval interval )
 	{
@@ -176,12 +235,14 @@ public class TransformTools {
 		scale.scale( 2.0 );
 		//scale.rotate( 0, 45 );
 		
+		
 		AffineTransform3D translate = new AffineTransform3D();
 		translate.translate( new double[] {100.0, 100.0, 100.0} );
 		AffineTransform3D translate2 = new AffineTransform3D();
 		translate2.translate( new double[] {200.0, 200.0, 200.0} );
 		
 		AffineTransform3D conc = scale.copy().preConcatenate( translate );
+		scale.scale( 3.0 );
 		AffineTransform3D conc2 = scale.copy().preConcatenate( translate2 );
 		//System.out.println( scale );
 		//System.out.println( translate );
@@ -216,7 +277,7 @@ public class TransformTools {
 		System.out.println( new RealPoint( trans2 ) );
 		
 		
-
+		System.out.println( mapBackTransform( everythingbuttraslation, everythingbuttraslation2 ) );
 		
 		
 		
