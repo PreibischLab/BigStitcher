@@ -41,6 +41,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.realtransform.Translation2D;
 import net.imglib2.realtransform.Translation3D;
+import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.type.numeric.complex.ComplexDoubleType;
 import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -169,9 +170,9 @@ public class FractalSpimDataGenerator
 		return mins;
 	}
 	
-	public static List<AbstractTranslation> getTileTranslations(List<Interval> intervals)
+	public static List<TranslationGet> getTileTranslations(List<Interval> intervals)
 	{
-		final List< AbstractTranslation > tr = new ArrayList<>();
+		final List< TranslationGet > tr = new ArrayList<>();
 		for(Interval iv : intervals)
 		{
 			double[] min = new double[iv.numDimensions()];

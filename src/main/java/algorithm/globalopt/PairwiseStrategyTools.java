@@ -8,6 +8,7 @@ import java.util.List;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AbstractTranslation;
+import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 
@@ -17,7 +18,7 @@ public class PairwiseStrategyTools
 	// shorthand for when we do not care about fixed views or groups, but just want all (overlapping) pairs
 	public static < V > List< Pair< V, V > > overlappingTiles(
 			final HashMap< V, Dimensions > vd,
-			final HashMap< V, AbstractTranslation > vl,
+			final HashMap< V, TranslationGet > vl,
 			final List< ? extends V > views )
 	{
 		return overlappingTiles( vd, vl, views, new ArrayList< V >(), new ArrayList< ArrayList< V > >() );		
@@ -26,7 +27,7 @@ public class PairwiseStrategyTools
 	
 	public static < V > List< Pair< V, V > > overlappingTiles(
 			final HashMap< V, Dimensions > vd,
-			final HashMap< V, AbstractTranslation > vl,
+			final HashMap< V, TranslationGet > vl,
 			final List< ? extends V > views,
 			final Collection< V > fixed,
 			final Collection< ? extends Collection< V > > groups )
@@ -55,8 +56,8 @@ public class PairwiseStrategyTools
 	public static boolean overlaps(
 			final Dimensions viewDimensionA,
 			final Dimensions viewDimensionB,
-			final AbstractTranslation viewLocationA,
-			final AbstractTranslation viewLocationB )
+			final TranslationGet viewLocationA,
+			final TranslationGet viewLocationB )
 	{
 		for ( int d = 0; d < viewLocationA.numDimensions(); ++d )
 		{

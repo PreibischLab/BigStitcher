@@ -46,7 +46,7 @@ public class PairwiseStitching
 
 	public static <T extends RealType< T >, S extends RealType< S >> Pair< double[], Double > getShiftLucasKanade(
 			final RandomAccessibleInterval< T > input1, final RandomAccessibleInterval< T > input2,
-			final AbstractTranslation t1, final AbstractTranslation t2, final PairwiseStitchingParameters params,
+			final TranslationGet t1, final TranslationGet t2, final PairwiseStitchingParameters params,
 			final ExecutorService service)
 	{
 		// check if we have singleton dimensions
@@ -162,7 +162,7 @@ public class PairwiseStitching
 	 */
 	public static <T extends RealType< T >, S extends RealType< S >> Pair< double[], Double > getShift(
 			final RandomAccessibleInterval< T > input1, final RandomAccessibleInterval< T > input2,
-			final AbstractTranslation t1, final AbstractTranslation t2, final PairwiseStitchingParameters params,
+			final TranslationGet t1, final TranslationGet t2, final PairwiseStitchingParameters params,
 			final ExecutorService service)
 	{
 
@@ -292,7 +292,7 @@ public class PairwiseStitching
 	}
 
 	public static <T extends RealType< T >, C extends Comparable< C >> List< PairwiseStitchingResult< C > > getPairwiseShifts(
-			final Map< C, RandomAccessibleInterval< T > > rais, final Map< C, AbstractTranslation > translations,
+			final Map< C, RandomAccessibleInterval< T > > rais, final Map< C, TranslationGet > translations,
 			final PairwiseStitchingParameters params, final ExecutorService service)
 	{
 		List< C > indexes = new ArrayList< >( rais.keySet() );
@@ -364,9 +364,9 @@ public class PairwiseStitching
 		fsdg.addFractal( m3 );
 
 		Map< Integer, RandomAccessibleInterval< LongType > > rais = new HashMap< >();
-		Map< Integer, AbstractTranslation > tr = new HashMap< >();
+		Map< Integer, TranslationGet > tr = new HashMap< >();
 
-		List< AbstractTranslation > tileTranslations = FractalSpimDataGenerator.getTileTranslations( falseStarts );
+		List< TranslationGet > tileTranslations = FractalSpimDataGenerator.getTileTranslations( falseStarts );
 
 		FractalImgLoader imgLoader = (FractalImgLoader) fsdg.generateSpimData( intervals ).getSequenceDescription()
 				.getImgLoader();

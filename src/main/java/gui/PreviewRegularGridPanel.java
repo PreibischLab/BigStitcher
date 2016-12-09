@@ -489,7 +489,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 				if (data.getSequenceDescription().getViewDescriptions().get( new ViewId( tp.getId(), vd.getViewSetupId() ) ).isPresent())
 				{
 					ViewRegistration vr = data.getViewRegistrations().getViewRegistration( tp.getId(), vd.getViewSetupId() );
-					ViewTransform calibration = vr.getTransformList().get( 0 );
+					ViewTransform calibration = vr.getTransformList().get( vr.getTransformList().size() - 1 );
 					vr.getTransformList().clear();
 					vr.getTransformList().add( calibration );
 					vr.updateModel();

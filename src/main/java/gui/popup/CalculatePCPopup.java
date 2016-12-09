@@ -35,6 +35,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
@@ -219,13 +220,13 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 
 					// find all pairwise matchings that we need to compute
 					final HashMap< ViewId, Dimensions > vd = new HashMap< >();
-					final HashMap< ViewId, AbstractTranslation > vl = new HashMap< >();
+					final HashMap< ViewId, TranslationGet > vl = new HashMap< >();
 
 					for ( final ViewId viewId : viewIds )
 					{
 						vd.put( viewId, sd.getViewDescriptions().get( viewId ).getViewSetup().getSize() );
-						vl.put( viewId, TransformTools.getInitialTranslation( vr.getViewRegistration( viewId ), is2d,
-								new AffineTransform3D() ) );
+						vl.put( viewId, TransformTools.getInitialTransforms( vr.getViewRegistration( viewId ), is2d,
+								new AffineTransform3D() ).getB() );
 					}
 
 					final List< Pair< ViewId, ViewId > > pairs = PairwiseStrategyTools.overlappingTiles( vd, vl,

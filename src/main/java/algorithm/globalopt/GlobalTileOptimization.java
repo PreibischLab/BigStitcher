@@ -23,6 +23,7 @@ import mpicbg.models.TranslationModel2D;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AbstractTranslation;
+import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 
@@ -44,7 +45,7 @@ public class GlobalTileOptimization
 			final int numDimensions,
 			final List< ? extends C > views,
 			final Collection< C > fixedViews,
-			final Map<C, AbstractTranslation> initialTranslations,
+			final Map<C, TranslationGet> initialTranslations,
 			final Collection<PairwiseStitchingResult< C >> pairwiseResults,
 			final GlobalOptimizationParameters params)
 	{

@@ -17,6 +17,9 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Translation2D;
 import net.imglib2.realtransform.Translation3D;
+import net.imglib2.realtransform.TranslationGet;
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 
 public class TransformTools {
 	
@@ -53,34 +56,39 @@ public class TransformTools {
 		return translation;
 	}
 
-	public static AbstractTranslation getInitialTranslation( final ViewRegistration vr, final boolean is2d, final AffineTransform3D dsCorrectionT )
+	/**
+	 * 
+	 * @param vr
+	 * @param is2d
+	 * @param dsCorrectionT
+	 * @return (1) the ViewRegistration without Translation part and the translation, with the inverse of (1) and dsCorrection applied
+	 */
+	public static Pair<AffineGet, TranslationGet> getInitialTransforms( final ViewRegistration vr, final boolean is2d, final AffineTransform3D dsCorrectionT )
 	{
-		// TODO: somehow fix the contract that the first transformation in the list is a translation
+		AffineTransform3D model = vr.getModel().copy();
 		
-		// this one should be the translation
-		ViewTransform vt = vr.getTransformList().get( vr.getTransformList().size() - 1 );
-
-		if ( !vt.hasName() || vt.getName().compareTo( "Translation" ) != 0 )
-		{
-			vt = new ViewTransformAffine( "Translation", createTranslation( 0, 0, 0 ) );
-			vr.concatenateTransform( vt );
-		}
-
-		final AffineGet affine = vt.asAffine3D();
+		// get model without translation (last column set to 0)
+		AffineTransform3D modelWithoutTranslation = model.copy();
+		modelWithoutTranslation.set( 0, 0, 3 );
+		modelWithoutTranslation.set( 0, 1, 3 );
+		modelWithoutTranslation.set( 0, 2, 3 );
 		
-		final double[] target = new double[]{ affine.get( 0, 3 ), affine.get( 1, 3 ), affine.get( 2, 3 ) };
+		// the translation with inverse of other part of model applied
+		final double[] target = model.getTranslation();
+		modelWithoutTranslation.applyInverse( target, target );
 		
 		// we go from big to downsampled, thats why the inverse
 		dsCorrectionT.applyInverse( target, target );
 		
 		
 		if ( is2d )
-			return new Translation2D( target[ 0 ], target[ 1 ] );
+			return new ValuePair<>(modelWithoutTranslation, new Translation2D( target[ 0 ], target[ 1 ] ));
 		else
-			return new Translation3D( target[ 0 ], target[ 1 ], target[ 2 ] );
+			return new ValuePair<>(modelWithoutTranslation, new Translation3D( target[ 0 ], target[ 1 ], target[ 2 ] ));
 	}
+	
 
-	public static FinalRealInterval applyTranslation(RealInterval img, AbstractTranslation translation, boolean[] ignoreDims){
+	public static FinalRealInterval applyTranslation(RealInterval img, TranslationGet translation, boolean[] ignoreDims){
 		int n = 0;
 		for (int d = 0; d < ignoreDims.length; ++d)
 			if (!ignoreDims[d])

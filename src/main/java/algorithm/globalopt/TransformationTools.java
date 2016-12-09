@@ -35,7 +35,9 @@ import net.imglib2.Cursor;
 import net.imglib2.Dimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AbstractTranslation;
+import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
@@ -102,23 +104,28 @@ public class TransformationTools
 		
 		
 		// TODO: Test if 2d, and if then reduce dimensionality and ask for a 2d translation
-		AbstractTranslation t1 = TransformTools.getInitialTranslation( vA, is2d, dsCorrectionT );
-		AbstractTranslation t2 = TransformTools.getInitialTranslation( vB, is2d, dsCorrectionT );
+		Pair< AffineGet, TranslationGet > t1 = TransformTools.getInitialTransforms( vA, is2d, dsCorrectionT );
+		Pair< AffineGet, TranslationGet > t2 = TransformTools.getInitialTransforms( vB, is2d, dsCorrectionT );
 
 		final Pair< double[], Double > result;
 		
 		if (params.doLucasKanade)
-			result = PairwiseStitching.getShiftLucasKanade( img1, img2, t1, t2, params, service );
+			result = PairwiseStitching.getShiftLucasKanade( img1, img2, t1.getB(), t2.getB(), params, service );
 		else
-			result = PairwiseStitching.getShift( img1, img2, t1, t2, params, service );
+			result = PairwiseStitching.getShift( img1, img2, t1.getB(), t2.getB(), params, service );
 
 		if (result == null)
 			return null;
 		
 		
-		for (int i = 0; i< result.getA().length; ++i)
-			
-			result.getA()[i] *= downsampleFactors[i];		
+		for (int i = 0; i< result.getA().length; ++i)			
+			result.getA()[i] *= downsampleFactors[i];
+		
+		t1.getA().applyInverse( result.getA(), result.getA() );
+		
+		// shift
+		//for (int i = 0; i< result.getA().length; ++i)
+		//	result.getA()[i] = vB.getModel().get( i, 3 ) - result.getA()[i];
 		
 		System.out.println("integer shift: " + Util.printCoordinates(result.getA()));
 		System.out.print("cross-corr: " + result.getB());
@@ -230,14 +237,14 @@ public class TransformationTools
 
 		// find all pairwise matchings that we need to compute
 		final HashMap< ViewId, Dimensions > vd = new HashMap<>();
-		final HashMap< ViewId, AbstractTranslation > vl = new HashMap<>();
+		final HashMap< ViewId, TranslationGet > vl = new HashMap<>();
 		
 		final long[] downsamplingFactors = new long[] {1,1,1};
 
 		for ( final ViewId viewId : viewIds )
 		{
 			vd.put( viewId, sd.getViewDescription( viewId ).getViewSetup().getSize() );
-			vl.put( viewId, TransformTools.getInitialTranslation( vr.getViewRegistration( viewId ), is2d, new AffineTransform3D()) );
+			vl.put( viewId, TransformTools.getInitialTransforms( vr.getViewRegistration( viewId ), is2d, new AffineTransform3D()).getB() );
 		}
 
 		final List< Pair< ViewId, ViewId > > pairs = PairwiseStrategyTools.overlappingTiles(
@@ -253,6 +260,9 @@ public class TransformationTools
 																downsamplingFactors);
 
 		// add correspondences
+		
+		if (true)
+			return;
 		
 		for ( final ViewId v : fixedViews )
 			System.out.println( "Fixed: " + v );

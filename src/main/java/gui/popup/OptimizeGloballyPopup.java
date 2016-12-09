@@ -21,6 +21,7 @@ import mpicbg.models.Tile;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
@@ -29,6 +30,7 @@ import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Translation3D;
+import net.imglib2.realtransform.TranslationGet;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -87,12 +89,12 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 
 			
 			final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
-			final Map<ViewId, AbstractTranslation> translations = new HashMap<>();
+			final Map<ViewId, TranslationGet> translations = new HashMap<>();
 			
 			for (ViewId id : viewIds){
-				AffineGet a3d = d.getViewRegistrations().getViewRegistration( id ).getTransformList().get( 1 ).asAffine3D();
-				Translation3D tr = new Translation3D( a3d.get( 0, 4 ),
-						a3d.get( 1, 4 ), a3d.get( 2, 4 ) );
+				AffineGet a3d = d.getViewRegistrations().getViewRegistration( id ).getModel();
+				Translation3D tr = new Translation3D( a3d.get( 0, 3 ),
+						a3d.get( 1, 3 ), a3d.get( 2, 3 ) );
 				translations.put( id, tr );
 			}
 			
@@ -106,8 +108,10 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 														params );
 			
 			
-			AffineGet vtFixed = 
-					(AffineGet) panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ) ).getTransformList().get( 1 ).asAffine3D().copy();
+			AffineGet vtFixed = new AffineTransform3D();
+			( (AffineTransform3D) vtFixed ).setTranslation( panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ) ).getModel().getTranslation() );;
+			
+		//			(AffineGet) panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ) ).getModel().copy();
 			
 			for (ViewId vid : models.keySet())
 			{
@@ -119,7 +123,8 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 				
 				at.concatenate( vtFixed );
 				
-				ViewTransform vt = new ViewTransformAffine( "Translation", at);
+				
+				//ViewTransform vt = new ViewTransformAffine( "Translation", at);
 				
 				// set the shift in stitchingResults
 				stitchingResults.getGlobalShifts().put( vid, tr );
@@ -130,10 +135,19 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 					{
 						for (ViewId vid2 : ((GroupedViews) groupVid).getViewIds()){
 							
-							if (d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().size() < 2)
-								d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().add(vt);
-							else
-								d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().set( 1 , vt);
+							
+							ViewRegistration vr = d.getViewRegistrations().getViewRegistration( vid2 );
+							
+							AffineTransform3D atI = at.copy();
+							atI.set( atI.get( 0, 3 ) - vr.getModel().get( 0, 3 ), 0, 3  );
+							atI.set( atI.get( 1, 3 ) - vr.getModel().get( 1, 3 ), 1, 3  );
+							atI.set( atI.get( 2, 3 ) - vr.getModel().get( 2, 3 ), 2, 3  );
+							
+							ViewTransform vt = new ViewTransformAffine( "stitching translation", atI );
+							//if (d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().size() < 2)
+								d.getViewRegistrations().getViewRegistration( vid2 ).preconcatenateTransform( vt );
+							//else
+							//	d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().set( 1 , vt);
 							d.getViewRegistrations().getViewRegistration( vid2 ).updateModel();
 						}
 					}
