@@ -185,9 +185,19 @@ public class TransformationTools
 			{
 				final Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > result = future.get();
 
+				
+				Pair< AffineGet, TranslationGet > initialTransformsA = TransformTools.getInitialTransforms( vrs.getViewRegistration( result.getA().getA() ), false, new AffineTransform3D() );
+				Pair< AffineGet, TranslationGet > initialTransformsB = TransformTools.getInitialTransforms( vrs.getViewRegistration( result.getA().getB() ), false, new AffineTransform3D() );
+				
+				AffineGet mapBack = TransformTools.mapBackTransform( initialTransformsA.getA(), initialTransformsB.getA() );
+				
+				AffineTransform3D resT = new AffineTransform3D();
+				resT.translate( result.getB().getA() );
+				resT.preConcatenate( mapBack );
+				
 				// TODO: when does that really happen?
 				if ( result.getB() != null)
-					results.add( new PairwiseStitchingResult< ViewId >( result.getA(), result.getB().getA(), result.getB().getB() ) );
+					results.add( new PairwiseStitchingResult< ViewId >( result.getA(), resT, result.getB().getB() ) );
 			}
 		}
 		catch ( final Exception e )

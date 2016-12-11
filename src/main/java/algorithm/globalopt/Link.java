@@ -6,15 +6,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import net.imglib2.realtransform.AffineGet;
+
 public class Link<T extends Comparable<T>>
 {
 		
 	private final T first;
 	private final T second;
-	private final double[] shift;
+	private final AffineGet shift;
 	private final LinkType linkType;
 	
-	public Link(final T fst, final T snd, final double[] shift, final LinkType linkType)
+	public Link(final T fst, final T snd, final AffineGet shift, final LinkType linkType)
 	{
 		this.first = fst;
 		this.second = snd;
@@ -32,11 +34,12 @@ public class Link<T extends Comparable<T>>
 		return second;
 	}
 
-	public double[] getShift()
+	public AffineGet getShift()
 	{
 		return shift;
 	}
 	
+	/*
 	public double[] getInverseShift()
 	{
 		final double[] tmp = new double[ shift.length ];
@@ -44,6 +47,7 @@ public class Link<T extends Comparable<T>>
 			tmp[ d ] = -shift[ d ];
 		return tmp;
 	}
+	*/
 
 	public LinkType getLinkType()
 	{

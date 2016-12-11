@@ -565,7 +565,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		
 		// get the Translations of first View
 		ViewRegistration selectedVr = data.getViewRegistrations().getViewRegistration(selectedVid);
-		AffineGet selectedTranslation = selectedVr.getTransformList().get( 1 ).asAffine3D();
+		AffineGet selectedModel = selectedVr.getModel();
 		
 		
 		final boolean[] active = new boolean[data.getSequenceDescription().getViewSetupsOrdered().size()];
@@ -598,10 +598,12 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 					for ( final BasicViewDescription< ? >  vd : group )
 							if ( vd.getTimePointId() == firstTP.getId() )
 							{
+								
 								int sourceIdx = getBDVSourceIndex( vd.getViewSetup(), data );
 								SourceState<?> s = bdvPopup().bdv.getViewer().getVisibilityAndGrouping().getSources().get( sourceIdx );
 								active[sourceIdx] = true;
-															
+								
+								/*
 								// get the Translations of second View
 								ViewRegistration vr = data.getViewRegistrations().getViewRegistration( new ViewId(firstTP.getId(), sourceIdx ));
 								AffineGet otherTranslation = vr.getTransformList().get( 1 ).asAffine3D();
@@ -614,9 +616,12 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 								AffineTransform3D shift = new AffineTransform3D();
 								shift.set( viewShiftX + psr.relativeVector()[0], 0, 3 );
 								shift.set( viewShiftY + psr.relativeVector()[1], 1, 3 );
-								shift.set( viewShiftZ + psr.relativeVector()[2], 2, 3 );							
+								shift.set( viewShiftZ + psr.relativeVector()[2], 2, 3 );	
+								*/						
+								AffineTransform3D trans = new AffineTransform3D();
+								trans.set( psr.getTransform().getRowPackedCopy() );
 								
-								((TransformedSource< ? >)s.getSpimSource()).setFixedTransform( shift );
+								((TransformedSource< ? >)s.getSpimSource()).setFixedTransform( trans );
 							}
 					
 				}
@@ -632,6 +637,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 								SourceState<?> s = bdvPopup().bdv.getViewer().getVisibilityAndGrouping().getSources().get( sourceIdx );
 								active[sourceIdx] = true;
 								
+								/*
 								// get the Translations of second View
 								ViewRegistration vr = data.getViewRegistrations().getViewRegistration( new ViewId(firstTP.getId(), sourceIdx ));
 								AffineGet otherTranslation = vr.getTransformList().get( 1 ).asAffine3D();
@@ -645,8 +651,12 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 								shift.set( viewShiftX - psr.relativeVector()[0], 0, 3 );
 								shift.set( viewShiftY - psr.relativeVector()[1], 1, 3 );
 								shift.set( viewShiftZ - psr.relativeVector()[2], 2, 3 );							
+								*/
 								
-								((TransformedSource< ? >)s.getSpimSource()).setFixedTransform( shift );
+								AffineTransform3D trans = new AffineTransform3D();
+								trans.set( psr.getTransform().inverse().getRowPackedCopy() );
+								
+								((TransformedSource< ? >)s.getSpimSource()).setFixedTransform( trans );
 								
 							}
 								

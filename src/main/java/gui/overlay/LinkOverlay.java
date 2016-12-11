@@ -129,17 +129,18 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 				sizeB[i] *= vt2.get( i, i );
 				
 				// we are in preview mode and there is a reference Tile set
-				if (activeLinks.size() > 0 && reference != null)
-				{
-					if (reference.equals( p.getA() ))
-					{
-						lPos2[i] = lPos1[i] + stitchingResults.getPairwiseResults().get( p ).relativeVector()[i];
-					}
-					if (reference.equals( p.getB() ))
-					{
-						lPos1[i] = lPos2[i] - stitchingResults.getPairwiseResults().get( p ).relativeVector()[i];
-					}
-				}
+				// FIXME: commented this out to resolve compile issues
+//				if (activeLinks.size() > 0 && reference != null)
+//				{
+//					if (reference.equals( p.getA() ))
+//					{
+//						lPos2[i] = lPos1[i] + stitchingResults.getPairwiseResults().get( p ).relativeVector()[i];
+//					}
+//					if (reference.equals( p.getB() ))
+//					{
+//						lPos1[i] = lPos2[i] - stitchingResults.getPairwiseResults().get( p ).relativeVector()[i];
+//					}
+//				}
 				
 				// start from middle of view
 				lPos1[i] += sizeA[i] / 2;

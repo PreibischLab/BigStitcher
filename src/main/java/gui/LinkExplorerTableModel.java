@@ -71,18 +71,19 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 		case 2:
 			return results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).r();
 		case 3:
-			double[] shift = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).relativeVector();
+			double[] shift = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).getTransform().getRowPackedCopy();
 			
 			StringBuilder res = new StringBuilder();
 			// round to 3 decimal places
 			DecimalFormat df = new DecimalFormat( "#.###" );
 			df.setRoundingMode( RoundingMode.HALF_UP );
 
-			res.append(df.format( shift[0]) );
+			// TODO: for now, just display the translation part of the transform
+			res.append(df.format( shift[3]) );
 			res.append(", ");
-			res.append(df.format(shift[1]) );
+			res.append(df.format(shift[7]) );
 			res.append(", ");
-			res.append(df.format( shift[2]) );
+			res.append(df.format( shift[11]) );
 			return res.toString();
 			
 		default:

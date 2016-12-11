@@ -27,6 +27,7 @@ import net.imglib2.algorithm.phasecorrelation.PhaseCorrelationPeak2;
 import net.imglib2.img.ImgFactory;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.realtransform.AbstractTranslation;
+import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.TranslationGet;
@@ -380,7 +381,7 @@ public class PairwiseStitching
 				new PairwiseStitchingParameters(),
 				Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() ) );
 
-		Map< Integer, double[] > globalOptimization = GlobalTileOptimization.twoRoundGlobalOptimization( 3,
+		Map< Integer, AffineGet > globalOptimization = GlobalTileOptimization.twoRoundGlobalOptimization( 3,
 				new ArrayList< >( rais.keySet() ), null, tr, pairwiseShifts, new GlobalOptimizationParameters() );
 
 		System.out.println( globalOptimization );

@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
+import algorithm.TransformTools;
 import algorithm.globalopt.GlobalOpt;
 import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GlobalTileOptimization;
@@ -89,17 +90,17 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 
 			
 			final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
-			final Map<ViewId, TranslationGet> translations = new HashMap<>();
+			final Map<ViewId, AffineGet> translations = new HashMap<>();
 			
 			for (ViewId id : viewIds){
 				AffineGet a3d = d.getViewRegistrations().getViewRegistration( id ).getModel();
-				Translation3D tr = new Translation3D( a3d.get( 0, 3 ),
-						a3d.get( 1, 3 ), a3d.get( 2, 3 ) );
-				translations.put( id, tr );
+//				Translation3D tr = new Translation3D( a3d.get( 0, 3 ),
+//						a3d.get( 1, 3 ), a3d.get( 2, 3 ) );
+				translations.put( id, a3d );
 			}
 			
 			
-			Map< ViewId, double[] > models = GlobalTileOptimization.twoRoundGlobalOptimization( 
+			Map< ViewId, AffineGet > models = GlobalTileOptimization.twoRoundGlobalOptimization( 
 														3,
 														viewIds,
 														fixedViews,
@@ -108,26 +109,43 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 														params );
 			
 			
+			
+			// view transformation of the first fixed view - every result will be relative to this
 			AffineGet vtFixed = new AffineTransform3D();
-			( (AffineTransform3D) vtFixed ).setTranslation( panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ) ).getModel().getTranslation() );;
+			( (AffineTransform3D) vtFixed ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ) ).getModel().getRowPackedCopy());
 			
 		//			(AffineGet) panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ) ).getModel().copy();
 			
 			for (ViewId vid : models.keySet())
 			{
-				double[] tr = models.get( vid );//.getModel().getTranslation();
+				// the transformation determined by stitching
+				AffineGet ag = models.get( vid );//.getModel().getTranslation();
 				AffineTransform3D at = new AffineTransform3D();
-				at.set( new double []  {1.0, 0.0, 0.0, tr[0],
-										0.0, 1.0, 0.0, tr[1],
-										0.0, 0.0, 1.0, tr[2]} );
+				at.set(ag.getRowPackedCopy() );
 				
-				at.concatenate( vtFixed );
+				// the original view transform of this tile
+				AffineGet transformOriginal = new AffineTransform3D();
+				( (AffineTransform3D) transformOriginal ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( vid ).getModel().getRowPackedCopy());
+				
+				// transformation from fixed to original
+				AffineGet mapBackToFixed = TransformTools.mapBackTransform( vtFixed, transformOriginal );
+				// difference to transformation determined by optimization -> result
+				AffineTransform3D mapBackToOriginal = new AffineTransform3D();
+				mapBackToOriginal.set( TransformTools.mapBackTransform( mapBackToFixed, at ).getRowPackedCopy());
+				
+				
+				System.out.println( "original:" + transformOriginal );
+				System.out.println( "tranform determined by optim:" + at );
+				System.out.println( "mapback to original:" + mapBackToOriginal );
+				System.out.println( "mapback to fixed:" + mapBackToFixed );
+				
+				//at.preConcatenate( mapBackToFixed );
 				
 				
 				//ViewTransform vt = new ViewTransformAffine( "Translation", at);
 				
 				// set the shift in stitchingResults
-				stitchingResults.getGlobalShifts().put( vid, tr );
+				stitchingResults.getGlobalShifts().put( vid, ag );
 				
 				// find the GroupedViews that contains vid, update Registrations for all viewIDs in group
 				for (ViewId groupVid : viewIds){
@@ -138,12 +156,12 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 							
 							ViewRegistration vr = d.getViewRegistrations().getViewRegistration( vid2 );
 							
-							AffineTransform3D atI = at.copy();
-							atI.set( atI.get( 0, 3 ) - vr.getModel().get( 0, 3 ), 0, 3  );
-							atI.set( atI.get( 1, 3 ) - vr.getModel().get( 1, 3 ), 1, 3  );
-							atI.set( atI.get( 2, 3 ) - vr.getModel().get( 2, 3 ), 2, 3  );
+//							AffineTransform3D atI = at.copy();
+//							atI.set( atI.get( 0, 3 ) - vr.getModel().get( 0, 3 ), 0, 3  );
+//							atI.set( atI.get( 1, 3 ) - vr.getModel().get( 1, 3 ), 1, 3  );
+//							atI.set( atI.get( 2, 3 ) - vr.getModel().get( 2, 3 ), 2, 3  );
 							
-							ViewTransform vt = new ViewTransformAffine( "stitching translation", atI );
+							ViewTransform vt = new ViewTransformAffine( "stitching transformation", mapBackToOriginal );
 							//if (d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().size() < 2)
 								d.getViewRegistrations().getViewRegistration( vid2 ).preconcatenateTransform( vt );
 							//else
