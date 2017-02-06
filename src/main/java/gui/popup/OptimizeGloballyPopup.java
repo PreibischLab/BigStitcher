@@ -131,9 +131,10 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 				AffineGet mapBackToFixed = TransformTools.mapBackTransform( vtFixed, transformOriginal );
 				// difference to transformation determined by optimization -> result
 				AffineTransform3D mapBackToOriginal = new AffineTransform3D();
-				mapBackToOriginal.set( TransformTools.mapBackTransform( mapBackToFixed, at ).getRowPackedCopy());
+				mapBackToOriginal.set( TransformTools.mapBackTransform( mapBackToFixed, at.inverse() ).getRowPackedCopy());
 				
 				
+				System.out.println( "viewID: " + vid.getViewSetupId() );
 				System.out.println( "original:" + transformOriginal );
 				System.out.println( "tranform determined by optim:" + at );
 				System.out.println( "mapback to original:" + mapBackToOriginal );

@@ -1,6 +1,7 @@
 package algorithm.globalopt;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -14,6 +15,7 @@ import algorithm.TransformTools;
 import algorithm.VectorUtil;
 import algorithm.globalopt.Link.LinkType;
 import mpicbg.models.AbstractAffineModel3D;
+import mpicbg.models.AffineModel3D;
 import mpicbg.models.IllDefinedDataPointsException;
 import mpicbg.models.Model;
 import mpicbg.models.NotEnoughDataPointsException;
@@ -23,6 +25,7 @@ import mpicbg.models.Tile;
 import mpicbg.models.TileConfiguration;
 import mpicbg.models.TranslationModel2D;
 import mpicbg.models.TranslationModel3D;
+import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
@@ -30,6 +33,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Translation3D;
 import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.util.Pair;
+import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
@@ -55,7 +59,7 @@ public class GlobalTileOptimization
 			final GlobalOptimizationParameters params)
 	{
 		
-		
+		Collections.sort( views );
 		
 		// create strong links for all pairs with valid pairwise results
 		List<Link<C>> strongLinks = new ArrayList<>();
@@ -65,6 +69,7 @@ public class GlobalTileOptimization
 			if (res.r() > params.correlationT && views.contains( res.pair().getA()) && views.contains( res.pair().getB()))
 			{
 				strongLinks.add( new Link< C >( res.pair().getA(), res.pair().getB(), res.getTransform(), LinkType.STRONG ) );
+//				System.out.println( "added strong link between " + ((ViewId) res.pair().getA()).getViewSetupId() + " and " + ((ViewId) res.pair().getB()).getViewSetupId() + ": " + res.getTransform() );
 			}
 		}
 		
@@ -81,8 +86,11 @@ public class GlobalTileOptimization
 				if(!(anyContains( views.get( i), connectedComponents ) && 
 						anyContains( views.get( j), connectedComponents ) ) )
 				{
-					AffineGet mapBack = TransformTools.mapBackTransform( initialTransforms.get( views.get( i ) ),
-							initialTransforms.get( views.get( j ) ));
+					AffineGet mapBack = TransformTools.mapBackTransform( initialTransforms.get( views.get( j ) ),
+							initialTransforms.get( views.get( i ) ));
+					
+					System.out.println( "added weak link between " + views.get( i ) + " and " + views.get( j ) + ": " + mapBack );
+//					System.out.println( "added weak link between " + ((ViewId)views.get( i )).getViewSetupId() + " and " + ((ViewId)views.get( j )).getViewSetupId() + ": " + mapBack );
 					weakLinks.add( new Link< C >( views.get( i ), views.get( j ), mapBack, LinkType.WEAK ) );
 				}
 				
@@ -113,6 +121,8 @@ public class GlobalTileOptimization
 		*/
 			Pair< TileConfiguration, Map< C, Tile< TranslationModel3D > > > tc = prepareTileConfiguration( new TranslationModel3D(), null, strongLinks, fixedViews, null, null );
 			Map< C, AffineGet > optimizeResult1 = optimize(numDimensions, tc.getA(), tc.getB(), params, null );
+			
+			optimizeResult1.forEach( (x, y) -> System.out.println( x + ": " + y ) );
 		
 		
 			// we have no weak links, return first round result
@@ -333,59 +343,53 @@ public class GlobalTileOptimization
 		
 		// we do not know any initial location
 		if (initialTransforms == null || 
-				(!initialTransforms.containsKey( pair.getFirst() ) || !initialTransforms.containsKey( pair.getSecond() )))
+				!(initialTransforms.containsKey( pair.getFirst() ) || initialTransforms.containsKey( pair.getSecond() )))
 		{
+			
 			for (int i = 0; i < p.length; ++i)
 			{
 				pair.getShift().applyInverse( pb[i], p[i] );
-				pointsA.add( new Point( pb[i] ) );
-				pointsB.add( new Point( p[i] ) );
+				pointsA.add( new Point( p[i] ) );
+				pointsB.add( new Point( pb[i] ) );
+			}
+		}
+		
+		// we already know the location of the first point in its (grouped) tile
+		else if (initialTransforms.containsKey( pair.getFirst() ) && !initialTransforms.containsKey( pair.getSecond() ))
+		{
+			for (int i = 0; i < p.length; ++i)
+			{
+				initialTransforms.get( pair.getFirst() ).applyInverse( pa[i], p[i] );
+				pair.getShift().applyInverse( pb[i], pa[i] );
+				pointsA.add( new Point( p[i] ) );
+				pointsB.add( new Point( pb[i] ) );	
 			}
 			
+			
+		} 
+		
+		// we know the location of the second point
+		else if (initialTransforms.containsKey( pair.getSecond() ) && !initialTransforms.containsKey( pair.getFirst() ))
+		{
+	
+			for (int i = 0; i < p.length; ++i)
+			{
+				
+				initialTransforms.get( pair.getSecond() ).applyInverse( pb[i], p[i] );
+				pair.getShift().apply( pb[i], pa[i] );
+				pointsA.add( new Point( pa[i] ) );
+				pointsB.add( new Point( p[i] ) );
+			}
+
 		}
-//		// we already know the location of the first point in its (grouped) tile
-//		else if (initialTransforms.containsKey( pair.getFirst() ) && !initialTransforms.containsKey( pair.getSecond() ))
-//		{
-//			for (int i = 0; i < p.length; ++i)
-//			{
-//				initialTransforms.get( pair.getFirst() ).apply( p[i], pa[i] );
-//				pair.getShift().applyInverse( pb[i], pa[i] );
-//				pointsA.add( new Point( pa[i] ) );
-//				pointsB.add( new Point( pb[i] ) );
-//			}
-//		} 
-//		// we know the location of the second point
-//		else if (initialTransforms.containsKey( pair.getSecond() ) && !initialTransforms.containsKey( pair.getFirst() ))
-//		{
-//	
-//			for (int i = 0; i < p.length; ++i)
-//			{
-//				
-//				initialTransforms.get( pair.getSecond() ).apply( p[i], pb[i] );
-//				pair.getShift().apply( pb[i], pa[i] );
-//				pointsA.add( new Point( pa[i] ) );
-//				pointsB.add( new Point( pb[i] ) );
-//			}
-//
-//		}
+		
 		// do not add a point match if both points are in pre-registered groups
 		else
 			return;
 
-		/*
-		System.out.println( p1.getL().length );
-		System.out.println( p1.getW().length );
-		System.out.println( p2.getL().length );
-		System.out.println( p2.getW().length );
-		
-		System.out.println( Util.printCoordinates( pair.getInverseShift() ));
-		*/
-
+		// create PointMatches and connect Tiles
 		for (int i = 0; i < pointsA.size(); ++i)
 			pm.add( new PointMatch( pointsA.get( i ) , pointsB.get( i ) ) );
-
-		// TODO: workaround until mpicbg is fixed with pull request #30
-		//pm.add( new PointMatch( p1.clone() , p2.clone() ) );
 
 		tileA.addMatches( pm );
 		tileB.addMatches( PointMatch.flip( pm ) );
@@ -489,116 +493,21 @@ public class GlobalTileOptimization
 	public static void main(String[] args)
 	{
 		
-		// TEST one connected component
-		List<Link<Integer>> myList = new ArrayList<>();
-		myList.add(new Link<Integer>(1, 2, new Translation3D( new double[] {-2, 2, 1}), LinkType.STRONG));
-		myList.add(new Link<Integer>(1, 3, new Translation3D( new double[] {1, 2, 0}), LinkType.STRONG));
-		myList.add(new Link<Integer>(2, 3, new Translation3D( new double[] {3, 25, -1}), LinkType.STRONG));
+		List<Integer> views = Arrays.asList( new Integer[] {1,2,-1, 3} );
+		List<Integer> fixedViews = Arrays.asList( new Integer[] {1} );
 		
+		Map<Integer, AffineGet> initialTransforms = new HashMap<>();
+		initialTransforms.put( 1, new Translation3D( 0, 0, 0 ) );
+		initialTransforms.put( 2, new Translation3D( 0.75, 0, 0 ) );
+		initialTransforms.put( -1, new Translation3D( 1.5, 0, 0 ) );
+		initialTransforms.put( 3, new Translation3D( 2.25, 0, 0 ) );
 		
-		Pair< TileConfiguration, Map< Integer, Tile< TranslationModel3D > > > prepareTileConfiguration = 
-				prepareTileConfiguration( 	new TranslationModel3D(), 
-									null,
-									myList, 
-									null, 
-									null, 
-									null );
+		List<PairwiseStitchingResult< Integer >> pairwiseResults = new ArrayList<>();
+		pairwiseResults.add( new PairwiseStitchingResult<>( new ValuePair<>( 1, 2 ), new Translation3D(1,0,0), 1.0 ) );
 		
-		Map< Integer, AffineGet > optimize = optimize(3, prepareTileConfiguration.getA(), prepareTileConfiguration.getB(), new GlobalOptimizationParameters(), null);
-	
-		optimize.forEach( (i, t) -> System.out.println( i + ": " + t ) );
-//		System.out.println( optimize );
+		Map< Integer, AffineGet > res = twoRoundGlobalOptimization( 3, views, fixedViews, initialTransforms, pairwiseResults, new GlobalOptimizationParameters() );
 		
-//		if (true)
-//			return;
-		
-		// TEST two connected components
-		myList = new ArrayList<>();
-		myList.add(new Link<Integer>(1, 2, new Translation3D( new double[] {2, 1, 0}), LinkType.STRONG));
-		myList.add(new Link<Integer>(4, 5, new Translation3D( new double[] {2, 1, 0}), LinkType.STRONG));
-		myList.add(new Link<Integer>(1, 7, new Translation3D( new double[] {0, 2, 0}), LinkType.STRONG));
-		myList.add(new Link<Integer>(2, 7, new Translation3D( new double[] {-2, 1, 0}), LinkType.STRONG));
-		
-		prepareTileConfiguration = 
-				prepareTileConfiguration( 	new TranslationModel3D(), 
-									null,
-									myList, 
-									null, 
-									null, 
-									null );
-		
-		optimize = optimize( 3, prepareTileConfiguration.getA(), prepareTileConfiguration.getB(), new GlobalOptimizationParameters(), null );
-
-		optimize.forEach( (i, t) -> System.out.println( i + ": " + t ) );
-		
-		// ADD Tile with weak link to the above
-		// weak links between all views not linked by strong links
-		myList = new ArrayList<>();
-		
-		
-
-		
-		myList.add(new Link<Integer>(2, 3, new Translation3D( new double[] {2, 0, 0}), LinkType.WEAK));
-		myList.add(new Link<Integer>(2, 6, new Translation3D( new double[] {2, 2, 0}), LinkType.WEAK));
-		
-		myList.add(new Link<Integer>(3, 4, new Translation3D( new double[] {2, 0, 0}), LinkType.WEAK));
-		
-		
-		
-		myList.add(new Link<Integer>(4, 6, new Translation3D( new double[] {-2, 2, 0}), LinkType.WEAK));
-
-		
-		
-		myList.add(new Link<Integer>(4, 7, new Translation3D( new double[] {-6, 2, 0}), LinkType.WEAK));
-		myList.add(new Link<Integer>(5, 7, new Translation3D( new double[] {-8, 2, 0}), LinkType.WEAK));
-		
-		List< Set< Integer > > groups = new ArrayList<>();
-		Set< Integer > group1 = new HashSet<>();
-		group1.add( 1 );
-		group1.add( 2 );
-		group1.add( 7 );
-		Set< Integer > group2 = new HashSet<>();
-		group2.add( 4 );
-		group2.add( 5 );
-		groups.add( group1 );
-		groups.add( group2 );
-				
-		
-		List<Integer> views = new ArrayList<>();
-		views.add( 1 );
-		views.add( 2 );
-		views.add( 3 );
-		views.add( 4 );
-		views.add( 5 );
-		views.add( 6 );
-		views.add( 7 );
-		
-		/*
-		// try +err
-		double[] err2 = VectorUtil.getVectorDiff(  new double[] {2,0,0} , optimize.get( 2 ));
-		optimize.put( 2, VectorUtil.getVectorSum( optimize.get( 2 ), err2) );
-		double[] err4 = VectorUtil.getVectorDiff(  new double[] {0,0,0} , optimize.get( 4 ) );
-		optimize.put( 4, VectorUtil.getVectorSum( optimize.get( 4 ), err4) );
-		double[] err5 = VectorUtil.getVectorDiff( new double[] {2,0,0}, optimize.get( 5 ) );
-		optimize.put( 5, VectorUtil.getVectorSum( optimize.get( 5 ), err5) );
-		*/
-		
-		prepareTileConfiguration = 
-				prepareTileConfiguration( 	new TranslationModel3D(), 
-									views,
-									myList, 
-									null, 
-									groups, 
-									optimize );
-		optimize = optimize(3,  prepareTileConfiguration.getA(), prepareTileConfiguration.getB(), new GlobalOptimizationParameters(), optimize);
-
-		/*
-		optimize.put(2, VectorUtil.getVectorDiff( err2, optimize.get( 2 )));
-		optimize.put(4, VectorUtil.getVectorDiff( err4, optimize.get( 4 )));
-		optimize.put(5, VectorUtil.getVectorDiff( err5, optimize.get( 5 ) ));
-		*/
-		
-		optimize.forEach( (i, t) -> System.out.println( i + ": " + t ) );
+		res.forEach( ( x, y ) -> System.out.println( x + ": " + y ));
 	
 	}
 	
