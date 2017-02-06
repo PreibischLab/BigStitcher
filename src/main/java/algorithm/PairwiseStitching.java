@@ -30,6 +30,7 @@ import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.Translation;
 import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
@@ -320,7 +321,7 @@ public class PairwiseStitching
 				if ( resT != null )
 				{
 					Pair< C, C > key = new ValuePair< C, C >( indexes.get( i ), indexes.get( j ) );
-					result.add( new PairwiseStitchingResult< >( key, resT.getA(), resT.getB() ) );
+					result.add( new PairwiseStitchingResult< C >( key, new Translation( resT.getA() ), resT.getB() ) );
 				}
 			}
 		}
