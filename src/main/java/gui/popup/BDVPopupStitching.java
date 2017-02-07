@@ -17,12 +17,16 @@ import javax.swing.JOptionPane;
 import algorithm.SpimDataTools;
 import bdv.AbstractSpimSource;
 import bdv.BigDataViewer;
+import bdv.BigDataViewerActions;
 import bdv.ViewerImgLoader;
 import bdv.spimdata.WrapBasicImgLoader;
 import bdv.tools.InitializeViewerState;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.brightness.MinMaxGroup;
 import bdv.tools.transformation.TransformedSource;
+import bdv.util.BdvFunctions;
+import bdv.util.BdvHandle;
+import bdv.util.BdvHandlePanel;
 import bdv.util.BehaviourTransformEventHandlerPlanar.BehaviourTransformEventHandlerPlanarFactory;
 import bdv.viewer.SourceAndConverter;
 import bdv.viewer.ViewerOptions;
@@ -289,6 +293,7 @@ public class BDVPopupStitching extends BDVPopup
 												"BigDataViewer", 
 												null, 
 												ViewerOptions.options().accumulateProjectorFactory( MaximumProjectorARGB.factory ) );
+		
 
 		/*
 		BigDataViewer bdv = new BigDataViewer( 	convSetups,
@@ -335,6 +340,39 @@ public class BDVPopupStitching extends BDVPopup
 
 		return bdv;
 		
+	}
+	
+	@Override
+	public void setBDV(BigDataViewer existingBdv)
+	{
+		// close existing bdv if necessary
+		if (bdvRunning())
+			new Thread(() -> {closeBDV();}).start();
+		
+		this.bdv = existingBdv;
+		FilteredAndGroupedExplorerPanel.setFusedModeSimple( bdv, panel.getSpimData() );
+//		if ( !bdv.tryLoadSettings( panel.xml() ) ) TODO: this should work, but currently tryLoadSettings is protected. fix that.
+		//	InitializeViewerState.initBrightness( 0.001, 0.999, bdv.getViewer(), bdv.getSetupAssignments() );
+		
+		
+		minMaxGroupByChannels( bdv, panel.getSpimData() );
+		colorByChannels( bdv, panel.getSpimData() );
+		
+		
+		// FIXME: source grouping is quite hacky atm
+		Set<Class<? extends Entity>> groupingFactors = new HashSet<>();
+		groupingFactors.add( Channel.class );
+		groupingFactors.add( Illumination.class );		
+		groupSourcesByFactors( bdv, panel.getSpimData(), groupingFactors );
+			
+		FilteredAndGroupedExplorerPanel.updateBDV( bdv, panel.colorMode(), panel.getSpimData(), panel.firstSelectedVD(), ((GroupedRowWindow)panel).selectedRowsGroups());
+
+		bdv.getViewer().removeTransformListener( lo );
+		bdv.getViewer().addTransformListener( lo );
+		bdv.getViewer().getDisplay().addOverlayRenderer( lo );
+		
+		bdv.getViewerFrame().setVisible( true );		
+		bdv.getViewer().requestRepaint();
 	}
 
 }
