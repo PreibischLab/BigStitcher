@@ -21,6 +21,7 @@ import algorithm.TransformTools;
 import algorithm.globalopt.GroupedViews;
 import algorithm.globalopt.PairwiseStrategyTools;
 import algorithm.globalopt.TransformationTools;
+import fiji.util.gui.GenericDialogPlus;
 import gui.StitchingResultsSettable;
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -73,6 +74,32 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 	{
 		this.panel = panel;
 		return this;
+	}
+
+	protected long[] askForDownsampling(boolean is2d)
+	{
+		GenericDialogPlus gdp = new GenericDialogPlus( "Manual downsampling" );
+		gdp.addChoice( "downsample x", ds, ds[0] );
+		gdp.addChoice( "downsample y", ds, ds[0] );
+		if ( !is2d )
+		{
+			gdp.addChoice( "downsample z", ds, ds[0] );
+		}
+		
+		gdp.showDialog();
+		long[] dsFactors = new long[] {1,1,1};
+		
+		if (!gdp.wasCanceled())
+		{
+			dsFactors[0] = Integer.parseInt( gdp.getNextChoice() );
+			dsFactors[1] = Integer.parseInt( gdp.getNextChoice() );
+			if ( !is2d )
+			{
+				dsFactors[2] = Integer.parseInt( gdp.getNextChoice() );
+			}
+		}
+		
+		return dsFactors;
 	}
 
 	public class MyActionListener implements ActionListener
@@ -152,16 +179,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 						
 					}
 					
-					/*
-					
-					gd.addChoice( "downsample x", ds, ds[0] );
-					gd.addChoice( "downsample y", ds, ds[0] );
-					if ( !is2d )
-					{
-						gd.addChoice( "downsample z", ds, ds[0] );
-					}
-					
-					*/
+					gd.addCheckbox( "manually select downsampling", false );
 					
 					gd.showDialog();
 
@@ -184,16 +202,16 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 						downSamplingFactors[2] = Long.parseLong( choiceSplit[2] );
 					}
 					
+					boolean manualDownsampling = gd.getNextBoolean();
+					
+					if (manualDownsampling)
+						downSamplingFactors = askForDownsampling( is2d );
+					
 					
 					
 					/*
 		
-					downSamplingFactors[0] = Integer.parseInt( gd.getNextChoice() );
-					downSamplingFactors[1] = Integer.parseInt( gd.getNextChoice() );
-					if ( !is2d )
-					{
-						downSamplingFactors[2] = Integer.parseInt( gd.getNextChoice() );
-					}
+					
 					*/
 
 					PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();

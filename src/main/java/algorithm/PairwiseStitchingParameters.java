@@ -31,8 +31,8 @@ public class PairwiseStitchingParameters
 		gd.addNumericField( "number of peaks to check", 5, 0 );
 		gd.addNumericField( "minimal overlap", 0, 0 );
 		gd.addCheckbox( "subpixel accuracy", true );
-		gd.addCheckbox( "use Lucas-Kanade algorithm", false );
-		gd.addNumericField( "max number of iterations", 500, 0 );
+		//gd.addCheckbox( "use Lucas-Kanade algorithm", false );
+		//gd.addNumericField( "max number of iterations", 500, 0 );
 		gd.showDialog();
 		
 		if (gd.wasCanceled())
@@ -41,10 +41,10 @@ public class PairwiseStitchingParameters
 		int peaksToCheck  = (int) gd.getNextNumber();
 		long minOverlap = (long) gd.getNextNumber();
 		boolean doSubpixel = gd.getNextBoolean();
-		boolean doLucasKanade = gd.getNextBoolean();
-		int maxIterations = (int) gd.getNextNumber();
+		//boolean doLucasKanade = gd.getNextBoolean();
+		//int maxIterations = (int) gd.getNextNumber();
 		
-		return new PairwiseStitchingParameters(minOverlap, peaksToCheck, doSubpixel, doLucasKanade, maxIterations);
+		return new PairwiseStitchingParameters(minOverlap, peaksToCheck, doSubpixel, false, 0);
 	}
 	
 }
