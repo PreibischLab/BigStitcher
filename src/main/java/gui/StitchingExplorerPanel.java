@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -247,7 +248,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		this.add( new JScrollPane( table ), BorderLayout.CENTER );
 
 		final JPanel footer = new JPanel();
-		footer.setLayout( new BoxLayout( footer, BoxLayout.PAGE_AXIS ) );
+		footer.setLayout( new BoxLayout( footer, BoxLayout.LINE_AXIS ) );
 
 		// All instances of Entities in SpimData with "own local coordinate
 		// system"
@@ -350,10 +351,23 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		} );		
 		footerGroupIllums.add( checkboxGroupIllums );
 
-		footer.add( footer_tp );
-		footer.add( footer_angle);
-		footer.add( footerGroupChannels );
-		footer.add( footerGroupIllums );
+		
+		final JPanel footerComboboxes = new JPanel();
+		footerComboboxes.setLayout( new BoxLayout( footerComboboxes, BoxLayout.PAGE_AXIS ) );
+		
+		final JPanel footerCheckboxes = new JPanel();
+		footerCheckboxes.setLayout( new BoxLayout( footerCheckboxes, BoxLayout.PAGE_AXIS ) );
+		
+		footerComboboxes.add( footer_tp );
+		footerComboboxes.add( footer_angle );
+		
+		footerCheckboxes.add( footerGroupChannels );
+		footerCheckboxes.add( footerGroupIllums );
+		
+		footer.add( footerComboboxes );
+		footer.add( footerCheckboxes);
+		footer.setBorder( BorderFactory.createEmptyBorder( 0, 10, 0, 10 )  );
+		
 		//footer.add( footer_tp, BorderLayout.NORTH );
 		//footer.add( footer_angle, BorderLayout.SOUTH );
 		//footer.add( illumCB, BorderLayout.WEST );

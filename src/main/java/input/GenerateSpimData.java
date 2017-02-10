@@ -184,15 +184,26 @@ public class GenerateSpimData
 				int timepointId, boolean normalize, ImgLoaderHint... hints )
 		{
 			ImagePlus imp;
+			String file;
 			
 			if ( setupId % 4 == 0 )
-				imp = new ImagePlus( "/Users/spreibi/Documents/Microscopy/Stitching/Truman/standard/73.tif" );
+				file = "73.tif.zip";
 			else if ( setupId % 4 == 1 )
-				imp = new ImagePlus( "/Users/spreibi/Documents/Microscopy/Stitching/Truman/standard/74.tif" );
+				file = "74.tif.zip";
 			else if ( setupId % 4 == 2 )
-				imp = new ImagePlus( "/Users/spreibi/Documents/Microscopy/Stitching/Truman/standard/75.tif" );
+				file = "75.tif.zip";
 			else 
-				imp = new ImagePlus( "/Users/spreibi/Documents/Microscopy/Stitching/Truman/standard/76.tif" );
+				file = "76.tif.zip";
+
+			if ( openImgs.containsKey( file ) )
+			{
+				imp = openImgs.get( file );
+			}
+			else
+			{
+				imp = new ImagePlus( file );
+				openImgs.put( file, imp );
+			}
 
 			Img< FloatType > img = copyChannel( imp, setupId / 4 );
 
