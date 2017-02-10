@@ -53,6 +53,7 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 					JOptionPane.showMessageDialog(
 							null,
 							"You need to select two images to remove Link" );
+					return;
 				}
 				
 				ViewId vid1 = viewIds.get( 0 );
