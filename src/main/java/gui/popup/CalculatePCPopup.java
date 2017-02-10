@@ -6,7 +6,9 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -259,17 +261,17 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					{
 						// find the ViewId of the GroupedViews that the results
 						// belong to
-						ViewId gvA = null;
-						ViewId gvB = null;
+						Set<ViewId> gvA = new HashSet<>();
+						Set<ViewId> gvB = new HashSet<>();
 						for ( GroupedViews g : viewIds )
 						{
-							if ( g.getViewIds().contains( psr.pair().getA() ) )
+							if ( g.getViewIds().containsAll( psr.pair().getA() ) )
 							{
-								gvA = g;
+								gvA.addAll( g.getViewIds() );
 							}
-							if ( g.getViewIds().contains( psr.pair().getB() ) )
+							if ( g.getViewIds().containsAll( psr.pair().getB() ) )
 							{
-								gvB = g;
+								gvB.addAll( g.getViewIds() );
 							}
 						}
 

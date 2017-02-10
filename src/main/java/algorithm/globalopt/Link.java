@@ -2,13 +2,14 @@ package algorithm.globalopt;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
 import net.imglib2.realtransform.AffineGet;
 
-public class Link<T extends Comparable<T>>
+public class Link<T>
 {
 		
 	private final T first;
@@ -64,7 +65,7 @@ public class Link<T extends Comparable<T>>
 		return "("+ first.toString() + ", " + second.toString() + ")";		
 	}
 	
-	public static <T extends Comparable<T>> List<Set<T>> 
+	public static <T> List<Set<T>> 
 			getConnectedComponents(Collection<Link<T>> links, LinkType linkType)
 	{
 		
@@ -77,11 +78,11 @@ public class Link<T extends Comparable<T>>
 			if (l.getLinkType() == linkType){
 				
 				// put every endpoint in a separate component first
-				Set<T> newComponent1 = new TreeSet<>();
+				Set<T> newComponent1 = new HashSet<>();
 				newComponent1.add( l.getFirst() );
 				connectedNodes.add( newComponent1 );
 				
-				Set<T> newComponent2 = new TreeSet<>();
+				Set<T> newComponent2 = new HashSet<>();
 				newComponent2.add( l.getSecond() );
 				connectedNodes.add( newComponent2 );
 				
@@ -115,13 +116,13 @@ public class Link<T extends Comparable<T>>
 				}
 				if (!firstFound)
 				{
-					Set<T> newComponent1 = new TreeSet<>();
+					Set<T> newComponent1 = new HashSet<>();
 					newComponent1.add( l.getFirst() );
 					connectedNodes.add( newComponent1 );
 				}
 				if (!secondFound)
 				{
-					Set<T> newComponent2 = new TreeSet<>();
+					Set<T> newComponent2 = new HashSet<>();
 					newComponent2.add( l.getSecond() );
 					connectedNodes.add( newComponent2 );
 				}
@@ -133,7 +134,7 @@ public class Link<T extends Comparable<T>>
 		return connectedNodes;		
 	}
 	
-	public static <T extends Comparable<T>> List<List<Link<T>>> 
+	public static <T> List<List<Link<T>>> 
 		getLinksConnectedComponents(List<Set<T>> components, Collection<Link<T>> links,  LinkType linkType)
 	{
 		List<List<Link<T>>> res = new ArrayList<>();

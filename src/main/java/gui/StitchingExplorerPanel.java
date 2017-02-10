@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.BoxLayout;
@@ -67,6 +68,7 @@ import gui.overlay.LinkOverlay;
 import gui.popup.ApplyBDVTransformationPopup;
 import gui.popup.BDVPopupStitching;
 import gui.popup.CalculatePCPopup;
+import gui.popup.CalculatePCPopupExpertBatch;
 import gui.popup.OptimizeGloballyPopup;
 import gui.popup.ResavePopup;
 import gui.popup.SimpleRemoveLinkPopup;
@@ -505,6 +507,10 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		calculatePCPopup.setStitchingResults( stitchingResults );
 		popups.add( calculatePCPopup );
 		
+		CalculatePCPopupExpertBatch calculatePCPopupExpert = new CalculatePCPopupExpertBatch();
+		calculatePCPopupExpert.setStitchingResults( stitchingResults );
+		popups.add( calculatePCPopupExpert );
+		
 		OptimizeGloballyPopup optimizePopup = new OptimizeGloballyPopup();
 		optimizePopup.setStitchingResults( stitchingResults );
 		popups.add( optimizePopup );
@@ -560,11 +566,11 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		List< List< BasicViewDescription< ? > > > elements = tableModel.getElements();
 		
 		// get all pairwise results which involve the views of the selected row
-		ViewId selectedVid = selectedRow.get( 0 );
-		ArrayList< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults.getAllPairwiseResultsForViewId( selectedVid );
+		Set<ViewId> selectedVids = new HashSet<>(selectedRow );
+		ArrayList< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults.getAllPairwiseResultsForViewId( selectedVids );
 		
 		// get the Translations of first View
-		ViewRegistration selectedVr = data.getViewRegistrations().getViewRegistration(selectedVid);
+		ViewRegistration selectedVr = data.getViewRegistrations().getViewRegistration(selectedVids.iterator().next());
 		AffineGet selectedModel = selectedVr.getModel();
 		
 		
@@ -578,7 +584,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		
 		resetBDVManualTransformations(bdvPopup().bdv);
 		
-		ArrayList< Pair<ViewId, ViewId> > activeLinks = new ArrayList<>();
+		ArrayList< Pair<Set<ViewId>, Set<ViewId>> > activeLinks = new ArrayList<>();
 		
 		for (PairwiseStitchingResult< ViewId > psr: resultsForId)
 		{
@@ -592,7 +598,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 			for (List<BasicViewDescription< ? >> group : elements)
 			{
 				// there is a link selected -> other
-				if (psr.pair().getA().equals( selectedVid ) &&  group.contains( psr.pair().getB()))
+				if (psr.pair().getA().equals( selectedVids ) &&  group.contains( psr.pair().getB()))
 				{
 					// set all views of the other group visible
 					for ( final BasicViewDescription< ? >  vd : group )
@@ -627,7 +633,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 				}
 				
 				// there is a link other -> selected
-				if (psr.pair().getB().equals( selectedVid ) && group.contains( psr.pair().getA()))
+				if (psr.pair().getB().equals( selectedVids ) && group.contains( psr.pair().getA()))
 				{
 					// set all views of the other group visible
 					for ( final BasicViewDescription< ? >  vd : group )
@@ -665,8 +671,9 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 			}
 		}
 		
-		linkOverlay.setActiveLinks( activeLinks, selectedVid );
-		getLinkExplorer().setActiveLinks( activeLinks );
+		// FIXME
+		//linkOverlay.setActiveLinks( activeLinks, selectedVid );
+		//getLinkExplorer().setActiveLinks( activeLinks );
 		
 		setVisibleSources( bdvPopup().bdv.getViewer().getVisibilityAndGrouping(), active );
 

@@ -4,7 +4,9 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.event.TableModelListener;
@@ -102,7 +104,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 		// get avg. correlation
 		else if (columnIndex - decorated.getColumnCount() == 1)
 		{
-			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
+			final Set<ViewId> vid = new HashSet<>(decorated.getElements().get(rowIndex));
 
 			DecimalFormat df = new DecimalFormat( "#.###" );
 			df.setRoundingMode( RoundingMode.HALF_UP );
@@ -114,7 +116,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 		//get no. of links
 		else if (columnIndex - decorated.getColumnCount() == 2)
 		{
-			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
+			final Set<ViewId> vid = new HashSet<>(decorated.getElements().get(rowIndex));
 			return(res.getAllPairwiseResultsForViewId( vid ).size());
 		}
 		
@@ -122,7 +124,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 		//get errors
 		else if (columnIndex - decorated.getColumnCount() == 3)
 		{
-			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
+			final Set<ViewId> vid = new HashSet<>(decorated.getElements().get(rowIndex));
 			final ArrayList< Double > errors = res.getErrors( vid );
 			DecimalFormat df = new DecimalFormat( "#.###" );
 			df.setRoundingMode( RoundingMode.HALF_UP );
@@ -210,5 +212,11 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 
 	@Override
 	public Set< Class< ? extends Entity > > getGroupingFactors(){return decorated.getGroupingFactors();}
+
+	@Override
+	public Map< Class< ? extends Entity >, List< ? extends Entity > > getFilters()
+	{
+		return decorated.getFilters();
+	}
 
 }

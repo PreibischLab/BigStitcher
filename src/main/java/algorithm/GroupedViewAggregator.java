@@ -63,11 +63,11 @@ public class GroupedViewAggregator
 		
 	public class Action <E extends Entity>{
 		ActionType actionType;
-		Class<E> entityClass;
+		Class<? extends E> entityClass;
 		E instance;
 		private OpService ops;
 		
-		Action(ActionType at, Class<E> entityClass, E instance){
+		Action(ActionType at, Class<? extends E> entityClass, E instance){
 			this.actionType = at;
 			this.entityClass = entityClass;
 			this.instance = instance;
@@ -205,7 +205,7 @@ public class GroupedViewAggregator
 		PICK_BRIGHTEST, AVERAGE, PICK_SPECIFIC
 	}
 	
-	public <E extends Entity> void addAction(ActionType at, Class<E> entityClass, E instance)
+	public <E extends Entity> void addAction(ActionType at, Class<? extends E> entityClass, E instance)
 	{
 		Action<E> newAc = new Action<E>( at, entityClass, instance );
 		actions.add(newAc);

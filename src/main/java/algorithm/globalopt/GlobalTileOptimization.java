@@ -7,9 +7,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
+
+import com.google.common.collect.Iterators;
 
 import algorithm.TransformTools;
 import algorithm.VectorUtil;
@@ -21,6 +25,7 @@ import mpicbg.models.Model;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
+import mpicbg.models.SimilarityModel3D;
 import mpicbg.models.Tile;
 import mpicbg.models.TileConfiguration;
 import mpicbg.models.TranslationModel2D;
@@ -50,34 +55,34 @@ public class GlobalTileOptimization
 	 * @param params 
 	 * @return a mapping of view identifieres to locations in global space
 	 */
-	public static < C extends Comparable< C >> Map<C, AffineGet> twoRoundGlobalOptimization(
-			final int numDimensions,
-			final List< ? extends C > views,
-			final Collection< C > fixedViews,
+	public static < C extends Comparable< C >, M extends AbstractAffineModel3D<M>> Map<Set<C>, AffineGet> twoRoundGlobalOptimization(
+			final M model,
+			final List< Set< C > > views,
+			final Collection< Set<C> > fixedViews,
 			final Map<C, AffineGet> initialTransforms,
 			final Collection<PairwiseStitchingResult< C >> pairwiseResults,
 			final GlobalOptimizationParameters params)
 	{
 		
-		Collections.sort( views );
+		//Collections.sort( views );
 		
 		// create strong links for all pairs with valid pairwise results
-		List<Link<C>> strongLinks = new ArrayList<>();
+		List<Link< Set<C> >> strongLinks = new ArrayList<>();
 		for (PairwiseStitchingResult< C > res : pairwiseResults)
 		{
 			// only consider Pairs that were also selected
 			if (res.r() > params.correlationT && views.contains( res.pair().getA()) && views.contains( res.pair().getB()))
 			{
-				strongLinks.add( new Link< C >( res.pair().getA(), res.pair().getB(), res.getTransform(), LinkType.STRONG ) );
-//				System.out.println( "added strong link between " + ((ViewId) res.pair().getA()).getViewSetupId() + " and " + ((ViewId) res.pair().getB()).getViewSetupId() + ": " + res.getTransform() );
+				strongLinks.add( new Link< Set<C> >( res.pair().getA(), res.pair().getB(), res.getTransform(), LinkType.STRONG ) );
+			//	System.out.println( "added strong link between " + ((ViewId) res.pair().getA()).getViewSetupId() + " and " + ((ViewId) res.pair().getB()).getViewSetupId() + ": " + res.getTransform() );
 			}
 		}
 		
-		List< Set< C > > connectedComponents = Link.getConnectedComponents( strongLinks, LinkType.STRONG );
+		List< Set< Set<C> > > connectedComponents = Link.getConnectedComponents( strongLinks, LinkType.STRONG );
 		
 		// create weak links between every pair of views that are not both in a conn.comp.
 		// TODO: we should only connect tiles within a reasonable radius to each other (for performance reasons)
-		List<Link<C>> weakLinks = new ArrayList<>();
+		List<Link<Set<C>>> weakLinks = new ArrayList<>();
 		for (int i = 0; i < views.size(); i++)
 		{
 			for(int j = i+1; j < views.size(); j++)
@@ -86,12 +91,13 @@ public class GlobalTileOptimization
 				if(!(anyContains( views.get( i), connectedComponents ) && 
 						anyContains( views.get( j), connectedComponents ) ) )
 				{
-					AffineGet mapBack = TransformTools.mapBackTransform( initialTransforms.get( views.get( j ) ),
-							initialTransforms.get( views.get( i ) ));
+					// TODO: is it okay to just use the first view here?
+					AffineGet mapBack = TransformTools.mapBackTransform( initialTransforms.get( views.get( j ).iterator().next() ),
+							initialTransforms.get( views.get( i ).iterator().next() ));
 					
 					System.out.println( "added weak link between " + views.get( i ) + " and " + views.get( j ) + ": " + mapBack );
 //					System.out.println( "added weak link between " + ((ViewId)views.get( i )).getViewSetupId() + " and " + ((ViewId)views.get( j )).getViewSetupId() + ": " + mapBack );
-					weakLinks.add( new Link< C >( views.get( i ), views.get( j ), mapBack, LinkType.WEAK ) );
+					weakLinks.add( new Link< Set<C> >( views.get( i ), views.get( j ), mapBack, LinkType.WEAK ) );
 				}
 				
 			}
@@ -119,8 +125,8 @@ public class GlobalTileOptimization
 		{
 		
 		*/
-			Pair< TileConfiguration, Map< C, Tile< TranslationModel3D > > > tc = prepareTileConfiguration( new TranslationModel3D(), null, strongLinks, fixedViews, null, null );
-			Map< C, AffineGet > optimizeResult1 = optimize(numDimensions, tc.getA(), tc.getB(), params, null );
+			Pair< TileConfiguration, Map< Set<C>, Tile< M > > > tc = prepareTileConfiguration( model.copy(), null, strongLinks, fixedViews, null, null );
+			Map< Set<C>, AffineGet > optimizeResult1 = optimize( tc.getA(), tc.getB(), params, null );
 			
 			optimizeResult1.forEach( (x, y) -> System.out.println( x + ": " + y ) );
 		
@@ -130,8 +136,8 @@ public class GlobalTileOptimization
 			if (weakLinks.size() == 0)
 				return optimizeResult1;
 		
-			Pair< TileConfiguration, Map< C, Tile< TranslationModel3D > > > tc2 = prepareTileConfiguration( new TranslationModel3D(), views, weakLinks, fixedViews, connectedComponents, optimizeResult1 );
-			Map< C, AffineGet > optimizeResult2 = optimize(numDimensions, tc2.getA(), tc2.getB(), new GlobalOptimizationParameters( 0.0, Double.MAX_VALUE, Double.MAX_VALUE ), optimizeResult1 );
+			Pair< TileConfiguration, Map< Set<C>, Tile< M > > > tc2 = prepareTileConfiguration( model.copy(), views, weakLinks, fixedViews, connectedComponents, optimizeResult1 );
+			Map< Set<C>, AffineGet > optimizeResult2 = optimize( tc2.getA(), tc2.getB(), new GlobalOptimizationParameters( 0.0, Double.MAX_VALUE, Double.MAX_VALUE ), optimizeResult1 );
 			
 			return optimizeResult2;
 		//}
@@ -140,21 +146,21 @@ public class GlobalTileOptimization
 
 	
 	
-	public static < M extends Model< M > , C extends Comparable< C >> Pair<TileConfiguration, Map<C, Tile<M>>>  prepareTileConfiguration(
+	public static < M extends AbstractAffineModel3D< M >, C> Pair<TileConfiguration, Map<Set<C>, Tile<M>>>  prepareTileConfiguration(
 			final M model,
-			final Collection< ? extends C > views,
-			final List< Link<C> > links,
-			final Collection< C > fixedViews,
-			final List< Set< C > > groups,
-			final Map<C, AffineGet> initialTransforms)
+			final Collection< Set<C> > views,
+			final List< Link<Set<C>> > links,
+			final Collection< Set<C> > fixedViews,
+			final List< Set< Set<C> > > groups,
+			final Map<Set<C>, AffineGet> initialTransforms)
 	{
 				
-		final List< C > actualViews;
+		final List< Set<C> > actualViews;
 		
 		// no list of views was given, assemble from links
 		if (views == null){
-			final HashSet< C > tmpSet = new HashSet<>();
-			for ( Link<C> l : links )
+			final HashSet< Set<C> > tmpSet = new HashSet<>();
+			for ( Link<Set<C>> l : links )
 			{
 				tmpSet.add( l.getFirst() );
 				tmpSet.add( l.getSecond() );
@@ -169,14 +175,14 @@ public class GlobalTileOptimization
 			actualViews.addAll( views );
 		}
 		 
-		Collections.sort( actualViews );
+		//Collections.sort( actualViews );
 		
 		// assign ViewIds to the individual Tiles (either one tile per view or one tile per group)
-		final Map< C, Tile< M > > map = assignViewsToTiles( model, actualViews, groups );
+		final Map< Set<C>, Tile< M > > map = assignViewsToTiles( model, actualViews, groups );
 		
 		
 		// assign the pointmatches to all the tiles
-		for ( Link<C> link : links )
+		for ( Link<Set<C>> link : links )
 			addPointMatches( link, map.get(link.getFirst() ), map.get( link.getSecond() ), initialTransforms);
 
 		// add and fix tiles as defined in the GlobalOptimizationType
@@ -185,8 +191,7 @@ public class GlobalTileOptimization
 		return new ValuePair<>(tc, map);
 	}
 	
-	public static <M extends AbstractAffineModel3D<M>, C extends Comparable< C >> Map<C, AffineGet> optimize(
-			int numD,
+	public static <M extends AbstractAffineModel3D<M>, C > Map<C, AffineGet> optimize(
 			TileConfiguration tc, 
 			Map<C, Tile<M>> map,
 			GlobalOptimizationParameters params,
@@ -252,7 +257,7 @@ public class GlobalTileOptimization
 //			shift = VectorUtil.getVectorSum( shift, initialTransforms.get( viewId ) );
 			
 			AffineTransform3D t = new AffineTransform3D();
-			t.set( tile.getModel().getMatrix( null ) );
+			t.set( ( tile.getModel() ).getMatrix( null ) );
 			
 			if (initialTransforms != null && initialTransforms.containsKey( viewId ))
 				t.concatenate( initialTransforms.get( viewId ) );
@@ -265,7 +270,7 @@ public class GlobalTileOptimization
 	}
 	
 	
-	protected static < M extends Model< M >, C extends Comparable< C >> HashMap< C, Tile< M > > assignViewsToTiles(
+	protected static < M extends AbstractAffineModel3D< M >, C> HashMap< C, Tile< M > > assignViewsToTiles(
 			final M model,
 			final List< C > views,
 			final List< Set < C > > groups )
@@ -316,11 +321,11 @@ public class GlobalTileOptimization
 		return map;
 	}
 	
-	protected static <C extends Comparable< C >> void addPointMatches( 
-			final Link<C> pair, 
-			final Tile<?> tileA, 
-			final Tile<?> tileB,
-			final Map<C, AffineGet> initialTransforms
+	protected static <C, M extends AbstractAffineModel3D< M >> void addPointMatches( 
+			final Link<Set<C>> pair, 
+			final Tile<M> tileA, 
+			final Tile<M> tileB,
+			final Map<Set<C>, AffineGet> initialTransforms
 			)
 	{
 		final ArrayList< PointMatch > pm = new ArrayList< PointMatch >();
@@ -397,13 +402,13 @@ public class GlobalTileOptimization
 		tileB.addConnectedTile( tileA );
 	}
 	
-	protected static < M extends Model< M >, C extends Comparable< C >> TileConfiguration addAndFixTiles(
-			final List< C > views,
-			final Map< C, Tile< M > > map,
-			final Collection< C > fixedViews)
+	protected static < M extends Model< M >, C> TileConfiguration addAndFixTiles(
+			final List< Set<C> > views,
+			final Map< Set<C>, Tile< M > > map,
+			final Collection< Set<C> > fixedViews)
 	{
 		// if no fixed tiles are given, fix the tile of the first view
-		final Collection< C > fixedViewsActual;
+		final Collection< Set<C> > fixedViewsActual;
 		if (fixedViews == null)
 		{
 			fixedViewsActual = new ArrayList<>();
@@ -421,7 +426,7 @@ public class GlobalTileOptimization
 		// assemble a list of all tiles and set them fixed if desired
 		final HashSet< Tile< M > > tiles = new HashSet< Tile< M > >();
 		
-		for ( final C viewId : views )
+		for ( final Set<C> viewId : views )
 		{
 			final Tile< M > tile = map.get( viewId );
 
@@ -493,8 +498,18 @@ public class GlobalTileOptimization
 	public static void main(String[] args)
 	{
 		
-		List<Integer> views = Arrays.asList( new Integer[] {1,2,-1, 3} );
-		List<Integer> fixedViews = Arrays.asList( new Integer[] {1} );
+		List<Set<Integer>> views = new ArrayList<>();
+		for (int i : new int[] {1,2,3,-1})
+		{
+			HashSet< Integer > hashSet = new HashSet<Integer>();
+			hashSet.add( i );
+			views.add( hashSet );
+		}
+		
+		List<Set< Integer>> fixedViews = new ArrayList<>();
+		HashSet< Integer > hashSet = new HashSet<Integer>();
+		hashSet.add( 1 );
+		fixedViews.add( hashSet );
 		
 		Map<Integer, AffineGet> initialTransforms = new HashMap<>();
 		initialTransforms.put( 1, new Translation3D( 0, 0, 0 ) );
@@ -503,13 +518,71 @@ public class GlobalTileOptimization
 		initialTransforms.put( 3, new Translation3D( 2.25, 0, 0 ) );
 		
 		List<PairwiseStitchingResult< Integer >> pairwiseResults = new ArrayList<>();
-		pairwiseResults.add( new PairwiseStitchingResult<>( new ValuePair<>( 1, 2 ), new Translation3D(1,0,0), 1.0 ) );
 		
-		Map< Integer, AffineGet > res = twoRoundGlobalOptimization( 3, views, fixedViews, initialTransforms, pairwiseResults, new GlobalOptimizationParameters() );
+		HashSet< Integer > s1 = new HashSet<Integer>();
+		HashSet< Integer > s2 = new HashSet<Integer>();
+		s1.add( 1 );
+		s2.add( 2 );
+		
+		pairwiseResults.add( new PairwiseStitchingResult<>( new ValuePair<>(s1, s2 ), new Translation3D(1,0,0), 1.0 ) );
+		
+		Map< Set<Integer>, AffineGet > res = twoRoundGlobalOptimization( new AffineModel3D(), views, fixedViews, initialTransforms, pairwiseResults, new GlobalOptimizationParameters() );
 		
 		res.forEach( ( x, y ) -> System.out.println( x + ": " + y ));
 	
 	}
 	
 	
+	public static <V, T> Map<Pair<Set<V>, Set<V>>, T> expandToLinksSubset(Collection<Set<V>> views, Map<Pair<Set<V>, Set<V>>, T> links, BiPredicate< Set<V>, Set<V> > check)
+	{
+		Map<Pair<Set<V>, Set<V>>, T> res = new HashMap<>();
+		Iterator< Set< V > > it1 = views.iterator();
+		while ( it1.hasNext() )
+		{
+			Set< V > viewSet1 = it1.next();
+			Iterator< Set< V > > it2 = views.iterator();
+			while (it2.hasNext())
+			{
+				Set< V > viewSet2 = it2.next();
+				for (Pair<Set<V>, Set<V>> linkPair : links.keySet())
+				{
+					if (check.test( viewSet1, linkPair.getA()) && check.test( viewSet2, linkPair.getB()))
+					{
+						res.put( new ValuePair< Set<V>, Set<V> >( viewSet1, viewSet2 ), links.get( linkPair ) );
+					}
+				}
+			}
+			
+		}
+		
+		return res;
+		
+	}
+	
+	// check if first Set is a subset of second Set
+	public class SubsetCheck <V> implements BiPredicate< Set<V>, Set<V> >
+	{
+
+		@Override
+		public boolean test(Set< V > t, Set< V > u)
+		{
+			return u.containsAll( t );
+		}
+		
+	}
+	
+	// check if second Set contains any of the elements of first Set (they intersect)
+	public class IntersectCheck <V> implements BiPredicate< Set<V>, Set<V> >
+	{
+
+		@Override
+		public boolean test(Set< V > t, Set< V > u)
+		{
+			for (V ti : t)
+				if (u.contains( ti ))
+					return true;
+			return false;
+		}
+		
+	}
 }

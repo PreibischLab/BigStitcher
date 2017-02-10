@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -195,9 +197,23 @@ public class TransformationTools
 				resT.translate( result.getB().getA() );
 				resT.preConcatenate( mapBack );
 				
+				
+				Pair<Set<ViewId>, Set<ViewId>> setPair = new ValuePair< Set<ViewId>, Set<ViewId> >( new HashSet<>(), new HashSet<>() );
+				if (result.getA().getA() instanceof GroupedViews)
+				{ 
+					setPair.getA().addAll( ((GroupedViews)result.getA().getA()).getViewIds() );
+					setPair.getB().addAll( ((GroupedViews)result.getA().getB()).getViewIds() );
+				}
+				else
+				{
+					setPair.getA().add( result.getA().getA() );
+					setPair.getA().add( result.getA().getB() );
+				}
+				
+				
 				// TODO: when does that really happen?
 				if ( result.getB() != null)
-					results.add( new PairwiseStitchingResult< ViewId >( result.getA(), resT, result.getB().getB() ) );
+					results.add( new PairwiseStitchingResult< ViewId >(setPair, resT, result.getB().getB() ) );
 			}
 		}
 		catch ( final Exception e )

@@ -5,7 +5,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Set;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.registration.ViewTransform;
@@ -102,7 +102,7 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		
 		//System.out.println( activeLinks );
 		
-		for (Pair< ViewId, ViewId > p : stitchingResults.getPairwiseResults().keySet())
+		for (Pair< Set<ViewId>, Set<ViewId> > p : stitchingResults.getPairwiseResults().keySet())
 		{
 			if (activeLinks.size() > 0 && !(activeLinks.contains( p )))
 				continue;
@@ -113,9 +113,9 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 			spimData.getSequenceDescription().getViewDescriptions().get( p.getB() ).getViewSetup().getSize().dimensions( sizeB );
 			
 			//ViewTransform vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA() ).getTransformList().get( 1 );
-			AffineTransform3D vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA() ).getModel();
+			AffineTransform3D vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA().iterator().next() ).getModel();
 			//ViewTransform vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB() ).getTransformList().get( 1 );
-			AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB() ).getModel();
+			AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB().iterator().next() ).getModel();
 			
 			final AffineTransform3D transform = new AffineTransform3D();
 			transform.preConcatenate( viewerTransform );
