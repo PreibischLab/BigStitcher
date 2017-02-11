@@ -20,12 +20,12 @@ public class RegularTranformHelpers
 	
 	public static class RegularTranslationParameters
 	{
-		int nDimensions;
-		int[] nSteps;
-		double[] overlaps;
-		int[] dimensionOrder;
-		boolean[] alternating;
-		boolean[] increasing;
+		public int nDimensions;
+		public int[] nSteps;
+		public double[] overlaps;
+		public int[] dimensionOrder;
+		public boolean[] alternating;
+		public boolean[] increasing;
 	}
 	
 	public static List< AffineTransform3D > generateRegularGrid(RegularTranslationParameters params, Dimensions dims)
