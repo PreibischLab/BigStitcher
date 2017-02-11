@@ -5,6 +5,7 @@ import ij.ImageJ;
 import ij.plugin.PlugIn;
 import input.FractalSpimDataGenerator;
 import mpicbg.spim.io.IOFunctions;
+import simulation.imgloader.SimulatedBeadsImgLoader2;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,6 +21,7 @@ public class Stitching_Explorer implements PlugIn
 {
 	boolean newDataset = false;
 	boolean useFractal = false;
+	boolean useSimulatedBeads = false;
 
 	@Override
 	public void run( String arg )
@@ -47,8 +49,19 @@ public class Stitching_Explorer implements PlugIn
 				setUseFractal();
 			}
 		});
+		
+		result.addButton( "Simulated Beads Example", new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				result.setReturnFalse( true );
+				result.getGenericDialog().dispose();
+				useSimulatedBeads = true;
+			}
+		});
 
-		if ( !result.queryXML( "Stitching Explorer", "", false, false, false, false ) && !newDataset && !useFractal )
+		if ( !result.queryXML( "Stitching Explorer", "", false, false, false, false ) && !newDataset && !useFractal && !useSimulatedBeads )
 			return;
 
 		final SpimData2 data;
@@ -72,6 +85,14 @@ public class Stitching_Explorer implements PlugIn
 			xml = null;
 			io = null;
 		}
+		
+		else if (useSimulatedBeads)
+		{
+			data = SpimData2.convert( SimulatedBeadsImgLoader2.createSpimDataFromUserInput());
+			xml = null;
+			io = null;
+		}
+		
 		else
 		{
 			data = result.getData();

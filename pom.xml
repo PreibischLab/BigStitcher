@@ -67,5 +67,10 @@
   		<artifactId>bigdataviewer-core</artifactId>
   		<version>2.5.2-SNAPSHOT</version>
   	</dependency>
+  	<dependency>
+  		<groupId>net.imglib2.simulation</groupId>
+  		<artifactId>multiview-simulation</artifactId>
+  		<version>1.0.0</version>
+  	</dependency>
   </dependencies>
 </project>
