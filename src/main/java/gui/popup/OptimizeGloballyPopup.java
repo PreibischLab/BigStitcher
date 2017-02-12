@@ -133,16 +133,19 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 					( (AffineTransform3D) transformOriginal ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( vidi ).getModel().getRowPackedCopy());
 					
 					// transformation from fixed to original
-					AffineGet mapBackToFixed = TransformTools.mapBackTransform( vtFixed, transformOriginal );
+					AffineGet mapBackToFixed = TransformTools.mapBackTransform( transformOriginal, vtFixed );
 					// difference to transformation determined by optimization -> result
 					AffineTransform3D mapBackToOriginal = new AffineTransform3D();
-					mapBackToOriginal.set( TransformTools.mapBackTransform( mapBackToFixed, at.inverse() ).getRowPackedCopy());
+					
+					mapBackToOriginal.set( mapBackToFixed.getRowPackedCopy() );
+					mapBackToOriginal.preConcatenate(  at.inverse() );
+					//mapBackToOriginal.set( TransformTools.mapBackTransform( at.inverse(), mapBackToFixed ).getRowPackedCopy());
 					
 					
 					System.out.println( "viewID: " + vid.iterator().next().getViewSetupId() );
 					System.out.println( "original:" + transformOriginal );
 					System.out.println( "tranform determined by optim:" + at );
-					System.out.println( "mapback to original:" + mapBackToOriginal );
+					System.out.println( "mapback to original inverse :" + mapBackToOriginal.inverse() );
 					System.out.println( "mapback to fixed:" + mapBackToFixed );
 					
 					//at.preConcatenate( mapBackToFixed );
@@ -164,7 +167,7 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 	//							atI.set( atI.get( 1, 3 ) - vr.getModel().get( 1, 3 ), 1, 3  );
 	//							atI.set( atI.get( 2, 3 ) - vr.getModel().get( 2, 3 ), 2, 3  );
 								
-								ViewTransform vt = new ViewTransformAffine( "stitching transformation", mapBackToOriginal );
+								ViewTransform vt = new ViewTransformAffine( "stitching transformation", mapBackToOriginal.inverse() );
 								//if (d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().size() < 2)
 									d.getViewRegistrations().getViewRegistration( vidi ).preconcatenateTransform( vt );
 								//else
