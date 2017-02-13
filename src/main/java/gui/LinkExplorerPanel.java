@@ -52,8 +52,8 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 	
 	public void setActiveLinks(List<Pair<Set<ViewId>, Set<ViewId>>> links)
 	{
-		System.out.println( "selected links:" );
-		links.forEach( ( l ) -> System.out.println( l ) );
+//		System.out.println( "selected links:" );
+//		links.forEach( ( l ) -> System.out.println( l ) );
 		model.setActiveLinks( links );
 		model.fireTableDataChanged();
 	}

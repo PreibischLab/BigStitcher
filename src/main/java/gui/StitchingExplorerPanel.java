@@ -35,6 +35,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import algorithm.SpimDataTools;
+import algorithm.TransformTools;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
@@ -600,7 +601,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			for ( List< BasicViewDescription< ? > > group : elements )
 			{
 				// there is a link selected -> other
-				if ( psr.pair().getA().equals( selectedVids ) && group.contains( psr.pair().getB() ) )
+				if ( psr.pair().getA().equals( selectedVids ) && psr.pair().getB().containsAll( group ) )
 				{
 					// set all views of the other group visible
 					for ( final BasicViewDescription< ? > vd : group )
@@ -612,31 +613,14 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 									.get( sourceIdx );
 							active[sourceIdx] = true;
 
-							/*
-							 * // get the Translations of second View
-							 * ViewRegistration vr =
-							 * data.getViewRegistrations().getViewRegistration(
-							 * new ViewId(firstTP.getId(), sourceIdx ));
-							 * AffineGet otherTranslation =
-							 * vr.getTransformList().get( 1 ).asAffine3D();
-							 * 
-							 * // use BDV manual transform to preview double
-							 * viewShiftX = selectedTranslation.get( 0, 3 ) -
-							 * otherTranslation.get( 0, 3 ); double viewShiftY =
-							 * selectedTranslation.get( 1, 3 ) -
-							 * otherTranslation.get( 1, 3 ); double viewShiftZ =
-							 * selectedTranslation.get( 2, 3 ) -
-							 * otherTranslation.get( 2, 3 );
-							 * 
-							 * AffineTransform3D shift = new
-							 * AffineTransform3D(); shift.set( viewShiftX +
-							 * psr.relativeVector()[0], 0, 3 ); shift.set(
-							 * viewShiftY + psr.relativeVector()[1], 1, 3 );
-							 * shift.set( viewShiftZ + psr.relativeVector()[2],
-							 * 2, 3 );
-							 */
+							
+							 // get the Translations of other View
+							 ViewRegistration vr = data.getViewRegistrations().getViewRegistration( new ViewId(firstTP.getId(), sourceIdx ));
+							 AffineGet otherTranslation = vr.getModel();
+							 
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getTransform().getRowPackedCopy() );
+							trans.concatenate( TransformTools.mapBackTransform( selectedModel, otherTranslation ) );
 
 							( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( trans );
 						}
@@ -644,7 +628,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				}
 
 				// there is a link other -> selected
-				if ( psr.pair().getB().equals( selectedVids ) && group.contains( psr.pair().getA() ) )
+				if ( psr.pair().getB().equals( selectedVids ) && psr.pair().getA().containsAll( group ) )
 				{
 					// set all views of the other group visible
 					for ( final BasicViewDescription< ? > vd : group )
@@ -655,32 +639,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 									.get( sourceIdx );
 							active[sourceIdx] = true;
 
-							/*
-							 * // get the Translations of second View
-							 * ViewRegistration vr =
-							 * data.getViewRegistrations().getViewRegistration(
-							 * new ViewId(firstTP.getId(), sourceIdx ));
-							 * AffineGet otherTranslation =
-							 * vr.getTransformList().get( 1 ).asAffine3D();
-							 * 
-							 * // use BDV manual transform to preview double
-							 * viewShiftX = selectedTranslation.get( 0, 3 ) -
-							 * otherTranslation.get( 0, 3 ); double viewShiftY =
-							 * selectedTranslation.get( 1, 3 ) -
-							 * otherTranslation.get( 1, 3 ); double viewShiftZ =
-							 * selectedTranslation.get( 2, 3 ) -
-							 * otherTranslation.get( 2, 3 );
-							 * 
-							 * AffineTransform3D shift = new
-							 * AffineTransform3D(); shift.set( viewShiftX -
-							 * psr.relativeVector()[0], 0, 3 ); shift.set(
-							 * viewShiftY - psr.relativeVector()[1], 1, 3 );
-							 * shift.set( viewShiftZ - psr.relativeVector()[2],
-							 * 2, 3 );
-							 */
+							// get the Translations of second View
+							 ViewRegistration vr = data.getViewRegistrations().getViewRegistration( new ViewId(firstTP.getId(), sourceIdx ));
+							 AffineGet otherTranslation = vr.getModel();
 
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getTransform().inverse().getRowPackedCopy() );
+							trans.concatenate(TransformTools.mapBackTransform( selectedModel, otherTranslation ) );
 
 							( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( trans );
 

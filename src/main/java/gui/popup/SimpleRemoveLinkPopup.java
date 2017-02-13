@@ -2,7 +2,9 @@ package gui.popup;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -14,6 +16,7 @@ import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
+import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
@@ -47,7 +50,7 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				final List< ViewId > viewIds = panel.selectedRowsViewId();
+				final List< List<ViewId> > viewIds = ((GroupedRowWindow)panel).selectedRowsViewIdGroups();
 				
 				if (viewIds.size() != 2){
 					JOptionPane.showMessageDialog(
@@ -56,10 +59,12 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 					return;
 				}
 				
-				ViewId vid1 = viewIds.get( 0 );
-				ViewId vid2 = viewIds.get( 1 );
+				Set<ViewId> vid1 = new HashSet<>(viewIds.get( 0 ));
+				Set<ViewId> vid2 = new HashSet<>(viewIds.get( 1 ));
 				
-				results.removePairwiseResultForPair( new ValuePair<>( vid1, vid2 ) );				
+				// try both ways
+				results.removePairwiseResultForPair( new ValuePair<>( vid1, vid2 ) );
+				results.removePairwiseResultForPair( new ValuePair<>( vid2, vid1 ) );
 			}
 		} );
 	}

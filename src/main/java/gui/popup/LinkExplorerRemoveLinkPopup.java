@@ -2,6 +2,8 @@ package gui.popup;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Set;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -14,6 +16,7 @@ import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
+import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
@@ -36,9 +39,11 @@ public class LinkExplorerRemoveLinkPopup extends JMenuItem implements StitchingR
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				Pair< ViewId, ViewId > pair = panel.getModel().getActiveLinks().get( panel.getTable().getSelectedRow() );
+				Pair< Set<ViewId>, Set<ViewId> > pair = panel.getModel().getActiveLinks().get( panel.getTable().getSelectedRow() );
 				results.removePairwiseResultForPair( pair );
 				((StitchingExplorerPanel< ?, ? >)stitchingExplorer).updateBDVPreviewMode();
+				
+				panel.selectedViewDescriptions( new ArrayList<>(((GroupedRowWindow)stitchingExplorer).selectedRowsGroups()) );
 				panel.getModel().fireTableDataChanged();
 			}
 
