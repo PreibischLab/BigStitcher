@@ -323,7 +323,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		{
 			List<String> selection = new ArrayList<>();
 			selection.add( "average" );
-			selection.add(  "pick prightest" );
+			selection.add(  "pick brightest" );
 			List< ? extends Entity > instancesInAllGroups = getInstancesInAllGroups( groupedElements, cl );
 			instancesInAllGroups.forEach( ( e ) -> 
 			{

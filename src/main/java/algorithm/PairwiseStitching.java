@@ -5,10 +5,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GlobalTileOptimization;
@@ -320,7 +323,11 @@ public class PairwiseStitching
 				}
 				if ( resT != null )
 				{
-					Pair< C, C > key = new ValuePair< C, C >( indexes.get( i ), indexes.get( j ) );
+					Set<C> setA = new HashSet<>();
+					setA.add( indexes.get( i ) );
+					Set<C> setB = new HashSet<>();
+					setA.add( indexes.get( j ) );
+					Pair< Set<C>, Set<C> > key = new ValuePair<>(setA,setB);
 					result.add( new PairwiseStitchingResult< C >( key, new Translation( resT.getA() ), resT.getB() ) );
 				}
 			}
@@ -382,8 +389,15 @@ public class PairwiseStitching
 				new PairwiseStitchingParameters(),
 				Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() ) );
 
-		Map< Integer, AffineGet > globalOptimization = GlobalTileOptimization.twoRoundGlobalOptimization( 3,
-				new ArrayList< >( rais.keySet() ), null, tr, pairwiseShifts, new GlobalOptimizationParameters() );
+		
+		Map< Integer, AffineGet > collect = tr.entrySet().stream().collect( Collectors.toMap( e -> 
+			e.getKey(), e -> {AffineTransform3D res = new AffineTransform3D(); res.set( e.getValue().getRowPackedCopy() ); return res; } ));
+		
+		Map< Set<Integer>, AffineGet > globalOptimization = GlobalTileOptimization.twoRoundGlobalOptimization( new TranslationModel3D(),
+				rais.keySet().stream().map( ( c ) -> {Set<Integer> s = new HashSet<>(); s.add( c ); return s;}).collect( Collectors.toList() ), 
+				null, 
+				collect,
+				pairwiseShifts, new GlobalOptimizationParameters() );
 
 		System.out.println( globalOptimization );
 	}

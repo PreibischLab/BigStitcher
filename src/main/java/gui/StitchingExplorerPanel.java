@@ -72,6 +72,7 @@ import gui.popup.BDVPopupStitching;
 import gui.popup.CalculatePCPopup;
 import gui.popup.CalculatePCPopupExpertBatch;
 import gui.popup.OptimizeGloballyPopup;
+import gui.popup.OptimizeGloballyPopupExpertBatch;
 import gui.popup.ResavePopup;
 import gui.popup.SimpleRemoveLinkPopup;
 import gui.popup.TestPopup;
@@ -517,6 +518,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		OptimizeGloballyPopup optimizePopup = new OptimizeGloballyPopup();
 		optimizePopup.setStitchingResults( stitchingResults );
 		popups.add( optimizePopup );
+		
+		OptimizeGloballyPopupExpertBatch optimizePopupExpert = new OptimizeGloballyPopupExpertBatch();
+		optimizePopupExpert.setStitchingResults( stitchingResults );
+		popups.add( optimizePopupExpert );
 
 		SimpleRemoveLinkPopup removeLinkPopup = new SimpleRemoveLinkPopup();
 		removeLinkPopup.setStitchingResults( stitchingResults );
@@ -744,15 +749,15 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					{
 						final InterestPointList ipl = vipl.getInterestPointList( label );
 
-						if ( ipl.getInterestPoints() == null )
+						if ( ipl.getInterestPointsCopy() == null )
 							ipl.loadInterestPoints();
 
-						ipl.saveInterestPoints();
+						ipl.saveInterestPoints(false);
 
-						if ( ipl.getCorrespondingInterestPoints() == null )
+						if ( ipl.getCorrespondingInterestPointsCopy() == null )
 							ipl.loadCorrespondingInterestPoints();
 
-						ipl.saveCorrespondingInterestPoints();
+						ipl.saveCorrespondingInterestPoints(false);
 					}
 				}
 			}
