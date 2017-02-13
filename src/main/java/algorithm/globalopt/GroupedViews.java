@@ -14,14 +14,14 @@ import mpicbg.spim.data.sequence.ViewId;
 
 public class GroupedViews extends ViewId
 {
-	final List< ViewId > group;
+	final List<? extends ViewId > group;
 
 	/**
 	 * A group of ViewIds that represents itself as the first ViewId
 	 * 
 	 * @param group
 	 */
-	public GroupedViews( final List< ViewId > group )
+	public GroupedViews( final List<? extends ViewId > group )
 	{
 		super( group.get( 0 ).getTimePointId(), group.get( 0 ).getViewSetupId() );
 
@@ -29,7 +29,7 @@ public class GroupedViews extends ViewId
 	}
 
 
-	public List< ViewId > getViewIds() { return group; }
+	public List<? extends ViewId > getViewIds() { return group; }
 
 	public static ArrayList< GroupedViews > groupByChannel( final List< ViewId > viewIds, final SequenceDescription sd )
 	{

@@ -79,7 +79,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 		return this;
 	}
 
-	protected long[] askForDownsampling(boolean is2d)
+	static long[] askForDownsampling(boolean is2d)
 	{
 		GenericDialogPlus gdp = new GenericDialogPlus( "Manual downsampling" );
 		gdp.addChoice( "downsample x", ds, ds[0] );

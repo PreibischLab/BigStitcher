@@ -129,7 +129,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	}
 	
 	
-	protected List<Pair<List< BasicViewDescription< ? extends BasicViewSetup > >, List< BasicViewDescription< ? extends BasicViewSetup >>>> getComparisons()
+	public List<Pair<List< BasicViewDescription< ? extends BasicViewSetup > >, List< BasicViewDescription< ? extends BasicViewSetup >>>> getComparisons()
 	{
 		final List<Pair<List< BasicViewDescription< ? extends BasicViewSetup > >, List< BasicViewDescription< ? extends BasicViewSetup >>>> res = new ArrayList<>();
 		
@@ -350,7 +350,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		System.out.println( res.getComparisons() );
 		System.out.println( res.getGroupedViewAggregator() );
 		
-		return null;
+		return res;
 	}
 	
 	
