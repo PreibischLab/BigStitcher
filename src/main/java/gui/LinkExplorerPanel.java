@@ -2,7 +2,11 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -16,11 +20,16 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 import gui.popup.LinkExplorerRemoveLinkPopup;
 import gui.popup.SimpleRemoveLinkPopup;
+import mpicbg.spim.data.generic.AbstractSpimData;
+import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
+import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
+import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
 
-public class LinkExplorerPanel extends JPanel
+public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData<?> >
 {
 	
 
@@ -41,8 +50,10 @@ public class LinkExplorerPanel extends JPanel
 	LinkExplorerTableModel model;
 	protected JTable table;
 	
-	public void setActiveLinks(List<Pair<ViewId, ViewId>> links)
+	public void setActiveLinks(List<Pair<Set<ViewId>, Set<ViewId>>> links)
 	{
+		System.out.println( "selected links:" );
+		links.forEach( ( l ) -> System.out.println( l ) );
 		model.setActiveLinks( links );
 		model.fireTableDataChanged();
 	}
@@ -83,6 +94,8 @@ public class LinkExplorerPanel extends JPanel
 		
 		table.setComponentPopupMenu( popupMenu );
 		
+		parent.addListener( this );
+		
 	}
 
 	private ListSelectionListener getSelectionListener()
@@ -101,7 +114,7 @@ public class LinkExplorerPanel extends JPanel
 					parent.linkOverlay.setSelectedLink( null );
 					return;
 				}
-				Pair< ViewId, ViewId > p = model.getActiveLinks().get( rowIdx );
+				Pair< Set<ViewId>, Set<ViewId> > p = model.getActiveLinks().get( rowIdx );
 				parent.linkOverlay.setSelectedLink( p );
 				
 				// repaint BDV if it is open
@@ -113,5 +126,35 @@ public class LinkExplorerPanel extends JPanel
 			}
 		};
 	}
+
+
+
+	@Override
+	public void selectedViewDescriptions(
+			List< List< BasicViewDescription< ? extends BasicViewSetup > > > viewDescriptions)
+	{
+		if (viewDescriptions.size() < 1) // nothing selected
+		{
+			setActiveLinks( new ArrayList<>() );
+			return;
+		}
+		// get pairwise results for first (and only) selected view group
+		ArrayList< PairwiseStitchingResult< ViewId > > pairwiseResults = results.getAllPairwiseResultsForViewId( new HashSet<>( viewDescriptions.iterator().next()));
+		setActiveLinks( pairwiseResults.stream().map( (p) -> p.pair() ).collect( Collectors.toList() ) );
+	}
+
+
+
+	@Override
+	public void updateContent(AbstractSpimData< ? > data) {} // not implemented yet
+
+
+	@Override
+	public void save()	{} // not implemented yet
+
+
+
+	@Override
+	public void quit() {} // not implemented yet
 
 }

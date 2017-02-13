@@ -26,9 +26,9 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 	private AbstractSpimData< ? > spimData;	
 	private final AffineTransform3D viewerTransform;	
 	public boolean isActive;
-	private ArrayList<Pair<ViewId, ViewId>> activeLinks;
-	private ValuePair<ViewId, ViewId> selectedLink;
-	private ViewId reference;
+	private ArrayList<Pair<Set<ViewId>, Set<ViewId>>> activeLinks;
+	private ValuePair<Set<ViewId>, Set<ViewId>> selectedLink;
+	private Set<ViewId> reference;
 	
 	public void clearActiveLinks()
 	{
@@ -36,19 +36,19 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		this.reference = null;
 	}
 	
-	public void setActiveLinks(List<Pair<ViewId, ViewId>> vids, ViewId reference)
+	public void setActiveLinks(List<Pair<Set<ViewId>, Set<ViewId>>> vids, Set<ViewId> reference)
 	{
 		activeLinks.clear();
 		activeLinks.addAll( vids );
 		this.reference = reference;
 	}
 	
-	public void setSelectedLink(Pair<ViewId, ViewId> link)
+	public void setSelectedLink(Pair<Set<ViewId>, Set<ViewId>> link)
 	{
 		if (link == null)
 			selectedLink = null;
 		else
-			selectedLink = new ValuePair< ViewId, ViewId >( link.getA(), link.getB() );
+			selectedLink = new ValuePair< Set<ViewId>, Set<ViewId> >( link.getA(), link.getB() );
 	}
 	
 
@@ -87,10 +87,7 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 			return;
 		
 		final Graphics2D graphics = ( Graphics2D ) g;
-		final double[] lPos1 = new double[ 3 ];
-		final double[] lPos2 = new double[ 3 ];
-		final double[] gPos1 = new double[ 3 ];
-		final double[] gPos2 = new double[ 3 ];
+		
 		
 		double maxr = 0.0;
 		double minr = Double.MAX_VALUE;
@@ -106,49 +103,37 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		{
 			if (activeLinks.size() > 0 && !(activeLinks.contains( p )))
 				continue;
-				
-			long[] sizeA = new long[spimData.getSequenceDescription().getViewDescriptions().get( p.getA() ).getViewSetup().getSize().numDimensions()];
-			long[] sizeB = new long[spimData.getSequenceDescription().getViewDescriptions().get( p.getB() ).getViewSetup().getSize().numDimensions()];
-			spimData.getSequenceDescription().getViewDescriptions().get( p.getA() ).getViewSetup().getSize().dimensions( sizeA );
-			spimData.getSequenceDescription().getViewDescriptions().get( p.getB() ).getViewSetup().getSize().dimensions( sizeB );
 			
-			//ViewTransform vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA() ).getTransformList().get( 1 );
+			// local coordinates of views, without BDV transform 
+			final double[] lPos1 = new double[ 3 ];
+			final double[] lPos2 = new double[ 3 ];
+			// global coordianates, after BDV transform
+			final double[] gPos1 = new double[ 3 ];
+			final double[] gPos2 = new double[ 3 ];
+			
+			long[] sizeA = new long[spimData.getSequenceDescription().getViewDescriptions().get( p.getA().iterator().next() ).getViewSetup().getSize().numDimensions()];
+			long[] sizeB = new long[spimData.getSequenceDescription().getViewDescriptions().get( p.getB().iterator().next() ).getViewSetup().getSize().numDimensions()];
+			spimData.getSequenceDescription().getViewDescriptions().get( p.getA().iterator().next() ).getViewSetup().getSize().dimensions( sizeA );
+			spimData.getSequenceDescription().getViewDescriptions().get( p.getB().iterator().next() ).getViewSetup().getSize().dimensions( sizeB );
+			
+			// TODO: this uses the transform of the first view in the set, maybe do something better?
 			AffineTransform3D vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA().iterator().next() ).getModel();
-			//ViewTransform vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB() ).getTransformList().get( 1 );
 			AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB().iterator().next() ).getModel();
 			
 			final AffineTransform3D transform = new AffineTransform3D();
 			transform.preConcatenate( viewerTransform );
-			
+
 			for(int i = 0; i < 3; i++)
 			{
-				lPos1[i] = vt1.get( i, 3 );
-				lPos2[i] = vt2.get( i, 3 );
-				
-				sizeA[i] *= vt1.get( i, i );
-				sizeB[i] *= vt2.get( i, i );
-				
-				// we are in preview mode and there is a reference Tile set
-				// FIXME: commented this out to resolve compile issues
-//				if (activeLinks.size() > 0 && reference != null)
-//				{
-//					if (reference.equals( p.getA() ))
-//					{
-//						lPos2[i] = lPos1[i] + stitchingResults.getPairwiseResults().get( p ).relativeVector()[i];
-//					}
-//					if (reference.equals( p.getB() ))
-//					{
-//						lPos1[i] = lPos2[i] - stitchingResults.getPairwiseResults().get( p ).relativeVector()[i];
-//					}
-//				}
-				
 				// start from middle of view
 				lPos1[i] += sizeA[i] / 2;
 				lPos2[i] += sizeB[i] / 2;
-				
-				
 			}
-			
+
+			vt1.apply( lPos1, lPos1 );
+			vt1.apply( lPos2, lPos2 );
+			stitchingResults.getPairwiseResults().get( p ).getTransform().apply( lPos2, lPos2 );
+
 			transform.apply( lPos1, gPos1 );
 			transform.apply( lPos2, gPos2 );
 			

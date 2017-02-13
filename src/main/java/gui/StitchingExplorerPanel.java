@@ -92,59 +92,61 @@ import bdv.viewer.DisplayMode;
 import bdv.viewer.VisibilityAndGrouping;
 import bdv.viewer.state.SourceState;
 
-public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > > extends FilteredAndGroupedExplorerPanel< AS, X > implements ExplorerWindow< AS, X >
+public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS >>
+		extends FilteredAndGroupedExplorerPanel< AS, X > implements ExplorerWindow< AS, X >
 {
 	// indicates whether we are in link preview mode or not
 	boolean previewMode = false;
-	
+
 	LinkOverlay linkOverlay;
-	
+
 	StitchingResults stitchingResults;
-	
+
 	LinkExplorerPanel linkExplorer;
 	JFrame linkFrame;
-	
-	public StitchingExplorerPanel( final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml, final X io )
+
+	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
+			final X io)
 	{
 		super( explorer, data, xml, io );
-		
-		if (data instanceof SpimData2)
+
+		if ( data instanceof SpimData2 )
 			this.stitchingResults = ( (SpimData2) data ).getStitchingResults();
 		else
 			this.stitchingResults = new StitchingResults();
-		
+
 		linkOverlay = new LinkOverlay( stitchingResults, data );
-		
-		popups = initPopups();		
+
+		popups = initPopups();
 		initComponent();
-				
-		if ( Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) ||
-				FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) )
-			{
-				bdvPopup().bdv = BDVPopupStitching.createBDV( this, linkOverlay );
-			}
-				
-		
+
+		if ( Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
+				|| FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) )
+		{
+			bdvPopup().bdv = BDVPopupStitching.createBDV( this, linkOverlay );
+		}
+
 	}
-	
+
 	void quitLinkExplorer()
 	{
 		linkOverlay.setSelectedLink( null );
-		if (linkFrame != null)
+		if ( linkFrame != null )
 		{
 			linkFrame.setVisible( false );
 			linkFrame.dispose();
 			linkFrame = null;
+			this.getListeners().remove( linkExplorer );
 			linkExplorer = null;
 		}
 	}
-	
+
 	public void togglePreviewMode()
 	{
 		previewMode = !previewMode;
 		linkOverlay.isActive = previewMode;
-		
-		if(previewMode)
+
+		if ( previewMode )
 		{
 			initLinkExplorer();
 			table.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
@@ -155,18 +157,18 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 			quitLinkExplorer();
 			linkOverlay.clearActiveLinks();
 			table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
-			updateBDV( bdvPopup().bdv, colorMode, data, firstSelectedVD, selectedRows);
+			updateBDV( bdvPopup().bdv, colorMode, data, firstSelectedVD, selectedRows );
 		}
 	}
 
 	public void initComponent()
 	{
 		// only do that if needed
-		//initLinkExplorer();
-		
+		// initLinkExplorer();
+
 		tableModel = new FilteredAndGroupedTableModel< AS >( this );
 		tableModel = new StitchingTableModelDecorator< >( tableModel );
-		((StitchingTableModelDecorator< AS >)tableModel).setStitchingResults( stitchingResults );
+		( (StitchingTableModelDecorator< AS >) tableModel ).setStitchingResults( stitchingResults );
 
 		tableModel.addGroupingFactor( Channel.class );
 		tableModel.addGroupingFactor( Illumination.class );
@@ -175,12 +177,13 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		table.setModel( tableModel );
 		table.setSurrendersFocusOnKeystroke( true );
 		table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
-		
+
 		final DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
 
 		// center all columns
-		for ( int column = 0; column < tableModel.getColumnCount(); ++column ){
+		for ( int column = 0; column < tableModel.getColumnCount(); ++column )
+		{
 			table.getColumnModel().getColumn( column ).setCellRenderer( centerRenderer );
 		}
 
@@ -254,9 +257,9 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 
 		// All instances of Entities in SpimData with "own local coordinate
 		// system"
-		Vector< ? > vAngle = new Vector< >(getEntityNamesOrIds( 
+		Vector< ? > vAngle = new Vector< >( getEntityNamesOrIds(
 				SpimDataTools.getInstancesOfAttribute( getSpimData().getSequenceDescription(), Angle.class ) ) );
-		Vector< ? > vTimepoint = new Vector< >( getEntityNamesOrIds( 
+		Vector< ? > vTimepoint = new Vector< >( getEntityNamesOrIds(
 				SpimDataTools.getInstancesOfAttribute( getSpimData().getSequenceDescription(), TimePoint.class ) ) );
 
 		// TimePoint ComboBox
@@ -266,14 +269,16 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				updateFilter( TimePoint.class, (TimePoint) getInstanceFromNameOrId( getSpimData().getSequenceDescription(), TimePoint.class, (String) timePointCB.getSelectedItem() ));
+				updateFilter( TimePoint.class,
+						(TimePoint) getInstanceFromNameOrId( getSpimData().getSequenceDescription(), TimePoint.class,
+								(String) timePointCB.getSelectedItem() ) );
 			}
 		} );
-		if (vTimepoint.size() == 1)
+		if ( vTimepoint.size() == 1 )
 			timePointCB.setEnabled( false );
 		else
-			updateFilter( TimePoint.class, (TimePoint) getInstanceFromNameOrId( getSpimData().getSequenceDescription(), TimePoint.class, (String) timePointCB.getSelectedItem() ));
-		
+			updateFilter( TimePoint.class, (TimePoint) getInstanceFromNameOrId( getSpimData().getSequenceDescription(),
+					TimePoint.class, (String) timePointCB.getSelectedItem() ) );
 
 		// Angle ComboBox
 		final JComboBox< ? > angleCB = new JComboBox< >( vAngle );
@@ -282,25 +287,26 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				updateFilter( Angle.class, (Angle) getInstanceFromNameOrId( getSpimData().getSequenceDescription(), Angle.class, (String) angleCB.getSelectedItem() ));
+				updateFilter( Angle.class, (Angle) getInstanceFromNameOrId( getSpimData().getSequenceDescription(),
+						Angle.class, (String) angleCB.getSelectedItem() ) );
 			}
 		} );
-		if (vAngle.size() == 1)
+		if ( vAngle.size() == 1 )
 			angleCB.setEnabled( false );
 		else
-			updateFilter( Angle.class, (Angle) getInstanceFromNameOrId( getSpimData().getSequenceDescription(), Angle.class, (String) angleCB.getSelectedItem() ));
+			updateFilter( Angle.class, (Angle) getInstanceFromNameOrId( getSpimData().getSequenceDescription(),
+					Angle.class, (String) angleCB.getSelectedItem() ) );
 
 		final JPanel footer_tp = new JPanel();
 		footer_tp.setLayout( new BoxLayout( footer_tp, BoxLayout.LINE_AXIS ) );
 		footer_tp.add( new JLabel( "Timepoint:" ) );
-		footer_tp.add( timePointCB);
-		
-		final JPanel footer_angle = new JPanel( );
+		footer_tp.add( timePointCB );
+
+		final JPanel footer_angle = new JPanel();
 		footer_angle.setLayout( new BoxLayout( footer_angle, BoxLayout.LINE_AXIS ) );
-		footer_angle.add( new JLabel( "Angle:" ));
+		footer_angle.add( new JLabel( "Angle:" ) );
 		footer_angle.add( angleCB );
-		
-		
+
 		// checkbox to toggle channel grouping
 		final JPanel footerGroupChannels = new JPanel();
 		footerGroupChannels.setLayout( new BoxLayout( footerGroupChannels, BoxLayout.LINE_AXIS ) );
@@ -308,25 +314,24 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		final JCheckBox checkboxGroupChannels = new JCheckBox( "Group Channels", true );
 		checkboxGroupChannels.addActionListener( new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				HashSet< Class< ? extends Entity > > groupingOld = new HashSet<>(tableModel.getGroupingFactors());
-				if (checkboxGroupChannels.isSelected())
+				HashSet< Class< ? extends Entity > > groupingOld = new HashSet< >( tableModel.getGroupingFactors() );
+				if ( checkboxGroupChannels.isSelected() )
 					groupingOld.add( Channel.class );
 				else
 					groupingOld.remove( Channel.class );
 				tableModel.clearGroupingFactors();
-				
-				for (Class<? extends Entity> c : groupingOld)
+
+				for ( Class< ? extends Entity > c : groupingOld )
 					tableModel.addGroupingFactor( c );
-				
-				
+
 			}
-		} );		
+		} );
 		footerGroupChannels.add( checkboxGroupChannels );
-		
+
 		// checkbox to toggle illumination grouping
 		final JPanel footerGroupIllums = new JPanel();
 		footerGroupIllums.setLayout( new BoxLayout( footerGroupIllums, BoxLayout.LINE_AXIS ) );
@@ -334,45 +339,43 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		final JCheckBox checkboxGroupIllums = new JCheckBox( "Group Illuminations", true );
 		checkboxGroupIllums.addActionListener( new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				HashSet< Class< ? extends Entity > > groupingOld = new HashSet<>(tableModel.getGroupingFactors());
-				if (checkboxGroupIllums.isSelected())
+				HashSet< Class< ? extends Entity > > groupingOld = new HashSet< >( tableModel.getGroupingFactors() );
+				if ( checkboxGroupIllums.isSelected() )
 					groupingOld.add( Illumination.class );
 				else
 					groupingOld.remove( Illumination.class );
 				tableModel.clearGroupingFactors();
-				
-				for (Class<? extends Entity> c : groupingOld)
+
+				for ( Class< ? extends Entity > c : groupingOld )
 					tableModel.addGroupingFactor( c );
-				
-				
+
 			}
-		} );		
+		} );
 		footerGroupIllums.add( checkboxGroupIllums );
 
-		
 		final JPanel footerComboboxes = new JPanel();
 		footerComboboxes.setLayout( new BoxLayout( footerComboboxes, BoxLayout.PAGE_AXIS ) );
-		
+
 		final JPanel footerCheckboxes = new JPanel();
 		footerCheckboxes.setLayout( new BoxLayout( footerCheckboxes, BoxLayout.PAGE_AXIS ) );
-		
+
 		footerComboboxes.add( footer_tp );
 		footerComboboxes.add( footer_angle );
-		
+
 		footerCheckboxes.add( footerGroupChannels );
 		footerCheckboxes.add( footerGroupIllums );
-		
+
 		footer.add( footerComboboxes );
-		footer.add( footerCheckboxes);
-		footer.setBorder( BorderFactory.createEmptyBorder( 0, 10, 0, 10 )  );
-		
-		//footer.add( footer_tp, BorderLayout.NORTH );
-		//footer.add( footer_angle, BorderLayout.SOUTH );
-		//footer.add( illumCB, BorderLayout.WEST );
+		footer.add( footerCheckboxes );
+		footer.setBorder( BorderFactory.createEmptyBorder( 0, 10, 0, 10 ) );
+
+		// footer.add( footer_tp, BorderLayout.NORTH );
+		// footer.add( footer_angle, BorderLayout.SOUTH );
+		// footer.add( illumCB, BorderLayout.WEST );
 
 		this.add( footer, BorderLayout.SOUTH );
 
@@ -402,335 +405,334 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 
 					selectedRows.add( tableModel.getElements().get( row ) );
 				}
-				
-				List<List<BasicViewDescription< ? extends BasicViewSetup >>> selectedList = new ArrayList<>();
-				for (List<BasicViewDescription< ? extends BasicViewSetup >> selectedI : selectedRows)
+
+				List< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedList = new ArrayList< >();
+				for ( List< BasicViewDescription< ? extends BasicViewSetup > > selectedI : selectedRows )
 					selectedList.add( selectedI );
-								
+
 				for ( int i = 0; i < listeners.size(); ++i )
 					listeners.get( i ).selectedViewDescriptions( selectedList );
-				
+
 				/*
-
-				if ( table.getSelectedRowCount() != 1 )
-				{
-					lastRow = -1;
-
-					for ( int i = 0; i < listeners.size(); ++i )
-						listeners.get( i ).firstSelectedViewDescriptions( null );
-
-					selectedRows.clear();
-
-					firstSelectedVD = null;
-					for ( final int row : table.getSelectedRows() )
-					{
-						if ( firstSelectedVD == null )
-							// TODO: is this okay? only adding first vd of
-							// potentially multiple per row
-							firstSelectedVD = tableModel.getElements().get( row ).get( 0 );
-
-						selectedRows.add( tableModel.getElements().get( row ) );
-					}
-
-				}
-				else
-				{
-					final int row = table.getSelectedRow();
-
-					if ( ( row != lastRow ) && row >= 0 && row < tableModel.getRowCount() )
-					{
-						lastRow = row;
-
-						// not using an iterator allows that listeners can close
-						// the frame and remove all listeners while they are
-						// called
-						final List< BasicViewDescription< ? extends BasicViewSetup > > vds = tableModel.getElements()
-								.get( row );
-
-						for ( int i = 0; i < listeners.size(); ++i )
-							listeners.get( i ).firstSelectedViewDescriptions( null );
-
-						selectedRows.clear();
-						selectedRows.add( vds );
-
-						firstSelectedVD = vds.get( 0 );
-					}
-				}
-				*/
+				 * 
+				 * if ( table.getSelectedRowCount() != 1 ) { lastRow = -1;
+				 * 
+				 * for ( int i = 0; i < listeners.size(); ++i ) listeners.get( i
+				 * ).firstSelectedViewDescriptions( null );
+				 * 
+				 * selectedRows.clear();
+				 * 
+				 * firstSelectedVD = null; for ( final int row :
+				 * table.getSelectedRows() ) { if ( firstSelectedVD == null ) //
+				 * TODO: is this okay? only adding first vd of // potentially
+				 * multiple per row firstSelectedVD =
+				 * tableModel.getElements().get( row ).get( 0 );
+				 * 
+				 * selectedRows.add( tableModel.getElements().get( row ) ); }
+				 * 
+				 * } else { final int row = table.getSelectedRow();
+				 * 
+				 * if ( ( row != lastRow ) && row >= 0 && row <
+				 * tableModel.getRowCount() ) { lastRow = row;
+				 * 
+				 * // not using an iterator allows that listeners can close //
+				 * the frame and remove all listeners while they are // called
+				 * final List< BasicViewDescription< ? extends BasicViewSetup >
+				 * > vds = tableModel.getElements() .get( row );
+				 * 
+				 * for ( int i = 0; i < listeners.size(); ++i ) listeners.get( i
+				 * ).firstSelectedViewDescriptions( null );
+				 * 
+				 * selectedRows.clear(); selectedRows.add( vds );
+				 * 
+				 * firstSelectedVD = vds.get( 0 ); } }
+				 */
 
 				if ( b != null && b.bdv != null )
-				{	
-					if (!previewMode)
-						updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows);
+				{
+					if ( !previewMode )
+						updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows );
 					else
 						updateBDVPreviewMode();
 				}
-					
-				
+
 			}
 
-			
 		};
 	}
-	
+
 	private void initLinkExplorer()
 	{
 		// we already should have an instance
-		if (linkExplorer != null)
+		if ( linkExplorer != null )
 			return;
-			
+
 		linkExplorer = new LinkExplorerPanel( stitchingResults, this );
 		// init the LinkExplorer
 		linkFrame = new JFrame( "Link Explorer" );
 		linkFrame.add( linkExplorer, BorderLayout.CENTER );
 		linkFrame.setSize( linkExplorer.getPreferredSize() );
-		
+
 		linkFrame.addWindowListener( new WindowAdapter()
 		{
 			@Override
-			public void windowClosing( WindowEvent evt )
+			public void windowClosing(WindowEvent evt)
 			{
 				quitLinkExplorer();
 			}
 		} );
-		
+
 		linkFrame.pack();
 		linkFrame.setVisible( true );
 		linkFrame.requestFocus();
 	}
-	
+
 	LinkExplorerPanel getLinkExplorer()
 	{
-		if (linkExplorer == null)
+		if ( linkExplorer == null )
 			initLinkExplorer();
 		return linkExplorer;
 	}
-	
+
 	public ArrayList< ExplorerWindowSetable > initPopups()
 	{
 		final ArrayList< ExplorerWindowSetable > popups = new ArrayList< ExplorerWindowSetable >();
 
 		popups.add( new LabelPopUp( " Displaying" ) );
-		popups.add( new BDVPopupStitching(linkOverlay) );
+		popups.add( new BDVPopupStitching( linkOverlay ) );
 		popups.add( new DisplayViewPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Processing" ) );
-				
+
 		CalculatePCPopup calculatePCPopup = new CalculatePCPopup();
 		calculatePCPopup.setStitchingResults( stitchingResults );
 		popups.add( calculatePCPopup );
-		
+
 		CalculatePCPopupExpertBatch calculatePCPopupExpert = new CalculatePCPopupExpertBatch();
 		calculatePCPopupExpert.setStitchingResults( stitchingResults );
 		popups.add( calculatePCPopupExpert );
-		
+
 		OptimizeGloballyPopup optimizePopup = new OptimizeGloballyPopup();
 		optimizePopup.setStitchingResults( stitchingResults );
 		popups.add( optimizePopup );
-		
+
 		SimpleRemoveLinkPopup removeLinkPopup = new SimpleRemoveLinkPopup();
 		removeLinkPopup.setStitchingResults( stitchingResults );
 		popups.add( removeLinkPopup );
-		
+
 		popups.add( new ApplyBDVTransformationPopup() );
 		popups.add( new TogglePreviewPopup() );
 		popups.add( new BoundingBoxPopup() );
-		
-		
+
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
 		popups.add( new TestPopup() );
 		popups.add( new BoundingBoxPopup() );
 		popups.add( new Separator() );
-		
+
 		popups.add( new LabelPopUp( " Modifications" ) );
 		popups.add( new ResavePopup() );
 
 		return popups;
 	}
-	
+
 	public void updateBDVPreviewMode()
 	{
-		
+
 		// we always set the fused mode
 		setFusedModeSimple( bdvPopup().bdv, data );
-		
-		if (selectedRowsGroups().size() < 1)
+
+		if ( selectedRowsGroups().size() < 1 )
 			return;
-		
+
 		// in Preview Mode, only one row should be selected
-		List<BasicViewDescription< ? extends BasicViewSetup >> selectedRow = selectedRowsGroups().iterator().next();
+		List< BasicViewDescription< ? extends BasicViewSetup > > selectedRow = selectedRowsGroups().iterator().next();
 		BasicViewDescription< ? extends BasicViewSetup > firstVD = firstSelectedVD;
-		
-		//System.out.println( selectedRow );
-		
+
+		// System.out.println( selectedRow );
+
 		if ( selectedRow == null || selectedRow.size() == 0 )
 			return;
 
 		if ( firstVD == null )
 			firstVD = selectedRow.get( 0 );
-		
+
 		// always use the first timepoint
 		final TimePoint firstTP = firstVD.getTimePoint();
 		bdvPopup().bdv.getViewer().setTimepoint( getBDVTimePointIndex( firstTP, data ) );
 
 		// get all of the rows
 		List< List< BasicViewDescription< ? > > > elements = tableModel.getElements();
-		
+
 		// get all pairwise results which involve the views of the selected row
-		Set<ViewId> selectedVids = new HashSet<>(selectedRow );
-		ArrayList< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults.getAllPairwiseResultsForViewId( selectedVids );
-		
+		Set< ViewId > selectedVids = new HashSet< >( selectedRow );
+		ArrayList< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults
+				.getAllPairwiseResultsForViewId( selectedVids );
+
 		// get the Translations of first View
-		ViewRegistration selectedVr = data.getViewRegistrations().getViewRegistration(selectedVids.iterator().next());
+		ViewRegistration selectedVr = data.getViewRegistrations().getViewRegistration( selectedVids.iterator().next() );
 		AffineGet selectedModel = selectedVr.getModel();
-		
-		
+
 		final boolean[] active = new boolean[data.getSequenceDescription().getViewSetupsOrdered().size()];
 
 		// set all views of the selected row visible
-		for ( final BasicViewDescription< ? extends BasicViewSetup >  vd : selectedRow )
-				if ( vd.getTimePointId() == firstTP.getId() )
-					active[getBDVSourceIndex( vd.getViewSetup(), data )] = true;
-	
-		
-		resetBDVManualTransformations(bdvPopup().bdv);
-		
-		ArrayList< Pair<Set<ViewId>, Set<ViewId>> > activeLinks = new ArrayList<>();
-		
-		for (PairwiseStitchingResult< ViewId > psr: resultsForId)
+		for ( final BasicViewDescription< ? extends BasicViewSetup > vd : selectedRow )
+			if ( vd.getTimePointId() == firstTP.getId() )
+				active[getBDVSourceIndex( vd.getViewSetup(), data )] = true;
+
+		resetBDVManualTransformations( bdvPopup().bdv );
+
+		ArrayList< Pair< Set< ViewId >, Set< ViewId > > > activeLinks = new ArrayList< >();
+
+		for ( PairwiseStitchingResult< ViewId > psr : resultsForId )
 		{
 			activeLinks.add( psr.pair() );
-			
-			// if we have no BDV open, continue adding active Links, but do not update BDV obviously
-			// TODO: un-tangle this method, BDV update and active link determination should be separate
+
+			// if we have no BDV open, continue adding active Links, but do not
+			// update BDV obviously
+			// TODO: un-tangle this method, BDV update and active link
+			// determination should be separate
 			if ( bdvPopup().bdv == null )
 				continue;
-			
-			for (List<BasicViewDescription< ? >> group : elements)
+
+			for ( List< BasicViewDescription< ? > > group : elements )
 			{
 				// there is a link selected -> other
-				if (psr.pair().getA().equals( selectedVids ) &&  group.contains( psr.pair().getB()))
+				if ( psr.pair().getA().equals( selectedVids ) && group.contains( psr.pair().getB() ) )
 				{
 					// set all views of the other group visible
-					for ( final BasicViewDescription< ? >  vd : group )
-							if ( vd.getTimePointId() == firstTP.getId() )
-							{
-								
-								int sourceIdx = getBDVSourceIndex( vd.getViewSetup(), data );
-								SourceState<?> s = bdvPopup().bdv.getViewer().getVisibilityAndGrouping().getSources().get( sourceIdx );
-								active[sourceIdx] = true;
-								
-								/*
-								// get the Translations of second View
-								ViewRegistration vr = data.getViewRegistrations().getViewRegistration( new ViewId(firstTP.getId(), sourceIdx ));
-								AffineGet otherTranslation = vr.getTransformList().get( 1 ).asAffine3D();
-																
-								// use BDV manual transform to preview 								
-								double viewShiftX = selectedTranslation.get( 0, 3 ) - otherTranslation.get( 0, 3 );
-								double viewShiftY = selectedTranslation.get( 1, 3 ) - otherTranslation.get( 1, 3 );
-								double viewShiftZ = selectedTranslation.get( 2, 3 ) - otherTranslation.get( 2, 3 );
-								
-								AffineTransform3D shift = new AffineTransform3D();
-								shift.set( viewShiftX + psr.relativeVector()[0], 0, 3 );
-								shift.set( viewShiftY + psr.relativeVector()[1], 1, 3 );
-								shift.set( viewShiftZ + psr.relativeVector()[2], 2, 3 );	
-								*/						
-								AffineTransform3D trans = new AffineTransform3D();
-								trans.set( psr.getTransform().getRowPackedCopy() );
-								
-								((TransformedSource< ? >)s.getSpimSource()).setFixedTransform( trans );
-							}
-					
+					for ( final BasicViewDescription< ? > vd : group )
+						if ( vd.getTimePointId() == firstTP.getId() )
+						{
+
+							int sourceIdx = getBDVSourceIndex( vd.getViewSetup(), data );
+							SourceState< ? > s = bdvPopup().bdv.getViewer().getVisibilityAndGrouping().getSources()
+									.get( sourceIdx );
+							active[sourceIdx] = true;
+
+							/*
+							 * // get the Translations of second View
+							 * ViewRegistration vr =
+							 * data.getViewRegistrations().getViewRegistration(
+							 * new ViewId(firstTP.getId(), sourceIdx ));
+							 * AffineGet otherTranslation =
+							 * vr.getTransformList().get( 1 ).asAffine3D();
+							 * 
+							 * // use BDV manual transform to preview double
+							 * viewShiftX = selectedTranslation.get( 0, 3 ) -
+							 * otherTranslation.get( 0, 3 ); double viewShiftY =
+							 * selectedTranslation.get( 1, 3 ) -
+							 * otherTranslation.get( 1, 3 ); double viewShiftZ =
+							 * selectedTranslation.get( 2, 3 ) -
+							 * otherTranslation.get( 2, 3 );
+							 * 
+							 * AffineTransform3D shift = new
+							 * AffineTransform3D(); shift.set( viewShiftX +
+							 * psr.relativeVector()[0], 0, 3 ); shift.set(
+							 * viewShiftY + psr.relativeVector()[1], 1, 3 );
+							 * shift.set( viewShiftZ + psr.relativeVector()[2],
+							 * 2, 3 );
+							 */
+							AffineTransform3D trans = new AffineTransform3D();
+							trans.set( psr.getTransform().getRowPackedCopy() );
+
+							( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( trans );
+						}
+
 				}
-				
+
 				// there is a link other -> selected
-				if (psr.pair().getB().equals( selectedVids ) && group.contains( psr.pair().getA()))
+				if ( psr.pair().getB().equals( selectedVids ) && group.contains( psr.pair().getA() ) )
 				{
 					// set all views of the other group visible
-					for ( final BasicViewDescription< ? >  vd : group )
-							if ( vd.getTimePointId() == firstTP.getId() )
-							{
-								int sourceIdx = getBDVSourceIndex( vd.getViewSetup(), data );
-								SourceState<?> s = bdvPopup().bdv.getViewer().getVisibilityAndGrouping().getSources().get( sourceIdx );
-								active[sourceIdx] = true;
-								
-								/*
-								// get the Translations of second View
-								ViewRegistration vr = data.getViewRegistrations().getViewRegistration( new ViewId(firstTP.getId(), sourceIdx ));
-								AffineGet otherTranslation = vr.getTransformList().get( 1 ).asAffine3D();
-																
-								// use BDV manual transform to preview 								
-								double viewShiftX = selectedTranslation.get( 0, 3 ) - otherTranslation.get( 0, 3 );
-								double viewShiftY = selectedTranslation.get( 1, 3 ) - otherTranslation.get( 1, 3 );
-								double viewShiftZ = selectedTranslation.get( 2, 3 ) - otherTranslation.get( 2, 3 );
-								
-								AffineTransform3D shift = new AffineTransform3D();
-								shift.set( viewShiftX - psr.relativeVector()[0], 0, 3 );
-								shift.set( viewShiftY - psr.relativeVector()[1], 1, 3 );
-								shift.set( viewShiftZ - psr.relativeVector()[2], 2, 3 );							
-								*/
-								
-								AffineTransform3D trans = new AffineTransform3D();
-								trans.set( psr.getTransform().inverse().getRowPackedCopy() );
-								
-								((TransformedSource< ? >)s.getSpimSource()).setFixedTransform( trans );
-								
-							}
-								
+					for ( final BasicViewDescription< ? > vd : group )
+						if ( vd.getTimePointId() == firstTP.getId() )
+						{
+							int sourceIdx = getBDVSourceIndex( vd.getViewSetup(), data );
+							SourceState< ? > s = bdvPopup().bdv.getViewer().getVisibilityAndGrouping().getSources()
+									.get( sourceIdx );
+							active[sourceIdx] = true;
+
+							/*
+							 * // get the Translations of second View
+							 * ViewRegistration vr =
+							 * data.getViewRegistrations().getViewRegistration(
+							 * new ViewId(firstTP.getId(), sourceIdx ));
+							 * AffineGet otherTranslation =
+							 * vr.getTransformList().get( 1 ).asAffine3D();
+							 * 
+							 * // use BDV manual transform to preview double
+							 * viewShiftX = selectedTranslation.get( 0, 3 ) -
+							 * otherTranslation.get( 0, 3 ); double viewShiftY =
+							 * selectedTranslation.get( 1, 3 ) -
+							 * otherTranslation.get( 1, 3 ); double viewShiftZ =
+							 * selectedTranslation.get( 2, 3 ) -
+							 * otherTranslation.get( 2, 3 );
+							 * 
+							 * AffineTransform3D shift = new
+							 * AffineTransform3D(); shift.set( viewShiftX -
+							 * psr.relativeVector()[0], 0, 3 ); shift.set(
+							 * viewShiftY - psr.relativeVector()[1], 1, 3 );
+							 * shift.set( viewShiftZ - psr.relativeVector()[2],
+							 * 2, 3 );
+							 */
+
+							AffineTransform3D trans = new AffineTransform3D();
+							trans.set( psr.getTransform().inverse().getRowPackedCopy() );
+
+							( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( trans );
+
+						}
 
 				}
 			}
 		}
+
+		linkOverlay.setActiveLinks( activeLinks, selectedVids);
 		
-		// FIXME
-		//linkOverlay.setActiveLinks( activeLinks, selectedVid );
-		//getLinkExplorer().setActiveLinks( activeLinks );
-		
+
 		setVisibleSources( bdvPopup().bdv.getViewer().getVisibilityAndGrouping(), active );
 
 		if ( bdvPopup().bdv != null )
 			bdvPopup().bdv.getViewer().requestRepaint();
-		
-	}
-	
-	
 
-	public static void setFusedModeSimple( final BigDataViewer bdv, final AbstractSpimData< ? > data )
+	}
+
+	public static void setFusedModeSimple(final BigDataViewer bdv, final AbstractSpimData< ? > data)
 	{
 		if ( bdv == null )
 			return;
 
 		if ( bdv.getViewer().getVisibilityAndGrouping().getDisplayMode() != DisplayMode.FUSED )
 		{
-			final boolean[] active = new boolean[ data.getSequenceDescription().getViewSetupsOrdered().size() ];
-			active[ 0 ] = true;
+			final boolean[] active = new boolean[data.getSequenceDescription().getViewSetupsOrdered().size()];
+			active[0] = true;
 			setVisibleSources( bdv.getViewer().getVisibilityAndGrouping(), active );
 			bdv.getViewer().getVisibilityAndGrouping().setDisplayMode( DisplayMode.FUSED );
 		}
 	}
 
-	public static void colorSources( final List< ConverterSetup > cs, final long j )
+	public static void colorSources(final List< ConverterSetup > cs, final long j)
 	{
 		for ( int i = 0; i < cs.size(); ++i )
 			cs.get( i ).setColor( new ARGBType( ColorStream.get( i + j ) ) );
 	}
 
-	public static void whiteSources( final List< ConverterSetup > cs )
+	public static void whiteSources(final List< ConverterSetup > cs)
 	{
 		for ( int i = 0; i < cs.size(); ++i )
 			cs.get( i ).setColor( new ARGBType( ARGBType.rgba( 255, 255, 255, 0 ) ) );
 	}
 
-	public static void setVisibleSources( final VisibilityAndGrouping vag, final boolean[] active )
+	public static void setVisibleSources(final VisibilityAndGrouping vag, final boolean[] active)
 	{
 		for ( int i = 0; i < active.length; ++i )
-			vag.setSourceActive( i, active[ i ] );
+			vag.setSourceActive( i, active[i] );
 	}
 
-	public static int getBDVTimePointIndex( final TimePoint t, final AbstractSpimData< ? > data )
+	public static int getBDVTimePointIndex(final TimePoint t, final AbstractSpimData< ? > data)
 	{
 		final List< TimePoint > list = data.getSequenceDescription().getTimePoints().getTimePointsOrdered();
 
@@ -741,17 +743,16 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		return 0;
 	}
 
-	public static int getBDVSourceIndex( final BasicViewSetup vs, final AbstractSpimData< ? > data )
+	public static int getBDVSourceIndex(final BasicViewSetup vs, final AbstractSpimData< ? > data)
 	{
 		final List< ? extends BasicViewSetup > list = data.getSequenceDescription().getViewSetupsOrdered();
-		
+
 		for ( int i = 0; i < list.size(); ++i )
 			if ( list.get( i ).getId() == vs.getId() )
 				return i;
 
 		return 0;
 	}
-
 
 	public void showInfoBox()
 	{
@@ -770,22 +771,22 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 
 			if ( SpimData2.class.isInstance( data ) )
 			{
-				final ViewInterestPoints vip = ( (SpimData2)data ).getViewInterestPoints();
-				
+				final ViewInterestPoints vip = ( (SpimData2) data ).getViewInterestPoints();
+
 				for ( final ViewInterestPointLists vipl : vip.getViewInterestPoints().values() )
 				{
 					for ( final String label : vipl.getHashMap().keySet() )
 					{
 						final InterestPointList ipl = vipl.getInterestPointList( label );
-	
+
 						if ( ipl.getInterestPoints() == null )
 							ipl.loadInterestPoints();
-						
+
 						ipl.saveInterestPoints();
-	
+
 						if ( ipl.getCorrespondingInterestPoints() == null )
 							ipl.loadCorrespondingInterestPoints();
-	
+
 						ipl.saveCorrespondingInterestPoints();
 					}
 				}
@@ -800,19 +801,17 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 		}
 	}
 
-	
-
 	protected void addColorMode()
 	{
 		table.addKeyListener( new KeyListener()
 		{
 			@Override
-			public void keyPressed( final KeyEvent arg0 )
+			public void keyPressed(final KeyEvent arg0)
 			{
 				if ( arg0.getKeyChar() == 'c' || arg0.getKeyChar() == 'C' )
 				{
 					colorMode = !colorMode;
-					
+
 					System.out.println( "colormode" );
 
 					final BDVPopup p = bdvPopup();
@@ -822,10 +821,14 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 			}
 
 			@Override
-			public void keyReleased( final KeyEvent arg0 ) {}
+			public void keyReleased(final KeyEvent arg0)
+			{
+			}
 
 			@Override
-			public void keyTyped( final KeyEvent arg0 ) {}
+			public void keyTyped(final KeyEvent arg0)
+			{
+			}
 		} );
 	}
 
@@ -836,14 +839,14 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 			boolean appleKeyDown = false;
 
 			@Override
-			public void keyTyped( KeyEvent arg0 )
+			public void keyTyped(KeyEvent arg0)
 			{
 				if ( appleKeyDown && arg0.getKeyChar() == 'a' )
 					table.selectAll();
 			}
 
 			@Override
-			public void keyReleased( KeyEvent arg0 )
+			public void keyReleased(KeyEvent arg0)
 			{
 				if ( arg0.getKeyCode() == 157 )
 					appleKeyDown = false;
@@ -855,7 +858,7 @@ public class StitchingExplorerPanel< AS extends AbstractSpimData< ? >, X extends
 				if ( arg0.getKeyCode() == 157 )
 					appleKeyDown = true;
 			}
-		});
+		} );
 	}
 
 }

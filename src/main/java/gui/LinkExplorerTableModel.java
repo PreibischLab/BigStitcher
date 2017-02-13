@@ -4,6 +4,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -22,7 +23,7 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	 */
 	private static final long serialVersionUID = 3972623555571460757L;
 
-	public List< Pair< ViewId, ViewId > > getActiveLinks()
+	public List< Pair< Set<ViewId>, Set<ViewId> > > getActiveLinks()
 	{
 		return activeLinks;
 	}
@@ -34,7 +35,7 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	}
 
 
-	private List<Pair<ViewId, ViewId>> activeLinks;
+	private List<Pair<Set<ViewId>, Set<ViewId>>> activeLinks;
 	private StitchingResults results;
 	
 	public LinkExplorerTableModel()
@@ -42,7 +43,7 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 		activeLinks = new ArrayList<>();
 	}
 	
-	public void setActiveLinks(List<Pair<ViewId, ViewId>> links)
+	public void setActiveLinks(List<Pair<Set<ViewId>, Set<ViewId>>> links)
 	{
 		activeLinks.clear();
 		activeLinks.addAll( links );
@@ -65,9 +66,9 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	{
 		switch ( columnIndex ) {
 		case 0:
-			return results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getA().getViewSetupId();
+			return results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getA();
 		case 1:
-			return results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getB().getViewSetupId();
+			return results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getB();
 		case 2:
 			return results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).r();
 		case 3:
