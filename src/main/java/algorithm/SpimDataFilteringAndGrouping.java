@@ -128,6 +128,17 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		return filters;
 	}
 	
+	public List<BasicViewDescription< ? > > getFilteredViews()
+	{
+		return SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), filters);
+	}
+	
+	public List< List< BasicViewDescription< ?  > >> getGroupedViews(boolean filtered)
+	{
+		final List<BasicViewDescription< ? > > ungroupedElements =
+				SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), filtered? filters : new HashMap<>());
+		return SpimDataTools.groupByAttributes(ungroupedElements, groupingFactors);
+	}
 	
 	public List<Pair<List< BasicViewDescription< ? extends BasicViewSetup > >, List< BasicViewDescription< ? extends BasicViewSetup >>>> getComparisons()
 	{
