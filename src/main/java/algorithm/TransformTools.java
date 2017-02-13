@@ -29,8 +29,30 @@ import net.imglib2.util.ValuePair;
 
 public class TransformTools {
 	
-	public static AffineGet mapBackTransform(AffineGet m1, AffineGet m2)
+	
+	public static Pair<AffineGet, AffineGet> decomposeIntoAffineAndTranslation(AffineGet tr)
 	{
+		AffineTransform3D t = new AffineTransform3D();
+		t.set( tr.getRowPackedCopy() );
+		t.set( 0, 0, 3 );
+		t.set( 0, 1, 3 );
+		t.set( 0, 2, 3 );
+		AffineTransform3D tt = new AffineTransform3D();
+		tt.set( tr.get( 0, 3 ), 0, 3 );
+		tt.set( tr.get( 1, 3 ), 1, 3 );
+		tt.set( tr.get( 2, 3 ), 2, 3 );
+		
+		return new ValuePair< AffineGet, AffineGet >( t, tt );
+	}
+	public static AffineGet mapBackTransform(AffineGet to, AffineGet from)
+	{
+		
+//		AffineTransform3D res = new AffineTransform3D();
+//		res.set( from.getRowPackedCopy() );
+//		res = res.preConcatenate( to.inverse() );
+//		
+//		if (true)
+//			return res.inverse();
 		
 		final double[][] p = new double[][]{
 			{ 0, 0, 0 },
@@ -46,10 +68,10 @@ public class TransformTools {
 		final double[][] pb = new double[8][3];
 		
 		for ( int i = 0; i < p.length; ++i )
-			m1.apply( p[ i ], pa[ i ] );
+			to.apply( p[ i ], pa[ i ] );
 		
 		for ( int i = 0; i < p.length; ++i )
-			m2.apply( p[ i ], pb[ i ] );
+			from.apply( p[ i ], pb[ i ] );
 		
 		// compute the model that maps pb >> pa
 		AffineModel3D mapBackModel = new AffineModel3D();

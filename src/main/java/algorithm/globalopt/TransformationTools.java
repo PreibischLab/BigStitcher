@@ -123,7 +123,7 @@ public class TransformationTools
 		for (int i = 0; i< result.getA().length; ++i)			
 			result.getA()[i] *= downsampleFactors[i];
 		
-		t1.getA().applyInverse( result.getA(), result.getA() );
+		t1.getA().apply( result.getA(), result.getA() );
 		
 		// shift
 		//for (int i = 0; i< result.getA().length; ++i)
@@ -187,17 +187,18 @@ public class TransformationTools
 			{
 				final Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > result = future.get();
 
-				
+				// get non-translation transform between the initial localtions
 				Pair< AffineGet, TranslationGet > initialTransformsA = TransformTools.getInitialTransforms( vrs.getViewRegistration( result.getA().getA() ), false, new AffineTransform3D() );
 				Pair< AffineGet, TranslationGet > initialTransformsB = TransformTools.getInitialTransforms( vrs.getViewRegistration( result.getA().getB() ), false, new AffineTransform3D() );
-				
 				AffineGet mapBack = TransformTools.mapBackTransform( initialTransformsA.getA(), initialTransformsB.getA() );
-				
+	
+				// correct translation determined by phase correlation by that transform
+				// TODO: move this inside the shift determination method -> make this method agnostic of actual intensity-based method used
 				AffineTransform3D resT = new AffineTransform3D();
 				resT.translate( result.getB().getA() );
-				resT.preConcatenate( mapBack );
-				
-				
+				resT = resT.copy().preConcatenate( mapBack );
+
+				// create Set pair identifying the pair
 				Pair<Set<ViewId>, Set<ViewId>> setPair = new ValuePair< Set<ViewId>, Set<ViewId> >( new HashSet<>(), new HashSet<>() );
 				if (result.getA().getA() instanceof GroupedViews)
 				{ 
@@ -209,8 +210,7 @@ public class TransformationTools
 					setPair.getA().add( result.getA().getA() );
 					setPair.getA().add( result.getA().getB() );
 				}
-				
-				
+
 				// TODO: when does that really happen?
 				if ( result.getB() != null)
 					results.add( new PairwiseStitchingResult< ViewId >(setPair, resT, result.getB().getB() ) );
@@ -223,17 +223,6 @@ public class TransformationTools
 			return null;
 		}
 
-		/*
-		for ( final Pair< ViewId, ViewId > p : pairs )
-		{
-			System.out.println( "Compute pairwise: " + p.getA() + " <> " + p.getB() );
-			final Pair< double[], Double > result = computeStitching( p.getA(), p.getB(), vrs.getViewRegistration( p.getA() ), vrs.getViewRegistration( p.getB() ), params, sd , gva, downsamplingFactors, service );
-			
-			if (result != null)
-				results.add( new PairwiseStitchingResult<ViewId>( p, result.getA(), result.getB() ) );
-		}
-		*/
-		
 		return results;
 	}
 

@@ -132,6 +132,9 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 					AffineGet transformOriginal = new AffineTransform3D();
 					( (AffineTransform3D) transformOriginal ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( vidi ).getModel().getRowPackedCopy());
 					
+					
+					
+					
 					// transformation from fixed to original
 					AffineGet mapBackToFixed = TransformTools.mapBackTransform( transformOriginal, vtFixed );
 					// difference to transformation determined by optimization -> result
