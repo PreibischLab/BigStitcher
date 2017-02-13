@@ -2,23 +2,15 @@ package algorithm;
 
 import java.util.ArrayList;
 
-import org.apache.commons.math3.linear.RealMatrix;
-
-import mpicbg.imglib.util.Util;
 import mpicbg.models.Affine3D;
 import mpicbg.models.AffineModel3D;
 import mpicbg.models.PointMatch;
 import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.data.registration.ViewTransform;
-import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
-import net.imglib2.Interval;
-import net.imglib2.Point;
 import net.imglib2.RealInterval;
 import net.imglib2.RealPoint;
-import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Translation2D;
@@ -46,14 +38,6 @@ public class TransformTools {
 	}
 	public static AffineGet mapBackTransform(AffineGet to, AffineGet from)
 	{
-		
-//		AffineTransform3D res = new AffineTransform3D();
-//		res.set( from.getRowPackedCopy() );
-//		res = res.preConcatenate( to.inverse() );
-//		
-//		if (true)
-//			return res.inverse();
-		
 		final double[][] p = new double[][]{
 			{ 0, 0, 0 },
 			{ 1, 0, 0 },
@@ -98,7 +82,6 @@ public class TransformTools {
 
 		mapBack.set( m[0][0], m[0][1], m[0][2], +m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2],
 				m[2][3] );
-
 
 		return mapBack;
 		
