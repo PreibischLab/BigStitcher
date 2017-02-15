@@ -20,6 +20,7 @@ import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.realtransform.AffineGet;
+import net.imglib2.realtransform.AffineTransform3D;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.ISpimDataTableModel;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
@@ -87,17 +88,17 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 			StringBuilder res = new StringBuilder();
 			
 			
-			ViewTransform tr = vr.getTransformList().get(vr.getTransformList().size() - 1);
+			AffineTransform3D tr = vr.getModel(); //getTransformList().get(vr.getTransformList().size() - 1);
 			
 			// round to 3 decimal places
 			DecimalFormat df = new DecimalFormat( "#.###" );
 			df.setRoundingMode( RoundingMode.HALF_UP );
 			
-			res.append(df.format( tr.asAffine3D().get(0, 3)) );
+			res.append(df.format( tr.get(0, 3)) );
 			res.append(", ");
-			res.append(df.format( tr.asAffine3D().get(1, 3)) );
+			res.append(df.format( tr.get(1, 3)) );
 			res.append(", ");
-			res.append(df.format( tr.asAffine3D().get(2, 3)) );
+			res.append(df.format( tr.get(2, 3)) );
 			return res.toString();
 		}
 		

@@ -2,7 +2,7 @@ package algorithm.globalopt;
 
 
 import input.GenerateSpimData;
-
+import spim.fiji.spimdata.SpimDataTools;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,15 +21,20 @@ import algorithm.GroupedViewAggregator;
 import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
 import algorithm.TransformTools;
+import bdv.BigDataViewer;
 import ij.IJ;
 import input.GenerateSpimData;
 import mpicbg.models.Tile;
 import mpicbg.models.TranslationModel3D;
+import mpicbg.pointdescriptor.LocalCoordinateSystemPointDescriptor;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+import mpicbg.spim.data.generic.sequence.ImgLoaders;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
+import mpicbg.spim.data.sequence.ImgLoader;
 import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
@@ -60,27 +65,35 @@ public class TransformationTools
 			final long[] downsampleFactors,
 			final ExecutorService service )
 	{
+		
+		// the transformation that maps the downsampled image coordinates back to the original input(!) image space
+		final AffineTransform3D dsCorrectionT = new AffineTransform3D();
+		
 		// TODO: check if overlapping, else return immediately
-		// TODO: can we ensure we have a ImgLoader here (BDV wraps ImgLoader into a BasicImgLaoder??)
-		/*
+		// TODO: can we ensure we have a ImgLoader here (BDV wraps ImgLoader into a BasicImgLoader??)
 		if (ImgLoader.class.isInstance( sd.getImgLoader() ))
 		{
-			Translation3D trA = new Translation3D( vA.getModel().getTranslation());
-			Translation3D trB = new Translation3D( vB.getModel().getTranslation());
+			
 			Dimensions dimsA = ((ImgLoader)sd.getImgLoader()).getSetupImgLoader( viewIdA.getViewSetupId() ).getImageSize( viewIdA.getTimePointId() );
 			Dimensions dimsB = ((ImgLoader)sd.getImgLoader()).getSetupImgLoader( viewIdB.getViewSetupId() ).getImageSize( viewIdB.getTimePointId() );
 			
-			if (!PairwiseStrategyTools.overlaps( dimsA, dimsB, trA, trB ))
-				return null;
+			if (dimsA != null && dimsB != null)
+			{
+				Pair< AffineGet, TranslationGet > trA = TransformTools.getInitialTransforms( vA, dimsA.numDimensions() == 2, dsCorrectionT );
+				Pair< AffineGet, TranslationGet > trB = TransformTools.getInitialTransforms( vB, dimsB.numDimensions() == 2, dsCorrectionT );
+				
+				if (!PairwiseStrategyTools.overlaps( dimsA, dimsB, trA.getB(), trB.getB() ))
+					return null;
+			}
 		}
-		*/
+
+		
 		
 			
 		final RandomAccessibleInterval<T> img1;
 		final RandomAccessibleInterval<T> img2;
 
-		// the transformation that maps the downsampled image coordinates back to the original input(!) image space
-		final AffineTransform3D dsCorrectionT = new AffineTransform3D();
+		
 		
 		if (gva != null && GroupedViews.class.isInstance( viewIdA ))
 		{
@@ -156,11 +169,13 @@ public class TransformationTools
 				@Override
 				public Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > call() throws Exception
 				{
+					Pair< double[], Double > result = null;
+					
 					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() );
 
 					final ExecutorService serviceLocal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 4 ) );
 
-					final Pair< double[], Double > result = computeStitching(
+					result = computeStitching(
 							p.getA(),
 							p.getB(),
 							vrs.getViewRegistration( p.getA() ),
@@ -171,8 +186,9 @@ public class TransformationTools
 							downsamplingFactors,
 							serviceLocal );
 
-					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": r=" + result.getB() );
-
+					if (result != null)
+						IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": r=" + result.getB() );
+					
 					return new ValuePair<>( p,  result );
 				}
 			});
@@ -187,6 +203,9 @@ public class TransformationTools
 			{
 				final Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > result = future.get();
 
+				if (result.getB() == null)
+					continue;
+				
 				// get non-translation transform between the initial localtions
 				Pair< AffineGet, TranslationGet > initialTransformsA = TransformTools.getInitialTransforms( vrs.getViewRegistration( result.getA().getA() ), false, new AffineTransform3D() );
 				Pair< AffineGet, TranslationGet > initialTransformsB = TransformTools.getInitialTransforms( vrs.getViewRegistration( result.getA().getB() ), false, new AffineTransform3D() );

@@ -3,6 +3,7 @@ package gui.popup;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,12 +14,16 @@ import javax.swing.JMenuItem;
 
 import algorithm.PairwiseStitchingParameters;
 import algorithm.SpimDataFilteringAndGrouping;
+import algorithm.TransformTools;
 import algorithm.globalopt.TransformationTools;
 import algorithm.globalopt.GroupedViews;
 import gui.StitchingResultsSettable;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
+import net.imglib2.Dimensions;
+import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
@@ -77,8 +82,7 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 					
 					List< Pair< ViewId, ViewId > > pairs = filteringAndGrouping.getComparisons().stream().map( 
 							( c ) -> new ValuePair<ViewId, ViewId>(new GroupedViews( c.getA() ), new GroupedViews( c.getB() )) ).collect( Collectors.toList() );
-					
-					
+
 					final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
 							pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
 							filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
@@ -87,6 +91,10 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 					// update StitchingResults with Results
 					for ( final PairwiseStitchingResult< ViewId > psr : results )
 					{
+						
+						if (psr == null)
+							continue;
+						
 						// find the ViewId of the GroupedViews that the results
 						// belong to
 						Set<ViewId> gvA = psr.pair().getA();
