@@ -66,11 +66,14 @@ import spim.fiji.spimdata.explorer.popup.BoundingBoxPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayViewPopup;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.explorer.popup.LabelPopUp;
+import spim.fiji.spimdata.explorer.popup.RemoveTransformationPopup;
+import gui.overlay.DemoLinkOverlay;
 import gui.overlay.LinkOverlay;
 import gui.popup.ApplyBDVTransformationPopup;
 import gui.popup.BDVPopupStitching;
 import gui.popup.CalculatePCPopup;
 import gui.popup.CalculatePCPopupExpertBatch;
+import gui.popup.DemoLinkOverlayPopup;
 import gui.popup.OptimizeGloballyPopup;
 import gui.popup.OptimizeGloballyPopupExpertBatch;
 import gui.popup.ResavePopup;
@@ -101,6 +104,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	boolean previewMode = false;
 
 	LinkOverlay linkOverlay;
+	
+	DemoLinkOverlay demoLinkOverlay;
 
 	StitchingResults stitchingResults;
 
@@ -118,6 +123,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			this.stitchingResults = new StitchingResults();
 
 		linkOverlay = new LinkOverlay( stitchingResults, data );
+		demoLinkOverlay = new DemoLinkOverlay( stitchingResults, data );
+		
+		addListener( (SelectedViewDescriptionListener< AS >) demoLinkOverlay );
 
 		popups = initPopups();
 		initComponent();
@@ -526,6 +534,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		SimpleRemoveLinkPopup removeLinkPopup = new SimpleRemoveLinkPopup();
 		removeLinkPopup.setStitchingResults( stitchingResults );
 		popups.add( removeLinkPopup );
+		
+		DemoLinkOverlayPopup dlPopup = new DemoLinkOverlayPopup(demoLinkOverlay);
+		popups.add( dlPopup );
 
 		popups.add( new ApplyBDVTransformationPopup() );
 		popups.add( new TogglePreviewPopup() );
@@ -536,6 +547,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
 		popups.add( new TestPopup() );
 		popups.add( new BoundingBoxPopup() );
+		popups.add( new RemoveTransformationPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Modifications" ) );
