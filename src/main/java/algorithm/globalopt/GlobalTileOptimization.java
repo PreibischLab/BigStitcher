@@ -32,6 +32,7 @@ import mpicbg.models.TranslationModel2D;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
+import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -42,6 +43,7 @@ import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import spim.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
 
 public class GlobalTileOptimization
 {
@@ -60,6 +62,7 @@ public class GlobalTileOptimization
 			final List< Set< C > > views,
 			final Collection< Set<C> > fixedViews,
 			final Map<C, AffineGet> initialTransforms,
+			final Map<C, Dimensions> viewDimensions, 
 			final Collection<PairwiseStitchingResult< C >> pairwiseResults,
 			final GlobalOptimizationParameters params)
 	{
@@ -91,6 +94,36 @@ public class GlobalTileOptimization
 				if(!(anyContains( views.get( i), connectedComponents ) && 
 						anyContains( views.get( j), connectedComponents ) ) )
 				{
+					
+					if (params.useOnlyOverlappingPairs && viewDimensions != null)
+					{
+					List<Dimensions> dimsA = new ArrayList<>();
+					List<Dimensions> dimsB = new ArrayList<>();
+					List<AffineTransform3D> transformsA = new ArrayList<>();
+					List<AffineTransform3D> transformsB = new ArrayList<>();
+					
+					for (C v : views.get( i ))
+					{
+						dimsA.add( viewDimensions.get( v ) );
+						AffineTransform3D at = new AffineTransform3D();
+						at.set( initialTransforms.get( i ).getRowPackedCopy() );
+						transformsA.add( at );
+					}
+					for (C v : views.get( j ))
+					{
+						dimsB.add( viewDimensions.get( v ) );
+						AffineTransform3D at = new AffineTransform3D();
+						at.set( initialTransforms.get( j ).getRowPackedCopy() );
+						transformsB.add( at );
+					}
+					
+					boolean overlap = SimpleBoundingBoxOverlap.overlaps( SimpleBoundingBoxOverlap.getBoundingBox( dimsA, transformsA ), 
+							SimpleBoundingBoxOverlap.getBoundingBox( dimsB, transformsB ));
+					
+					if (!overlap)
+						continue;
+					
+					}
 					// TODO: is it okay to just use the first view here?
 					AffineGet mapBack = TransformTools.mapBackTransform( initialTransforms.get( views.get( j ).iterator().next() ),
 							initialTransforms.get( views.get( i ).iterator().next() ));
@@ -133,11 +166,11 @@ public class GlobalTileOptimization
 		
 			// we have no weak links, return first round result
 			// TODO: move connected components, so that they do not overlap
-			if (weakLinks.size() == 0)
+			if (weakLinks.size() == 0 || !params.doTwoRound)
 				return optimizeResult1;
 		
 			Pair< TileConfiguration, Map< Set<C>, Tile< M > > > tc2 = prepareTileConfiguration( model.copy(), views, weakLinks, fixedViews, connectedComponents, optimizeResult1 );
-			Map< Set<C>, AffineGet > optimizeResult2 = optimize( tc2.getA(), tc2.getB(), new GlobalOptimizationParameters( 0.0, Double.MAX_VALUE, Double.MAX_VALUE ), optimizeResult1 );
+			Map< Set<C>, AffineGet > optimizeResult2 = optimize( tc2.getA(), tc2.getB(), new GlobalOptimizationParameters( 0.0, Double.MAX_VALUE, Double.MAX_VALUE , false, params.useOnlyOverlappingPairs), optimizeResult1 );
 			
 			return optimizeResult2;
 		//}
@@ -526,7 +559,7 @@ public class GlobalTileOptimization
 		
 		pairwiseResults.add( new PairwiseStitchingResult<>( new ValuePair<>(s1, s2 ), new Translation3D(1,0,0), 1.0 ) );
 		
-		Map< Set<Integer>, AffineGet > res = twoRoundGlobalOptimization( new AffineModel3D(), views, fixedViews, initialTransforms, pairwiseResults, new GlobalOptimizationParameters() );
+		Map< Set<Integer>, AffineGet > res = twoRoundGlobalOptimization( new AffineModel3D(), views, fixedViews, initialTransforms, null, pairwiseResults, new GlobalOptimizationParameters() );
 		
 		res.forEach( ( x, y ) -> System.out.println( x + ": " + y ));
 	

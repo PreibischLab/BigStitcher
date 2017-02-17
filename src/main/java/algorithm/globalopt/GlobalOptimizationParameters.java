@@ -7,17 +7,20 @@ public class GlobalOptimizationParameters
 	public double correlationT;
 	public double relativeThreshold;
 	public double absoluteThreshold;
+	public boolean doTwoRound;
+	public boolean useOnlyOverlappingPairs;
 	
 	public GlobalOptimizationParameters()
 	{
-		this(0.4, 2.5, 3.5);		
+		this(0.4, 2.5, 3.5, true, true);		
 	}
 	
-	public GlobalOptimizationParameters(double correlationThreshold, double relativeThreshold, double absoluteThreshold)
+	public GlobalOptimizationParameters(double correlationThreshold, double relativeThreshold, double absoluteThreshold, boolean doTwoRound, boolean useOnlyOverlappingPairs)
 	{
 		this.correlationT = correlationThreshold;
 		this.relativeThreshold = relativeThreshold;
-		this.absoluteThreshold = absoluteThreshold;		
+		this.absoluteThreshold = absoluteThreshold;
+		this.doTwoRound = doTwoRound;
 	}
 	
 	public static GlobalOptimizationParameters askUserForParameters()
@@ -27,6 +30,8 @@ public class GlobalOptimizationParameters
 		gd.addNumericField( "cross-correlation threshold", 0.4, 3 );
 		gd.addNumericField( "relative error threshold", 2.5, 3 );
 		gd.addNumericField( "absolute error threshold", 3.5, 3 );
+		gd.addCheckbox( "do two-round optimization", true );
+		gd.addCheckbox( "weak links only between approximately overlapping views", true );
 		gd.showDialog();
 		
 		if (gd.wasCanceled())
@@ -35,7 +40,10 @@ public class GlobalOptimizationParameters
 		double ccTh = gd.getNextNumber();
 		double relTh = gd.getNextNumber();
 		double absTh = gd.getNextNumber();
+		boolean twoRound = gd.getNextBoolean();
+		boolean onlyOverlapping = gd.getNextBoolean();
 		
-		return new GlobalOptimizationParameters(ccTh, relTh, absTh);
+		
+		return new GlobalOptimizationParameters(ccTh, relTh, absTh, twoRound, onlyOverlapping);
 	}
 }

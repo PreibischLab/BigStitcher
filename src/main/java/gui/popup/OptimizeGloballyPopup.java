@@ -13,6 +13,8 @@ import java.util.Set;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
+import com.google.common.collect.Sets.SetView;
+
 import algorithm.TransformTools;
 import algorithm.globalopt.GlobalOpt;
 import algorithm.globalopt.GlobalOptimizationParameters;
@@ -24,11 +26,13 @@ import mpicbg.models.Tile;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.ViewId;
+import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -88,18 +92,52 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			// define fixed tiles
 			// the first selected Tile will be fixed
 			final ArrayList< Set<ViewId> > fixedViews = new ArrayList<>();
-			fixedViews.add( viewIds.get( 0 ) );
+			
+			GenericDialog gdFixing = new GenericDialog( "Pick view (group) to fix" );
+			List<String> choices = new ArrayList<>();
+			for (Set< ViewId > s : viewIds)
+				choices.add( s.toString() );
+			gdFixing.addChoice( "view to fix", choices.toArray( new String[choices.size()] ), choices.get( 0 ) );
+			
+			
+			gdFixing.showDialog();
+			if (gdFixing.wasCanceled())
+				return;
+			
+			fixedViews.add( viewIds.get( gdFixing.getNextChoiceIndex() ) );
 
 			
 			final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
 			final Map<ViewId, AffineGet> translations = new HashMap<>();
+			Map<ViewId, Dimensions> dims = new HashMap<>();
 			
-			for (Set<ViewId> id : viewIds){
-				AffineGet a3d = d.getViewRegistrations().getViewRegistration( id.iterator().next() ).getModel();
-//				Translation3D tr = new Translation3D( a3d.get( 0, 3 ),
-//						a3d.get( 1, 3 ), a3d.get( 2, 3 ) );
-				translations.put( id.iterator().next(), a3d );
+			
+			boolean allHaveSize = true;
+			for (Set<ViewId> sid : viewIds){
+				for (ViewId id : sid)
+				{
+					AffineGet a3d = d.getViewRegistrations().getViewRegistration( id ).getModel();
+	//				Translation3D tr = new Translation3D( a3d.get( 0, 3 ),
+	//						a3d.get( 1, 3 ), a3d.get( 2, 3 ) );
+					translations.put( id, a3d );
+					
+					if (allHaveSize)
+					{
+						BasicViewSetup vs = d.getSequenceDescription().getViewDescriptions().get( id ).getViewSetup();
+						if (!vs.hasSize())
+						{
+							allHaveSize = false;
+							continue;
+						}
+						dims.put( id, vs.getSize() );
+					}
+				
+				}
+				
 			}
+			
+			if (!allHaveSize)
+				dims = null;
 			
 			
 			Map< Set< ViewId >, AffineGet > models = GlobalTileOptimization.twoRoundGlobalOptimization( 
@@ -107,6 +145,7 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 														viewIds,
 														fixedViews,
 														translations,
+														dims,
 														results, 
 														params );
 			
