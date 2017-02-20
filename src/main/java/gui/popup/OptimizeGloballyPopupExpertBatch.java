@@ -28,6 +28,7 @@ import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
+import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
@@ -132,6 +133,30 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 				for (ViewId vid : subset.getViews())
 					translations.put( vid, filteringAndGrouping.getSpimData().getViewRegistrations().getViewRegistration( vid ).getModel());
 				
+				Map<ViewId, Dimensions> dims = new HashMap<>();
+				boolean allHaveSize = true;
+				for (Set<ViewId> sid : subset.getGroups().stream().map( g -> g.getViews() ).collect( Collectors.toSet() )){
+					for (ViewId id : sid)
+					{						
+						if (allHaveSize)
+						{
+							BasicViewSetup vs = filteringAndGrouping.getSpimData().getSequenceDescription().getViewDescriptions().get( id ).getViewSetup();
+							if (!vs.hasSize())
+							{
+								allHaveSize = false;
+								continue;
+							}
+							dims.put( id, vs.getSize() );
+						}
+					
+					}
+					
+				}
+				
+				if (!allHaveSize)
+					dims = null;
+				
+				
 				List<Set<ViewId>> fixed = new ArrayList<>();
 				fixed.add( subset.getGroups().iterator().next().getViews());
 				
@@ -140,6 +165,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 						subset.getGroups().stream().map( g -> g.getViews() ).collect( Collectors.toList() ),
 						fixed,
 						translations,
+						dims,
 						stitchingResults.getPairwiseResults().values(), 
 						params );
 				
