@@ -113,7 +113,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	JFrame linkFrame;
 
 	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
-			final X io)
+			final X io, boolean startBDVifHDF5)
 	{
 		super( explorer, data, xml, io );
 
@@ -130,13 +130,21 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups = initPopups();
 		initComponent();
 
-		if ( Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
-				|| FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) )
+		if ( startBDVifHDF5 && (Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
+				|| FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) ) )
 		{
-			bdvPopup().bdv = BDVPopupStitching.createBDV( this, linkOverlay );
+			if (!bdvPopup().bdvRunning())
+				bdvPopup().bdv = BDVPopupStitching.createBDV( this, linkOverlay );
 		}
 
 	}
+	
+	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
+			final X io)
+	{
+		this(explorer, data, xml, io, true);
+	}
+	
 
 	void quitLinkExplorer()
 	{

@@ -126,7 +126,7 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 		frame.remove( panel );
 		
 		// make new panel
-		panel = mode == Mode.STITCHING ? new StitchingExplorerPanel<AS, X>(  this, data, xml, io ) : new ViewSetupExplorerPanel<AS, X>(  this, data, xml, io );
+		panel = mode == Mode.STITCHING ? new StitchingExplorerPanel<AS, X>(  this, data, xml, io , false) : new ViewSetupExplorerPanel<AS, X>(  this, data, xml, io , false );
 		frame.add( panel, BorderLayout.CENTER );
 		frame.setSize( panel.getPreferredSize() );
 		frame.pack();
