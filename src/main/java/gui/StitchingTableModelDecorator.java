@@ -83,7 +83,12 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 		// get location
 		else if (columnIndex - decorated.getColumnCount() == 0) 
 		{
+			
 			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
+			
+			if (decorated.getPanel().getSpimData().getSequenceDescription().getMissingViews().getMissingViews().contains( vid ))
+				return "View missing";
+			
 			final ViewRegistration vr = decorated.getPanel().getSpimData().getViewRegistrations().getViewRegistration(vid);
 			StringBuilder res = new StringBuilder();
 			
