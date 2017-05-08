@@ -1,6 +1,8 @@
 package gui;
 
 import java.awt.Image;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.Timer;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -23,6 +26,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -70,13 +74,13 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 			return null;
 		}
 		
-		if (steps.size() != 3)
+		if (steps.size() < 2)
 			return null;
 		
 		int[] res = new int[3];
 		res[0] = steps.get( 0 );
 		res[1] = steps.get( 1 );
-		res[2] = steps.get( 2 );
+		res[2] = steps.size() == 3 ? steps.get( 2 ) : 1;
 		
 		return res;
 	}
@@ -94,6 +98,8 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 
 		
 		Set<String> splittedSet = new HashSet<>(splitted);
+		splittedSet.add( "Z" );
+		
 		//System.out.println( splittedSet );
 		if (!(splittedSet.size() == 3 ) || !splittedSet.contains( "X" ) || !splittedSet.contains( "Y" ) || !splittedSet.contains( "Z" ))
 			return null;
@@ -101,13 +107,40 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		int res[] = new int[3];
 		res[0] = (int)(char)splitted.get( 0 ).charAt( 0 ) - 88;
 		res[1] = (int)(char)splitted.get( 1 ).charAt( 0 ) - 88;
-		res[2] = (int)(char)splitted.get( 2 ).charAt( 0 ) - 88;
+		res[2] = splitted.size() == 3 ? (int)(char)splitted.get( 2 ).charAt( 0 ) - 88 : 2;
 		
 		return res;
 	}
 	
-	private static String[] dimensionNames = new String[] {"X", "Y", "Z"};
+	private final static String[] dimensionNames = new String[] {"X", "Y", "Z"};
 
+	private final static String[][] imageFiles = new String[][]{
+		{"/images/column1.png","/images/column2.png","/images/column3.png","/images/column4.png",
+		"/images/row1.png","/images/row2.png","/images/row3.png","/images/row4.png"},
+		{"/images/snake1.png","/images/snake2.png","/images/snake3.png","/images/snake4.png",
+		"/images/snake5.png","/images/snake6.png","/images/snake7.png","/images/snake8.png"}
+		};
+		
+	private static class GridPreset
+	{
+		boolean[] alternating;
+		boolean[] increasing;
+		String dimensionOrder;
+		
+		public GridPreset(boolean[] alternating, boolean[] increasing, String dimensionOrder)
+		{
+			this.alternating = alternating;
+			this.increasing = increasing;
+			this.dimensionOrder = dimensionOrder;
+		}
+		
+	}
+	
+	private static final List<GridPreset> presets = new ArrayList<>();
+	static
+	{
+		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {true, true} , "y,x" ) );
+	}
 	
 	private ExplorerWindow< AS, ?> parent;
 	
@@ -128,6 +161,9 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	private int[] steps;
 	private double[] overlaps;
 	private List<List<BasicViewDescription< ? >>> selectedVDs;
+	
+	private boolean linkedOverlaps = true;
+	private boolean zEnabled = false;
 	
 	// save old transformation to undo if we cancel
 	private AffineTransform3D oldViewerTransform;
@@ -164,19 +200,19 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	
 	public PreviewRegularGridPanel(ExplorerWindow< AS, ? > parent)
 	{
-		int iconSizeX = 64;
-		int iconSizeY = 64;
+		int iconSizeX = 80;
+		int iconSizeY = 80;
 		
-		Image imColumn1 = null;
-		Image imColumn2;
-		Image imColumn3;
-		Image imColumn4;
+		
+			
+		
+		
+		Image[][] images = new Image[2][8];
 		try
 		{
-			imColumn1 = ImageIO.read( getClass().getResource( "/images/column1.png" ) ).getScaledInstance( iconSizeX, iconSizeY, Image.SCALE_SMOOTH );
-			imColumn2 = ImageIO.read( getClass().getResource( "/images/column2.png" ) ).getScaledInstance( iconSizeX, iconSizeY, Image.SCALE_DEFAULT );
-			imColumn3 = ImageIO.read( getClass().getResource( "/images/column2.png" ) ).getScaledInstance( iconSizeX, iconSizeY, Image.SCALE_DEFAULT );
-			imColumn4 = ImageIO.read( getClass().getResource( "/images/column2.png" ) ).getScaledInstance( iconSizeX, iconSizeY, Image.SCALE_DEFAULT );
+			for (int i = 0; i < 2; i++)
+				for (int j = 0; j < 8; j++)
+					images[i][j] = ImageIO.read( getClass().getResource(imageFiles[i][j] ) ).getScaledInstance( iconSizeX, iconSizeY, Image.SCALE_SMOOTH );
 		}
 		catch (IOException e)
 		{
@@ -191,9 +227,30 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		
 		
 		// preset Icon panel
+		
 		JPanel presetPanel = new JPanel();
-		presetPanel.setLayout( new BoxLayout( presetPanel, BoxLayout.LINE_AXIS ) );
-		presetPanel.add( new JLabel( new ImageIcon( imColumn1 ) ) );
+		presetPanel.setLayout( new BoxLayout( presetPanel, BoxLayout.PAGE_AXIS ) );
+		
+		JPanel presetPanelRow1 = new JPanel();
+		presetPanelRow1.setLayout( new BoxLayout( presetPanelRow1, BoxLayout.LINE_AXIS ) );		
+		for (int i = 0; i < 8; i++)
+		{
+			JButton imgI = new JButton( new ImageIcon( images[0][i] ) );
+			imgI.addActionListener( e -> System.out.println( "click." ) );
+			presetPanelRow1.add( imgI );
+		}
+
+		JPanel presetPanelRow2 = new JPanel();
+		presetPanelRow2.setLayout( new BoxLayout( presetPanelRow2, BoxLayout.LINE_AXIS ) );		
+		for (int i = 0; i < 8; i++)
+		{
+			JButton imgI = new JButton( new ImageIcon( images[1][i] ) );
+			imgI.addActionListener( e -> System.out.println( "clack." ) );
+			presetPanelRow2.add( imgI );
+		}
+		
+		presetPanel.add( presetPanelRow1 );
+		presetPanel.add( presetPanelRow2 );
 		this.add( presetPanel );
 		
 		
@@ -202,6 +259,8 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		alternatingCheckboxes.add( new JCheckBox( "X", true ));
 		alternatingCheckboxes.add( new JCheckBox( "Y", true ));
 		alternatingCheckboxes.add( new JCheckBox( "Z", true ));
+		alternatingCheckboxes.get( 2 ).setEnabled( false );
+		
 		
 		JPanel alternatingCheckboxesPanel = new JPanel();
 		alternatingCheckboxesPanel.setLayout( new BoxLayout( alternatingCheckboxesPanel, BoxLayout.LINE_AXIS ) );
@@ -220,6 +279,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		increasingCheckboxes.add( new JCheckBox( "X", true ));
 		increasingCheckboxes.add( new JCheckBox( "Y", true ));
 		increasingCheckboxes.add( new JCheckBox( "Z", true ));
+		increasingCheckboxes.get( 2 ).setEnabled( false );
 		
 		JPanel increasingCheckboxesPanel = new JPanel();
 		increasingCheckboxesPanel.setLayout( new BoxLayout( increasingCheckboxesPanel, BoxLayout.LINE_AXIS ) );
@@ -238,26 +298,37 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		overlapSliders.add( new JSlider( JSlider.HORIZONTAL, 0, 100, 10 ) );
 		overlapSliders.add( new JSlider( JSlider.HORIZONTAL, 0, 100, 10 ) );
 		overlapSliders.add( new JSlider( JSlider.HORIZONTAL, 0, 100, 10 ) );
+		overlapSliders.get( 2 ).setEnabled( false );
 		
 		JPanel overlapSlidersPanel = new JPanel();
 		overlapSlidersPanel.setLayout( new BoxLayout( overlapSlidersPanel, BoxLayout.LINE_AXIS ) );
 		int i = 0;
 		for (JSlider c : overlapSliders)
 		{
-			overlapSlidersPanel.add( new JLabel( dimensionNames[i++] ) );
+			JLabel dimensionLab = new JLabel( dimensionNames[i++] );
+			dimensionLab.setBorder( BorderFactory.createEmptyBorder( 0, 18, 0, 0 ) );
+			overlapSlidersPanel.add( dimensionLab );
 			overlapSlidersPanel.add( c );
 			final JLabel valueDisplay = new JLabel( Integer.toString( c.getValue() ) );
 			overlapSlidersPanel.add( valueDisplay );
-			c.addChangeListener( (e) -> {update();
-											valueDisplay.setText( Integer.toString( c.getValue() ) );} );
+			c.addChangeListener( (e) -> {	if (linkedOverlaps)
+												for (JSlider olS : overlapSliders)
+													olS.setValue(c.getValue());
+											update();
+											valueDisplay.setText( Integer.toString( c.getValue() ) );
+											} );
 		}
+		JToggleButton linkButton = new JToggleButton( "link" );
+		linkButton.setSelected( true );
+		linkButton.addActionListener( e -> linkedOverlaps = linkButton.isSelected() );
+		overlapSlidersPanel.add( linkButton );
 		
 		this.add( new JLabel( "Overlap in dimensions" ) );
 		this.add( overlapSlidersPanel );
 		
 		
 		// dimension order
-		orderTextField = new JTextField( "x, y, z", 30 );
+		orderTextField = new JTextField( "x, y", 30 );
 		orderWarningLabel = new JLabel("");
 		orderTextField.getDocument().addDocumentListener( new DocumentListener()
 		{			
@@ -275,7 +346,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		this.add( orderWarningLabel );
 		
 		// steps in each dimension
-		stepsTextField = new JTextField( "4, 4, 1", 30 );
+		stepsTextField = new JTextField( "4, 4", 30 );
 		stepsWarningLabel = new JLabel( "" );
 		stepsTextField.getDocument().addDocumentListener( new DocumentListener()
 		{			
@@ -349,7 +420,6 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		else
 			stepsWarningLabel.setText("");
 		
-
 		updateBDV();
 		
 	}
