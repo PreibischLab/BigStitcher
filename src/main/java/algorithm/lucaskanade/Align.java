@@ -83,16 +83,20 @@ public class Align<T extends RealType< T >>
 		this.currentTransform.set( tr );
 	}
 
-	public Align(final RandomAccessibleInterval< T > template, final ImgFactory< FloatType > factory)
+	public Align(final RandomAccessibleInterval< T > template, final ImgFactory< FloatType > factory, WarpFunction model, AffineGet startTransform)
 	{
 		this.template = template;
 		final T type = Util.getTypeFromInterval( template );
 
 		n = template.numDimensions();
-		warpFunction = new TranslationWarp( n );
+		warpFunction = model;
 		numParameters = warpFunction.numParameters();
+		
 		currentTransform = new AffineTransform( n );
 
+		if (!( startTransform == null ))
+			currentTransform.set( startTransform.getRowPackedCopy() );
+		
 		final long[] dim = new long[n + 1];
 		for ( int d = 0; d < n; ++d )
 			dim[d] = template.dimension( d );
@@ -200,7 +204,7 @@ public class Align<T extends RealType< T >>
 		int i = 0;
 		while ( i < maxIterations )
 		{
-			++i;
+			System.out.println( ++i );
 			if ( alignStep( image, service ) < minParameterChange )
 			{
 				lastAlignConverged = true;

@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GlobalTileOptimization;
+import algorithm.lucaskanade.AffineWarp;
 import algorithm.lucaskanade.Align;
 import input.FractalImgLoader;
 import input.FractalSpimDataGenerator;
@@ -119,9 +120,10 @@ public class PairwiseStitching
 
 
 				
-				Align< T > align = new Align<T>( Views.zeroMin( Views.interval( img1, interval1 ) ), new ArrayImgFactory<FloatType>() );
-				AffineTransform align2 = align.align( Views.zeroMin( Views.interval( img2, interval2 ) ), 500, 0.01 );
+				Align< T > align = new Align<T>( Views.zeroMin( Views.interval( img1, interval1 ) ), new ArrayImgFactory<FloatType>(), new AffineWarp( img1.numDimensions() ), new AffineTransform3D() );
+				AffineTransform align2 = align.align( Views.zeroMin( Views.interval( img2, interval2 ) ), params.maxIterations, 0.1 );
 				
+				System.out.println( align2 );
 
 				// adapt shift for the entire image, not only the overlapping parts
 				final double[] entireIntervalShift = new double[input1.numDimensions()];
