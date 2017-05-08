@@ -170,6 +170,7 @@ public class PhaseCorrelationPeak2 {
 			nPixel *= intervals.getA().dimension(i);
 		}
 		
+		
 		if (nPixel < minOverlapPx){
 			crossCorr = Double.NEGATIVE_INFINITY;
 			nPixel = 0;
@@ -177,8 +178,6 @@ public class PhaseCorrelationPeak2 {
 		}
 
 		// for subpixel move the underlying Img2 by the subpixel offset
-		// this seems to do weird stuff sometimes, skip it
-		/*
 		if ( subpixelShift != null )
 		{
 			//
@@ -196,9 +195,9 @@ public class PhaseCorrelationPeak2 {
 				transform = new Translation3D( -tx, -ty, shift.getDoublePosition( 2 ) - subpixelShift.getDoublePosition( 2 ) ); // -relative subpixel shift only
 	
 			
-			//img2 = Views.interval( Views.raster( RealViews.transform( rra, transform ) ), img2 );
+			img2 = Views.interval( Views.raster( RealViews.transform( rra, transform ) ), img2 );
 		}
-		*/
+
 
 		crossCorr = PhaseCorrelation2Util.getCorrelation(Views.zeroMin(Views.interval(img1, intervals.getA())), Views.zeroMin(Views.interval(img2, intervals.getB())));
 		
