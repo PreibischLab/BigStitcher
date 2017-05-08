@@ -74,6 +74,7 @@ import gui.popup.BDVPopupStitching;
 import gui.popup.CalculatePCPopup;
 import gui.popup.CalculatePCPopupExpertBatch;
 import gui.popup.DemoLinkOverlayPopup;
+import gui.popup.DisplayOverlapTestPopup;
 import gui.popup.OptimizeGloballyPopup;
 import gui.popup.OptimizeGloballyPopupExpertBatch;
 import gui.popup.ResavePopup;
@@ -556,6 +557,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new TestPopup() );
 		popups.add( new BoundingBoxPopup() );
 		popups.add( new RemoveTransformationPopup() );
+		popups.add( new DisplayOverlapTestPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Modifications" ) );
