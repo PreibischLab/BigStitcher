@@ -211,6 +211,31 @@ public class GroupedViewAggregator
 		actions.add(newAc);
 	}
 	
+	public <T extends RealType<T>> RandomAccessibleInterval< T > aggregate(
+			List<RandomAccessibleInterval< T >> rais,
+			List<? extends ViewId> vids,
+			AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd
+			)
+	{
+		Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> map = new HashMap<>();
+		
+		for (int i = 0; i < vids.size(); i++)
+		{
+			ViewId vid = vids.get( i );
+			BasicViewDescription< ? > vd = sd.getViewDescriptions().get( vid );
+			map.put( vd, rais.get( i ) );
+		}
+		
+		for (Action< ? > action : actions)
+		{
+			map = action.aggregate( map );
+		}
+		
+		// return the first RAI still present
+		// ideally, there should be only one left
+		return map.values().iterator().next();
+		
+	}
 	
 	public <T extends RealType<T>> RandomAccessibleInterval< T > aggregate(GroupedViews gv, 
 												AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd,
