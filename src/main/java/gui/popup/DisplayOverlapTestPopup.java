@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
@@ -17,14 +16,13 @@ import algorithm.GroupedViewAggregator;
 import algorithm.GroupedViewAggregator.ActionType;
 import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
-import algorithm.TransformTools;
-import algorithm.globalopt.TransformationTools;
-import gui.popup.TestPopup.MyActionListener;
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Channel;
@@ -32,26 +30,20 @@ import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.ImgLoader;
 import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
-import mpicbg.spim.data.sequence.ViewSetup;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.algorithm.phasecorrelation.PhaseCorrelation2;
 import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.realtransform.AffineGet;
-import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Translation;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
-import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.boundingbox.BoundingBox;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.process.fusion.boundingbox.overlap.IterativeBoundingBoxDetermination;
-import spim.process.fusion.export.DisplayImage;
 import spim.process.fusion.transformed.FusedRandomAccessibleInterval;
 import spim.process.fusion.transformed.TransformView;
 import spim.process.fusion.transformed.TransformVirtual;
@@ -117,7 +109,7 @@ public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindow
 					return wrp;} ).collect( Collectors.toList() );
 				
 				List< RandomAccessibleInterval< FloatType > > openFused = 
-						openVirtuallyFused( spimData, wrapped, bbOverlap, new double[]{downsampling,downsampling,downsampling} );
+						openVirtuallyFused( spimData.getSequenceDescription(), spimData.getViewRegistrations(), wrapped, bbOverlap, new double[]{downsampling,downsampling,downsampling} );
 				
 				GroupedViewAggregator gva = new GroupedViewAggregator();
 				gva.addAction( ActionType.AVERAGE, Channel.class, null );
@@ -166,16 +158,15 @@ public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindow
 	}
 
 	
-	public static <AS extends AbstractSpimData<? extends AbstractSequenceDescription<?,? extends ViewDescription,? extends ImgLoader>>>
+	public static <S extends AbstractSequenceDescription< ?,? extends BasicViewDescription<? extends BasicViewSetup>, ?  >>
 		List<RandomAccessibleInterval< FloatType >> openVirtuallyFused(
-				AS spimData,
+				S sd,
+				ViewRegistrations vrs,
 				Collection<? extends Collection<ViewId>> views,
 				Interval boundingBox,
 				double[] downsamplingFactors)
 	{
-		final ImgLoader imgLoader = spimData.getSequenceDescription().getImgLoader();
-		final ViewRegistrations vrs = spimData.getViewRegistrations();
-		
+		final BasicImgLoader imgLoader = sd.getImgLoader();
 		
 		final List<RandomAccessibleInterval< FloatType >> openImgs = new ArrayList<>();
 		final Interval bbSc = TransformVirtual.scaleBoundingBox( new FinalInterval( boundingBox ), inverse( downsamplingFactors ));
@@ -198,7 +189,7 @@ public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindow
 				final float[] blending = ProcessFusion.defaultBlendingRange.clone();
 				final float[] border = ProcessFusion.defaultBlendingBorder.clone();
 
-				ProcessVirtual.adjustBlending( spimData.getSequenceDescription().getViewDescriptions().get( viewId ), blending, border );
+				ProcessVirtual.adjustBlending( sd.getViewDescriptions().get( viewId ), blending, border );
 
 				model = model.copy();
 				TransformVirtual.scaleTransform( model, inverse(downsamplingFactors) );

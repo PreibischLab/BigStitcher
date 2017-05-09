@@ -3,6 +3,7 @@ package algorithm.globalopt;
 
 import input.GenerateSpimData;
 import spim.fiji.spimdata.SpimDataTools;
+import spim.fiji.spimdata.boundingbox.BoundingBox;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,13 +16,16 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import algorithm.DownsampleTools;
 import algorithm.GroupedViewAggregator;
 import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
 import algorithm.TransformTools;
+import algorithm.GroupedViewAggregator.ActionType;
 import bdv.BigDataViewer;
+import gui.popup.DisplayOverlapTestPopup;
 import ij.IJ;
 import input.GenerateSpimData;
 import mpicbg.models.Tile;
@@ -34,26 +38,127 @@ import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.ImgLoaders;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
+import mpicbg.spim.data.sequence.Channel;
+import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.ImgLoader;
 import mpicbg.spim.data.sequence.SequenceDescription;
+import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Cursor;
 import net.imglib2.Dimensions;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.Translation;
 import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import spim.Threads;
 import spim.process.fusion.ImagePortion;
+import spim.process.fusion.boundingbox.overlap.IterativeBoundingBoxDetermination;
 
 public class TransformationTools
 {
+	
+	public static < T extends RealType< T > > Pair< double[], Double > computeStitchingNonEqualTransformations(
+			final ViewId viewIdA,
+			final ViewId viewIdB,
+			final ViewRegistrations vrs,
+			final PairwiseStitchingParameters params,
+			final AbstractSequenceDescription< ?,? extends BasicViewDescription<?>, ? > sd,
+			final GroupedViewAggregator gva,
+			final long[] downsampleFactors,
+			final ExecutorService service )
+	{
+		
+		final double[] downsampleDbl = new double[downsampleFactors.length];
+		for (int d = 0; d < downsampleFactors.length; d++)
+			downsampleDbl[d] = downsampleFactors[d];
+		
+		IterativeBoundingBoxDetermination< ViewId > bbDet = new IterativeBoundingBoxDetermination<ViewId>( sd, vrs );
+		
+		final List<List<ViewId>> views = new ArrayList<>();
+		
+		// unwrap GroupedViews if necessary
+		final List<ViewId> viewsA = new ArrayList<>();
+		if (GroupedViews.class.isInstance( viewIdA ))
+			viewsA.addAll( ((GroupedViews) viewIdA ).getViewIds());
+		else
+			viewsA.add( viewIdA );
+		
+		final List<ViewId> viewsB = new ArrayList<>();
+		if (GroupedViews.class.isInstance( viewIdB ))
+			viewsB.addAll( ((GroupedViews) viewIdB ).getViewIds());
+		else
+			viewsB.add( viewIdB );
+		
+		// bounding box of 1st view group
+		views.add( viewsA );				
+		BoundingBox viewsABoundingBox = bbDet.getMaxBoundingBox( views );
+		
+		// add second view group and get overlap bounding box
+		views.add( viewsB );
+		BoundingBox bbOverlap = bbDet.getMaxOverlapBoundingBox( views );			
+		//System.out.println( "Overlap BB: " + Util.printInterval( bbOverlap ) );
+		
+		
+		
+		List<RandomAccessibleInterval< FloatType >> raiOverlaps = new ArrayList<>();
+		
+		for (List< ViewId > tileViews : views)
+		{
+			List<List< ViewId >> wrapped = tileViews.stream().map( v -> {
+				ArrayList< ViewId > wrp = new ArrayList<ViewId>();
+				wrp.add( v );
+				return wrp;} ).collect( Collectors.toList() );
+			
+			List< RandomAccessibleInterval< FloatType > > openFused = 
+					DisplayOverlapTestPopup.openVirtuallyFused( sd, vrs, wrapped, bbOverlap, downsampleDbl );
+			
+			
+			RandomAccessibleInterval< FloatType > raiI = gva.aggregate( 
+					openFused, 
+					tileViews,
+					sd );
+			
+			raiOverlaps.add(raiI);
+		}
+		
+		
+		RandomAccessibleInterval< FloatType > img1 = raiOverlaps.get(0);
+		RandomAccessibleInterval< FloatType > img2 = raiOverlaps.get(1);
+		
+		final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, new Translation( img1.numDimensions() ), new Translation( img1.numDimensions() ), params, service );
+	
+		if (result == null)
+			return null;		
+		
+		for (int i = 0; i< result.getA().length; ++i)
+		{
+			result.getA()[i] *= downsampleFactors[i];
+			
+			// add shift between view group 1 bbox and overlap
+			result.getA()[i] += bbOverlap.realMin( i ) - viewsABoundingBox.realMin( i );
+		}
+		
+		
+		
+		System.out.println("integer shift: " + Util.printCoordinates(result.getA()));
+		System.out.print("cross-corr: " + result.getB());
+
+		
+		//service.shutdown();
+		
+		return result;
+	
+	}
+	
 	public static < T extends RealType< T > > Pair< double[], Double > computeStitching(
 			final ViewId viewIdA,
 			final ViewId viewIdB,
@@ -146,7 +251,7 @@ public class TransformationTools
 		System.out.print("cross-corr: " + result.getB());
 
 		
-		service.shutdown();
+		//service.shutdown();
 		
 		return result;
 	}
@@ -175,16 +280,42 @@ public class TransformationTools
 
 					final ExecutorService serviceLocal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 4 ) );
 
-					result = computeStitching(
-							p.getA(),
-							p.getB(),
-							vrs.getViewRegistration( p.getA() ),
-							vrs.getViewRegistration( p.getB() ),
-							params,
-							sd,
-							gva,
-							downsamplingFactors,
-							serviceLocal );
+					// TODO: check for ViewRegistration "equality" here and use fused views if they differ
+					boolean nonTranslationsEqual = TransformTools.nonTranslationsEqual( vrs.getViewRegistration( p.getA()), vrs.getViewRegistration( p.getB() ));
+					
+					if (nonTranslationsEqual)
+					{
+						System.err.println( "non translations equal" );
+						result = computeStitching(
+								p.getA(),
+								p.getB(),
+								vrs.getViewRegistration( p.getA() ),
+								vrs.getViewRegistration( p.getB() ),
+								params,
+								sd,
+								gva,
+								downsamplingFactors,
+								serviceLocal );
+					}
+					else
+					{
+						result = computeStitchingNonEqualTransformations( 
+								p.getA(),
+								p.getB(),
+								vrs,
+								params,
+								sd,
+								gva,
+								downsamplingFactors,
+								serviceLocal );
+						System.err.println( "non translations NOT equal" );
+					}
+					
+					
+					
+					
+					
+					serviceLocal.shutdown();
 
 					if (result != null)
 						IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": r=" + result.getB() );
@@ -215,7 +346,11 @@ public class TransformationTools
 				// TODO: move this inside the shift determination method -> make this method agnostic of actual intensity-based method used
 				AffineTransform3D resT = new AffineTransform3D();
 				resT.translate( result.getB().getA() );
-				resT = resT.copy().preConcatenate( mapBack );
+				
+				boolean nonTranslationsEqual = TransformTools.nonTranslationsEqual(vrs.getViewRegistration( result.getA().getA() ), vrs.getViewRegistration( result.getA().getB() ));
+				
+				if (nonTranslationsEqual)
+					resT = resT.copy().preConcatenate( mapBack );
 
 				// create Set pair identifying the pair
 				Pair<Set<ViewId>, Set<ViewId>> setPair = new ValuePair< Set<ViewId>, Set<ViewId> >( new HashSet<>(), new HashSet<>() );
