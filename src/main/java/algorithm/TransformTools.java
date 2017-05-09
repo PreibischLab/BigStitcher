@@ -151,6 +151,35 @@ public class TransformTools {
 			return new ValuePair<>(modelWithoutTranslation, new Translation3D( target[ 0 ], target[ 1 ], target[ 2 ] ));
 	}
 	
+	/**
+	 * check for all a_i, b_i: abs(a_i - b_i) <= eps 
+	 * @param a
+	 * @param b
+	 * @param eps
+	 * @return
+	 */
+	public static boolean allAlmostEqual(double[] a, double[] b, double eps)
+	{
+		if (a.length != b.length)
+			return false;
+		
+		for (int i = 0; i < a.length; i++)
+			if (Math.abs( a[i] - b[i] ) > eps)
+				return false;
+		
+		return true;
+	}
+	
+	public static boolean nonTranslationsEqual(final ViewRegistration vr1, final ViewRegistration vr2)
+	{
+		final int n = vr1.getModel().numDimensions();
+		final AffineTransform3D dsTransform = new AffineTransform3D();
+		
+		final Pair< AffineGet, TranslationGet > initialTransforms1 = getInitialTransforms( vr1, n == 2, dsTransform );
+		final Pair< AffineGet, TranslationGet > initialTransforms2 = getInitialTransforms( vr2, n == 2, dsTransform );
+		
+		return allAlmostEqual( initialTransforms1.getA().getRowPackedCopy(), initialTransforms2.getA().getRowPackedCopy(), 0.01 );
+	}
 
 	public static FinalRealInterval applyTranslation(RealInterval img, TranslationGet translation, boolean[] ignoreDims){
 		int n = 0;
