@@ -78,6 +78,7 @@ import gui.popup.DisplayOverlapTestPopup;
 import gui.popup.OptimizeGloballyPopup;
 import gui.popup.OptimizeGloballyPopupExpertBatch;
 import gui.popup.ResavePopup;
+import gui.popup.SelectIlluminationPopup;
 import gui.popup.SimpleRemoveLinkPopup;
 import gui.popup.TestPopup;
 import gui.popup.TogglePreviewPopup;
@@ -558,6 +559,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new BoundingBoxPopup() );
 		popups.add( new RemoveTransformationPopup() );
 		popups.add( new DisplayOverlapTestPopup() );
+		popups.add( new SelectIlluminationPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Modifications" ) );
