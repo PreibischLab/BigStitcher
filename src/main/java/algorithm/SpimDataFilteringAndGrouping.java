@@ -34,7 +34,7 @@ import spim.fiji.spimdata.explorer.GroupedRowWindow;
 public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 {
 	
-	static List<Class<? extends Entity>> entityClasses = new ArrayList<>();
+	public static List<Class<? extends Entity>> entityClasses = new ArrayList<>();
 	static 
 	{
 		entityClasses.add( TimePoint.class );
@@ -77,6 +77,12 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		
 	public void addFilter(Class<? extends Entity> cl, List<? extends Entity> instances){
 		filters.put(cl, instances);
+	}
+	
+	public void addFilters(Collection<? extends BasicViewDescription< ? extends BasicViewSetup >> selected)
+	{
+		for (Class<? extends Entity> cl : entityClasses)
+			filters.put( cl, new ArrayList<>(getInstancesOfAttribute( selected, cl ) ) );
 	}
 	
 	public void addApplicationAxis(Class<? extends Entity> axis ) {
@@ -191,18 +197,35 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	}
 
 
+	/**
+	 * get all instances of the attribute class cl in the (grouped) views vds. 
+	 * @param vds
+	 * @param cl
+	 * @return
+	 */
 	public static Set<Entity> getInstancesOfAttributeGrouped(Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > vds, Class<? extends Entity> cl)
-	{
-		Set<Entity> res = new HashSet<>();
-		for (List< BasicViewDescription< ? extends BasicViewSetup > > vdl1 : vds)
-			for (BasicViewDescription< ? extends BasicViewSetup > vd : vdl1)
-				if (cl == TimePoint.class)
-					res.add( vd.getTimePoint() );
-				else
-					res.add( vd.getViewSetup().getAttribute( cl ) );
-		return res;
+	{	
+		// make one List out of the nested Collection and getInstancesOfAttribute
+		return getInstancesOfAttribute( vds.stream().reduce( new ArrayList<>(), (x, y) -> {x.addAll(y); return x;} ), cl );
 	}
 	
+	public static Set<Entity> getInstancesOfAttribute(Collection<? extends BasicViewDescription< ? extends BasicViewSetup >> vds, Class<? extends Entity> cl)
+	{
+		Set<Entity> res = new HashSet<>();
+		for (BasicViewDescription< ? extends BasicViewSetup > vd : vds)
+			if (cl == TimePoint.class)
+				res.add( vd.getTimePoint() );
+			else
+				res.add( vd.getViewSetup().getAttribute( cl ) );
+		return res;		
+	}
+		
+	/**
+	 * get the instances of class cl that are present in at least one ViewDescription of each of the groups in vds.
+	 * @param vds
+	 * @param cl
+	 * @return
+	 */
 	public static List<? extends Entity> getInstancesInAllGroups(Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > vds, Class<? extends Entity> cl)
 	{
 		Set<Entity> res = new HashSet<>();
