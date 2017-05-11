@@ -418,10 +418,18 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 				selectedRows.clear();
 				firstSelectedVD = null;
+				boolean foundFirstView = false;
 				for ( final int row : table.getSelectedRows() )
 				{
-					if ( firstSelectedVD == null )
-						firstSelectedVD = tableModel.getElements().get( row ).get( 0 );
+					if (!foundFirstView)
+					for (int i = 0; i < tableModel.getElements().get( row ).size(); i++)
+						if ( firstSelectedVD == null || !firstSelectedVD.isPresent())
+						{
+							foundFirstView = true;
+							firstSelectedVD = tableModel.getElements().get( row ).get( i );
+							break;
+						}
+							
 
 					selectedRows.add( tableModel.getElements().get( row ) );
 				}

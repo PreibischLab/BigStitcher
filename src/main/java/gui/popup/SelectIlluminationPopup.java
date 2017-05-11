@@ -1,5 +1,8 @@
 package gui.popup;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -8,21 +11,47 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.illuminationselection.BasicViewSelection;
 import algorithm.illuminationselection.BrightestViewSelection;
+import algorithm.illuminationselection.IlluminationSelectionPreviewGUI;
 import algorithm.illuminationselection.ViewSelection;
+import bdv.BigDataViewer;
+import bdv.SpimSource;
+import bdv.tools.transformation.TransformedSource;
+import bdv.viewer.state.SourceState;
 import fiji.util.gui.GenericDialogPlus;
 import gui.popup.TestPopup.MyActionListener;
 import ij.gui.GenericDialog;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.embed.swing.JFXPanel;
+import javafx.geometry.Pos;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TreeTableView;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.control.TableColumn.CellDataFeatures;
+import javafx.util.Callback;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
@@ -38,6 +67,8 @@ import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.boundingbox.BoundingBoxes;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
@@ -50,12 +81,8 @@ import spim.fiji.spimdata.stitchingresults.StitchingResults;
 public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindowSetable
 {
 	
-	static Map<String, Class<? extends BasicViewSelection>> methods = new HashMap<>();
-	static{
-		methods.put( "Pick brightest", BrightestViewSelection.class );
-	}
 
-	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	private FilteredAndGroupedExplorerPanel< ?, ? > panel;
 	
 	public SelectIlluminationPopup()
 	{
@@ -67,7 +94,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 	public JComponent setExplorerWindow(
 			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
 	{
-		this.panel = panel;
+		this.panel = (FilteredAndGroupedExplorerPanel< ?, ? >)panel;
 		return this;
 	}
 
@@ -93,106 +120,106 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			final GenericDialogPlus gdpParams = new GenericDialogPlus( "Illumination Selection" );
-			gdpParams.addCheckbox( "Process only selection", false );
-			gdpParams.addCheckbox( "Show selection results before applying", true );
-			addViewSelectionQuery( gdpParams );
 			
-			gdpParams.showDialog();
-			
-			if (gdpParams.wasCanceled())
-				return;
-			
-			final boolean limitToSelection = gdpParams.getNextBoolean();
-			final boolean previewResults = gdpParams.getNextBoolean();
-			final ViewSelection< ViewId > viewSelection = getViewSelectionResult( gdpParams, panel.getSpimData().getSequenceDescription() );			
-			
-			
-			final SpimDataFilteringAndGrouping< AbstractSpimData< ? > > grouping =
-					new SpimDataFilteringAndGrouping< AbstractSpimData<?> >(panel.getSpimData());
-			grouping.addGroupingFactor( Illumination.class );
-			
-			/*
-			grouping.addApplicationAxis( Angle.class );
-			grouping.addApplicationAxis( TimePoint.class );
-			grouping.addApplicationAxis( Tile.class );
-			grouping.addApplicationAxis( Channel.class );
-			*/
-			
-			if (limitToSelection)
+			new Thread(new Runnable()
 			{
-				final Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selected = ((GroupedRowWindow)panel).selectedRowsGroups();
-				grouping.addFilters( selected.stream().reduce( new ArrayList<>(), (x, y) -> {x.addAll(y); return x;} ) );
-				/*
-				grouping.addFilter( TimePoint.class, SpimDataFilteringAndGrouping.getInstancesInAllGroups( selected, TimePoint.class ));
-				grouping.addFilter( Tile.class, SpimDataFilteringAndGrouping.getInstancesInAllGroups( selected, Tile.class ));
-				grouping.addFilter( Channel.class, SpimDataFilteringAndGrouping.getInstancesInAllGroups( selected, Channel.class ));
-				*/
-			}
-			
-			final List< List< BasicViewDescription< ? > > > groupedViews = grouping.getGroupedViews( true );
-			
-			final List< ViewId > bestViews = new ArrayList<>();
-			for (final List< ? extends ViewId > group : groupedViews)
-				bestViews.add( viewSelection.getBestView( group ) );
 				
-			
-			if (previewResults)
-			{
-				GenericDialogPlus gdp = new GenericDialogPlus("Preview Selected Illuminations");
-			
-				for (int i = 0; i < groupedViews.size(); i++)
+				@Override
+				public void run()
 				{
-					List< BasicViewDescription< ? > > group = groupedViews.get( i );
-					ViewId bestView = bestViews.get( i );
+					final GenericDialogPlus gdpParams = new GenericDialogPlus( "Illumination Selection" );
+					gdpParams.addCheckbox( "Process only selection", false );
+					gdpParams.addCheckbox( "Show selection results before applying", true );
+					addViewSelectionQuery( gdpParams );
 					
-					String desc = getViewDescriptionStringWithoutIllum( (BasicViewDescription< ? > ) bestView);
-					String[] choices = group.stream().map( v -> Integer.toString( v.getViewSetup().getAttribute( Illumination.class ).getId() ))
-						.collect( Collectors.toList() ).toArray( new String[group.size()] );
-					String bestIllum = Integer.toString( ( (BasicViewDescription< ? > ) bestView).getViewSetup().getAttribute( Illumination.class ).getId());
+					gdpParams.showDialog();
 					
-					gdp.addChoice( desc, choices, bestIllum );					
+					if (gdpParams.wasCanceled())
+						return;
+					
+					final boolean limitToSelection = gdpParams.getNextBoolean();
+					final boolean previewResults = gdpParams.getNextBoolean();
+					final ViewSelection< ViewId > viewSelection = getViewSelectionResult( gdpParams, panel.getSpimData().getSequenceDescription() );			
+					
+					
+					final SpimDataFilteringAndGrouping< AbstractSpimData< ? > > grouping =
+							new SpimDataFilteringAndGrouping< AbstractSpimData<?> >(panel.getSpimData());
+					grouping.addGroupingFactor( Illumination.class );
+					
+					/*
+					grouping.addApplicationAxis( Angle.class );
+					grouping.addApplicationAxis( TimePoint.class );
+					grouping.addApplicationAxis( Tile.class );
+					grouping.addApplicationAxis( Channel.class );
+					*/
+					
+					if (limitToSelection)
+					{
+						final Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selected = ((GroupedRowWindow)panel).selectedRowsGroups();
+						grouping.addFilters( selected.stream().reduce( new ArrayList<>(), (x, y) -> {x.addAll(y); return x;} ) );
+						/*
+						grouping.addFilter( TimePoint.class, SpimDataFilteringAndGrouping.getInstancesInAllGroups( selected, TimePoint.class ));
+						grouping.addFilter( Tile.class, SpimDataFilteringAndGrouping.getInstancesInAllGroups( selected, Tile.class ));
+						grouping.addFilter( Channel.class, SpimDataFilteringAndGrouping.getInstancesInAllGroups( selected, Channel.class ));
+						*/
+					}
+					
+					// get grouped views and filter out missing views
+					final List< List< BasicViewDescription< ? > > > groupedViews = grouping.getGroupedViews( true );
+					groupedViews.forEach( g -> SpimData2.filterMissingViews( panel.getSpimData(), g ) );
+					
+					
+					List< ViewId > bestViews = new ArrayList<>();
+					for (final List<? extends ViewId > group : groupedViews)
+						bestViews.add( viewSelection.getBestView( group ) );
+
+						
+					
+					if (previewResults)
+					{
+						
+						List< ViewId > bestViewsFromGUI = new IlluminationSelectionPreviewGUI().previewWithGUI( groupedViews, bestViews, panel.bdvPopup().getBDV());
+						
+						if (bestViewsFromGUI == null)
+						{
+							System.out.println( "Illumination selection aborted by user." );
+							return;
+						}
+							
+						else
+							bestViews = bestViewsFromGUI;
+						
+					}
+					
+					//bestViews.forEach( System.out::println );
+					
+					final Set<ViewId> missingViews = new HashSet<>();
+					
+					for (final List< ? extends ViewId > group : groupedViews)
+						for (final ViewId vid : group)
+							if (!(bestViews.contains( vid )))
+								missingViews.add( vid );
+					
+					missingViews.forEach( System.out::println );
+					
+					// TODO: are there realistic cases where we will not have a SpimData?
+					if (SpimData.class.isInstance( panel.getSpimData() ))
+					{
+						SpimData data = (SpimData) panel.getSpimData();				
+						SpimData2 dataNew = getCopyWithMissingViews( data, missingViews );				
+						
+						panel.setSpimData( dataNew );
+						panel.updateContent();
+						panel.saveXML();
+					}
+					else
+					{
+						System.err.println( "ERROR: Cannot replace data because it is not SpimData." );
+					}
 					
 				}
-				
-				gdp.showDialog();
-				
-				if (gdp.wasCanceled())
-					return;
-				
-				for (int i = 0; i < groupedViews.size(); i++)
-				{
-					int indexChoice = gdp.getNextChoiceIndex();
-					bestViews.set( i, groupedViews.get( i ).get( indexChoice ) );
-				}
-				
-			}
+			}).start();
 			
-			//bestViews.forEach( System.out::println );
-			
-			final Set<ViewId> missingViews = new HashSet<>();
-			
-			for (final List< ? extends ViewId > group : groupedViews)
-				for (final ViewId vid : group)
-					if (!(bestViews.contains( vid )))
-						missingViews.add( vid );
-			
-			missingViews.forEach( System.out::println );
-			
-			// TODO: are there realistic cases where we will not have a SpimData?
-			if (SpimData.class.isInstance( panel.getSpimData() ))
-			{
-				SpimData data = (SpimData) panel.getSpimData();				
-				SpimData2 dataNew = getCopyWithMissingViews( data, missingViews );				
-				
-				((FilteredAndGroupedExplorerPanel< ?, ? >)panel).setSpimData( dataNew );
-				panel.updateContent();
-				panel.saveXML();
-			}
-			else
-			{
-				System.err.println( "ERROR: Cannot replace data because it is not SpimData." );
-			}
 			
 		}
 		
@@ -241,4 +268,9 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 				", Angle " + vd.getViewSetup().getAttribute( Angle.class ).getId() +
 				", Channel " + vd.getViewSetup().getAttribute( Channel.class ).getId();
 	}
+	
+	
+	
+	
+		
 }
