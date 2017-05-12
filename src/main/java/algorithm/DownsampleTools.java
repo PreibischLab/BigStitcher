@@ -16,7 +16,8 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
-import spim.process.interestpointdetection.Downsample;
+import spim.process.interestpointdetection.methods.downsampling.Downsample;
+
 
 public class DownsampleTools
 {
