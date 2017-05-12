@@ -1,8 +1,6 @@
 package gui;
 
 import java.awt.Image;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,9 +8,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
-import java.util.Timer;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -33,7 +31,6 @@ import javax.swing.event.DocumentListener;
 import bdv.BigDataViewer;
 import bdv.tools.transformation.TransformedSource;
 import bdv.viewer.state.SourceState;
-import bdv.viewer.state.ViewerState;
 import gui.RegularTranformHelpers.RegularTranslationParameters;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
@@ -45,7 +42,6 @@ import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Dimensions;
-import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
@@ -136,10 +132,41 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		
 	}
 	
+	private void applyGridPreset(GridPreset gp)
+	{
+		for (int i = 0; i < gp.alternating.length; i ++)
+			alternatingCheckboxes.get( i ).setSelected( gp.alternating[i] );
+		
+		for (int i = 0; i < gp.increasing.length; i ++)
+			increasingCheckboxes.get( i ).setSelected( gp.increasing[i] );
+		
+		orderTextField.setText( gp.dimensionOrder );
+		
+		update();
+	}
+	
 	private static final List<GridPreset> presets = new ArrayList<>();
 	static
 	{
 		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {true, true} , "y,x" ) );
+		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {false, true} , "y,x" ) );
+		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {true, false} , "y,x" ) );
+		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {false, false} , "y,x" ) );
+		
+		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {true, true} , "x,y" ) );
+		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {false, true} , "x,y" ) );
+		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {true, false} , "x,y" ) );
+		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {false, false} , "x,y" ) );
+		
+		presets.add( new GridPreset( new boolean[] {true, false}, new boolean[] {true, true} , "x,y" ) );
+		presets.add( new GridPreset( new boolean[] {false, true}, new boolean[] {true, false} , "y,x" ) );
+		presets.add( new GridPreset( new boolean[] {true, false}, new boolean[] {false, true} , "x,y" ) );
+		presets.add( new GridPreset( new boolean[] {false, true}, new boolean[] {false, false} , "y,x" ) );
+		
+		presets.add( new GridPreset( new boolean[] {true, false}, new boolean[] {true, false} , "x,y" ) );
+		presets.add( new GridPreset( new boolean[] {false, true}, new boolean[] {true, false} , "y,x" ) );
+		presets.add( new GridPreset( new boolean[] {true, false}, new boolean[] {false, false} , "y,x" ) );
+		presets.add( new GridPreset( new boolean[] {false, true}, new boolean[] {false, false} , "x,y" ) );
 	}
 	
 	private ExplorerWindow< AS, ?> parent;
@@ -236,7 +263,8 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		for (int i = 0; i < 8; i++)
 		{
 			JButton imgI = new JButton( new ImageIcon( images[0][i] ) );
-			imgI.addActionListener( e -> System.out.println( "click." ) );
+			final Integer ii = i;
+			imgI.addActionListener( e -> applyGridPreset( presets.get( ii ) ) );
 			presetPanelRow1.add( imgI );
 		}
 
@@ -245,7 +273,8 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		for (int i = 0; i < 8; i++)
 		{
 			JButton imgI = new JButton( new ImageIcon( images[1][i] ) );
-			imgI.addActionListener( e -> System.out.println( "clack." ) );
+			final Integer ii = i;
+			imgI.addActionListener( e -> applyGridPreset( presets.get( 8 + ii ) ) );
 			presetPanelRow2.add( imgI );
 		}
 		
