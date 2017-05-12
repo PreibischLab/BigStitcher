@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -31,7 +32,7 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	@Override
 	public String getColumnName(int column)
 	{
-		return new String[]{"ViewID A", "ViewID B", "cross correlation", "shift"}[column];
+		return new String[]{"ViewIDs A", "ViewIDs B", "cross correlation", "shift"}[column];
 	}
 
 
@@ -64,14 +65,23 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex)
 	{
-		switch ( columnIndex ) {
-		case 0:
-			return results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getA();
-		case 1:
-			return results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getB();
-		case 2:
+		if (columnIndex == 0)
+		{
+			Set< ViewId > views = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getA();
+			List< String > descs = views.stream().map( view -> "(View " + view.getViewSetupId() + ", Timepoint " + view.getTimePointId() + ")" ).collect( Collectors.toList() );
+			return "[" + String.join( ", ", descs ) + "]";
+		}
+			
+		else if (columnIndex == 1)
+		{
+			Set< ViewId > views = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getB();
+			List< String > descs = views.stream().map( view -> "(View " + view.getViewSetupId() + ", Timepoint " + view.getTimePointId() + ")" ).collect( Collectors.toList() );
+			return "[" + String.join( ", ", descs ) + "]";
+		}
+		else if (columnIndex == 2)
 			return results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).r();
-		case 3:
+		else if (columnIndex == 3)
+		{
 			double[] shift = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).getTransform().getRowPackedCopy();
 			
 			StringBuilder res = new StringBuilder();
@@ -86,10 +96,11 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 			res.append(", ");
 			res.append(df.format( shift[11]) );
 			return res.toString();
-			
-		default:
-			return "";
 		}
+			
+		else
+			return "";
+		
 	}
 	
 	

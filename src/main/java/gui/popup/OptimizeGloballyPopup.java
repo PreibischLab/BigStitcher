@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -96,8 +97,11 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			GenericDialog gdFixing = new GenericDialog( "Pick view (group) to fix" );
 			List<String> choices = new ArrayList<>();
 			for (Set< ViewId > s : viewIds)
-				choices.add( s.toString() );
-			gdFixing.addChoice( "view to fix", choices.toArray( new String[choices.size()] ), choices.get( 0 ) );
+			{
+				List< String > descs = s.stream().map( view -> "(View " + view.getViewSetupId() + ", Timepoint " + view.getTimePointId() + ")" ).collect( Collectors.toList() );
+				choices.add( "[" + String.join( ", ", descs ) + "]" );
+			}
+			gdFixing.addChoice( "view (group) to fix", choices.toArray( new String[choices.size()] ), choices.get( 0 ) );
 			
 			
 			gdFixing.showDialog();
