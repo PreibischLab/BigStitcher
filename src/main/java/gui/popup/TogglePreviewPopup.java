@@ -6,20 +6,10 @@ import java.awt.event.ActionListener;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
-import bdv.BigDataViewer;
-import bdv.tools.transformation.TransformedSource;
-import bdv.viewer.state.SourceState;
 import gui.StitchingExplorerPanel;
-import gui.popup.TestPopup.MyActionListener;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.data.registration.ViewTransform;
-import mpicbg.spim.data.registration.ViewTransformAffine;
-import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
-import net.imglib2.realtransform.AffineGet;
-import net.imglib2.realtransform.AffineTransform3D;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 
