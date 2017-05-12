@@ -614,11 +614,14 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 
 	public void quit()
 	{
-		FilteredAndGroupedExplorerPanel< AS,? > FilteredAndGroupedExplorerPanel = (FilteredAndGroupedExplorerPanel< AS,? >)parent;
-		FilteredAndGroupedExplorerPanel.getListeners().remove( this );
-		parent.bdvPopup().getBDV().getViewer().setCurrentViewerTransform( oldViewerTransform );
+		FilteredAndGroupedExplorerPanel< AS,? > panel = (FilteredAndGroupedExplorerPanel< AS,? >)parent;
+		panel.getListeners().remove( this );
 		
-		spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel.resetBDVManualTransformations( parent.bdvPopup().getBDV() );
+		final BigDataViewer bdv = parent.bdvPopup().getBDV();		
+		if(!(bdv == null))
+			bdv.getViewer().setCurrentViewerTransform( oldViewerTransform );
+		
+		FilteredAndGroupedExplorerPanel.resetBDVManualTransformations( parent.bdvPopup().getBDV() );
 		parent.bdvPopup().getBDV().getViewer().requestRepaint();
 		
 		
