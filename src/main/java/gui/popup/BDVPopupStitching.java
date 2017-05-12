@@ -18,6 +18,7 @@ import algorithm.SpimDataTools;
 import bdv.AbstractSpimSource;
 import bdv.BigDataViewer;
 import bdv.BigDataViewerActions;
+import bdv.SpimSource;
 import bdv.ViewerImgLoader;
 import bdv.spimdata.WrapBasicImgLoader;
 import bdv.tools.InitializeViewerState;
@@ -200,7 +201,9 @@ public class BDVPopupStitching extends BDVPopup
 		for(int i = 0; i < bdv.getViewer().getState().getSources().size(); ++i)
 		{
 			Integer timepointId = data.getSequenceDescription().getTimePoints().getTimePointsOrdered().get( bdv.getViewer().getState().getCurrentTimepoint()).getId();
-			BasicViewDescription< ? > vd = data.getSequenceDescription().getViewDescriptions().get( new ViewId( timepointId, i ) );
+			
+			SpimSource<?> src = (SpimSource< ? >)((TransformedSource< ? >)bdv.getViewer().getState().getSources().get( i ).getSpimSource()).getWrappedSource();
+			BasicViewDescription< ? > vd = data.getSequenceDescription().getViewDescriptions().get( new ViewId( timepointId, src.getSetupId()) );
 			vds.add( vd );
 			vdToSource.put( vd, i );
 		}
