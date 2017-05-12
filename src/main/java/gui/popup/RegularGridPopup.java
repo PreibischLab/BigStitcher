@@ -27,7 +27,7 @@ import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 
-public class TestPopup extends JMenuItem implements ExplorerWindowSetable {
+public class RegularGridPopup extends JMenuItem implements ExplorerWindowSetable {
 	
 	private static final long serialVersionUID = 5234649267634013390L;
 	public static boolean showWarning = true;
@@ -35,9 +35,9 @@ public class TestPopup extends JMenuItem implements ExplorerWindowSetable {
 	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 	PreviewRegularGridPanel< ? > regularGridPanel;
 
-	public TestPopup() 
+	public RegularGridPopup() 
 	{
-		super( "Test..." );
+		super( "Move Tiles to Regular Grid manually" );
 		this.addActionListener( new MyActionListener() );
 	}
 
@@ -72,7 +72,7 @@ public class TestPopup extends JMenuItem implements ExplorerWindowSetable {
 			
 			regularGridPanel = new PreviewRegularGridPanel<>( panel );
 									
-			JFrame frame = new JFrame( "Link Explorer" );
+			JFrame frame = new JFrame( "Regular Grid Options" );
 			frame.add( regularGridPanel, BorderLayout.CENTER );
 			frame.setSize( regularGridPanel.getPreferredSize() );
 			

@@ -80,7 +80,7 @@ import gui.popup.OptimizeGloballyPopup;
 import gui.popup.OptimizeGloballyPopupExpertBatch;
 import gui.popup.SelectIlluminationPopup;
 import gui.popup.SimpleRemoveLinkPopup;
-import gui.popup.TestPopup;
+import gui.popup.RegularGridPopup;
 import gui.popup.TogglePreviewPopup;
 import input.FractalImgLoader;
 import spim.fiji.spimdata.explorer.popup.Separator;
@@ -563,7 +563,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
-		popups.add( new TestPopup() );
+		popups.add( new RegularGridPopup() );
 		popups.add( new BoundingBoxPopup() );
 		popups.add( new RemoveTransformationPopup() );
 		popups.add( new DisplayOverlapTestPopup() );
