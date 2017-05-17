@@ -143,7 +143,7 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 		// set the initial focus to the table
 		panel.table.requestFocus();
 		
-		
+		frame.requestFocus();
 		currentMode = mode;
 	}
 	

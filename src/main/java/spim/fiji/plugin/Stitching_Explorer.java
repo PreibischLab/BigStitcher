@@ -61,7 +61,7 @@ public class Stitching_Explorer implements PlugIn
 			}
 		});
 
-		if ( !result.queryXML( "Stitching Explorer", "", false, false, false, false ) && !newDataset && !useFractal && !useSimulatedBeads )
+		if ( !result.queryXML( "Stitching Explorer", "", false, false, false, false, false ) && !newDataset && !useFractal && !useSimulatedBeads )
 			return;
 
 		final SpimData2 data;

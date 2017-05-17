@@ -86,6 +86,11 @@ public class IlluminationSelectionPreviewGUI
 	
 	public static void updateBDV(final BigDataViewer bdv, ViewId bestView)
 	{
+		// do nothing if BDV is not open
+		if (bdv == null)
+			return;
+		
+		// FIXME? is there a better way to get the ViewId of BDV sources?
 		List< SourceState< ? > > sources = bdv.getViewer().getState().getSources();
 		bdv.getViewer().setTimepoint( bestView.getTimePointId() );
 		

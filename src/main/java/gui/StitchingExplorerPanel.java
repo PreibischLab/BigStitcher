@@ -113,6 +113,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 	LinkExplorerPanel linkExplorer;
 	JFrame linkFrame;
+	
+	// offset to get different "random" colors
+	private long colorOffset = 0;
 
 	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
 			final X io, boolean startBDVifHDF5)
@@ -553,12 +556,12 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		removeLinkPopup.setStitchingResults( stitchingResults );
 		popups.add( removeLinkPopup );
 		
-		DemoLinkOverlayPopup dlPopup = new DemoLinkOverlayPopup(demoLinkOverlay);
-		popups.add( dlPopup );
+		//DemoLinkOverlayPopup dlPopup = new DemoLinkOverlayPopup(demoLinkOverlay);
+		//popups.add( dlPopup );
 
 		popups.add( new ApplyBDVTransformationPopup() );
 		popups.add( new TogglePreviewPopup() );
-		popups.add( new BoundingBoxPopup() );
+		//popups.add( new BoundingBoxPopup() );
 
 		popups.add( new Separator() );
 
@@ -566,7 +569,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new RegularGridPopup() );
 		popups.add( new BoundingBoxPopup() );
 		popups.add( new RemoveTransformationPopup() );
-		popups.add( new DisplayOverlapTestPopup() );
+		//popups.add( new DisplayOverlapTestPopup() );
 		popups.add( new SelectIlluminationPopup() );
 		popups.add( new Separator() );
 
@@ -818,7 +821,17 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 					final BDVPopup p = bdvPopup();
 					if ( p != null && p.bdv != null && p.bdv.getViewerFrame().isVisible() )
+					{
 						updateBDV( p.bdv, colorMode, data, null, selectedRows );
+						if (!colorMode)
+							BDVPopupStitching.colorByChannels( p.bdv, data );
+						else
+						{
+							// cycle between color schemes
+							colorOffset = (colorOffset + 1) % 5;
+							colorSources( p.bdv.getSetupAssignments().getConverterSetups(), colorOffset );
+						}
+					}
 				}
 			}
 

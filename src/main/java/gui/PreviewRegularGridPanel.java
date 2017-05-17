@@ -619,10 +619,12 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		
 		final BigDataViewer bdv = parent.bdvPopup().getBDV();		
 		if(!(bdv == null))
+		{
 			bdv.getViewer().setCurrentViewerTransform( oldViewerTransform );
 		
-		FilteredAndGroupedExplorerPanel.resetBDVManualTransformations( parent.bdvPopup().getBDV() );
-		parent.bdvPopup().getBDV().getViewer().requestRepaint();
+			FilteredAndGroupedExplorerPanel.resetBDVManualTransformations( parent.bdvPopup().getBDV() );
+			parent.bdvPopup().getBDV().getViewer().requestRepaint();
+		}
 		
 		
 	}
