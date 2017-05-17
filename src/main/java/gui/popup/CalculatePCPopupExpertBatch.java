@@ -70,14 +70,27 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 				@Override
 				public void run()
 				{
+				
+					FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
+					SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
 					
-					SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 
-							SpimDataFilteringAndGrouping.askUserForGrouping( (FilteredAndGroupedExplorerPanel< ? extends AbstractSpimData< ? >, ? > ) panel);
+					filteringAndGrouping.askUserForFiltering( panelFG );
+					if (filteringAndGrouping.getDialogWasCancelled())
+						return;
 					
+					filteringAndGrouping.askUserForGrouping( panelFG );
+					if (filteringAndGrouping.getDialogWasCancelled())
+						return;
+					
+					filteringAndGrouping.askUserForGroupingAggregator();
+					if (filteringAndGrouping.getDialogWasCancelled())
+						return;
 					
 					PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
 					
-					long[] dsFactors = CalculatePCPopup.askForDownsampling( false );
+					long[] dsFactors = CalculatePCPopup.askForDownsampling( panel.getSpimData(), false );
+					if (dsFactors == null)
+						return;
 					
 					
 					List< Pair< ViewId, ViewId > > pairs = filteringAndGrouping.getComparisons().stream().map( 

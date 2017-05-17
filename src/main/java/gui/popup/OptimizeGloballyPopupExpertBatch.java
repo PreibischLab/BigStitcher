@@ -75,9 +75,19 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 			if (params == null)
 				return;
 			
-			final SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = SpimDataFilteringAndGrouping.askUserForGrouping( (FilteredAndGroupedExplorerPanel<? extends AbstractSpimData< ? >, ? >) panel );
+			FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
+			SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
 			
-			// why can type not be BasicViewDescriotion?
+			filteringAndGrouping.askUserForFiltering( panelFG );
+			if (filteringAndGrouping.getDialogWasCancelled())
+				return;
+			
+			filteringAndGrouping.askUserForGrouping( panelFG );
+			if (filteringAndGrouping.getDialogWasCancelled())
+				return;
+			
+			
+			// why can type not be BasicViewDescription?
 			PairwiseSetup< ViewId > setup = new PairwiseSetup< ViewId >(
 					filteringAndGrouping.getFilteredViews().stream().map( x -> (ViewId) x ).collect( Collectors.toList() ),
 					filteringAndGrouping.getGroupedViews( false ).stream().map( x -> 

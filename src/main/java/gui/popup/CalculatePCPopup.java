@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.swing.JComponent;
@@ -30,6 +31,7 @@ import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.base.NamedEntity;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
@@ -41,6 +43,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -79,31 +82,87 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 		return this;
 	}
 
-	static long[] askForDownsampling(boolean is2d)
+	public static long[] askForDownsampling(AbstractSpimData< ? > data, boolean is2d)
 	{
-		GenericDialogPlus gdp = new GenericDialogPlus( "Manual downsampling" );
-		gdp.addChoice( "downsample x", ds, ds[0] );
-		gdp.addChoice( "downsample y", ds, ds[0] );
-		if ( !is2d )
-		{
-			gdp.addChoice( "downsample z", ds, ds[0] );
-		}
+		// get first non-missing viewDescription
+		final Optional<? extends BasicViewDescription< ? > > firstPresent = 
+				data.getSequenceDescription().getViewDescriptions().values().stream().filter( v -> v.isPresent() ).findFirst();
 		
-		gdp.showDialog();
-		long[] dsFactors = new long[] {1,1,1};
+		boolean askForManualDownsampling = true;
+		final long[] downSamplingFactors = new long[] {1, 1, 1};
 		
-		if (!gdp.wasCanceled())
+		// ask for precomputed levels if we have at least one present view and a MultiResolutionImgLoader
+		if (firstPresent.isPresent())
 		{
-			dsFactors[0] = Integer.parseInt( gdp.getNextChoice() );
-			dsFactors[1] = Integer.parseInt( gdp.getNextChoice() );
-			if ( !is2d )
+			if (MultiResolutionImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ))
 			{
-				dsFactors[2] = Integer.parseInt( gdp.getNextChoice() );
+				// by default, we do not ask for manual ds if we have multiresolution data
+				askForManualDownsampling = false;
+				
+				GenericDialog gd = new GenericDialog( "Use precomputed downsampling" );
+				
+				final MultiResolutionImgLoader mrImgLoader = (MultiResolutionImgLoader) data.getSequenceDescription().getImgLoader();
+				final double[][] mipmapResolutions = mrImgLoader.getSetupImgLoader( firstPresent.get().getViewSetupId()).getMipmapResolutions();
+				final String[] dsStrings = new String[mipmapResolutions.length];
+				
+				for (int i = 0; i<mipmapResolutions.length; i++)
+				{
+					final String fx = ((Long)Math.round( mipmapResolutions[i][0] )).toString(); 
+					final String fy = ((Long)Math.round( mipmapResolutions[i][1] )).toString(); 
+					final String fz = ((Long)Math.round( mipmapResolutions[i][2] )).toString();
+					final String dsString = String.join( ", ", fx, fy, fz );
+					dsStrings[i] = dsString;
+				}
+				
+				gd.addChoice( "downsampling (x, y, z)", dsStrings, dsStrings[0] );
+				gd.addCheckbox( "manually select downsampling", false );
+				
+				gd.showDialog();
+
+				if ( gd.wasCanceled() )
+					return null;
+				
+				final String dsChoice = gd.getNextChoice();
+				final String[] choiceSplit = dsChoice.split( ", " );
+				downSamplingFactors[0] = Long.parseLong( choiceSplit[0] );
+				downSamplingFactors[1] = Long.parseLong( choiceSplit[1] );
+				downSamplingFactors[2] = Long.parseLong( choiceSplit[2] );
+				
+				askForManualDownsampling = gd.getNextBoolean();
+			
 			}
 		}
 		
-		return dsFactors;
+		if (!askForManualDownsampling)
+			return downSamplingFactors;
+		
+		GenericDialogPlus gdp = new GenericDialogPlus( "Manual downsampling" );
+		gdp.addChoice( "downsample x", ds, Long.toString( downSamplingFactors[0] ));
+		gdp.addChoice( "downsample y", ds, Long.toString( downSamplingFactors[1] ) );
+		if ( !is2d )
+		{
+			gdp.addChoice( "downsample z", ds, Long.toString( downSamplingFactors[2] ) );
+		}
+		
+		gdp.showDialog();
+		
+		if (gdp.wasCanceled())
+			return null;
+			
+			downSamplingFactors[0] = Integer.parseInt( gdp.getNextChoice() );
+			downSamplingFactors[1] = Integer.parseInt( gdp.getNextChoice() );
+			if ( !is2d )
+			{
+				downSamplingFactors[2] = Integer.parseInt( gdp.getNextChoice() );
+			}
+		
+		
+		return downSamplingFactors;
 	}
+		
+		
+		
+
 
 	public class MyActionListener implements ActionListener
 	{
@@ -159,31 +218,6 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					gd.addChoice( "illumination to use", illuminationNames.toArray( new String[0] ), "pick brightest" );
 					
 					
-					// Ask for downsampling factors
-					
-					// we have a HDF5 dataset - display mipmap resolutins present as choices
-					if ( MultiResolutionImgLoader.class.isInstance( sd.getImgLoader() ))
-					{
-						MultiResolutionImgLoader mrImgLoader = (MultiResolutionImgLoader) sd.getImgLoader();
-						// we consider the resolutions present for the first selected ViewId
-						double[][] mipmapResolutions = mrImgLoader.getSetupImgLoader( panel.firstSelectedVD().getViewSetupId()).getMipmapResolutions();
-						String[] dsStrings = new String[mipmapResolutions.length];
-						
-						for (int i = 0; i<mipmapResolutions.length; i++)
-						{
-							String fx = ((Long)Math.round( mipmapResolutions[i][0] )).toString(); 
-							String fy = ((Long)Math.round( mipmapResolutions[i][1] )).toString(); 
-							String fz = ((Long)Math.round( mipmapResolutions[i][2] )).toString();
-							String dsString = String.join( ", ", fx, fy, fz );
-							dsStrings[i] = dsString;
-						}
-						
-						gd.addChoice( "downsampling (x, y, z)", dsStrings, dsStrings[0] );
-						
-					}
-					
-					gd.addCheckbox( "manually select downsampling", false );
-					
 					gd.showDialog();
 
 					if ( gd.wasCanceled() )
@@ -193,29 +227,10 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					String illum = gd.getNextChoice();
 					
 
-					//long[] downSamplingFactors = !is2d ? new long[3] : new long[2];
-					long[] downSamplingFactors = new long[] {1, 1, 1};
 					
-					if (( MultiResolutionImgLoader.class.isInstance( sd.getImgLoader() )))
-					{
-						String dsChoice = gd.getNextChoice();
-						String[] choiceSplit = dsChoice.split( ", " );
-						downSamplingFactors[0] = Long.parseLong( choiceSplit[0] );
-						downSamplingFactors[1] = Long.parseLong( choiceSplit[1] );
-						downSamplingFactors[2] = Long.parseLong( choiceSplit[2] );
-					}
-					
-					boolean manualDownsampling = gd.getNextBoolean();
-					
-					if (manualDownsampling)
-						downSamplingFactors = askForDownsampling( is2d );
-					
-					
-					
-					/*
-		
-					
-					*/
+					final long[] downSamplingFactors = askForDownsampling( panel.getSpimData(), is2d );
+					if (downSamplingFactors == null)
+						return;
 
 					PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
 					if ( params == null )
