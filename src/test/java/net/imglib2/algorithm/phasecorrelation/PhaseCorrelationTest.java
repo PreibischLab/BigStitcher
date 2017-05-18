@@ -6,16 +6,27 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.math3.ode.ExpandableStatefulODE;
 import org.junit.Test;
 
+import mpicbg.imglib.interpolation.linear.LinearInterpolatorFactory;
+import mpicbg.imglib.outofbounds.OutOfBoundsStrategyFactory;
 import net.imglib2.FinalInterval;
+import net.imglib2.FinalRealInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
+import net.imglib2.realtransform.AffineGet;
+import net.imglib2.realtransform.AffineRandomAccessible;
+import net.imglib2.realtransform.RealViews;
+import net.imglib2.realtransform.Translation2D;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
+import net.imglib2.util.Util;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 public class PhaseCorrelationTest {
@@ -70,20 +81,26 @@ public class PhaseCorrelationTest {
 		for( FloatType t : img )
 			t.set( rnd.nextFloat());
 		
-		long shiftX = -20;
+		long shiftX = -2;
 		long shiftY = -2;
 		
-		FinalInterval interval2 = new FinalInterval(new long[] {50, 50});
-		FinalInterval interval1 = Intervals.translate(interval2, -shiftX, 0);
-		interval1 = Intervals.translate(interval1, -shiftY, 1);
+		FinalInterval interval1 = new FinalInterval(new long[] {50, 50});
+		FinalInterval interval2 = Intervals.translate(interval1, shiftX, 0);
+		interval2 = Intervals.translate(interval2, shiftY, 1);
 
 		int [] extension = new int[img.numDimensions()];
 		Arrays.fill(extension, 10);
 		
-		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(Views.zeroMin(Views.interval(img, interval1)), Views.zeroMin(Views.interval(img, interval2)), extension, new ArrayImgFactory<FloatType>(), 
+		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(
+				Views.zeroMin(Views.interval(Views.extendZero( img ), interval1)),
+				Views.zeroMin(Views.interval(Views.extendZero( img ), interval2)),
+				extension, new ArrayImgFactory<FloatType>(), 
 				new FloatType(), new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 		
-		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.zeroMin(Views.interval(img, interval1)), Views.zeroMin(Views.interval(img, interval2)), 20, 0, false, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm,
+				Views.zeroMin(Views.interval(Views.extendZero( img ), interval1)),
+				Views.zeroMin(Views.interval(Views.extendZero( img ), interval2)),
+				20, 0, false, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 		
 		long[] expected = new long[]{shiftX, shiftY};
 		long[] found = new long[img.numDimensions()];
@@ -91,8 +108,60 @@ public class PhaseCorrelationTest {
 		
 		
 		shiftPeak.getShift().localize(found);
+		System.out.println( Util.printCoordinates( found ) );
 		
 		assertArrayEquals(expected, found);
 		
 	}
+	
+	@Test
+	public void testPCRealShift() {
+		
+		// TODO: very large shifts (nearly no overlap) lead to incorrect shift determination (as expected)
+		// maybe we can optimize behaviour in this situation
+		Img< FloatType > img = ArrayImgs.floats( 200, 200 );
+		Random rnd = new Random( System.currentTimeMillis() );
+		
+		for( FloatType t : img )
+			t.set( rnd.nextFloat());
+		
+		double shiftX = -20.9;
+		double shiftY = 1.9;
+		
+		// to test < 0.5 px off
+		final double eps = 0.5;
+		
+		FinalInterval interval2 = new FinalInterval(new long[] {50, 50});
+		
+		
+
+		AffineRandomAccessible< FloatType, AffineGet > imgTr = RealViews.affine( Views.interpolate( Views.extendZero( img ), new NLinearInterpolatorFactory<>() ), new Translation2D( shiftX, shiftY ));
+		IntervalView< FloatType > img2 = Views.interval( Views.raster( imgTr ), interval2);
+		
+		int [] extension = new int[img.numDimensions()];
+		Arrays.fill(extension, 10);
+		
+		RandomAccessibleInterval<FloatType> pcm = PhaseCorrelation2.calculatePCM(Views.zeroMin(img2), Views.zeroMin(Views.interval(img, interval2)), extension, new ArrayImgFactory<FloatType>(), 
+				new FloatType(), new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		
+		PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift(pcm, Views.zeroMin(img2), Views.zeroMin(Views.interval(img, interval2)), 20, 0, true, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		
+		
+		double[] expected = new double[]{shiftX, shiftY};
+		double[] found = new double[img.numDimensions()];
+		
+		
+		
+		
+		shiftPeak.getSubpixelShift().localize(found);
+		
+		System.out.println( Util.printCoordinates( found ) );
+		
+		
+		for (int d = 0; d < expected.length; d++)
+			assertTrue( Math.abs( expected[d] - found[d] ) < eps );
+		
+	}
+	
+	
 }
