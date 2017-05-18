@@ -245,8 +245,16 @@ public class BDVPopupStitching extends BDVPopup
 		List< List< BasicViewDescription< ? > > > vdGroups = SpimDataTools.collapseByAttributes( vds, groupingFactors );
 		
 		// nothing to group
-		if (vdGroups.size() <= 1)
+		if (vdGroups.size() < 1)
 			return;
+		
+		// one group -> white
+		if (vdGroups.size() == 1)
+		{
+			FilteredAndGroupedExplorerPanel.whiteSources(bdv.getSetupAssignments().getConverterSetups());
+			return;
+		}
+		
 		List<ArrayList<ConverterSetup>> groups =  new ArrayList<>();
 		
 		for (List< BasicViewDescription< ? > > lVd : vdGroups)
