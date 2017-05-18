@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -19,6 +20,7 @@ import com.jgoodies.common.base.Strings;
 import algorithm.GroupedViewAggregator;
 import algorithm.GroupedViewAggregator.ActionType;
 import algorithm.PairwiseStitchingParameters;
+import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.SpimDataTools;
 import algorithm.TransformTools;
 import algorithm.globalopt.GroupedViews;
@@ -36,7 +38,9 @@ import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
+import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.ViewId;
+import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -44,7 +48,9 @@ import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.SpimData2;
+import spim.fiji.spimdata.ViewSetupUtils;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
+import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
@@ -176,6 +182,27 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 				@Override
 				public void run()
 				{
+					
+					
+					FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
+					SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
+					
+					// use whatever is selected in panel as filters
+					filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
+					
+					// get the grouping from panel and compare Tiles
+					panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
+					filteringAndGrouping.addComparisonAxis( Tile.class );
+					
+					// ask user what to do with grouped views
+					filteringAndGrouping.askUserForGroupingAggregator();
+					if (filteringAndGrouping.getDialogWasCancelled())
+						return;
+					
+					// TODO: do a meaningful is2d check
+					boolean is2d = false;
+					
+					/*
 					final AbstractSpimData< ? > d = panel.getSpimData();
 					final AbstractSequenceDescription< ?, ?, ? > sd = d.getSequenceDescription();
 					final ViewRegistrations vr = d.getViewRegistrations();
@@ -227,6 +254,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					String illum = gd.getNextChoice();
 					
 
+					*/
 					
 					final long[] downSamplingFactors = askForDownsampling( panel.getSpimData(), is2d );
 					if (downSamplingFactors == null)
@@ -239,12 +267,14 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					// final ArrayList< ViewId > viewIdsSelectedChannel = new
 					// ArrayList<>();
 
+					/*
 					int channelIdxInGroup = channelNames.indexOf( channel ) - 1;
 					boolean doChannelAverage = channelIdxInGroup < 0;
 
 					int illumIdxInGroup = illuminationNames.indexOf( illum ) - 1;
 					boolean doIllumBrightest = illumIdxInGroup < 0;
 
+					 */
 					/*
 					 * // get only one channel from grouped views if (
 					 * !doGrouped ) { for (GroupedViews g : viewIds) {
@@ -253,6 +283,32 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					 * viewIdsSelectedChannel.addAll( viewIds ); }
 					 */
 
+					List< Pair< ViewId, ViewId > > pairs = filteringAndGrouping.getComparisons().stream().map( 
+							( c ) -> new ValuePair<ViewId, ViewId>(new GroupedViews( c.getA() ), new GroupedViews( c.getB() )) ).collect( Collectors.toList() );
+
+					final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
+							pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
+							filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
+							downSamplingFactors );
+
+					// update StitchingResults with Results
+					for ( final PairwiseStitchingResult< ViewId > psr : results )
+					{
+						
+						if (psr == null)
+							continue;
+						
+						// find the ViewId of the GroupedViews that the results
+						// belong to
+						Set<ViewId> gvA = psr.pair().getA();
+						Set<ViewId> gvB = psr.pair().getB();
+						
+
+						stitchingResults.setPairwiseResultForPair( new ValuePair< >( gvA, gvB ), psr );
+					}
+					
+					/*
+					
 					// find all pairwise matchings that we need to compute
 					final HashMap< ViewId, Dimensions > vd = new HashMap< >();
 					final HashMap< ViewId, TranslationGet > vl = new HashMap< >();
@@ -310,6 +366,8 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 
 						stitchingResults.setPairwiseResultForPair( new ValuePair< >( gvA, gvB ), psr );
 					}
+					
+					*/
 				}
 			} ).start();
 
