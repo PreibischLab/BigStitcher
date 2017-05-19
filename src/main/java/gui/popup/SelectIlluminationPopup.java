@@ -8,6 +8,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -18,6 +23,7 @@ import algorithm.illuminationselection.IlluminationSelectionPreviewGUI;
 import algorithm.illuminationselection.ViewSelection;
 import fiji.util.gui.GenericDialogPlus;
 import ij.gui.GenericDialog;
+import javassist.bytecode.analysis.Executor;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
@@ -130,10 +136,37 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 					final List< List< BasicViewDescription< ? > > > groupedViews = grouping.getGroupedViews( true );
 					groupedViews.forEach( g -> SpimData2.filterMissingViews( panel.getSpimData(), g ) );
 					
-					
+					// multithreaded best illuination determination
+					List< Callable< ViewId > > tasks = new ArrayList<>();					
 					List< ViewId > bestViews = new ArrayList<>();
+					ExecutorService service = Executors.newFixedThreadPool(Math.max( 2, Runtime.getRuntime().availableProcessors() ));
+					
 					for (final List<? extends ViewId > group : groupedViews)
-						bestViews.add( viewSelection.getBestView( group ) );
+						tasks.add( new Callable< ViewId >()
+						{
+							
+							@Override
+							public ViewId call() throws Exception
+							{
+								return viewSelection.getBestView( group );
+							}
+						} );
+						
+					List< Future< ViewId > > futures;
+					try
+					{
+						futures = service.invokeAll( tasks );
+						
+						for (Future< ViewId > f : futures)
+							bestViews.add( f.get() );
+					}
+					catch ( InterruptedException | ExecutionException e )
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					service.shutdown();					
 
 						
 					

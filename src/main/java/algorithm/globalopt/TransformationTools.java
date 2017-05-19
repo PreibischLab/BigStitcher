@@ -285,7 +285,7 @@ public class TransformationTools
 					
 					if (nonTranslationsEqual)
 					{
-						System.err.println( "non translations equal" );
+						System.out.println( "non translations equal" );
 						result = computeStitching(
 								p.getA(),
 								p.getB(),
@@ -308,7 +308,7 @@ public class TransformationTools
 								gva,
 								downsamplingFactors,
 								serviceLocal );
-						System.err.println( "non translations NOT equal" );
+						System.out.println( "non translations NOT equal, using virtually fused views for stitching" );
 					}
 					
 					
