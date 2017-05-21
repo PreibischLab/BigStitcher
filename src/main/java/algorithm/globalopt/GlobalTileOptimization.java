@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Dimensions;
+import net.imglib2.FinalDimensions;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -49,17 +51,17 @@ public class GlobalTileOptimization
 {
 	
 	/**
-	 * @param numDimensions
-	 * @param views identifieres of the "views" to be stitched
+	 * @param model an instance of the model we wish to fit to data
+	 * @param viewSets identifieres of the sets of "views" to be stitched
 	 * @param fixedViews identifieres of the fixed views
 	 * @param initialTranslations approximate initial translations for each view
 	 * @param pairwiseResults collection of available calculated pairwise shifts
-	 * @param params 
+	 * @param params  parameters for global optimization
 	 * @return a mapping of view identifieres to locations in global space
 	 */
 	public static < C extends Comparable< C >, M extends AbstractAffineModel3D<M>> Map<Set<C>, AffineGet> twoRoundGlobalOptimization(
 			final M model,
-			final List< Set< C > > views,
+			final List< Set< C > > viewSets,
 			final Collection< Set<C> > fixedViews,
 			final Map<C, AffineGet> initialTransforms,
 			final Map<C, Dimensions> viewDimensions, 
@@ -67,77 +69,98 @@ public class GlobalTileOptimization
 			final GlobalOptimizationParameters params)
 	{
 		
-		//Collections.sort( views );
 		
-		// create strong links for all pairs with valid pairwise results
+		// 1) create strong links for all pairs with valid pairwise results
 		List<Link< Set<C> >> strongLinks = new ArrayList<>();
 		for (PairwiseStitchingResult< C > res : pairwiseResults)
 		{
-			// only consider Pairs that were also selected
-			if (res.r() > params.correlationT && views.contains( res.pair().getA()) && views.contains( res.pair().getB()))
+			// only consider Pairs that were selected and that have high enough correlation
+			if (res.r() > params.correlationT && viewSets.contains( res.pair().getA()) && viewSets.contains( res.pair().getB()))
 			{
 				strongLinks.add( new Link< Set<C> >( res.pair().getA(), res.pair().getB(), res.getTransform(), LinkType.STRONG ) );
-			//	System.out.println( "added strong link between " + ((ViewId) res.pair().getA()).getViewSetupId() + " and " + ((ViewId) res.pair().getB()).getViewSetupId() + ": " + res.getTransform() );
+				//System.out.println( "added strong link between " + ((ViewId) res.pair().getA()).getViewSetupId() + " and " + ((ViewId) res.pair().getB()).getViewSetupId() + ": " + res.getTransform() );
 			}
 		}
 		
+		// 2) find connected components in strong link graph
 		List< Set< Set<C> > > connectedComponents = Link.getConnectedComponents( strongLinks, LinkType.STRONG );
 		
-		// create weak links between every pair of views that are not both in a conn.comp.
-		// TODO: we should only connect tiles within a reasonable radius to each other (for performance reasons)
+		
+		// 3) create weak links between every pair of views that are not both in the same conn.comp.
 		List<Link<Set<C>>> weakLinks = new ArrayList<>();
-		for (int i = 0; i < views.size(); i++)
+		for (int i = 0; i < viewSets.size(); i++)
 		{
-			for(int j = i+1; j < views.size(); j++)
+			for(int j = i+1; j < viewSets.size(); j++)
 			{
+				int indexI = -1;
+				int counter = 0;
+				for (Set< Set<C> > cc : connectedComponents)
+				{
+					if ( cc.contains( viewSets.get( i ) ) )
+						indexI = counter;
+					++counter;
+				}
 				
-				if(!(anyContains( views.get( i), connectedComponents ) && 
-						anyContains( views.get( j), connectedComponents ) ) )
+				int indexJ = -1;
+				counter = 0;
+				for (Set< Set<C> > cc : connectedComponents)
+				{
+					if ( cc.contains( viewSets.get( j ) ) )
+						indexJ = counter;
+					++counter;
+				}
+
+				if( (indexI == -1 && indexJ == -1) || (indexI != indexJ))
 				{
 					
+					// check overlap if requested and only add weak links between overlapping view sets 
 					if (params.useOnlyOverlappingPairs && viewDimensions != null)
 					{
-					List<Dimensions> dimsA = new ArrayList<>();
-					List<Dimensions> dimsB = new ArrayList<>();
-					List<AffineTransform3D> transformsA = new ArrayList<>();
-					List<AffineTransform3D> transformsB = new ArrayList<>();
+						final List<Dimensions> dimsA = new ArrayList<>();
+						final List<Dimensions> dimsB = new ArrayList<>();
+						final List<AffineTransform3D> transformsA = new ArrayList<>();
+						final List<AffineTransform3D> transformsB = new ArrayList<>();
+						
+						// get view transformations and dimensions for view pair
+						for (final C v : viewSets.get( i ))
+						{
+							dimsA.add( viewDimensions.get( v ) );
+							AffineTransform3D at = new AffineTransform3D();
+							at.set( initialTransforms.get( v ).getRowPackedCopy() );
+							transformsA.add( at );
+						}
+						for (final C v : viewSets.get( j ))
+						{
+							dimsB.add( viewDimensions.get( v ) );
+							AffineTransform3D at = new AffineTransform3D();
+							at.set( initialTransforms.get( v ).getRowPackedCopy() );
+							transformsB.add( at );
+						}
+						
+						// check for overlap with a SimpleBoundingBoxOverlap
+						boolean overlap = SimpleBoundingBoxOverlap.overlaps( SimpleBoundingBoxOverlap.getBoundingBox( dimsA, transformsA ), 
+								SimpleBoundingBoxOverlap.getBoundingBox( dimsB, transformsB ));
+						
+						if (!overlap)
+							continue;
 					
-					for (C v : views.get( i ))
-					{
-						dimsA.add( viewDimensions.get( v ) );
-						AffineTransform3D at = new AffineTransform3D();
-						at.set( initialTransforms.get( i ).getRowPackedCopy() );
-						transformsA.add( at );
 					}
-					for (C v : views.get( j ))
-					{
-						dimsB.add( viewDimensions.get( v ) );
-						AffineTransform3D at = new AffineTransform3D();
-						at.set( initialTransforms.get( j ).getRowPackedCopy() );
-						transformsB.add( at );
-					}
 					
-					boolean overlap = SimpleBoundingBoxOverlap.overlaps( SimpleBoundingBoxOverlap.getBoundingBox( dimsA, transformsA ), 
-							SimpleBoundingBoxOverlap.getBoundingBox( dimsB, transformsB ));
+					// we use the first views in set to determine the map back transform for the weak link
+					// TODO: handle the case of different transforms in the view sets
+					AffineGet mapBack = TransformTools.mapBackTransform( initialTransforms.get( viewSets.get( j ).iterator().next() ),
+							initialTransforms.get( viewSets.get( i ).iterator().next() ));
 					
-					if (!overlap)
-						continue;
-					
-					}
-					// TODO: is it okay to just use the first view here?
-					AffineGet mapBack = TransformTools.mapBackTransform( initialTransforms.get( views.get( j ).iterator().next() ),
-							initialTransforms.get( views.get( i ).iterator().next() ));
-					
-					System.out.println( "added weak link between " + views.get( i ) + " and " + views.get( j ) + ": " + mapBack );
-//					System.out.println( "added weak link between " + ((ViewId)views.get( i )).getViewSetupId() + " and " + ((ViewId)views.get( j )).getViewSetupId() + ": " + mapBack );
-					weakLinks.add( new Link< Set<C> >( views.get( i ), views.get( j ), mapBack, LinkType.WEAK ) );
+					//System.out.println( "added weak link between " + viewSets.get( i ) + " and " + viewSets.get( j ) + ": " + mapBack );
+					//System.out.println( "added weak link between " + ((ViewId)views.get( i )).getViewSetupId() + " and " + ((ViewId)views.get( j )).getViewSetupId() + ": " + mapBack );
+					weakLinks.add( new Link< Set<C> >( viewSets.get( i ), viewSets.get( j ), mapBack, LinkType.WEAK ) );
 				}
 				
 			}
 		}		
 		
 		
-		// TODO: 
+		// TODO: handle the 2D case? maybe we should do this outside and just call this method with a 2d model instance
 		/*
 		if (numDimensions == 2){
 			Pair< TileConfiguration, Map< C, Tile< TranslationModel2D > > > tc = prepareTileConfiguration( new TranslationModel2D(), null, strongLinks, fixedViews, null, params, null );
@@ -158,34 +181,47 @@ public class GlobalTileOptimization
 		{
 		
 		*/
-			Pair< TileConfiguration, Map< Set<C>, Tile< M > > > tc = prepareTileConfiguration( model.copy(), null, strongLinks, fixedViews, null, null );
-			Map< Set<C>, AffineGet > optimizeResult1 = optimize( tc.getA(), tc.getB(), params, null );
-			
-			optimizeResult1.forEach( (x, y) -> System.out.println( x + ": " + y ) );
 		
+		// 4) build TileConfiguration using the strong links and optimize
+		final Pair< TileConfiguration, Map< Set< C >, Tile< M > > > tcFirstPass = prepareTileConfiguration( model.copy(), null,
+				strongLinks, fixedViews, null, null );
+		final Map< Set< C >, AffineGet > optimizeResultFirstPass = optimize( tcFirstPass.getA(), tcFirstPass.getB(), params, null );
+
+		// optimizeResultFirstPass.forEach( (x, y) -> System.out.println( x + ": " + y ) );
+
+		// if we have no weak links or the user does not want to do a second round, return first round result
+		if ( weakLinks.size() == 0 || !params.doTwoRound )
+			return optimizeResultFirstPass;
+
 		
-			// we have no weak links, return first round result
-			// TODO: move connected components, so that they do not overlap
-			if (weakLinks.size() == 0 || !params.doTwoRound)
-				return optimizeResult1;
-		
-			Pair< TileConfiguration, Map< Set<C>, Tile< M > > > tc2 = prepareTileConfiguration( model.copy(), views, weakLinks, fixedViews, connectedComponents, optimizeResult1 );
-			Map< Set<C>, AffineGet > optimizeResult2 = optimize( tc2.getA(), tc2.getB(), new GlobalOptimizationParameters( 0.0, Double.MAX_VALUE, Double.MAX_VALUE , false, params.useOnlyOverlappingPairs), optimizeResult1 );
-			
-			return optimizeResult2;
-		//}
+		// 5) build TileCOnfiguration from weak links and optimize
+		final Pair< TileConfiguration, Map< Set< C >, Tile< M > > > tcSecondPass = prepareTileConfiguration( model.copy(), viewSets,
+				weakLinks, fixedViews, connectedComponents, optimizeResultFirstPass );
+		final Map< Set< C >, AffineGet > optimizeResultSecondPass = optimize( tcSecondPass.getA(), tcSecondPass.getB(), new GlobalOptimizationParameters(
+				0.0, Double.MAX_VALUE, Double.MAX_VALUE, false, params.useOnlyOverlappingPairs ), optimizeResultFirstPass );
+
+		return optimizeResultSecondPass;
 		
 	}
 
 	
-	
+	/**
+	 * build TileConfiguration for 2-round global optimization
+	 * @param model
+	 * @param views
+	 * @param links
+	 * @param fixedViews
+	 * @param groups
+	 * @param firstPassTransforms
+	 * @return
+	 */
 	public static < M extends AbstractAffineModel3D< M >, C> Pair<TileConfiguration, Map<Set<C>, Tile<M>>>  prepareTileConfiguration(
 			final M model,
 			final Collection< Set<C> > views,
 			final List< Link<Set<C>> > links,
 			final Collection< Set<C> > fixedViews,
 			final List< Set< Set<C> > > groups,
-			final Map<Set<C>, AffineGet> initialTransforms)
+			final Map<Set<C>, AffineGet> firstPassTransforms)
 	{
 				
 		final List< Set<C> > actualViews;
@@ -216,7 +252,7 @@ public class GlobalTileOptimization
 		
 		// assign the pointmatches to all the tiles
 		for ( Link<Set<C>> link : links )
-			addPointMatches( link, map.get(link.getFirst() ), map.get( link.getSecond() ), initialTransforms);
+			addPointMatches( link, map.get(link.getFirst() ), map.get( link.getSecond() ), firstPassTransforms);
 
 		// add and fix tiles as defined in the GlobalOptimizationType
 		final TileConfiguration tc = addAndFixTiles( actualViews, map, fixedViews);
@@ -355,16 +391,17 @@ public class GlobalTileOptimization
 	}
 	
 	protected static <C, M extends AbstractAffineModel3D< M >> void addPointMatches( 
-			final Link<Set<C>> pair, 
+			final Link<Set<C>> link, 
 			final Tile<M> tileA, 
 			final Tile<M> tileB,
-			final Map<Set<C>, AffineGet> initialTransforms
+			final Map<Set<C>, AffineGet> firstPassTransforms
 			)
 	{
 		final ArrayList< PointMatch > pm = new ArrayList< PointMatch >();
 		final List<Point> pointsA = new ArrayList<>();
 		final List<Point> pointsB = new ArrayList<>();
 		
+		// we use the vertices of the unit cube and their transformations as point matches 
 		final double[][] p = new double[][]{
 			{ 0, 0, 0 },
 			{ 1, 0, 0 },
@@ -379,26 +416,28 @@ public class GlobalTileOptimization
 		final double[][] pb = new double[8][3];
 		
 		
-		// we do not know any initial location
-		if (initialTransforms == null || 
-				!(initialTransforms.containsKey( pair.getFirst() ) || initialTransforms.containsKey( pair.getSecond() )))
+		// case 1: we have no first pass results (e.g. we are preparing for the first pass)
+		if (firstPassTransforms == null || 
+				!(firstPassTransforms.containsKey( link.getFirst() ) || firstPassTransforms.containsKey( link.getSecond() )))
 		{
 			
 			for (int i = 0; i < p.length; ++i)
 			{
-				pair.getShift().applyInverse( pb[i], p[i] );
+				link.getShift().applyInverse( pb[i], p[i] );
 				pointsA.add( new Point( p[i] ) );
 				pointsB.add( new Point( pb[i] ) );
 			}
 		}
 		
-		// we already know the location of the first point in its (grouped) tile
-		else if (initialTransforms.containsKey( pair.getFirst() ) && !initialTransforms.containsKey( pair.getSecond() ))
+		// case 2: we already know the location of the first point in its (grouped) tile
+		// TODO: we will use the point match from first to second even if we have first pass results for second, is this okay?
+		// else if (firstPassTransforms.containsKey( link.getFirst() ) && !firstPassTransforms.containsKey( link.getSecond() ))
+		else if (firstPassTransforms.containsKey( link.getFirst() ) )
 		{
 			for (int i = 0; i < p.length; ++i)
 			{
-				initialTransforms.get( pair.getFirst() ).applyInverse( pa[i], p[i] );
-				pair.getShift().applyInverse( pb[i], pa[i] );
+				firstPassTransforms.get( link.getFirst() ).applyInverse(  pa[i], p[i] );
+				link.getShift().applyInverse( pb[i], pa[i] );
 				pointsA.add( new Point( p[i] ) );
 				pointsB.add( new Point( pb[i] ) );	
 			}
@@ -406,25 +445,22 @@ public class GlobalTileOptimization
 			
 		} 
 		
-		// we know the location of the second point
-		else if (initialTransforms.containsKey( pair.getSecond() ) && !initialTransforms.containsKey( pair.getFirst() ))
+		// case 3: we use the first pass result from second view group 
+		//else if (firstPassTransforms.containsKey( link.getSecond() ) && !firstPassTransforms.containsKey( link.getFirst() ))
+		else
 		{
 	
 			for (int i = 0; i < p.length; ++i)
 			{
 				
-				initialTransforms.get( pair.getSecond() ).applyInverse( pb[i], p[i] );
-				pair.getShift().apply( pb[i], pa[i] );
+				firstPassTransforms.get( link.getSecond() ).applyInverse( pb[i], p[i] );
+				link.getShift().apply( pb[i], pa[i] );
 				pointsA.add( new Point( pa[i] ) );
 				pointsB.add( new Point( p[i] ) );
 			}
 
 		}
 		
-		// do not add a point match if both points are in pre-registered groups
-		else
-			return;
-
 		// create PointMatches and connect Tiles
 		for (int i = 0; i < pointsA.size(); ++i)
 			pm.add( new PointMatch( pointsA.get( i ) , pointsB.get( i ) ) );
@@ -471,7 +507,7 @@ public class GlobalTileOptimization
 			tiles.add( tile );
 		}	
 
-		// now add connected tiles to the tileconfiguration
+		// now add connected tiles to the TileConfiguration
 		for ( final Tile< M > tile : tiles )
 			if ( tile.getConnectedTiles().size() > 0 )
 				tc.addTile( tile );
@@ -532,7 +568,7 @@ public class GlobalTileOptimization
 	{
 		
 		List<Set<Integer>> views = new ArrayList<>();
-		for (int i : new int[] {1,2,3,-1})
+		for (int i : new int[] {1,2,3,4})
 		{
 			HashSet< Integer > hashSet = new HashSet<Integer>();
 			hashSet.add( i );
@@ -540,26 +576,37 @@ public class GlobalTileOptimization
 		}
 		
 		List<Set< Integer>> fixedViews = new ArrayList<>();
-		HashSet< Integer > hashSet = new HashSet<Integer>();
-		hashSet.add( 1 );
-		fixedViews.add( hashSet );
+		HashSet< Integer > firstView = new HashSet<Integer>();
+		firstView.add( 1 );
+		fixedViews.add( firstView );
 		
 		Map<Integer, AffineGet> initialTransforms = new HashMap<>();
 		initialTransforms.put( 1, new Translation3D( 0, 0, 0 ) );
 		initialTransforms.put( 2, new Translation3D( 0.75, 0, 0 ) );
-		initialTransforms.put( -1, new Translation3D( 1.5, 0, 0 ) );
-		initialTransforms.put( 3, new Translation3D( 2.25, 0, 0 ) );
+		initialTransforms.put( 3, new Translation3D( 1.5, 0, 0 ) );
+		initialTransforms.put( 4, new Translation3D( 2.25, 0, 0 ) );
+		
+		Map<Integer, Dimensions> dims = new HashMap<>();
+		dims.put( 1, new FinalDimensions( 1,1,1 ) );
+		dims.put( 2, new FinalDimensions( 1,1,1 ) );
+		dims.put( 3, new FinalDimensions( 1,1,1 ) );
+		dims.put( 4, new FinalDimensions( 1,1,1 ) );
+		
+		
 		
 		List<PairwiseStitchingResult< Integer >> pairwiseResults = new ArrayList<>();
 		
 		HashSet< Integer > s1 = new HashSet<Integer>();
 		HashSet< Integer > s2 = new HashSet<Integer>();
-		s1.add( 1 );
-		s2.add( 2 );
+		s1.add( 2 );
+		s2.add( 3 );
 		
 		pairwiseResults.add( new PairwiseStitchingResult<>( new ValuePair<>(s1, s2 ), new Translation3D(1,0,0), 1.0 ) );
 		
-		Map< Set<Integer>, AffineGet > res = twoRoundGlobalOptimization( new AffineModel3D(), views, fixedViews, initialTransforms, null, pairwiseResults, new GlobalOptimizationParameters() );
+		final GlobalOptimizationParameters params = new GlobalOptimizationParameters();
+		params.useOnlyOverlappingPairs = true;
+		
+		Map< Set<Integer>, AffineGet > res = twoRoundGlobalOptimization( new TranslationModel3D(), views, fixedViews, initialTransforms, dims, pairwiseResults, params );
 		
 		res.forEach( ( x, y ) -> System.out.println( x + ": " + y ));
 	

@@ -4,8 +4,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -88,7 +90,35 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			for (List<ViewId> vidl : ((GroupedRowWindow)panel).selectedRowsViewIdGroups())
 				viewIds.add( new HashSet<ViewId>( vidl ) );
 			
-			//Collections.sort( viewIds );
+			
+			Collections.sort( viewIds, new Comparator< Set<ViewId > >()
+			{
+				@Override
+				public int compare(Set< ViewId > o1, Set< ViewId > o2)
+				{
+					final ArrayList< ViewId > o1List = new ArrayList<>(o1);
+					final ArrayList< ViewId > o2List = new ArrayList<>(o2);
+					Collections.sort( o1List );
+					Collections.sort( o2List );
+					Iterator< ViewId > it1 = o1List.iterator();
+					Iterator< ViewId > it2 = o2List.iterator();
+					while(it1.hasNext() && it2.hasNext())
+					{
+						int comp = it1.next().compareTo( it2.next() );
+						if (comp != 0)
+							return comp;
+					}
+					// list 1 is longer
+					if (it1.hasNext())
+						return -1;
+					// list 2 is longer
+					if (it2.hasNext())
+						return 1;
+					// lists equal
+					else
+						return 0;
+				}
+			} );
 			
 			// define fixed tiles
 			// the first selected Tile will be fixed
