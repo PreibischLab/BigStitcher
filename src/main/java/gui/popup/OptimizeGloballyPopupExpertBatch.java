@@ -139,9 +139,9 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 			{
 				System.out.println( subset );
 				
-				Map<ViewId, AffineGet> translations = new HashMap<>();
+				Map<ViewId, AffineGet> initialTransformations = new HashMap<>();
 				for (ViewId vid : subset.getViews())
-					translations.put( vid, filteringAndGrouping.getSpimData().getViewRegistrations().getViewRegistration( vid ).getModel());
+					initialTransformations.put( vid, filteringAndGrouping.getSpimData().getViewRegistrations().getViewRegistration( vid ).getModel());
 				
 				Map<ViewId, Dimensions> dims = new HashMap<>();
 				boolean allHaveSize = true;
@@ -174,80 +174,61 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 						new TranslationModel3D(),
 						subset.getGroups().stream().map( g -> g.getViews() ).collect( Collectors.toList() ),
 						fixed,
-						translations,
+						initialTransformations,
 						dims,
 						stitchingResults.getPairwiseResults().values(), 
 						params );
 				
-				//models.entrySet().forEach( el -> System.out.println( el.getKey() + ": " + el.getValue() )  );
 				
 				// view transformation of the first fixed view - every result will be relative to this
-				AffineGet vtFixed = new AffineTransform3D();
-				( (AffineTransform3D) vtFixed ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( fixed.get( 0 ).iterator().next() ).getModel().getRowPackedCopy());
-				
-			//			(AffineGet) panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ) ).getModel().copy();
-				
-				for (Set<ViewId> vid : models.keySet())
+				AffineTransform3D vtFixed = new AffineTransform3D();
+				vtFixed.set( panel.getSpimData().getViewRegistrations().getViewRegistration( fixed.get( 0 ).iterator().next() ).getModel().getRowPackedCopy());
+							
+				for ( Set< ViewId > vids : models.keySet() )
 				{
 					// the transformation determined by stitching
-					AffineGet ag = models.get( vid );//.getModel().getTranslation();
-					AffineTransform3D at = new AffineTransform3D();
-					at.set(ag.getRowPackedCopy() );
-					
-					for (ViewId vidi : vid)
+					AffineTransform3D modelTransform = new AffineTransform3D();
+					modelTransform.set( models.get( vids ).getRowPackedCopy() );
+
+					for ( ViewId vid : vids )
 					{
-						
+
 						// the original view transform of this tile
-						AffineGet transformOriginal = new AffineTransform3D();
-						( (AffineTransform3D) transformOriginal ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( vidi ).getModel().getRowPackedCopy());
-						
-						
-						
-						
+						AffineTransform3D transformOriginal = new AffineTransform3D();
+						transformOriginal.set( panel.getSpimData().getViewRegistrations()
+								.getViewRegistration( vid ).getModel().getRowPackedCopy() );
+
 						// transformation from fixed to original
-						AffineGet mapBackToFixed = TransformTools.mapBackTransform( transformOriginal, vtFixed );
-						// difference to transformation determined by optimization -> result
-						AffineTransform3D mapBackToOriginal = new AffineTransform3D();
+						AffineTransform3D transformRelativeToFixed = TransformTools.mapBackTransform( transformOriginal, vtFixed );
 						
-						mapBackToOriginal.set( mapBackToFixed.getRowPackedCopy() );
-						mapBackToOriginal.preConcatenate(  at.inverse() );
-						//mapBackToOriginal.set( TransformTools.mapBackTransform( at.inverse(), mapBackToFixed ).getRowPackedCopy());
-						
-						
-						System.out.println( "viewID: " + vid.iterator().next().getViewSetupId() );
+						// TODO: check mapBackTransform again
+						AffineTransform3D accumulativeTransform = TransformTools.mapBackTransform( modelTransform, transformRelativeToFixed );
+
+
+						System.out.println( "viewId: " + vids.iterator().next().getViewSetupId() );
 						System.out.println( "original:" + transformOriginal );
-						System.out.println( "tranform determined by optim:" + at );
-						System.out.println( "mapback to original inverse :" + mapBackToOriginal.inverse() );
-						System.out.println( "mapback to fixed:" + mapBackToFixed );
-						
-						//at.preConcatenate( mapBackToFixed );
-						
-						
-						//ViewTransform vt = new ViewTransformAffine( "Translation", at);
-						
+						System.out.println( "model: " + modelTransform );
+						System.out.println( "fixed -> original: " + transformRelativeToFixed );
+						System.out.println( "fixed -> original -> model: " + accumulativeTransform );
+
+						// at.preConcatenate( mapBackToFixed );
+
+						// ViewTransform vt = new ViewTransformAffine(
+						// "Translation", at);
+
 						// set the shift in stitchingResults
-						stitchingResults.getGlobalShifts().put( vid.iterator().next(), ag );
-						
-						
-								
-									
-									
-									ViewRegistration vr = filteringAndGrouping.getSpimData().getViewRegistrations().getViewRegistration( vidi );
-									
-		//							AffineTransform3D atI = at.copy();
-		//							atI.set( atI.get( 0, 3 ) - vr.getModel().get( 0, 3 ), 0, 3  );
-		//							atI.set( atI.get( 1, 3 ) - vr.getModel().get( 1, 3 ), 1, 3  );
-		//							atI.set( atI.get( 2, 3 ) - vr.getModel().get( 2, 3 ), 2, 3  );
-									
-									ViewTransform vt = new ViewTransformAffine( "stitching transformation", mapBackToOriginal.inverse() );
-									//if (d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().size() < 2)
-									filteringAndGrouping.getSpimData().getViewRegistrations().getViewRegistration( vidi ).preconcatenateTransform( vt );
-									//else
-									//	d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().set( 1 , vt);
-									filteringAndGrouping.getSpimData().getViewRegistrations().getViewRegistration( vidi ).updateModel();
-								
-						
-					
+						stitchingResults.getGlobalShifts().put( vids.iterator().next(), modelTransform );
+
+						// add to ViewRegistration
+						ViewTransform vtAccumulative = new ViewTransformAffine( "stitching transformation",
+								accumulativeTransform );
+
+						filteringAndGrouping.getSpimData().getViewRegistrations().getViewRegistration( vid )
+								.preconcatenateTransform( vtAccumulative );
+
+						filteringAndGrouping.getSpimData().getViewRegistrations().getViewRegistration( vid )
+								.updateModel();
+
 					}
 				}
 				

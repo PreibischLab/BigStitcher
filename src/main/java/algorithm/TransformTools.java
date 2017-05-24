@@ -36,7 +36,7 @@ public class TransformTools {
 		
 		return new ValuePair< AffineGet, AffineGet >( t, tt );
 	}
-	public static AffineGet mapBackTransform(AffineGet to, AffineGet from)
+	public static AffineTransform3D mapBackTransform(AffineGet to, AffineGet from)
 	{
 		final double[][] p = new double[][]{
 			{ 0, 0, 0 },
