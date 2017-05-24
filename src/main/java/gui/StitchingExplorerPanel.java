@@ -509,7 +509,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			@Override
 			public void windowClosing(WindowEvent evt)
 			{
-				quitLinkExplorer();
+				togglePreviewMode();
 			}
 		} );
 
