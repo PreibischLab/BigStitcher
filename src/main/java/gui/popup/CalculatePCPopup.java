@@ -194,6 +194,14 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
 					filteringAndGrouping.addComparisonAxis( Tile.class );
 					
+					// compare by Channel if channels were ungrouped in UI
+					if (!panelFG.getTableModel().getGroupingFactors().contains( Channel.class ))
+						filteringAndGrouping.addComparisonAxis( Channel.class );
+					
+					// compare by Illumination if illums were ungrouped in UI
+					if (!panelFG.getTableModel().getGroupingFactors().contains( Illumination.class ))
+						filteringAndGrouping.addComparisonAxis( Illumination.class );
+					
 					// ask user what to do with grouped views
 					filteringAndGrouping.askUserForGroupingAggregator();
 					if (filteringAndGrouping.getDialogWasCancelled())
