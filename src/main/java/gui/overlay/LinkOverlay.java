@@ -1,5 +1,6 @@
 package gui.overlay;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -143,7 +144,9 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 			else
 				graphics.setColor( getColor( stitchingResults.getPairwiseResults().get( p ).r(), maxr, minr ) );
 			
+			graphics.setStroke( new BasicStroke( 2.0f ) );
 			graphics.drawLine((int) gPos1[0],(int) gPos1[1],(int) gPos2[0],(int) gPos2[1] );
+			
 		}
 	}
 
