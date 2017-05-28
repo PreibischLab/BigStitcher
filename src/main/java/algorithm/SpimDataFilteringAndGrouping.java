@@ -31,6 +31,7 @@ import spim.fiji.datasetmanager.FileListDatasetDefinition;
 import spim.fiji.spimdata.SpimDataTools;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 {
@@ -142,23 +143,23 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		return SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), filters);
 	}
 	
-	public List< List< BasicViewDescription< ?  > >> getGroupedViews(boolean filtered)
+	public List< Group< BasicViewDescription< ?  > >> getGroupedViews(boolean filtered)
 	{
 		final List<BasicViewDescription< ? > > ungroupedElements =
 				SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), filtered? filters : new HashMap<>());
-		return SpimDataTools.groupByAttributes(ungroupedElements, groupingFactors);
+		return Group.combineBy( ungroupedElements, groupingFactors);
 	}
 	
-	public List<Pair<List< BasicViewDescription< ? extends BasicViewSetup > >, List< BasicViewDescription< ? extends BasicViewSetup >>>> getComparisons()
+	public List<Pair<Group< BasicViewDescription< ? extends BasicViewSetup > >, Group< BasicViewDescription< ? extends BasicViewSetup >>>> getComparisons()
 	{
-		final List<Pair<List< BasicViewDescription< ? extends BasicViewSetup > >, List< BasicViewDescription< ? extends BasicViewSetup >>>> res = new ArrayList<>();
+		final List<Pair<Group< BasicViewDescription< ? extends BasicViewSetup > >, Group< BasicViewDescription< ? extends BasicViewSetup >>>> res = new ArrayList<>();
 		
 		// filter first
 		final List<BasicViewDescription< ? > > ungroupedElements =
 				SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), filters);
 		// then group
-		final List< List< BasicViewDescription< ?  > >> groupedElements = 
-				SpimDataTools.groupByAttributes(ungroupedElements, groupingFactors);
+		final List< Group< BasicViewDescription< ?  > >> groupedElements = 
+				Group.combineBy(ungroupedElements, groupingFactors);
 		
 		// go through possible group pairs
 		for (int i = 0; i < groupedElements.size(); ++i)
@@ -175,7 +176,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		return res;		
 	}
 	
-	private static boolean groupsDifferByAny(List< BasicViewDescription< ?  > > vds1, List< BasicViewDescription< ?  > > vds2, Set<Class<? extends Entity>> entities)
+	private static boolean groupsDifferByAny(Iterable< BasicViewDescription< ?  > > vds1, Iterable< BasicViewDescription< ?  > > vds2, Set<Class<? extends Entity>> entities)
 	{
 		for (Class<? extends Entity> entity : entities)
 		{
@@ -229,10 +230,10 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	 * @param cl
 	 * @return
 	 */
-	public static List<? extends Entity> getInstancesInAllGroups(Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > vds, Class<? extends Entity> cl)
+	public static List<? extends Entity> getInstancesInAllGroups(Collection< ? extends Iterable< BasicViewDescription< ? extends BasicViewSetup > > > vds, Class<? extends Entity> cl)
 	{
 		Set<Entity> res = new HashSet<>();
-		Iterator< List< BasicViewDescription< ? extends BasicViewSetup > > > it = vds.iterator();
+		Iterator< ? extends Iterable< BasicViewDescription< ? extends BasicViewSetup > > > it = vds.iterator();
 		for (BasicViewDescription< ? extends BasicViewSetup > vd : it.next())
 			if (cl == TimePoint.class)
 				res.add( vd.getTimePoint() );
@@ -402,8 +403,8 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		final List<BasicViewDescription< ? > > ungroupedElements =
 						SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), getFilters());
 		// then group
-		final List< List< BasicViewDescription< ?  > >> groupedElements = 
-						SpimDataTools.groupByAttributes(ungroupedElements, getGroupingFactors());
+		final List< Group< BasicViewDescription< ?  > >> groupedElements = 
+						Group.combineBy( ungroupedElements, getGroupingFactors());
 		
 		for (Class<? extends Entity> cl : getGroupingFactors())
 		{

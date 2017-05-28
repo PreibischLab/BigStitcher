@@ -45,6 +45,7 @@ import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 
 public class PairwiseStitching
@@ -168,7 +169,7 @@ public class PairwiseStitching
 	 * @return
 	 */
 	public static <T extends RealType< T >, S extends RealType< S >> Pair< double[], Double > getShift(
-			final RandomAccessibleInterval< T > input1, final RandomAccessibleInterval< T > input2,
+			final RandomAccessibleInterval< T > input1, final RandomAccessibleInterval< S > input2,
 			final TranslationGet t1, final TranslationGet t2, final PairwiseStitchingParameters params,
 			final ExecutorService service)
 	{
@@ -184,7 +185,7 @@ public class PairwiseStitching
 		final RealInterval transformed2 = TransformTools.applyTranslation( input2, t2, singletonDims );
 
 		final RandomAccessibleInterval< T > img1;
-		final RandomAccessibleInterval< T > img2;
+		final RandomAccessibleInterval< S > img2;
 
 		// make sure it is zero-min
 		if ( !Views.isZeroMin( input1 ) )
@@ -289,8 +290,10 @@ public class PairwiseStitching
 				System.out.println( intervalSubpixelOffset1 + "," + intervalSubpixelOffset2 + "," + localRasterShift );
 				final double localRelativeShift = localRasterShift - ( intervalSubpixelOffset2 - intervalSubpixelOffset1 );
 	
-				// correct for the initial shift between the two inputs
-				entireIntervalShift[d] = ( transformed2.realMin( d2 ) - transformed1.realMin( d2 ) ) + localRelativeShift;
+				// do not correct for the initial shift between the two inputs
+				// We will use relative shifts frome here on
+				//entireIntervalShift[d] = ( transformed2.realMin( d2 ) - transformed1.realMin( d2 ) ) + localRelativeShift;
+				entireIntervalShift[d] = localRelativeShift;
 				d2++;
 			}
 		}
@@ -329,8 +332,8 @@ public class PairwiseStitching
 					setA.add( indexes.get( i ) );
 					Set<C> setB = new HashSet<>();
 					setA.add( indexes.get( j ) );
-					Pair< Set<C>, Set<C> > key = new ValuePair<>(setA,setB);
-					result.add( new PairwiseStitchingResult< C >( key, new Translation( resT.getA() ), resT.getB() ) );
+					Pair< Group<C>, Group<C> > key = new ValuePair<>(new Group<>(setA), new Group<>(setB));
+					result.add( new PairwiseStitchingResult< C >( key, null, new Translation( resT.getA() ), resT.getB() ) );
 				}
 			}
 		}
@@ -395,13 +398,15 @@ public class PairwiseStitching
 		Map< Integer, AffineGet > collect = tr.entrySet().stream().collect( Collectors.toMap( e -> 
 			e.getKey(), e -> {AffineTransform3D res = new AffineTransform3D(); res.set( e.getValue().getRowPackedCopy() ); return res; } ));
 		
-		Map< Set<Integer>, AffineGet > globalOptimization = GlobalTileOptimization.twoRoundGlobalOptimization( new TranslationModel3D(),
-				rais.keySet().stream().map( ( c ) -> {Set<Integer> s = new HashSet<>(); s.add( c ); return s;}).collect( Collectors.toList() ), 
-				null, 
-				collect,
-				pairwiseShifts, new GlobalOptimizationParameters() );
-
-		System.out.println( globalOptimization );
+		// TODO: replace with new globalOpt code
+		
+//		Map< Set<Integer>, AffineGet > globalOptimization = GlobalTileOptimization.twoRoundGlobalOptimization( new TranslationModel3D(),
+//				rais.keySet().stream().map( ( c ) -> {Set<Integer> s = new HashSet<>(); s.add( c ); return s;}).collect( Collectors.toList() ), 
+//				null, 
+//				collect,
+//				pairwiseShifts, new GlobalOptimizationParameters() );
+//
+//		System.out.println( globalOptimization );
 	}
 
 }

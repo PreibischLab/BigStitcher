@@ -18,6 +18,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 
 
@@ -27,8 +28,8 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 	private AbstractSpimData< ? > spimData;	
 	private final AffineTransform3D viewerTransform;	
 	public boolean isActive;
-	private ArrayList<Pair<Set<ViewId>, Set<ViewId>>> activeLinks;
-	private ValuePair<Set<ViewId>, Set<ViewId>> selectedLink;
+	private ArrayList<Pair<Group<? extends ViewId>, Group<? extends ViewId>>> activeLinks;
+	private ValuePair<Group<? extends ViewId>, Group<? extends ViewId>> selectedLink;
 	private Set<ViewId> reference;
 	
 	public void clearActiveLinks()
@@ -37,19 +38,19 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		this.reference = null;
 	}
 	
-	public void setActiveLinks(List<Pair<Set<ViewId>, Set<ViewId>>> vids, Set<ViewId> reference)
+	public void setActiveLinks(List<Pair<Group<? extends ViewId>, Group<? extends ViewId>>> vids, Set<ViewId> reference)
 	{
 		activeLinks.clear();
 		activeLinks.addAll( vids );
 		this.reference = reference;
 	}
 	
-	public void setSelectedLink(Pair<Set<ViewId>, Set<ViewId>> link)
+	public void setSelectedLink(Pair<Group<? extends ViewId>, Group<? extends ViewId>> link)
 	{
 		if (link == null)
 			selectedLink = null;
 		else
-			selectedLink = new ValuePair< Set<ViewId>, Set<ViewId> >( link.getA(), link.getB() );
+			selectedLink = new ValuePair<>( link.getA(), link.getB() );
 	}
 	
 

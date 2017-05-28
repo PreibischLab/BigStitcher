@@ -51,6 +51,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class GroupedViewAggregator
 {	
@@ -237,14 +238,14 @@ public class GroupedViewAggregator
 		
 	}
 	
-	public <T extends RealType<T>> RandomAccessibleInterval< T > aggregate(GroupedViews gv, 
+	public <T extends RealType<T>> RandomAccessibleInterval< T > aggregate(Group<? extends ViewId> gv, 
 												AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd,
 												long[] downsampleFactors,
 												final AffineTransform3D dsCorrectionT){
 		
 		Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> map = new HashMap<>();
 		
-		for (ViewId vid : gv.getViewIds())
+		for (ViewId vid : gv.getViews())
 		{
 			
 			BasicViewDescription< ? > vd = sd.getViewDescriptions().get( vid );
@@ -362,13 +363,13 @@ public class GroupedViewAggregator
 		setupsVID.add( new ViewId(0,1) );
 		setupsVID.add( new ViewId(0,2) );
 		setupsVID.add( new ViewId(0,3) );
-		GroupedViews gv = new GroupedViews( setupsVID );
+		Group<ViewId> gv = new Group<>( setupsVID );
 		
 		
 		
 		gva.aggregate( gv, sd, new long[] {1,1,1} , new AffineTransform3D());
 		
-		ImageJFunctions.show( (RandomAccessibleInterval< UnsignedShortType >)gva.aggregate( gv, sd , new long[] {1,1,1}, new AffineTransform3D()));
+		ImageJFunctions.show( (RandomAccessibleInterval< FloatType >)gva.aggregate( gv, sd , new long[] {1,1,1}, new AffineTransform3D()));
 		
 		new ImageJ();
 		

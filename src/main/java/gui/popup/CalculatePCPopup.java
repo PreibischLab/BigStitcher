@@ -34,6 +34,7 @@ import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.base.NamedEntity;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
@@ -55,6 +56,7 @@ import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
 {
@@ -291,8 +293,8 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					 * viewIdsSelectedChannel.addAll( viewIds ); }
 					 */
 
-					List< Pair< ViewId, ViewId > > pairs = filteringAndGrouping.getComparisons().stream().map( 
-							( c ) -> new ValuePair<ViewId, ViewId>(new GroupedViews( c.getA() ), new GroupedViews( c.getB() )) ).collect( Collectors.toList() );
+					List< Pair< Group< BasicViewDescription< ? extends BasicViewSetup > >, Group< BasicViewDescription< ? extends BasicViewSetup > > > > pairs 
+						= filteringAndGrouping.getComparisons();
 
 					final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
 							pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
@@ -308,8 +310,8 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 						
 						// find the ViewId of the GroupedViews that the results
 						// belong to
-						Set<ViewId> gvA = psr.pair().getA();
-						Set<ViewId> gvB = psr.pair().getB();
+						Set<ViewId> gvA = (Set< ViewId >) psr.pair().getA().getViews();
+						Set<ViewId> gvB = (Set< ViewId >) psr.pair().getB().getViews();
 						
 
 						stitchingResults.setPairwiseResultForPair( new ValuePair< >( gvA, gvB ), psr );

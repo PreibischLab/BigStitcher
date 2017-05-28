@@ -45,6 +45,7 @@ import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindowSetable
 {
@@ -133,22 +134,22 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 					}
 					
 					// get grouped views and filter out missing views
-					final List< List< BasicViewDescription< ? > > > groupedViews = grouping.getGroupedViews( true );
-					groupedViews.forEach( g -> SpimData2.filterMissingViews( panel.getSpimData(), g ) );
+					final List< Group< BasicViewDescription< ? > > > groupedViews = grouping.getGroupedViews( true );
+					groupedViews.forEach( g -> SpimData2.filterMissingViews( panel.getSpimData(), g.getViews() ) );
 					
 					// multithreaded best illuination determination
 					List< Callable< ViewId > > tasks = new ArrayList<>();					
 					List< ViewId > bestViews = new ArrayList<>();
 					ExecutorService service = Executors.newFixedThreadPool(Math.max( 2, Runtime.getRuntime().availableProcessors() ));
 					
-					for (final List<? extends ViewId > group : groupedViews)
+					for (final Group<? extends ViewId > group : groupedViews)
 						tasks.add( new Callable< ViewId >()
 						{
 							
 							@Override
 							public ViewId call() throws Exception
 							{
-								return viewSelection.getBestView( group );
+								return viewSelection.getBestView( group.getViews() );
 							}
 						} );
 						

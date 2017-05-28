@@ -46,6 +46,9 @@ import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
+import spim.process.interestpointregistration.global.pointmatchcreating.ImageCorrelationPointMatchCreator;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
 {
@@ -174,6 +177,21 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 				dims = null;
 			
 			
+			ArrayList< Group< ViewId > > groupsIn = new ArrayList<Group<ViewId>>();
+			viewIds.forEach( vids -> groupsIn.add( new Group<>(vids) ) );
+			
+			HashMap< ViewId, Tile< TranslationModel3D > > compute = spim.process.interestpointregistration.global.GlobalOpt.compute( 
+					new TranslationModel3D(), 
+					new ImageCorrelationPointMatchCreator( results, 0.4 ), 
+					new ConvergenceStrategy( 5 ),
+					fixedViews.iterator().next(), 
+					groupsIn );
+			
+			compute.forEach( (k, v) -> System.out.println( k + ": " + v.getModel() ) );
+			
+			if (true)
+				return;
+			
 			Map< Set< ViewId >, AffineGet > models = GlobalTileOptimization.twoRoundGlobalOptimization( 
 														new TranslationModel3D(),
 														viewIds,
@@ -182,6 +200,8 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 														dims,
 														results, 
 														params );
+			
+			
 			
 			
 			

@@ -91,7 +91,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 			PairwiseSetup< ViewId > setup = new PairwiseSetup< ViewId >(
 					filteringAndGrouping.getFilteredViews().stream().map( x -> (ViewId) x ).collect( Collectors.toList() ),
 					filteringAndGrouping.getGroupedViews( false ).stream().map( x -> 
-						new Group<ViewId>( x.stream().map( y -> (ViewId) y ).collect( Collectors.toList() ) )).collect( Collectors.toSet()  ))
+						new Group<ViewId>( x.getViews().stream().map( y -> (ViewId) y ).collect( Collectors.toList() ) )).collect( Collectors.toSet()  ))
 			{
 
 				@Override
@@ -201,20 +201,16 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 						// transformation from fixed to original
 						AffineTransform3D transformRelativeToFixed = TransformTools.mapBackTransform( transformOriginal, vtFixed );
 						
-						// TODO: check mapBackTransform again
 						AffineTransform3D accumulativeTransform = TransformTools.mapBackTransform( modelTransform, transformRelativeToFixed );
 
 
+						/*
 						System.out.println( "viewId: " + vids.iterator().next().getViewSetupId() );
 						System.out.println( "original:" + transformOriginal );
 						System.out.println( "model: " + modelTransform );
 						System.out.println( "fixed -> original: " + transformRelativeToFixed );
 						System.out.println( "fixed -> original -> model: " + accumulativeTransform );
-
-						// at.preConcatenate( mapBackToFixed );
-
-						// ViewTransform vt = new ViewTransformAffine(
-						// "Translation", at);
+						*/
 
 						// set the shift in stitchingResults
 						stitchingResults.getGlobalShifts().put( vids.iterator().next(), modelTransform );

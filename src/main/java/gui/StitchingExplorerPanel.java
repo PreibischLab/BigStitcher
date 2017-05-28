@@ -90,6 +90,7 @@ import spim.fiji.spimdata.interestpoints.ViewInterestPointLists;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import bdv.BigDataViewer;
 import bdv.img.hdf5.Hdf5ImageLoader;
 import bdv.tools.InitializeViewerState;
@@ -625,7 +626,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		resetBDVManualTransformations( bdvPopup().bdv );
 
-		ArrayList< Pair< Set< ViewId >, Set< ViewId > > > activeLinks = new ArrayList< >();
+		List< Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > activeLinks = new ArrayList< >();
 
 		for ( PairwiseStitchingResult< ViewId > psr : resultsForId )
 		{
@@ -641,7 +642,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			for ( List< BasicViewDescription< ? > > group : elements )
 			{
 				// there is a link selected -> other
-				if ( psr.pair().getA().equals( selectedVids ) && psr.pair().getB().containsAll( group ) )
+				if ( psr.pair().getA().equals( selectedVids ) && psr.pair().getB().getViews().containsAll( group ) )
 				{
 					// set all views of the other group visible
 					for ( final BasicViewDescription< ? > vd : group )
@@ -668,7 +669,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				}
 
 				// there is a link other -> selected
-				if ( psr.pair().getB().equals( selectedVids ) && psr.pair().getA().containsAll( group ) )
+				if ( psr.pair().getB().equals( selectedVids ) && psr.pair().getA().getViews().containsAll( group ) )
 				{
 					// set all views of the other group visible
 					for ( final BasicViewDescription< ? > vd : group )

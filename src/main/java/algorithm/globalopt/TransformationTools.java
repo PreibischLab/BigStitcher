@@ -3,6 +3,7 @@ package algorithm.globalopt;
 
 import input.GenerateSpimData;
 import spim.fiji.spimdata.SpimDataTools;
+import spim.fiji.spimdata.ViewSetupUtils;
 import spim.fiji.spimdata.boundingbox.BoundingBox;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Cursor;
 import net.imglib2.Dimensions;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealInterval;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
@@ -62,13 +64,14 @@ import net.imglib2.util.ValuePair;
 import spim.Threads;
 import spim.process.fusion.ImagePortion;
 import spim.process.fusion.boundingbox.overlap.IterativeBoundingBoxDetermination;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class TransformationTools
 {
 	
-	public static < T extends RealType< T > > Pair< double[], Double > computeStitchingNonEqualTransformations(
-			final ViewId viewIdA,
-			final ViewId viewIdB,
+	public static < T extends RealType< T > > Pair<Pair< double[], Double >, RealInterval> computeStitchingNonEqualTransformations(
+			final Group<? extends ViewId> viewIdsA,
+			final Group<? extends ViewId> viewIdsB,
 			final ViewRegistrations vrs,
 			final PairwiseStitchingParameters params,
 			final AbstractSequenceDescription< ?,? extends BasicViewDescription<?>, ? > sd,
@@ -81,38 +84,24 @@ public class TransformationTools
 		for (int d = 0; d < downsampleFactors.length; d++)
 			downsampleDbl[d] = downsampleFactors[d];
 		
-		IterativeBoundingBoxDetermination< ViewId > bbDet = new IterativeBoundingBoxDetermination<ViewId>( sd, vrs );
 		
+		// FIXME: remove cast of sd, change constructor?
+		IterativeBoundingBoxDetermination< ViewId > bbDet = new IterativeBoundingBoxDetermination<ViewId>( (SequenceDescription) sd, vrs );
+		
+		// get Overlap Bounding Box
 		final List<List<ViewId>> views = new ArrayList<>();
+		views.add( new ArrayList<>(viewIdsA.getViews()) );
+		views.add( new ArrayList<>(viewIdsB.getViews()) );
+		BoundingBox bbOverlap = bbDet.getMaxOverlapBoundingBox( views );
 		
-		// unwrap GroupedViews if necessary
-		final List<ViewId> viewsA = new ArrayList<>();
-		if (GroupedViews.class.isInstance( viewIdA ))
-			viewsA.addAll( ((GroupedViews) viewIdA ).getViewIds());
-		else
-			viewsA.add( viewIdA );
-		
-		final List<ViewId> viewsB = new ArrayList<>();
-		if (GroupedViews.class.isInstance( viewIdB ))
-			viewsB.addAll( ((GroupedViews) viewIdB ).getViewIds());
-		else
-			viewsB.add( viewIdB );
-		
-		// bounding box of 1st view group
-		views.add( viewsA );				
-		BoundingBox viewsABoundingBox = bbDet.getMaxBoundingBox( views );
-		
-		// add second view group and get overlap bounding box
-		views.add( viewsB );
-		BoundingBox bbOverlap = bbDet.getMaxOverlapBoundingBox( views );			
 		//System.out.println( "Overlap BB: " + Util.printInterval( bbOverlap ) );
-		
-		
+				
 		
 		List<RandomAccessibleInterval< FloatType >> raiOverlaps = new ArrayList<>();
 		
 		for (List< ViewId > tileViews : views)
 		{
+			// wrap every vid in list
 			List<List< ViewId >> wrapped = tileViews.stream().map( v -> {
 				ArrayList< ViewId > wrp = new ArrayList<ViewId>();
 				wrp.add( v );
@@ -139,15 +128,22 @@ public class TransformationTools
 		if (result == null)
 			return null;		
 		
+
 		for (int i = 0; i< result.getA().length; ++i)
 		{
 			result.getA()[i] *= downsampleFactors[i];
 			
+		}
+		
+		/*
 			// add shift between view group 1 bbox and overlap
 			result.getA()[i] += bbOverlap.realMin( i ) - viewsABoundingBox.realMin( i );
 		}
 		
+		*/
 		
+		
+		// TODO: return the bounding Box here
 		
 		System.out.println("integer shift: " + Util.printCoordinates(result.getA()));
 		System.out.print("cross-corr: " + result.getB());
@@ -155,15 +151,14 @@ public class TransformationTools
 		
 		//service.shutdown();
 		
-		return result;
+		return new ValuePair<>(result, bbOverlap);
 	
 	}
 	
-	public static < T extends RealType< T > > Pair< double[], Double > computeStitching(
-			final ViewId viewIdA,
-			final ViewId viewIdB,
-			final ViewRegistration vA,
-			final ViewRegistration vB,
+	public static < T extends RealType< T > > Pair<Pair< double[], Double >, RealInterval> computeStitching(
+			final Group<? extends ViewId> viewIdsA,
+			final Group<? extends ViewId> viewIdsB,
+			final ViewRegistrations vrs,
 			final PairwiseStitchingParameters params,
 			final AbstractSequenceDescription< ?,? extends BasicViewDescription<?>, ? > sd,
 			final GroupedViewAggregator gva,
@@ -174,13 +169,28 @@ public class TransformationTools
 		// the transformation that maps the downsampled image coordinates back to the original input(!) image space
 		final AffineTransform3D dsCorrectionT = new AffineTransform3D();
 		
+		// FIXME: remove cast of sd, change constructor?
+		IterativeBoundingBoxDetermination< ViewId > bbDet = new IterativeBoundingBoxDetermination<ViewId>( (SequenceDescription) sd, vrs );
+				
+		// get Overlap Bounding Box
+		final List<List<ViewId>> views = new ArrayList<>();
+		views.add( new ArrayList<>(viewIdsA.getViews()) );
+		views.add( new ArrayList<>(viewIdsB.getViews()) );
+		BoundingBox bbOverlap = bbDet.getMaxOverlapBoundingBox( views );
+		
+		if (bbOverlap == null)
+			return null;
+		
+		
+		
+		/*
 		// TODO: check if overlapping, else return immediately
 		// TODO: can we ensure we have a ImgLoader here (BDV wraps ImgLoader into a BasicImgLoader??)
 		if (ImgLoader.class.isInstance( sd.getImgLoader() ))
 		{
 			
-			Dimensions dimsA = ((ImgLoader)sd.getImgLoader()).getSetupImgLoader( viewIdA.getViewSetupId() ).getImageSize( viewIdA.getTimePointId() );
-			Dimensions dimsB = ((ImgLoader)sd.getImgLoader()).getSetupImgLoader( viewIdB.getViewSetupId() ).getImageSize( viewIdB.getTimePointId() );
+			Dimensions dimsA = ((ImgLoader)sd.getImgLoader()).getSetupImgLoader( viewIdsA.getViewSetupId() ).getImageSize( viewIdsA.getTimePointId() );
+			Dimensions dimsB = ((ImgLoader)sd.getImgLoader()).getSetupImgLoader( viewIdsB.getViewSetupId() ).getImageSize( viewIdsB.getTimePointId() );
 			
 			if (dimsA != null && dimsB != null)
 			{
@@ -193,29 +203,31 @@ public class TransformationTools
 		}
 
 		
-		
+		*/
 			
 		final RandomAccessibleInterval<T> img1;
 		final RandomAccessibleInterval<T> img2;
 
 		
-		
-		if (gva != null && GroupedViews.class.isInstance( viewIdA ))
+		/*
+		if (gva != null && GroupedViews.class.isInstance( viewIdsA ))
 		{
-			img1 = gva.aggregate( (GroupedViews) viewIdA, sd, downsampleFactors, dsCorrectionT );	
-			img2 = gva.aggregate( (GroupedViews) viewIdB, sd, downsampleFactors, dsCorrectionT );
+		*/
+			img1 = gva.aggregate( viewIdsA, sd, downsampleFactors, dsCorrectionT );	
+			img2 = gva.aggregate( viewIdsB, sd, downsampleFactors, dsCorrectionT );
+			/*
 		}
 		else
 		{
-			img1 = DownsampleTools.openAndDownsample( sd.getImgLoader(), viewIdA, downsampleFactors, dsCorrectionT );
-			img2 = DownsampleTools.openAndDownsample( sd.getImgLoader(), viewIdB, downsampleFactors, dsCorrectionT );
+			img1 = DownsampleTools.openAndDownsample( sd.getImgLoader(), viewIdsA, downsampleFactors, dsCorrectionT );
+			img2 = DownsampleTools.openAndDownsample( sd.getImgLoader(), viewIdsB, downsampleFactors, dsCorrectionT );
 		}
-
+	*/
 		
 		if (img1 == null || img2 == null)
 		{
-			IJ.log( "WARNING: Tried to open missing View when computing Stitching for " + viewIdA + " and " + 
-						viewIdB + ". No link between those could be determined");
+			IJ.log( "WARNING: Tried to open missing View when computing Stitching for " + viewIdsA + " and " + 
+						viewIdsB + ". No link between those could be determined");
 			return null;
 		}
 		
@@ -224,8 +236,8 @@ public class TransformationTools
 		
 		
 		// TODO: Test if 2d, and if then reduce dimensionality and ask for a 2d translation
-		Pair< AffineGet, TranslationGet > t1 = TransformTools.getInitialTransforms( vA, is2d, dsCorrectionT );
-		Pair< AffineGet, TranslationGet > t2 = TransformTools.getInitialTransforms( vB, is2d, dsCorrectionT );
+		Pair< AffineGet, TranslationGet > t1 = TransformTools.getInitialTransforms( vrs.getViewRegistration(viewIdsA.iterator().next()), is2d, dsCorrectionT );
+		Pair< AffineGet, TranslationGet > t2 = TransformTools.getInitialTransforms( vrs.getViewRegistration(viewIdsB.iterator().next()), is2d, dsCorrectionT );
 
 		final Pair< double[], Double > result;
 		
@@ -253,10 +265,10 @@ public class TransformationTools
 		
 		//service.shutdown();
 		
-		return result;
+		return new ValuePair< Pair<double[],Double>, RealInterval >( result, bbOverlap );
 	}
 
-	public static ArrayList< PairwiseStitchingResult<ViewId> > computePairs( 	final List< Pair< ViewId, ViewId > > pairs, 
+	public static <V extends ViewId > ArrayList< PairwiseStitchingResult<ViewId> > computePairs( 	final List< Pair<  Group< V >,  Group< V > > > pairs, 
 																		final PairwiseStitchingParameters params, 
 																		final ViewRegistrations vrs,
 																		final AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd, 
@@ -265,23 +277,26 @@ public class TransformationTools
 	{
 		// set up executor service
 		final ExecutorService serviceGlobal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 2 ) );
-		final ArrayList< Callable< Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > > > tasks = new ArrayList<>();
+		final ArrayList< Callable< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< double[], Double >, RealInterval> > > > tasks = new ArrayList<>();
 
-		for ( final Pair< ViewId, ViewId > p : pairs )
+		for ( final Pair< Group< V >, Group< V > > p : pairs )
 		{
-			tasks.add( new Callable< Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > >()
+			tasks.add( new Callable< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< double[], Double >, RealInterval> > >()
 			{
 				@Override
-				public Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > call() throws Exception
+				public Pair< Pair< Group< V >, Group< V > >, Pair<Pair< double[], Double >, RealInterval> > call() throws Exception
 				{
-					Pair< double[], Double > result = null;
+					Pair<Pair< double[], Double >, RealInterval> result = null;
 					
 					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() );
 
 					final ExecutorService serviceLocal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 4 ) );
 
-					// TODO: check for ViewRegistration "equality" here and use fused views if they differ
-					boolean nonTranslationsEqual = TransformTools.nonTranslationsEqual( vrs.getViewRegistration( p.getA()), vrs.getViewRegistration( p.getB() ));
+					// TODO: check for ViewRegistration "equality" here and use fused views if they differ					
+					final ViewId firstVdA = p.getA().iterator().next();
+					final ViewId firstVdB = p.getB().iterator().next();
+					
+					boolean nonTranslationsEqual = TransformTools.nonTranslationsEqual( vrs.getViewRegistration( firstVdA ), vrs.getViewRegistration( firstVdB ) );
 					
 					if (nonTranslationsEqual)
 					{
@@ -289,8 +304,7 @@ public class TransformationTools
 						result = computeStitching(
 								p.getA(),
 								p.getB(),
-								vrs.getViewRegistration( p.getA() ),
-								vrs.getViewRegistration( p.getB() ),
+								vrs,
 								params,
 								sd,
 								gva,
@@ -325,34 +339,39 @@ public class TransformationTools
 			});
 		}
 
-		final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>();
+		final ArrayList< PairwiseStitchingResult< ViewId > > results = new ArrayList<>();
 
 		try
 		{
 			// invokeAll() returns when all tasks are complete
-			for ( final Future< Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > > future : serviceGlobal.invokeAll( tasks ) )
+			for ( final Future< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< double[], Double >, RealInterval> > > future : serviceGlobal.invokeAll( tasks ) )
 			{
-				final Pair< Pair< ViewId, ViewId >, Pair< double[], Double > > result = future.get();
+				final Pair< Pair< Group< V >, Group< V > >, Pair<Pair< double[], Double >, RealInterval> > result = future.get();
 
 				if (result.getB() == null)
 					continue;
 				
+				final ViewRegistration vrA = vrs.getViewRegistration( result.getA().getA().iterator().next() );
+				final ViewRegistration vrB = vrs.getViewRegistration( result.getA().getB().iterator().next() );
+				
 				// get non-translation transform between the initial localtions
-				Pair< AffineGet, TranslationGet > initialTransformsA = TransformTools.getInitialTransforms( vrs.getViewRegistration( result.getA().getA() ), false, new AffineTransform3D() );
-				Pair< AffineGet, TranslationGet > initialTransformsB = TransformTools.getInitialTransforms( vrs.getViewRegistration( result.getA().getB() ), false, new AffineTransform3D() );
+				Pair< AffineGet, TranslationGet > initialTransformsA = TransformTools.getInitialTransforms( vrA, false, new AffineTransform3D() );
+				Pair< AffineGet, TranslationGet > initialTransformsB = TransformTools.getInitialTransforms( vrB, false, new AffineTransform3D() );
 				AffineGet mapBack = TransformTools.mapBackTransform( initialTransformsA.getA(), initialTransformsB.getA() );
 	
 				// correct translation determined by phase correlation by that transform
 				// TODO: move this inside the shift determination method -> make this method agnostic of actual intensity-based method used
 				AffineTransform3D resT = new AffineTransform3D();
-				resT.translate( result.getB().getA() );
+				resT.translate( result.getB().getA().getA() );
 				
-				boolean nonTranslationsEqual = TransformTools.nonTranslationsEqual(vrs.getViewRegistration( result.getA().getA() ), vrs.getViewRegistration( result.getA().getB() ));
+				boolean nonTranslationsEqual = TransformTools.nonTranslationsEqual(vrA, vrB);
 				
 				if (nonTranslationsEqual)
 					resT = resT.copy().preConcatenate( mapBack );
 
 				// create Set pair identifying the pair
+				
+				/*
 				Pair<Set<ViewId>, Set<ViewId>> setPair = new ValuePair< Set<ViewId>, Set<ViewId> >( new HashSet<>(), new HashSet<>() );
 				if (result.getA().getA() instanceof GroupedViews)
 				{ 
@@ -364,10 +383,15 @@ public class TransformationTools
 					setPair.getA().add( result.getA().getA() );
 					setPair.getA().add( result.getA().getB() );
 				}
+				*/
+				
+				// TODO: can we get rid of this ugly cast
+				Group< ViewId > groupA = new Group<ViewId>(result.getA().getA().getViews().stream().map( x -> (ViewId) x ).collect( Collectors.toList() ));
+				Group< ViewId > groupB = new Group<ViewId>(result.getA().getB().getViews().stream().map( x -> (ViewId) x ).collect( Collectors.toList() ));
 
 				// TODO: when does that really happen?
 				if ( result.getB() != null)
-					results.add( new PairwiseStitchingResult< ViewId >(setPair, resT, result.getB().getB() ) );
+					results.add( new PairwiseStitchingResult<>( new ValuePair<>(groupA, groupB), result.getB().getB(),  resT, result.getB().getA().getB() ) );
 			}
 		}
 		catch ( final Exception e )
