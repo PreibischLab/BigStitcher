@@ -16,38 +16,37 @@ import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
-import com.google.common.collect.Sets.SetView;
-
 import algorithm.TransformTools;
-import algorithm.globalopt.GlobalOpt;
 import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GlobalTileOptimization;
-import algorithm.globalopt.GroupedViews;
 import gui.StitchingResultsSettable;
 import ij.gui.GenericDialog;
 import mpicbg.models.Tile;
+import mpicbg.models.TileConfiguration;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
-import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.realtransform.Translation3D;
-import net.imglib2.realtransform.TranslationGet;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.global.GlobalOpt;
+import spim.process.interestpointregistration.global.GlobalOptTwoRound;
 import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
+import spim.process.interestpointregistration.global.convergence.IterativeConvergenceStrategy;
+import spim.process.interestpointregistration.global.convergence.SimpleIterativeConvergenceStrategy;
+import spim.process.interestpointregistration.global.linkremoval.MaxErrorLinkRemoval;
 import spim.process.interestpointregistration.global.pointmatchcreating.ImageCorrelationPointMatchCreator;
+import spim.process.interestpointregistration.global.pointmatchcreating.MetaDataWeakLinkFactory;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
@@ -180,14 +179,38 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			ArrayList< Group< ViewId > > groupsIn = new ArrayList<Group<ViewId>>();
 			viewIds.forEach( vids -> groupsIn.add( new Group<>(vids) ) );
 			
-			HashMap< ViewId, Tile< TranslationModel3D > > compute = spim.process.interestpointregistration.global.GlobalOpt.compute( 
+			HashMap< ViewId, Tile< TranslationModel3D > > compute = GlobalOpt.compute( 
 					new TranslationModel3D(), 
 					new ImageCorrelationPointMatchCreator( results, 0.4 ), 
 					new ConvergenceStrategy( 5 ),
 					fixedViews.iterator().next(), 
 					groupsIn );
 			
-			compute.forEach( (k, v) -> System.out.println( k + ": " + v.getModel() ) );
+			HashMap< ViewId, AffineTransform3D > compute2 = GlobalOptTwoRound.compute(
+					new TranslationModel3D(), 
+					new ImageCorrelationPointMatchCreator( results, 0.4 ),
+					new SimpleIterativeConvergenceStrategy( 5.0, 3.5, 5 ),
+					new MaxErrorLinkRemoval(),
+					new MetaDataWeakLinkFactory( panel.getSpimData().getViewRegistrations() ),
+					new ConvergenceStrategy( Double.MAX_VALUE ),
+					fixedViews.iterator().next(),
+					new HashSet<>(groupsIn) );
+			
+			compute2.forEach( (k, v) -> System.out.println( k + ": " + v ) );
+			compute2.forEach( (k, v) -> {
+				
+				final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
+				//final AffineTransform3D at = new AffineTransform3D();
+				//at.set( v.getModel().getMatrix( null ) );
+				final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", v );
+				vr.preconcatenateTransform( vt );
+				vr.updateModel();	
+
+			} );
+			
+			
+			
+			panel.bdvPopup().updateBDV();
 			
 			if (true)
 				return;
