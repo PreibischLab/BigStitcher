@@ -64,6 +64,9 @@ import net.imglib2.util.ValuePair;
 import spim.Threads;
 import spim.process.fusion.ImagePortion;
 import spim.process.fusion.boundingbox.overlap.IterativeBoundingBoxDetermination;
+import spim.process.interestpointregistration.global.GlobalOpt;
+import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
+import spim.process.interestpointregistration.global.pointmatchcreating.ImageCorrelationPointMatchCreator;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class TransformationTools
@@ -79,80 +82,67 @@ public class TransformationTools
 			final long[] downsampleFactors,
 			final ExecutorService service )
 	{
-		
+
 		final double[] downsampleDbl = new double[downsampleFactors.length];
 		for (int d = 0; d < downsampleFactors.length; d++)
 			downsampleDbl[d] = downsampleFactors[d];
-		
-		
-		// FIXME: remove cast of sd, change constructor?
-		IterativeBoundingBoxDetermination< ViewId > bbDet = new IterativeBoundingBoxDetermination<ViewId>( (SequenceDescription) sd, vrs );
-		
+
 		// get Overlap Bounding Box
+		// TODO: remove cast of sd, change constructor?
+		IterativeBoundingBoxDetermination< ViewId > bbDet = new IterativeBoundingBoxDetermination<ViewId>( (SequenceDescription) sd, vrs );
+
 		final List<List<ViewId>> views = new ArrayList<>();
 		views.add( new ArrayList<>(viewIdsA.getViews()) );
 		views.add( new ArrayList<>(viewIdsB.getViews()) );
 		BoundingBox bbOverlap = bbDet.getMaxOverlapBoundingBox( views );
+
 		
-		//System.out.println( "Overlap BB: " + Util.printInterval( bbOverlap ) );
-				
-		
-		List<RandomAccessibleInterval< FloatType >> raiOverlaps = new ArrayList<>();
-		
+		List<RandomAccessibleInterval< FloatType >> raiOverlaps = new ArrayList<>();		
 		for (List< ViewId > tileViews : views)
 		{
-			// wrap every vid in list
+			// wrap every view id (corresponding e.g. to different channels, illums,.. ) in list
 			List<List< ViewId >> wrapped = tileViews.stream().map( v -> {
 				ArrayList< ViewId > wrp = new ArrayList<ViewId>();
 				wrp.add( v );
 				return wrp;} ).collect( Collectors.toList() );
-			
+
+			// open all of them "virtually fused"
 			List< RandomAccessibleInterval< FloatType > > openFused = 
 					DisplayOverlapTestPopup.openVirtuallyFused( sd, vrs, wrapped, bbOverlap, downsampleDbl );
-			
-			
+
+			// aggregate the group into one image
 			RandomAccessibleInterval< FloatType > raiI = gva.aggregate( 
 					openFused, 
 					tileViews,
 					sd );
-			
+
 			raiOverlaps.add(raiI);
 		}
-		
-		
-		RandomAccessibleInterval< FloatType > img1 = raiOverlaps.get(0);
-		RandomAccessibleInterval< FloatType > img2 = raiOverlaps.get(1);
-		
-		final Pair< double[], Double > result = PairwiseStitching.getShift( img1, img2, new Translation( img1.numDimensions() ), new Translation( img1.numDimensions() ), params, service );
-	
-		if (result == null)
-			return null;		
-		
 
+		// the overlap in both images
+		final RandomAccessibleInterval< FloatType > img1 = raiOverlaps.get(0);
+		final RandomAccessibleInterval< FloatType > img2 = raiOverlaps.get(1);
+		
+		// compute phase correlation shift (passing (0,0,..) translations prevents any overlap correction inside)
+		final Pair< double[], Double > result = PairwiseStitching.getShift(
+				img1,
+				img2,
+				new Translation( img1.numDimensions() ),
+				new Translation( img1.numDimensions() ),
+				params,
+				service );
+
+		if (result == null)
+			return null;
+
+		// correct for downsampling, but nothing else
 		for (int i = 0; i< result.getA().length; ++i)
-		{
 			result.getA()[i] *= downsampleFactors[i];
-			
-		}
-		
-		/*
-			// add shift between view group 1 bbox and overlap
-			result.getA()[i] += bbOverlap.realMin( i ) - viewsABoundingBox.realMin( i );
-		}
-		
-		*/
-		
-		
-		// TODO: return the bounding Box here
-		
-		System.out.println("integer shift: " + Util.printCoordinates(result.getA()));
+
+		System.out.println("shift: " + Util.printCoordinates(result.getA()));
 		System.out.print("cross-corr: " + result.getB());
 
-		
-		//service.shutdown();
-		
 		return new ValuePair<>(result, bbOverlap);
-	
 	}
 	
 	public static < T extends RealType< T > > Pair<Pair< double[], Double >, RealInterval> computeStitching(
@@ -168,74 +158,34 @@ public class TransformationTools
 		
 		// the transformation that maps the downsampled image coordinates back to the original input(!) image space
 		final AffineTransform3D dsCorrectionT = new AffineTransform3D();
-		
-		// FIXME: remove cast of sd, change constructor?
-		IterativeBoundingBoxDetermination< ViewId > bbDet = new IterativeBoundingBoxDetermination<ViewId>( (SequenceDescription) sd, vrs );
-				
+
 		// get Overlap Bounding Box
+		// TODO: remove cast of sd, change constructor?
+		IterativeBoundingBoxDetermination< ViewId > bbDet = new IterativeBoundingBoxDetermination<ViewId>( (SequenceDescription) sd, vrs );
+
 		final List<List<ViewId>> views = new ArrayList<>();
 		views.add( new ArrayList<>(viewIdsA.getViews()) );
 		views.add( new ArrayList<>(viewIdsB.getViews()) );
 		BoundingBox bbOverlap = bbDet.getMaxOverlapBoundingBox( views );
-		
+
+		// this should be caught outside of this method already, but check nonetheless
 		if (bbOverlap == null)
 			return null;
-		
-		
-		
-		/*
-		// TODO: check if overlapping, else return immediately
-		// TODO: can we ensure we have a ImgLoader here (BDV wraps ImgLoader into a BasicImgLoader??)
-		if (ImgLoader.class.isInstance( sd.getImgLoader() ))
-		{
-			
-			Dimensions dimsA = ((ImgLoader)sd.getImgLoader()).getSetupImgLoader( viewIdsA.getViewSetupId() ).getImageSize( viewIdsA.getTimePointId() );
-			Dimensions dimsB = ((ImgLoader)sd.getImgLoader()).getSetupImgLoader( viewIdsB.getViewSetupId() ).getImageSize( viewIdsB.getTimePointId() );
-			
-			if (dimsA != null && dimsB != null)
-			{
-				Pair< AffineGet, TranslationGet > trA = TransformTools.getInitialTransforms( vA, dimsA.numDimensions() == 2, dsCorrectionT );
-				Pair< AffineGet, TranslationGet > trB = TransformTools.getInitialTransforms( vB, dimsB.numDimensions() == 2, dsCorrectionT );
-				
-				if (!PairwiseStrategyTools.overlaps( dimsA, dimsB, trA.getB(), trB.getB() ))
-					return null;
-			}
-		}
 
-		
-		*/
-			
-		final RandomAccessibleInterval<T> img1;
-		final RandomAccessibleInterval<T> img2;
+		// get one image per group
+		final RandomAccessibleInterval<T> img1 = gva.aggregate( viewIdsA, sd, downsampleFactors, dsCorrectionT );	
+		final RandomAccessibleInterval<T> img2 = gva.aggregate( viewIdsB, sd, downsampleFactors, dsCorrectionT );
 
-		
-		/*
-		if (gva != null && GroupedViews.class.isInstance( viewIdsA ))
-		{
-		*/
-			img1 = gva.aggregate( viewIdsA, sd, downsampleFactors, dsCorrectionT );	
-			img2 = gva.aggregate( viewIdsB, sd, downsampleFactors, dsCorrectionT );
-			/*
-		}
-		else
-		{
-			img1 = DownsampleTools.openAndDownsample( sd.getImgLoader(), viewIdsA, downsampleFactors, dsCorrectionT );
-			img2 = DownsampleTools.openAndDownsample( sd.getImgLoader(), viewIdsB, downsampleFactors, dsCorrectionT );
-		}
-	*/
-		
 		if (img1 == null || img2 == null)
 		{
-			IJ.log( "WARNING: Tried to open missing View when computing Stitching for " + viewIdsA + " and " + 
+			IOFunctions.println( "WARNING: Tried to open missing View when computing Stitching for " + viewIdsA + " and " + 
 						viewIdsB + ". No link between those could be determined");
 			return null;
 		}
-		
-		
+
+		// get translations
+		// TODO: is the 2d check here meaningful?
 		boolean is2d = img1.numDimensions() == 2;
-		
-		
-		// TODO: Test if 2d, and if then reduce dimensionality and ask for a 2d translation
 		Pair< AffineGet, TranslationGet > t1 = TransformTools.getInitialTransforms( vrs.getViewRegistration(viewIdsA.iterator().next()), is2d, dsCorrectionT );
 		Pair< AffineGet, TranslationGet > t2 = TransformTools.getInitialTransforms( vrs.getViewRegistration(viewIdsB.iterator().next()), is2d, dsCorrectionT );
 
@@ -254,20 +204,49 @@ public class TransformationTools
 			result.getA()[i] *= downsampleFactors[i];
 		
 		t1.getA().apply( result.getA(), result.getA() );
-		
-		// shift
-		//for (int i = 0; i< result.getA().length; ++i)
-		//	result.getA()[i] = vB.getModel().get( i, 3 ) - result.getA()[i];
-		
-		System.out.println("integer shift: " + Util.printCoordinates(result.getA()));
+
+		System.out.println("shift: " + Util.printCoordinates(result.getA()));
 		System.out.print("cross-corr: " + result.getB());
 
-		
-		//service.shutdown();
-		
 		return new ValuePair< Pair<double[],Double>, RealInterval >( result, bbOverlap );
 	}
 
+	/**
+	 * 
+	 * @param pairs list of potentially overlapping pairs of view groups, this will be modified!
+	 * @param vrs 
+	 * @param sd
+	 * @return list of the pairs that were removed
+	 */
+	public static <V extends ViewId> List< Pair< Group< V >, Group< V > > > filterNonOverlappingPairs(
+			List< Pair<  Group< V >,  Group< V > > > pairs,
+			final ViewRegistrations vrs,
+			final AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd
+			)
+	{
+		IterativeBoundingBoxDetermination< V > ibbd = new IterativeBoundingBoxDetermination< V >((SequenceDescription)sd, vrs);
+		final List< Pair<  Group< V >,  Group< V > > > removedPairs = new ArrayList<>();
+		
+		for (int i = pairs.size() - 1; i >= 0; i--)
+		{
+			final List<Set<V>> pairAsGroups = new ArrayList<>();
+			pairAsGroups.add( pairs.get( i ).getA().getViews() );
+			pairAsGroups.add( pairs.get( i ).getB().getViews() );
+			
+			BoundingBox bb = ibbd.getMaxOverlapBoundingBox( pairAsGroups );
+			
+			if (bb == null)
+			{
+				removedPairs.add( pairs.get( i ) );
+				pairs.remove( i );
+			}
+			
+		}
+		
+		return removedPairs;
+		
+	}
+	
 	public static <V extends ViewId > ArrayList< PairwiseStitchingResult<ViewId> > computePairs( 	final List< Pair<  Group< V >,  Group< V > > > pairs, 
 																		final PairwiseStitchingParameters params, 
 																		final ViewRegistrations vrs,
@@ -279,6 +258,10 @@ public class TransformationTools
 		final ExecutorService serviceGlobal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 2 ) );
 		final ArrayList< Callable< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< double[], Double >, RealInterval> > > > tasks = new ArrayList<>();
 
+		// remove non-overlapping comparisons
+		final List< Pair< Group< V >, Group< V > > > removedPairs = filterNonOverlappingPairs( pairs, vrs, sd );
+		removedPairs.forEach( p -> System.out.println( "Skipping non-overlapping pair: " + p.getA() + " -> " + p.getB() ) );
+		
 		for ( final Pair< Group< V >, Group< V > > p : pairs )
 		{
 			tasks.add( new Callable< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< double[], Double >, RealInterval> > >()
@@ -324,11 +307,7 @@ public class TransformationTools
 								serviceLocal );
 						System.out.println( "non translations NOT equal, using virtually fused views for stitching" );
 					}
-					
-					
-					
-					
-					
+
 					serviceLocal.shutdown();
 
 					if (result != null)
@@ -343,9 +322,9 @@ public class TransformationTools
 
 		try
 		{
-			// invokeAll() returns when all tasks are complete
 			for ( final Future< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< double[], Double >, RealInterval> > > future : serviceGlobal.invokeAll( tasks ) )
 			{
+				// wait for task to complete
 				final Pair< Pair< Group< V >, Group< V > >, Pair<Pair< double[], Double >, RealInterval> > result = future.get();
 
 				if (result.getB() == null)
@@ -354,37 +333,21 @@ public class TransformationTools
 				final ViewRegistration vrA = vrs.getViewRegistration( result.getA().getA().iterator().next() );
 				final ViewRegistration vrB = vrs.getViewRegistration( result.getA().getB().iterator().next() );
 				
-				// get non-translation transform between the initial localtions
+				// get non-translation transform between the initial localtion of groupA
 				Pair< AffineGet, TranslationGet > initialTransformsA = TransformTools.getInitialTransforms( vrA, false, new AffineTransform3D() );
-				Pair< AffineGet, TranslationGet > initialTransformsB = TransformTools.getInitialTransforms( vrB, false, new AffineTransform3D() );
-				AffineGet mapBack = TransformTools.mapBackTransform( initialTransformsA.getA(), initialTransformsB.getA() );
-	
-				// correct translation determined by phase correlation by that transform
-				// TODO: move this inside the shift determination method -> make this method agnostic of actual intensity-based method used
+
+				// apply to shift vector
+				// FIXME: this only works for scaling, we need to do moething different about rotations, etc.
+				boolean nonTranslationsEqual = TransformTools.nonTranslationsEqual(vrA, vrB);
+				if (nonTranslationsEqual)
+					initialTransformsA.getA().apply( result.getB().getA().getA(), result.getB().getA().getA() );
+
 				AffineTransform3D resT = new AffineTransform3D();
 				resT.translate( result.getB().getA().getA() );
 				
-				boolean nonTranslationsEqual = TransformTools.nonTranslationsEqual(vrA, vrB);
-				
-				if (nonTranslationsEqual)
-					resT = resT.copy().preConcatenate( mapBack );
+				// TODO: translate does not properly update the matrix, but copy does -> we need a newer version of imglib2-realtransform
+				resT = resT.copy();
 
-				// create Set pair identifying the pair
-				
-				/*
-				Pair<Set<ViewId>, Set<ViewId>> setPair = new ValuePair< Set<ViewId>, Set<ViewId> >( new HashSet<>(), new HashSet<>() );
-				if (result.getA().getA() instanceof GroupedViews)
-				{ 
-					setPair.getA().addAll( ((GroupedViews)result.getA().getA()).getViewIds() );
-					setPair.getB().addAll( ((GroupedViews)result.getA().getB()).getViewIds() );
-				}
-				else
-				{
-					setPair.getA().add( result.getA().getA() );
-					setPair.getA().add( result.getA().getB() );
-				}
-				*/
-				
 				// TODO: can we get rid of this ugly cast
 				Group< ViewId > groupA = new Group<ViewId>(result.getA().getA().getViews().stream().map( x -> (ViewId) x ).collect( Collectors.toList() ));
 				Group< ViewId > groupB = new Group<ViewId>(result.getA().getB().getViews().stream().map( x -> (ViewId) x ).collect( Collectors.toList() ));
@@ -408,9 +371,6 @@ public class TransformationTools
 	{
 		final SpimData d = GenerateSpimData.grid3x2();
 		final SequenceDescription sd = d.getSequenceDescription();
-		final ViewRegistrations vr = d.getViewRegistrations();
-
-		final boolean is2d = false;
 
 		// select views to process
 		final List< ViewId > rawViewIds = new ArrayList< ViewId >();
@@ -418,72 +378,42 @@ public class TransformationTools
 		Collections.sort( rawViewIds );
 
 		// take together all views where the all attributes are the same except channel (i.e. group the channels)
-		// they are now represented by the channel of the first ID (e.g. channelId=0)
-		final List< GroupedViews > viewIds = GroupedViews.groupByChannel( rawViewIds, sd );
+		final List< Group<ViewId> > viewIds = Group.groupByChannel( rawViewIds, sd );
 
 		// define fixed tiles
 		final ArrayList< ViewId > fixedViews = new ArrayList< ViewId >();
-		fixedViews.add( viewIds.get( 0 ) );
+		fixedViews.addAll( viewIds.get( 0 ).getViews() );
 
-		// define groups (no checks in between Tiles of a group, they are transformed together)
-		final ArrayList< ArrayList< ViewId > > groupedViews = new ArrayList< ArrayList< ViewId > >();
+		final long[] downsamplingFactors = new long[] {2,2,1};
 
-		// find all pairwise matchings that we need to compute
-		final HashMap< ViewId, Dimensions > vd = new HashMap<>();
-		final HashMap< ViewId, TranslationGet > vl = new HashMap<>();
+		final List<Pair<Group<ViewId>, Group<ViewId>>> pairs = new ArrayList<>();
+		for (int i = 0; i < viewIds.size(); i++)
+			for (int j = i+1; j< viewIds.size(); j++)
+				pairs.add( new ValuePair<>( viewIds.get( i ), viewIds.get( j ) ) );		
 		
-		final long[] downsamplingFactors = new long[] {1,1,1};
-
-		for ( final ViewId viewId : viewIds )
-		{
-			vd.put( viewId, sd.getViewDescription( viewId ).getViewSetup().getSize() );
-			vl.put( viewId, TransformTools.getInitialTransforms( vr.getViewRegistration( viewId ), is2d, new AffineTransform3D()).getB() );
-		}
-
-		final List< Pair< ViewId, ViewId > > pairs = PairwiseStrategyTools.overlappingTiles(
-				vd, vl, viewIds,
-				fixedViews, groupedViews );
-				
-		// compute them
+		final GroupedViewAggregator gva = new GroupedViewAggregator();
+		gva.addAction( ActionType.AVERAGE, Channel.class, null );
+		
+		// compute pairwise shifts
 		final ArrayList< PairwiseStitchingResult <ViewId>> results = computePairs( pairs,
 																new PairwiseStitchingParameters(), 
 																d.getViewRegistrations(),
 																d.getSequenceDescription() ,
-																null,
+																gva,
 																downsamplingFactors);
 
-		// add correspondences
-		
-		if (true)
-			return;
+		results.forEach( r -> System.out.println( r.getTransform() ) );
 		
 		for ( final ViewId v : fixedViews )
 			System.out.println( "Fixed: " + v );
 
-		
-		GlobalOptimizationParameters params = new GlobalOptimizationParameters();
-		// global opt
-		final HashMap< ViewId, Tile< TranslationModel3D > > models =
-				GlobalOpt.compute( new TranslationModel3D(), results, fixedViews, groupedViews , params);
+		GlobalOpt.compute( 
+				new TranslationModel3D(),
+				new ImageCorrelationPointMatchCreator( results, 0.5 ),
+				new ConvergenceStrategy( 5.0 ),
+				fixedViews,
+				viewIds );
 
-		/*
-		// save the corresponding detections and output result
-		for ( final Pair< Pair< ViewId, ViewId >, PairwiseResult > p : result )
-		{
-			final InterestPointList listA = spimData.getViewInterestPoints().getViewInterestPointLists( p.getA().getA() ).getInterestPointList( "beads" );
-			final InterestPointList listB = spimData.getViewInterestPoints().getViewInterestPointLists( p.getA().getB() ).getInterestPointList( "beads" );
-			setCorrespondences( p.getB().getInliers(), p.getA().getA(), p.getA().getB(), "beads", "beads", listA, listB );
 
-			System.out.println( p.getB().getFullDesc() );
-		}
-		
-
-		// map-back model (useless as we fix the first one)
-		final AffineTransform3D mapBack = computeMapBackModel(
-				spimData.getSequenceDescription().getViewDescription( viewIds.get( 0 ) ).getViewSetup().getSize(),
-				transformations.get( viewIds.get( 0 ) ).getModel(),
-				models.get( viewIds.get( 0 ) ).getModel(),
-				new RigidModel3D() );
-		*/
 	}
 }

@@ -174,7 +174,6 @@ public class PairwiseStitching
 			final ExecutorService service)
 	{
 
-		
 		// check if we have singleton dimensions
 		boolean[] singletonDims = new boolean[input1.numDimensions()];
 		for ( int d = 0; d < input1.numDimensions(); ++d )
@@ -187,7 +186,7 @@ public class PairwiseStitching
 		final RandomAccessibleInterval< T > img1;
 		final RandomAccessibleInterval< S > img2;
 
-		// make sure it is zero-min
+		// make sure it is zero-min and drop singleton dimensions
 		if ( !Views.isZeroMin( input1 ) )
 			img1 = Views.dropSingletonDimensions( Views.zeroMin( input1 ));
 		else
@@ -198,34 +197,37 @@ public class PairwiseStitching
 		else
 			img2 = Views.dropSingletonDimensions( input2 );
 
-		// ImageJFunctions.show( img1 );
-		// ImageJFunctions.show( img2 );
 
+		// echo intervals
 		System.out.println( "1: " + Util.printInterval( img1 ) );
 		System.out.println( "1: " + TransformTools.printRealInterval( transformed1 ) );
 		System.out.println( "2: " + Util.printInterval( img2 ) );
 		System.out.println( "2: " + TransformTools.printRealInterval( transformed2 ) );
 
+		// get overlap interval
 		final RealInterval overlap = TransformTools.getOverlap( transformed1, transformed2 );
 		System.out.println( "O: " + TransformTools.printRealInterval( overlap ) );
 
-		// not overlapping
+		// not overlapping -> we wont be able to determine a shift
 		if ( overlap == null )
 			return null;
 
+		// get overlap in images' coordinates
 		final RealInterval localOverlap1 = TransformTools.getLocalOverlap( transformed1, overlap );
 		final RealInterval localOverlap2 = TransformTools.getLocalOverlap( transformed2, overlap );
 
+		// round to integer interval
 		final Interval interval1 = TransformTools.getLocalRasterOverlap( localOverlap1 );
 		final Interval interval2 = TransformTools.getLocalRasterOverlap( localOverlap2 );
 
+		// echo intervals
 		System.out.println( "1: " + TransformTools.printRealInterval( localOverlap1 ) );
 		System.out.println( "1: " + Util.printInterval( interval1 ) );
 		System.out.println( "2: " + TransformTools.printRealInterval( localOverlap2 ) );
 		System.out.println( "2: " + Util.printInterval( interval2 ) );
 
-		long nPixel = 1;
 		// test if the overlap is too small to begin with
+		long nPixel = 1;
 		for ( int d = 0; d < img1.numDimensions(); ++d )
 			nPixel *= img1.dimension( d );
 
@@ -238,10 +240,6 @@ public class PairwiseStitching
 		final int[] extension = new int[img1.numDimensions()];
 		Arrays.fill( extension, 10 );
 
-		// ImageJFunctions.show( Views.zeroMin( Views.interval( img1, interval1
-		// ) ) );
-		// ImageJFunctions.show( Views.zeroMin( Views.interval( img2, interval2
-		// ) ) );
 
 		System.out.println( "FFT" );
 		// TODO: Do not extend by mirror inside, but do that out here on the
@@ -257,8 +255,6 @@ public class PairwiseStitching
 				Views.zeroMin( Views.interval( img1, interval1 ) ), Views.zeroMin( Views.interval( img2, interval2 ) ),
 				params.peaksToCheck, params.minOverlap, params.doSubpixel, service );
 
-		
-		
 		// the best peak is horrible or no peaks were found at all, return null
 		if ( shiftPeak == null || Double.isInfinite( shiftPeak.getCrossCorr() ) )
 			return null;
@@ -270,15 +266,15 @@ public class PairwiseStitching
 		else
 			shift = shiftPeak.getSubpixelShift();
 
-		// adapt shift for the entire image, not only the overlapping parts
-		final double[] entireIntervalShift = new double[input1.numDimensions()];
-
+		// final, relative shift
+		final double[] finalShift = new double[input1.numDimensions()];
 		int d2 = 0;
 		for ( int d = 0; d < input1.numDimensions(); ++d )
 		{
+			// we ignored these axes during phase correlation -> set their shift to 0
 			if (singletonDims[d])
 			{
-				entireIntervalShift[d] = t2.getTranslation( d ) - t1.getTranslation( d );
+				finalShift[d] = 0.0;
 			}
 			else
 			{
@@ -290,15 +286,12 @@ public class PairwiseStitching
 				System.out.println( intervalSubpixelOffset1 + "," + intervalSubpixelOffset2 + "," + localRasterShift );
 				final double localRelativeShift = localRasterShift - ( intervalSubpixelOffset2 - intervalSubpixelOffset1 );
 	
-				// do not correct for the initial shift between the two inputs
-				// We will use relative shifts frome here on
-				//entireIntervalShift[d] = ( transformed2.realMin( d2 ) - transformed1.realMin( d2 ) ) + localRelativeShift;
-				entireIntervalShift[d] = localRelativeShift;
+				finalShift[d] = localRelativeShift;
 				d2++;
 			}
 		}
 
-		return new ValuePair< >( entireIntervalShift, shiftPeak.getCrossCorr() );
+		return new ValuePair< >( finalShift, shiftPeak.getCrossCorr() );
 	}
 
 	public static <T extends RealType< T >, C extends Comparable< C >> List< PairwiseStitchingResult< C > > getPairwiseShifts(

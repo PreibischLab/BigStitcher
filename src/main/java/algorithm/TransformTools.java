@@ -182,6 +182,8 @@ public class TransformTools {
 	}
 
 	public static FinalRealInterval applyTranslation(RealInterval img, TranslationGet translation, boolean[] ignoreDims){
+
+		// get number of dimensions we actually use
 		int n = 0;
 		for (int d = 0; d < ignoreDims.length; ++d)
 			if (!ignoreDims[d])
