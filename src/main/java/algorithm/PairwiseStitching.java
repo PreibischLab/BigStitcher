@@ -57,103 +57,107 @@ public class PairwiseStitching
 			final ExecutorService service)
 	{
 		// check if we have singleton dimensions
-				boolean[] singletonDims = new boolean[input1.numDimensions()];
-				for ( int d = 0; d < input1.numDimensions(); ++d )
-					singletonDims[d] = !(input1.dimension( d ) > 1 && input2.dimension( d ) > 1);
-					// TODO: should we consider cases where a dimension is singleton in one image but not the other?
+		boolean[] singletonDims = new boolean[input1.numDimensions()];
+		for ( int d = 0; d < input1.numDimensions(); ++d )
+			singletonDims[d] = !( input1.dimension( d ) > 1 && input2.dimension( d ) > 1 );
+		// TODO: should we consider cases where a dimension is singleton in one
+		// image but not the other?
 
-				final RealInterval transformed1 = TransformTools.applyTranslation( input1, t1, singletonDims );
-				final RealInterval transformed2 = TransformTools.applyTranslation( input2, t2, singletonDims );
+		final RealInterval transformed1 = TransformTools.applyTranslation( input1, t1, singletonDims );
+		final RealInterval transformed2 = TransformTools.applyTranslation( input2, t2, singletonDims );
 
-				final RandomAccessibleInterval< T > img1;
-				final RandomAccessibleInterval< T > img2;
+		final RandomAccessibleInterval< T > img1;
+		final RandomAccessibleInterval< T > img2;
 
-				// make sure it is zero-min
-				if ( !Views.isZeroMin( input1 ) )
-					img1 = Views.dropSingletonDimensions( Views.zeroMin( input1 ));
-				else
-					img1 = Views.dropSingletonDimensions(input1);
+		// make sure it is zero-min
+		if ( !Views.isZeroMin( input1 ) )
+			img1 = Views.dropSingletonDimensions( Views.zeroMin( input1 ) );
+		else
+			img1 = Views.dropSingletonDimensions( input1 );
 
-				if ( !Views.isZeroMin( input2 ) )
-					img2 = Views.dropSingletonDimensions( Views.zeroMin( input2 ) );
-				else
-					img2 = Views.dropSingletonDimensions( input2 );
+		if ( !Views.isZeroMin( input2 ) )
+			img2 = Views.dropSingletonDimensions( Views.zeroMin( input2 ) );
+		else
+			img2 = Views.dropSingletonDimensions( input2 );
 
-				// ImageJFunctions.show( img1 );
-				// ImageJFunctions.show( img2 );
+		// ImageJFunctions.show( img1 );
+		// ImageJFunctions.show( img2 );
 
-				System.out.println( "1: " + Util.printInterval( img1 ) );
-				System.out.println( "1: " + TransformTools.printRealInterval( transformed1 ) );
-				System.out.println( "2: " + Util.printInterval( img2 ) );
-				System.out.println( "2: " + TransformTools.printRealInterval( transformed2 ) );
+		System.out.println( "1: " + Util.printInterval( img1 ) );
+		System.out.println( "1: " + TransformTools.printRealInterval( transformed1 ) );
+		System.out.println( "2: " + Util.printInterval( img2 ) );
+		System.out.println( "2: " + TransformTools.printRealInterval( transformed2 ) );
 
-				final RealInterval overlap = TransformTools.getOverlap( transformed1, transformed2 );
-				System.out.println( "O: " + TransformTools.printRealInterval( overlap ) );
+		final RealInterval overlap = TransformTools.getOverlap( transformed1, transformed2 );
+		System.out.println( "O: " + TransformTools.printRealInterval( overlap ) );
 
-				// not overlapping
-				if ( overlap == null )
-					return null;
+		// not overlapping
+		if ( overlap == null )
+			return null;
 
-				final RealInterval localOverlap1 = TransformTools.getLocalOverlap( transformed1, overlap );
-				final RealInterval localOverlap2 = TransformTools.getLocalOverlap( transformed2, overlap );
+		final RealInterval localOverlap1 = TransformTools.getLocalOverlap( transformed1, overlap );
+		final RealInterval localOverlap2 = TransformTools.getLocalOverlap( transformed2, overlap );
 
-				final Interval interval1 = TransformTools.getLocalRasterOverlap( localOverlap1 );
-				final Interval interval2 = TransformTools.getLocalRasterOverlap( localOverlap2 );
+		final Interval interval1 = TransformTools.getLocalRasterOverlap( localOverlap1 );
+		final Interval interval2 = TransformTools.getLocalRasterOverlap( localOverlap2 );
 
-				System.out.println( "1: " + TransformTools.printRealInterval( localOverlap1 ) );
-				System.out.println( "1: " + Util.printInterval( interval1 ) );
-				System.out.println( "2: " + TransformTools.printRealInterval( localOverlap2 ) );
-				System.out.println( "2: " + Util.printInterval( interval2 ) );
+		System.out.println( "1: " + TransformTools.printRealInterval( localOverlap1 ) );
+		System.out.println( "1: " + Util.printInterval( interval1 ) );
+		System.out.println( "2: " + TransformTools.printRealInterval( localOverlap2 ) );
+		System.out.println( "2: " + Util.printInterval( interval2 ) );
 
-				long nPixel = 1;
-				// test if the overlap is too small to begin with
-				for ( int d = 0; d < img1.numDimensions(); ++d )
-					nPixel *= img1.dimension( d );
+		long nPixel = 1;
+		// test if the overlap is too small to begin with
+		for ( int d = 0; d < img1.numDimensions(); ++d )
+			nPixel *= img1.dimension( d );
 
-				if ( nPixel < params.minOverlap )
-					return null;
+		if ( nPixel < params.minOverlap )
+			return null;
 
-				//
-				// call the phase correlation
-				//
-				final int[] extension = new int[img1.numDimensions()];
-				Arrays.fill( extension, 10 );
+		//
+		// call the phase correlation
+		//
+		final int[] extension = new int[img1.numDimensions()];
+		Arrays.fill( extension, 10 );
 
+		Align< T > align = new Align< T >( Views.zeroMin( Views.interval( img1, interval1 ) ),
+				new ArrayImgFactory< FloatType >(), new AffineWarp( img1.numDimensions() ), new AffineTransform3D() );
+		AffineTransform align2 = align.align( Views.zeroMin( Views.interval( img2, interval2 ) ), params.maxIterations,
+				0.1 );
 
-				
-				Align< T > align = new Align<T>( Views.zeroMin( Views.interval( img1, interval1 ) ), new ArrayImgFactory<FloatType>(), new AffineWarp( img1.numDimensions() ), new AffineTransform3D() );
-				AffineTransform align2 = align.align( Views.zeroMin( Views.interval( img2, interval2 ) ), params.maxIterations, 0.1 );
-				
-				System.out.println( align2 );
+		System.out.println( align2 );
 
-				// adapt shift for the entire image, not only the overlapping parts
-				final double[] entireIntervalShift = new double[input1.numDimensions()];
+		// adapt shift for the entire image, not only the overlapping parts
+		final double[] entireIntervalShift = new double[input1.numDimensions()];
 
-				int d2 = 0;
-				for ( int d = 0; d < input1.numDimensions(); ++d )
-				{
-					if (singletonDims[d])
-					{
-						entireIntervalShift[d] = t2.getTranslation( d ) - t1.getTranslation( d );
-					}
-					else
-					{
-						// correct for the int/real coordinate mess
-						final double intervalSubpixelOffset1 = interval1.realMin( d2 ) - localOverlap1.realMin( d2 ); // a_s
-						final double intervalSubpixelOffset2 = interval2.realMin( d2 ) - localOverlap2.realMin( d2 ); // b_s
-			
-						//final double localRasterShift = shift.getDoublePosition( d2 ); // d'
-						final double localRasterShift = align2.get( d2, img1.numDimensions() ); // d'
-						System.out.println( intervalSubpixelOffset1 + "," + intervalSubpixelOffset2 + "," + localRasterShift );
-						final double localRelativeShift = localRasterShift - ( intervalSubpixelOffset2 - intervalSubpixelOffset1 );
-			
-						// correct for the initial shift between the two inputs
-						entireIntervalShift[d] = ( transformed2.realMin( d2 ) - transformed1.realMin( d2 ) ) + localRelativeShift;
-						d2++;
-					}
-				}
+		int d2 = 0;
+		for ( int d = 0; d < input1.numDimensions(); ++d )
+		{
+			if ( singletonDims[d] )
+			{
+				entireIntervalShift[d] = t2.getTranslation( d ) - t1.getTranslation( d );
+			}
+			else
+			{
+				// correct for the int/real coordinate mess
+				final double intervalSubpixelOffset1 = interval1.realMin( d2 ) - localOverlap1.realMin( d2 ); // a_s
+				final double intervalSubpixelOffset2 = interval2.realMin( d2 ) - localOverlap2.realMin( d2 ); // b_s
 
-				return new ValuePair< >( entireIntervalShift, align.didConverge() ? 1.0 : 0.0);
+				// final double localRasterShift = shift.getDoublePosition( d2
+				// ); // d'
+				final double localRasterShift = align2.get( d2, img1.numDimensions() ); // d'
+				System.out.println( intervalSubpixelOffset1 + "," + intervalSubpixelOffset2 + "," + localRasterShift );
+				final double localRelativeShift = localRasterShift
+						- ( intervalSubpixelOffset2 - intervalSubpixelOffset1 );
+
+				// correct for the initial shift between the two inputs
+				entireIntervalShift[d] = ( transformed2.realMin( d2 ) - transformed1.realMin( d2 ) )
+						+ localRelativeShift;
+				d2++;
+			}
+		}
+
+		return new ValuePair<>( entireIntervalShift, align.didConverge() ? 1.0 : 0.0 );
 	}
 	/**
 	 * The absolute shift of input2 relative to after PCM input1 (without t1 and

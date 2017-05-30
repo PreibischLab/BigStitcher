@@ -275,7 +275,6 @@ public class TransformationTools
 
 					final ExecutorService serviceLocal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 4 ) );
 
-					// TODO: check for ViewRegistration "equality" here and use fused views if they differ					
 					final ViewId firstVdA = p.getA().iterator().next();
 					final ViewId firstVdB = p.getB().iterator().next();
 					
@@ -333,11 +332,11 @@ public class TransformationTools
 				final ViewRegistration vrA = vrs.getViewRegistration( result.getA().getA().iterator().next() );
 				final ViewRegistration vrB = vrs.getViewRegistration( result.getA().getB().iterator().next() );
 				
-				// get non-translation transform between the initial localtion of groupA
+				// get non-translation transform between the initial location of groupA
 				Pair< AffineGet, TranslationGet > initialTransformsA = TransformTools.getInitialTransforms( vrA, false, new AffineTransform3D() );
 
 				// apply to shift vector
-				// FIXME: this only works for scaling, we need to do moething different about rotations, etc.
+				// FIXME: this only works for scaling, we need to do something different about rotations, etc.
 				boolean nonTranslationsEqual = TransformTools.nonTranslationsEqual(vrA, vrB);
 				if (nonTranslationsEqual)
 					initialTransformsA.getA().apply( result.getB().getA().getA(), result.getB().getA().getA() );
