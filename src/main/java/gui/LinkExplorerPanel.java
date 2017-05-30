@@ -28,6 +28,7 @@ import net.imglib2.util.Pair;
 import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData<?> >
 {
@@ -50,7 +51,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 	LinkExplorerTableModel model;
 	protected JTable table;
 	
-	public void setActiveLinks(List<Pair<Set<ViewId>, Set<ViewId>>> links)
+	public void setActiveLinks(List<Pair<Group<ViewId>, Group<ViewId>>> links)
 	{
 //		System.out.println( "selected links:" );
 //		links.forEach( ( l ) -> System.out.println( l ) );
@@ -114,7 +115,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 					parent.linkOverlay.setSelectedLink( null );
 					return;
 				}
-				Pair< Set<ViewId>, Set<ViewId> > p = model.getActiveLinks().get( rowIdx );
+				Pair< Group<ViewId>, Group<ViewId> > p = model.getActiveLinks().get( rowIdx );
 				parent.linkOverlay.setSelectedLink( p );
 				
 				// repaint BDV if it is open

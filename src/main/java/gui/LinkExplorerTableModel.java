@@ -13,6 +13,7 @@ import javax.swing.table.AbstractTableModel;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class LinkExplorerTableModel extends AbstractTableModel implements StitchingResultsSettable
 {
@@ -24,7 +25,7 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	 */
 	private static final long serialVersionUID = 3972623555571460757L;
 
-	public List< Pair< Set<ViewId>, Set<ViewId> > > getActiveLinks()
+	public List< Pair< Group<ViewId>, Group<ViewId> > > getActiveLinks()
 	{
 		return activeLinks;
 	}
@@ -36,7 +37,7 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	}
 
 
-	private List<Pair<Set<ViewId>, Set<ViewId>>> activeLinks;
+	private List<Pair<Group<ViewId>, Group<ViewId>>> activeLinks;
 	private StitchingResults results;
 	
 	public LinkExplorerTableModel()
@@ -44,7 +45,7 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 		activeLinks = new ArrayList<>();
 	}
 	
-	public void setActiveLinks(List<Pair<Set<ViewId>, Set<ViewId>>> links)
+	public void setActiveLinks(List<Pair<Group<ViewId>, Group<ViewId>>> links)
 	{
 		activeLinks.clear();
 		activeLinks.addAll( links );
@@ -67,16 +68,14 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	{
 		if (columnIndex == 0)
 		{
-			Set< ViewId > views = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getA();
-			List< String > descs = views.stream().map( view -> "(View " + view.getViewSetupId() + ", Timepoint " + view.getTimePointId() + ")" ).collect( Collectors.toList() );
-			return "[" + String.join( ", ", descs ) + "]";
+			final Group< ViewId > views = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getA();
+			return views.toString();
 		}
 			
 		else if (columnIndex == 1)
 		{
-			Set< ViewId > views = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getB();
-			List< String > descs = views.stream().map( view -> "(View " + view.getViewSetupId() + ", Timepoint " + view.getTimePointId() + ")" ).collect( Collectors.toList() );
-			return "[" + String.join( ", ", descs ) + "]";
+			final Group< ViewId > views = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getB();
+			return views.toString();
 		}
 		else if (columnIndex == 2)
 			return results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).r();

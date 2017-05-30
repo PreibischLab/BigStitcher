@@ -626,7 +626,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		resetBDVManualTransformations( bdvPopup().bdv );
 
-		List< Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > activeLinks = new ArrayList< >();
+		List< Pair< Group< ViewId >, Group< ViewId > > > activeLinks = new ArrayList< >();
 
 		for ( PairwiseStitchingResult< ViewId > psr : resultsForId )
 		{
@@ -641,52 +641,45 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 			for ( List< BasicViewDescription< ? > > group : elements )
 			{
+				
 				// there is a link selected -> other
-				if ( psr.pair().getA().equals( selectedVids ) && psr.pair().getB().getViews().containsAll( group ) )
+				if ( psr.pair().getA().getViews().equals( selectedVids ) && psr.pair().getB().getViews().containsAll( group ) )
 				{
-					// set all views of the other group visible
 					for ( final BasicViewDescription< ? > vd : group )
 						if ( vd.getTimePointId() == firstTP.getId() )
 						{
 
+							// set all views of the other group visible
 							int sourceIdx = getBDVSourceIndex( vd.getViewSetup(), data );
 							SourceState< ? > s = bdvPopup().bdv.getViewer().getVisibilityAndGrouping().getSources()
 									.get( sourceIdx );
 							active[sourceIdx] = true;
-
-							
-							 // get the Translations of other View
-							 ViewRegistration vr = data.getViewRegistrations().getViewRegistration( new ViewId(firstTP.getId(), sourceIdx ));
-							 AffineGet otherTranslation = vr.getModel();
-							 
+ 
+							// accumulative transform determined by stitching
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getTransform().getRowPackedCopy() );
-							trans.concatenate( TransformTools.mapBackTransform( selectedModel, otherTranslation ) );
 
 							( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( trans );
 						}
 
 				}
+				
 
 				// there is a link other -> selected
-				if ( psr.pair().getB().equals( selectedVids ) && psr.pair().getA().getViews().containsAll( group ) )
+				if ( psr.pair().getB().getViews().equals( selectedVids ) && psr.pair().getA().getViews().containsAll( group ) )
 				{
-					// set all views of the other group visible
 					for ( final BasicViewDescription< ? > vd : group )
 						if ( vd.getTimePointId() == firstTP.getId() )
 						{
+							// set all views of the other group visible
 							int sourceIdx = getBDVSourceIndex( vd.getViewSetup(), data );
 							SourceState< ? > s = bdvPopup().bdv.getViewer().getVisibilityAndGrouping().getSources()
 									.get( sourceIdx );
 							active[sourceIdx] = true;
 
-							// get the Translations of second View
-							 ViewRegistration vr = data.getViewRegistrations().getViewRegistration( new ViewId(firstTP.getId(), sourceIdx ));
-							 AffineGet otherTranslation = vr.getModel();
-
+							// accumulative transform determined by stitching
 							AffineTransform3D trans = new AffineTransform3D();
-							trans.set( psr.getTransform().inverse().getRowPackedCopy() );
-							trans.concatenate(TransformTools.mapBackTransform( selectedModel, otherTranslation ) );
+							trans.set( psr.getInverseTransform().getRowPackedCopy() );
 
 							( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( trans );
 

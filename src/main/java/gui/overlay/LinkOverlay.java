@@ -28,8 +28,8 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 	private AbstractSpimData< ? > spimData;	
 	private final AffineTransform3D viewerTransform;	
 	public boolean isActive;
-	private ArrayList<Pair<Group<? extends ViewId>, Group<? extends ViewId>>> activeLinks;
-	private ValuePair<Group<? extends ViewId>, Group<? extends ViewId>> selectedLink;
+	private ArrayList<Pair<Group< ViewId>, Group<ViewId>>> activeLinks;
+	private ValuePair<Group<ViewId>, Group< ViewId>> selectedLink;
 	private Set<ViewId> reference;
 	
 	public void clearActiveLinks()
@@ -38,14 +38,14 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		this.reference = null;
 	}
 	
-	public void setActiveLinks(List<Pair<Group<? extends ViewId>, Group<? extends ViewId>>> vids, Set<ViewId> reference)
+	public void setActiveLinks(List<Pair<Group<ViewId>, Group<ViewId>>> vids, Set<ViewId> reference)
 	{
 		activeLinks.clear();
 		activeLinks.addAll( vids );
 		this.reference = reference;
 	}
 	
-	public void setSelectedLink(Pair<Group<? extends ViewId>, Group<? extends ViewId>> link)
+	public void setSelectedLink(Pair<Group<ViewId>, Group<ViewId>> link)
 	{
 		if (link == null)
 			selectedLink = null;
@@ -101,7 +101,7 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		
 		//System.out.println( activeLinks );
 		
-		for (Pair< Set<ViewId>, Set<ViewId> > p : stitchingResults.getPairwiseResults().keySet())
+		for (Pair< Group<ViewId>, Group<ViewId> > p : stitchingResults.getPairwiseResults().keySet())
 		{
 			if (activeLinks.size() > 0 && !(activeLinks.contains( p )))
 				continue;
@@ -113,14 +113,14 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 			final double[] gPos1 = new double[ 3 ];
 			final double[] gPos2 = new double[ 3 ];
 			
-			long[] sizeA = new long[spimData.getSequenceDescription().getViewDescriptions().get( p.getA().iterator().next() ).getViewSetup().getSize().numDimensions()];
-			long[] sizeB = new long[spimData.getSequenceDescription().getViewDescriptions().get( p.getB().iterator().next() ).getViewSetup().getSize().numDimensions()];
-			spimData.getSequenceDescription().getViewDescriptions().get( p.getA().iterator().next() ).getViewSetup().getSize().dimensions( sizeA );
-			spimData.getSequenceDescription().getViewDescriptions().get( p.getB().iterator().next() ).getViewSetup().getSize().dimensions( sizeB );
+			long[] sizeA = new long[spimData.getSequenceDescription().getViewDescriptions().get( p.getA().getViews().iterator().next() ).getViewSetup().getSize().numDimensions()];
+			long[] sizeB = new long[spimData.getSequenceDescription().getViewDescriptions().get( p.getB().getViews().iterator().next() ).getViewSetup().getSize().numDimensions()];
+			spimData.getSequenceDescription().getViewDescriptions().get( p.getA().getViews().iterator().next() ).getViewSetup().getSize().dimensions( sizeA );
+			spimData.getSequenceDescription().getViewDescriptions().get( p.getB().getViews().iterator().next() ).getViewSetup().getSize().dimensions( sizeB );
 			
 			// TODO: this uses the transform of the first view in the set, maybe do something better?
-			AffineTransform3D vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA().iterator().next() ).getModel();
-			AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB().iterator().next() ).getModel();
+			AffineTransform3D vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA().getViews().iterator().next() ).getModel();
+			AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB().getViews().iterator().next() ).getModel();
 			
 			final AffineTransform3D transform = new AffineTransform3D();
 			transform.preConcatenate( viewerTransform );
@@ -133,8 +133,8 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 			}
 
 			vt1.apply( lPos1, lPos1 );
-			vt1.apply( lPos2, lPos2 );
-			stitchingResults.getPairwiseResults().get( p ).getTransform().apply( lPos2, lPos2 );
+			vt2.apply( lPos2, lPos2 );
+			stitchingResults.getPairwiseResults().get( p ).getTransform().applyInverse( lPos2, lPos2 );
 
 			transform.apply( lPos1, gPos1 );
 			transform.apply( lPos2, gPos2 );

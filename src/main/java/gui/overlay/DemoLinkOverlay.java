@@ -20,6 +20,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import spim.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
 
 public class DemoLinkOverlay implements OverlayRenderer, TransformListener< AffineTransform3D >,SelectedViewDescriptionListener< AbstractSpimData<?> >
@@ -29,7 +30,7 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 	private AbstractSpimData< ? > spimData;	
 	private AffineTransform3D viewerTransform;	
 	public boolean isActive;
-	private ArrayList<Pair<Set<ViewId>, Set<ViewId>>> activeLinks;
+	private ArrayList<Pair<Group<ViewId>, Group<ViewId>>> activeLinks;
 	private double rThresh = .4;
 
 	
@@ -57,7 +58,7 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 		if (!isActive || activeLinks.size() == 0)
 			return;
 		
-		for ( Pair<Set<ViewId>, Set<ViewId>> p: activeLinks)
+		for ( Pair<Group<ViewId>, Group<ViewId>> p: activeLinks)
 		{
 		
 		// local coordinates of views, without BDV transform 
@@ -122,7 +123,7 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 		activeLinks.clear();
 	}
 	
-	public void setActiveLinks(List<Pair<Set<ViewId>, Set<ViewId>>> vids)
+	public void setActiveLinks(List<Pair<Group<ViewId>, Group<ViewId>>> vids)
 	{
 		activeLinks.clear();
 		activeLinks.addAll( vids );
@@ -136,15 +137,15 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 	public void selectedViewDescriptions(
 			List< List< BasicViewDescription< ? extends BasicViewSetup > > > viewDescriptions)
 	{
-		List<Pair<Set<ViewId>, Set<ViewId>>> res = new ArrayList<>();
+		List<Pair<Group<ViewId>, Group<ViewId>>> res = new ArrayList<>();
 		for (int i = 0; i<viewDescriptions.size(); i++)
 			for (int j = i+1; j<viewDescriptions.size(); j++)
 			{
-				Set<ViewId> setA = new HashSet<>();
-				setA.addAll( viewDescriptions.get( i ) );
-				Set<ViewId> setB = new HashSet<>();
-				setB.addAll( viewDescriptions.get( j ) );
-				res.add( new ValuePair< Set<ViewId>, Set<ViewId> >( setA, setB ) );
+				Group<ViewId> groupA = new Group<>();
+				groupA.getViews().addAll( viewDescriptions.get( i ) );
+				Group<ViewId> groupB = new Group<>();
+				groupB.getViews().addAll( viewDescriptions.get( j ) );
+				res.add( new ValuePair< Group<ViewId>, Group<ViewId> >( groupA, groupB ) );
 			}
 		setActiveLinks( res );
 		
