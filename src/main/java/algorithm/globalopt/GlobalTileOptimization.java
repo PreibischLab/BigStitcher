@@ -45,6 +45,7 @@ import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import spim.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
 
 public class GlobalTileOptimization
@@ -59,6 +60,7 @@ public class GlobalTileOptimization
 	 * @param params  parameters for global optimization
 	 * @return a mapping of view identifieres to locations in global space
 	 */
+	@Deprecated
 	public static < C extends Comparable< C >, M extends AbstractAffineModel3D<M>> Map<Set<C>, AffineGet> twoRoundGlobalOptimization(
 			final M model,
 			final List< Set< C > > viewSets,
@@ -77,7 +79,7 @@ public class GlobalTileOptimization
 			// only consider Pairs that were selected and that have high enough correlation
 			if (res.r() > params.correlationT && viewSets.contains( res.pair().getA()) && viewSets.contains( res.pair().getB()))
 			{
-				strongLinks.add( new Link< Set<C> >( res.pair().getA(), res.pair().getB(), res.getTransform(), LinkType.STRONG ) );
+				strongLinks.add( new Link< Set<C> >( res.pair().getA().getViews(), res.pair().getB().getViews(), res.getTransform(), LinkType.STRONG ) );
 				//System.out.println( "added strong link between " + ((ViewId) res.pair().getA()).getViewSetupId() + " and " + ((ViewId) res.pair().getB()).getViewSetupId() + ": " + res.getTransform() );
 			}
 		}
@@ -596,12 +598,11 @@ public class GlobalTileOptimization
 		
 		List<PairwiseStitchingResult< Integer >> pairwiseResults = new ArrayList<>();
 		
-		HashSet< Integer > s1 = new HashSet<Integer>();
-		HashSet< Integer > s2 = new HashSet<Integer>();
-		s1.add( 2 );
-		s2.add( 3 );
+		Group< Integer > s1 = new Group<Integer>(2);
+		Group< Integer > s2 = new Group<Integer>(3);
 		
-		pairwiseResults.add( new PairwiseStitchingResult<>( new ValuePair<>(s1, s2 ), new Translation3D(1,0,0), 1.0 ) );
+		
+		pairwiseResults.add( new PairwiseStitchingResult<Integer>( new ValuePair<>(s1, s2 ), null, new Translation3D(1,0,0), 1.0 ) );
 		
 		final GlobalOptimizationParameters params = new GlobalOptimizationParameters();
 		params.useOnlyOverlappingPairs = true;
