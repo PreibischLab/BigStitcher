@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,6 +18,7 @@ import algorithm.TransformTools;
 import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GlobalTileOptimization;
 import gui.StitchingResultsSettable;
+import mpicbg.models.Tile;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
@@ -38,6 +40,13 @@ import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.global.GlobalOptIterative;
+import spim.process.interestpointregistration.global.GlobalOptTwoRound;
+import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
+import spim.process.interestpointregistration.global.convergence.SimpleIterativeConvergenceStrategy;
+import spim.process.interestpointregistration.global.linkremoval.MaxErrorLinkRemoval;
+import spim.process.interestpointregistration.global.pointmatchcreating.ImageCorrelationPointMatchCreator;
+import spim.process.interestpointregistration.global.pointmatchcreating.MetaDataWeakLinkFactory;
 import spim.process.interestpointregistration.pairwise.constellation.PairwiseSetup;
 import spim.process.interestpointregistration.pairwise.constellation.Subset;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
@@ -170,6 +179,54 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 				List<Set<ViewId>> fixed = new ArrayList<>();
 				fixed.add( subset.getGroups().iterator().next().getViews());
 				
+				
+				if (params.doTwoRound)
+				{
+					HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
+							new TranslationModel3D(), 
+							new ImageCorrelationPointMatchCreator( stitchingResults.getPairwiseResults().values(), params.correlationT ),
+							new SimpleIterativeConvergenceStrategy( params.absoluteThreshold, params.relativeThreshold, params.absoluteThreshold ),
+							new MaxErrorLinkRemoval(),
+							new MetaDataWeakLinkFactory( panel.getSpimData().getViewRegistrations() ),
+							new ConvergenceStrategy( Double.MAX_VALUE ),
+							fixed.iterator().next(),
+							subset.getGroups() );
+					
+					globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
+					globalOptResults.forEach( (k, v) -> {
+						
+						final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
+						final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", v );
+						vr.preconcatenateTransform( vt );
+						vr.updateModel();	
+
+					} );
+				}
+				else
+				{
+					HashMap< ViewId, Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute( 
+							new TranslationModel3D(),
+							new ImageCorrelationPointMatchCreator( stitchingResults.getPairwiseResults().values(), params.correlationT ),
+							new SimpleIterativeConvergenceStrategy( params.absoluteThreshold, params.relativeThreshold, params.absoluteThreshold ),
+							new MaxErrorLinkRemoval(), 
+							fixed.iterator().next(),
+							subset.getGroups() );
+					
+					globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
+					globalOptResults.forEach( (k, v) -> {
+						
+						final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
+						final AffineTransform3D viewTransform = new AffineTransform3D();
+						viewTransform.set( v.getModel().getMatrix( null ) );
+						final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform);
+						vr.preconcatenateTransform( vt );
+						vr.updateModel();	
+
+					} );
+				}
+				
+				
+				/*
 				Map< Set< ViewId >, AffineGet > models = GlobalTileOptimization.twoRoundGlobalOptimization( 
 						new TranslationModel3D(),
 						subset.getGroups().stream().map( g -> g.getViews() ).collect( Collectors.toList() ),
@@ -210,7 +267,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 						System.out.println( "model: " + modelTransform );
 						System.out.println( "fixed -> original: " + transformRelativeToFixed );
 						System.out.println( "fixed -> original -> model: " + accumulativeTransform );
-						*/
+						
 
 						// set the shift in stitchingResults
 						stitchingResults.getGlobalShifts().put( vids.iterator().next(), modelTransform );
@@ -228,6 +285,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 					}
 				}
 				
+				*/
 				
 			}
 			

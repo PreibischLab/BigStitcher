@@ -40,6 +40,7 @@ import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
 import spim.process.interestpointregistration.global.GlobalOpt;
+import spim.process.interestpointregistration.global.GlobalOptIterative;
 import spim.process.interestpointregistration.global.GlobalOptTwoRound;
 import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
 import spim.process.interestpointregistration.global.convergence.IterativeConvergenceStrategy;
@@ -179,39 +180,55 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			ArrayList< Group< ViewId > > groupsIn = new ArrayList<Group<ViewId>>();
 			viewIds.forEach( vids -> groupsIn.add( new Group<>(vids) ) );
 			
-			HashMap< ViewId, Tile< TranslationModel3D > > compute = GlobalOpt.compute( 
-					new TranslationModel3D(), 
-					new ImageCorrelationPointMatchCreator( results, 0.4 ), 
-					new ConvergenceStrategy( 5 ),
-					fixedViews.iterator().next(), 
-					groupsIn );
 			
-			HashMap< ViewId, AffineTransform3D > compute2 = GlobalOptTwoRound.compute(
-					new TranslationModel3D(), 
-					new ImageCorrelationPointMatchCreator( results, 0.4 ),
-					new SimpleIterativeConvergenceStrategy( 5.0, 3.5, 5 ),
-					new MaxErrorLinkRemoval(),
-					new MetaDataWeakLinkFactory( panel.getSpimData().getViewRegistrations() ),
-					new ConvergenceStrategy( Double.MAX_VALUE ),
-					fixedViews.iterator().next(),
-					new HashSet<>(groupsIn) );
-			
-			compute2.forEach( (k, v) -> System.out.println( k + ": " + v ) );
-			compute2.forEach( (k, v) -> {
+			if (params.doTwoRound)
+			{
+				HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
+						new TranslationModel3D(), 
+						new ImageCorrelationPointMatchCreator( results, params.correlationT ),
+						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold, params.relativeThreshold, params.absoluteThreshold ),
+						new MaxErrorLinkRemoval(),
+						new MetaDataWeakLinkFactory( panel.getSpimData().getViewRegistrations() ),
+						new ConvergenceStrategy( Double.MAX_VALUE ),
+						fixedViews.iterator().next(),
+						new HashSet<>(groupsIn) );
 				
-				final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
-				//final AffineTransform3D at = new AffineTransform3D();
-				//at.set( v.getModel().getMatrix( null ) );
-				final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", v );
-				vr.preconcatenateTransform( vt );
-				vr.updateModel();	
+				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
+				globalOptResults.forEach( (k, v) -> {
+					
+					final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
+					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", v );
+					vr.preconcatenateTransform( vt );
+					vr.updateModel();	
 
-			} );
-			
-			
-			
+				} );
+			}
+			else
+			{
+				HashMap< ViewId, Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute( 
+						new TranslationModel3D(),
+						new ImageCorrelationPointMatchCreator( results, params.correlationT ),
+						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold, params.relativeThreshold, params.absoluteThreshold ),
+						new MaxErrorLinkRemoval(), 
+						fixedViews.iterator().next(),
+						new HashSet<>(groupsIn) );
+				
+				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
+				globalOptResults.forEach( (k, v) -> {
+					
+					final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
+					final AffineTransform3D viewTransform = new AffineTransform3D();
+					viewTransform.set( v.getModel().getMatrix( null ) );
+					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform);
+					vr.preconcatenateTransform( vt );
+					vr.updateModel();	
+
+				} );
+			}
+
 			panel.bdvPopup().updateBDV();
-			
+
+			/*
 			if (true)
 				return;
 			
@@ -299,7 +316,7 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			}
 			
 			panel.bdvPopup().updateBDV();
-
+			*/
 		}
 		
 	}
