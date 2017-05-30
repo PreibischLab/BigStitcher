@@ -17,6 +17,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import algorithm.DownsampleTools;
@@ -262,6 +263,11 @@ public class TransformationTools
 		final List< Pair< Group< V >, Group< V > > > removedPairs = filterNonOverlappingPairs( pairs, vrs, sd );
 		removedPairs.forEach( p -> System.out.println( "Skipping non-overlapping pair: " + p.getA() + " -> " + p.getB() ) );
 		
+		final int nComparisions = pairs.size();
+		AtomicInteger nCompleted = new AtomicInteger();
+		
+		IJ.showProgress( 0.0 );
+		
 		for ( final Pair< Group< V >, Group< V > > p : pairs )
 		{
 			tasks.add( new Callable< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< double[], Double >, RealInterval> > >()
@@ -309,8 +315,12 @@ public class TransformationTools
 
 					serviceLocal.shutdown();
 
+					// show progress in ImageJ progress bar
+					int nCompletedI = nCompleted.incrementAndGet();
+					IJ.showProgress( (double) nCompletedI / nComparisions );
+					
 					if (result != null)
-						IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": r=" + result.getB() );
+						IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": r=" + result.getA().getB() );
 					
 					return new ValuePair<>( p,  result );
 				}
