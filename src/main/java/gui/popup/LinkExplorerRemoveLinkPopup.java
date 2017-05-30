@@ -15,10 +15,12 @@ import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class LinkExplorerRemoveLinkPopup extends JMenuItem implements StitchingResultsSettable, ExplorerWindowSetable
 {
@@ -39,8 +41,9 @@ public class LinkExplorerRemoveLinkPopup extends JMenuItem implements StitchingR
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				Pair< Set<ViewId>, Set<ViewId> > pair = panel.getModel().getActiveLinks().get( panel.getTable().getSelectedRow() );
-				results.removePairwiseResultForPair( pair );
+				final Pair< Group<ViewId>, Group<ViewId> > pair = panel.getModel().getActiveLinks().get( panel.getTable().getSelectedRow() );
+				final Pair< Set<ViewId>, Set<ViewId> > viewSetPair = new ValuePair< Set<ViewId>, Set<ViewId> >( pair.getA().getViews(), pair.getB().getViews() );
+				results.removePairwiseResultForPair( viewSetPair );
 				((StitchingExplorerPanel< ?, ? >)stitchingExplorer).updateBDVPreviewMode();
 				
 				panel.selectedViewDescriptions( new ArrayList<>(((GroupedRowWindow)stitchingExplorer).selectedRowsGroups()) );

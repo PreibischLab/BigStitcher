@@ -184,88 +184,32 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 				@Override
 				public void run()
 				{
-					
-					
 					FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
 					SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
-					
+
 					// use whatever is selected in panel as filters
 					filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
-					
+
 					// get the grouping from panel and compare Tiles
 					panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
 					filteringAndGrouping.addComparisonAxis( Tile.class );
-					
+
 					// compare by Channel if channels were ungrouped in UI
 					if (!panelFG.getTableModel().getGroupingFactors().contains( Channel.class ))
 						filteringAndGrouping.addComparisonAxis( Channel.class );
-					
+
 					// compare by Illumination if illums were ungrouped in UI
 					if (!panelFG.getTableModel().getGroupingFactors().contains( Illumination.class ))
 						filteringAndGrouping.addComparisonAxis( Illumination.class );
-					
+
 					// ask user what to do with grouped views
 					filteringAndGrouping.askUserForGroupingAggregator();
 					if (filteringAndGrouping.getDialogWasCancelled())
 						return;
-					
+
 					// TODO: do a meaningful is2d check
 					boolean is2d = false;
-					
-					/*
-					final AbstractSpimData< ? > d = panel.getSpimData();
-					final AbstractSequenceDescription< ?, ?, ? > sd = d.getSequenceDescription();
-					final ViewRegistrations vr = d.getViewRegistrations();
 
-					// take together all views where the all attributes are the
-					// same except channel (i.e. group the channels)
-					// they are now represented by the channel of the first ID
-					// (e.g. channelId=0)
-					final ArrayList< GroupedViews > viewIds = new ArrayList< >();
-
-					for ( List< ViewId > vidl : ( (GroupedRowWindow) panel ).selectedRowsViewIdGroups() )
-						viewIds.add( new GroupedViews( vidl ) );
-
-					Collections.sort( viewIds );
-
-					ArrayList< String > channelNames = new ArrayList< >();
-					channelNames.add( "average all" );
-
-					List< Entity > channels = SpimDataTools.getInstancesOfAttribute( sd, Channel.class );
-					for ( Entity en : channels )
-						channelNames.add( NamedEntity.class.isInstance( en ) ? ( (NamedEntity) en ).getName()
-								: Integer.toString( en.getId() ) );
-
-					ArrayList< String > illuminationNames = new ArrayList< >();
-					illuminationNames.add( "pick brightest" );
-
-					List< Entity > illums = SpimDataTools.getInstancesOfAttribute( sd, Illumination.class );
-					for ( Entity en : illums )
-						illuminationNames.add( NamedEntity.class.isInstance( en ) ? ( (NamedEntity) en ).getName()
-								: Integer.toString( en.getId() ) );
-
-					GroupedViews gv = viewIds.get( 0 );
-					boolean is2d = sd.getViewDescriptions().get( gv ).getViewSetup().getSize().numDimensions() == 2;
-					// boolean is2d = false;
-
-					
-										
-					GenericDialog gd = new GenericDialog( "Stitching options" );
-					gd.addChoice( "channel to use", channelNames.toArray( new String[0] ), "average all" );
-					gd.addChoice( "illumination to use", illuminationNames.toArray( new String[0] ), "pick brightest" );
-					
-					
-					gd.showDialog();
-
-					if ( gd.wasCanceled() )
-						return;
-
-					String channel = gd.getNextChoice();
-					String illum = gd.getNextChoice();
-					
-
-					*/
-					
 					final long[] downSamplingFactors = askForDownsampling( panel.getSpimData(), is2d );
 					if (downSamplingFactors == null)
 						return;
@@ -273,25 +217,6 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
 					if ( params == null )
 						return;
-
-					// final ArrayList< ViewId > viewIdsSelectedChannel = new
-					// ArrayList<>();
-
-					/*
-					int channelIdxInGroup = channelNames.indexOf( channel ) - 1;
-					boolean doChannelAverage = channelIdxInGroup < 0;
-
-					int illumIdxInGroup = illuminationNames.indexOf( illum ) - 1;
-					boolean doIllumBrightest = illumIdxInGroup < 0;
-
-					 */
-					/*
-					 * // get only one channel from grouped views if (
-					 * !doGrouped ) { for (GroupedViews g : viewIds) {
-					 * viewIdsSelectedChannel.add( g.getViewIds().get(
-					 * channelIdxInGroup ) ); } } // keep GroupedViews else {
-					 * viewIdsSelectedChannel.addAll( viewIds ); }
-					 */
 
 					List< Pair< Group< BasicViewDescription< ? extends BasicViewSetup > >, Group< BasicViewDescription< ? extends BasicViewSetup > > > > pairs 
 						= filteringAndGrouping.getComparisons();
@@ -307,77 +232,10 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 						
 						if (psr == null)
 							continue;
-						
-						// find the ViewId of the GroupedViews that the results
-						// belong to
-						Set<ViewId> gvA = (Set< ViewId >) psr.pair().getA().getViews();
-						Set<ViewId> gvB = (Set< ViewId >) psr.pair().getB().getViews();
-						
+												
 
-						stitchingResults.setPairwiseResultForPair( new ValuePair< >( gvA, gvB ), psr );
+						stitchingResults.setPairwiseResultForPair( psr.pair(), psr );
 					}
-					
-					/*
-					
-					// find all pairwise matchings that we need to compute
-					final HashMap< ViewId, Dimensions > vd = new HashMap< >();
-					final HashMap< ViewId, TranslationGet > vl = new HashMap< >();
-
-					for ( final ViewId viewId : viewIds )
-					{
-						vd.put( viewId, sd.getViewDescriptions().get( viewId ).getViewSetup().getSize() );
-						vl.put( viewId, TransformTools.getInitialTransforms( vr.getViewRegistration( viewId ), is2d,
-								new AffineTransform3D() ).getB() );
-					}
-
-					final List< Pair< ViewId, ViewId > > pairs = PairwiseStrategyTools.overlappingTiles( vd, vl,
-							viewIds );
-
-					// compute them
-
-					GroupedViewAggregator groupedViewAggregator = new GroupedViewAggregator();
-
-					// decide how to handle illuminations
-					if ( doIllumBrightest )
-						groupedViewAggregator.addAction( ActionType.PICK_BRIGHTEST, Illumination.class, null );
-					else
-						groupedViewAggregator.addAction( ActionType.PICK_SPECIFIC, Illumination.class,
-								(Illumination) illums.get( illumIdxInGroup ) );
-
-					// decide how to handle channels
-					if ( doChannelAverage )
-						groupedViewAggregator.addAction( ActionType.AVERAGE, Channel.class, null );
-					else
-						groupedViewAggregator.addAction( ActionType.PICK_SPECIFIC, Channel.class,
-								(Channel) channels.get( channelIdxInGroup ) );
-
-					final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
-							pairs, params, d.getViewRegistrations(), d.getSequenceDescription(), groupedViewAggregator,
-							downSamplingFactors );
-
-					// update StitchingResults with Results
-					for ( final PairwiseStitchingResult< ViewId > psr : results )
-					{
-						// find the ViewId of the GroupedViews that the results
-						// belong to
-						Set<ViewId> gvA = new HashSet<>();
-						Set<ViewId> gvB = new HashSet<>();
-						for ( GroupedViews g : viewIds )
-						{
-							if ( g.getViewIds().containsAll( psr.pair().getA() ) )
-							{
-								gvA.addAll( g.getViewIds() );
-							}
-							if ( g.getViewIds().containsAll( psr.pair().getB() ) )
-							{
-								gvB.addAll( g.getViewIds() );
-							}
-						}
-
-						stitchingResults.setPairwiseResultForPair( new ValuePair< >( gvA, gvB ), psr );
-					}
-					
-					*/
 				}
 			} ).start();
 

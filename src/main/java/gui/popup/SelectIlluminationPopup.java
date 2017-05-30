@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -169,12 +171,18 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 					
 					service.shutdown();					
 
-						
+					final List< List< BasicViewDescription< ? > > > groupedViewsList = null;
+					groupedViews.stream().map( g -> {
+						final ArrayList<BasicViewDescription< ? >> views = new ArrayList<>(g.getViews());
+						Collections.sort( views );
+						return views;
+					} ).collect(Collectors.toList());
+					
 					
 					if (previewResults)
 					{
 						
-						List< ViewId > bestViewsFromGUI = new IlluminationSelectionPreviewGUI().previewWithGUI( groupedViews, bestViews, panel.bdvPopup().getBDV());
+						List< ViewId > bestViewsFromGUI = new IlluminationSelectionPreviewGUI().previewWithGUI( groupedViewsList, bestViews, panel.bdvPopup().getBDV());
 						
 						if (bestViewsFromGUI == null)
 						{
@@ -191,7 +199,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 					
 					final Set<ViewId> missingViews = new HashSet<>();
 					
-					for (final List< ? extends ViewId > group : groupedViews)
+					for (final Group< ? extends ViewId > group : groupedViews)
 						for (final ViewId vid : group)
 							if (!(bestViews.contains( vid )))
 								missingViews.add( vid );

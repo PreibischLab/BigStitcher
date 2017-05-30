@@ -20,6 +20,8 @@ import algorithm.globalopt.GroupedViews;
 import gui.StitchingResultsSettable;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -31,6 +33,7 @@ import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
 {
@@ -93,8 +96,7 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 						return;
 					
 					
-					List< Pair< ViewId, ViewId > > pairs = filteringAndGrouping.getComparisons().stream().map( 
-							( c ) -> new ValuePair<ViewId, ViewId>(new GroupedViews( c.getA() ), new GroupedViews( c.getB() )) ).collect( Collectors.toList() );
+					List< Pair< Group< BasicViewDescription< ? extends BasicViewSetup > >, Group< BasicViewDescription< ? extends BasicViewSetup > > > > pairs = filteringAndGrouping.getComparisons();
 
 					final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
 							pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
@@ -108,13 +110,8 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 						if (psr == null)
 							continue;
 						
-						// find the ViewId of the GroupedViews that the results
-						// belong to
-						Set<ViewId> gvA = psr.pair().getA();
-						Set<ViewId> gvB = psr.pair().getB();
 						
-
-						stitchingResults.setPairwiseResultForPair( new ValuePair< >( gvA, gvB ), psr );
+						stitchingResults.setPairwiseResultForPair(psr.pair(), psr );
 					}
 					
 					
