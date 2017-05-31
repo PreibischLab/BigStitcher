@@ -144,7 +144,7 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			fixedViews.add( viewIds.get( gdFixing.getNextChoiceIndex() ) );
 
 			
-			final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
+			List< PairwiseStitchingResult<ViewId> > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
 			final Map<ViewId, AffineGet> translations = new HashMap<>();
 			Map<ViewId, Dimensions> dims = new HashMap<>();
 			
@@ -180,8 +180,9 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			ArrayList< Group< ViewId > > groupsIn = new ArrayList<Group<ViewId>>();
 			viewIds.forEach( vids -> groupsIn.add( new Group<>(vids) ) );
 			
+			// filter to only process links between selected views
+			results = results.stream().filter( psr -> groupsIn.contains( psr.pair().getA() ) && groupsIn.contains( psr.pair().getB() ) ).collect( Collectors.toList() );
 
-			// FIXME: GlobalOpt does not respect group selection
 			if (params.doTwoRound)
 			{
 				HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
