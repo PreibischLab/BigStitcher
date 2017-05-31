@@ -144,7 +144,7 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			fixedViews.add( viewIds.get( gdFixing.getNextChoiceIndex() ) );
 
 			
-			final ArrayList< PairwiseStitchingResult<ViewId> > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
+			List< PairwiseStitchingResult<ViewId> > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
 			final Map<ViewId, AffineGet> translations = new HashMap<>();
 			Map<ViewId, Dimensions> dims = new HashMap<>();
 			
@@ -180,7 +180,9 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			ArrayList< Group< ViewId > > groupsIn = new ArrayList<Group<ViewId>>();
 			viewIds.forEach( vids -> groupsIn.add( new Group<>(vids) ) );
 			
-			
+			// filter to only process links between selected views
+			results = results.stream().filter( psr -> groupsIn.contains( psr.pair().getA() ) && groupsIn.contains( psr.pair().getB() ) ).collect( Collectors.toList() );
+
 			if (params.doTwoRound)
 			{
 				HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
@@ -196,8 +198,18 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
 				globalOptResults.forEach( (k, v) -> {
 					
+					
 					final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
-					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", v );
+					
+					AffineTransform3D viewTransform = new AffineTransform3D();
+					viewTransform.set( v );
+
+					// TODO: this works only for raw data shifts
+					viewTransform = getAccumulativeTransformForRawDataTransform( vr, viewTransform );
+
+					System.out.println( viewTransform );
+
+					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
 					vr.preconcatenateTransform( vt );
 					vr.updateModel();	
 
@@ -217,8 +229,12 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 				globalOptResults.forEach( (k, v) -> {
 					
 					final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
-					final AffineTransform3D viewTransform = new AffineTransform3D();
+					AffineTransform3D viewTransform = new AffineTransform3D();
 					viewTransform.set( v.getModel().getMatrix( null ) );
+					
+					// TODO: this works only for raw data shifts
+					viewTransform = getAccumulativeTransformForRawDataTransform( vr, viewTransform );
+					
 					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform);
 					vr.preconcatenateTransform( vt );
 					vr.updateModel();	
@@ -319,6 +335,14 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 			*/
 		}
 		
+	}
+	
+	public static AffineTransform3D getAccumulativeTransformForRawDataTransform(ViewRegistration viewRegistration, AffineGet rawTransform)
+	{		
+		final AffineTransform3D vrModel = viewRegistration.getModel();		
+		final AffineTransform3D result = vrModel.inverse().copy();
+		result.preConcatenate( rawTransform ).preConcatenate( vrModel );
+		return result;
 	}
 
 }

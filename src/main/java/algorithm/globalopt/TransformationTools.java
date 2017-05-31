@@ -180,7 +180,7 @@ public class TransformationTools
 		for (int i = 0; i< result.getA().length; ++i)			
 			result.getA()[i] *= downsampleFactors[i];
 		
-		t1.getA().apply( result.getA(), result.getA() );
+		//t1.getA().apply( result.getA(), result.getA() );
 
 		System.out.println("shift: " + Util.printCoordinates(result.getA()));
 		System.out.print("cross-corr: " + result.getB());
@@ -316,6 +316,7 @@ public class TransformationTools
 				if (result.getB() == null)
 					continue;
 				
+				/*
 				final ViewRegistration vrA = vrs.getViewRegistration( result.getA().getA().iterator().next() );
 				final ViewRegistration vrB = vrs.getViewRegistration( result.getA().getB().iterator().next() );
 				
@@ -328,6 +329,7 @@ public class TransformationTools
 				if (nonTranslationsEqual)
 					initialTransformsA.getA().apply( result.getB().getA().getA(), result.getB().getA().getA() );
 
+				 */
 				AffineTransform3D resT = new AffineTransform3D();
 				resT.translate( result.getB().getA().getA() );
 				

@@ -3,6 +3,7 @@ package gui.popup;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -179,12 +180,15 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 				List<Set<ViewId>> fixed = new ArrayList<>();
 				fixed.add( subset.getGroups().iterator().next().getViews());
 				
+				Collection< PairwiseStitchingResult< ViewId > > results = stitchingResults.getPairwiseResults().values();
+				// filter to only process links between selected views
+				results = results.stream().filter( psr -> subset.getGroups().contains( psr.pair().getA() ) && subset.getGroups().contains( psr.pair().getB() ) ).collect( Collectors.toList() );
 				
 				if (params.doTwoRound)
 				{
 					HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
 							new TranslationModel3D(), 
-							new ImageCorrelationPointMatchCreator( stitchingResults.getPairwiseResults().values(), params.correlationT ),
+							new ImageCorrelationPointMatchCreator( results, params.correlationT ),
 							new SimpleIterativeConvergenceStrategy( params.absoluteThreshold, params.relativeThreshold, params.absoluteThreshold ),
 							new MaxErrorLinkRemoval(),
 							new MetaDataWeakLinkFactory( panel.getSpimData().getViewRegistrations() ),
@@ -196,7 +200,12 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 					globalOptResults.forEach( (k, v) -> {
 						
 						final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
-						final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", v );
+						
+						AffineTransform3D viewTransform = new AffineTransform3D();
+						viewTransform.set( v );
+						viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr, viewTransform );
+
+						final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
 						vr.preconcatenateTransform( vt );
 						vr.updateModel();	
 
@@ -206,7 +215,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 				{
 					HashMap< ViewId, Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute( 
 							new TranslationModel3D(),
-							new ImageCorrelationPointMatchCreator( stitchingResults.getPairwiseResults().values(), params.correlationT ),
+							new ImageCorrelationPointMatchCreator( results, params.correlationT ),
 							new SimpleIterativeConvergenceStrategy( params.absoluteThreshold, params.relativeThreshold, params.absoluteThreshold ),
 							new MaxErrorLinkRemoval(), 
 							fixed.iterator().next(),
@@ -216,8 +225,11 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 					globalOptResults.forEach( (k, v) -> {
 						
 						final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
-						final AffineTransform3D viewTransform = new AffineTransform3D();
+						AffineTransform3D viewTransform = new AffineTransform3D();
 						viewTransform.set( v.getModel().getMatrix( null ) );
+						
+						viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr, viewTransform );
+						
 						final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform);
 						vr.preconcatenateTransform( vt );
 						vr.updateModel();	
