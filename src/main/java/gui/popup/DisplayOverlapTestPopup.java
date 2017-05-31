@@ -43,6 +43,7 @@ import spim.fiji.spimdata.boundingbox.BoundingBox;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
 import spim.process.fusion.boundingbox.overlap.IterativeBoundingBoxDetermination;
 import spim.process.fusion.transformed.FusedRandomAccessibleInterval;
 import spim.process.fusion.transformed.TransformView;
@@ -80,9 +81,9 @@ public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindow
 			
 			List<List< ViewId >> views = ((GroupedRowWindow) panel).selectedRowsViewIdGroups();
 			
-			IterativeBoundingBoxDetermination< ViewId > bbDet = new IterativeBoundingBoxDetermination<>( spimData );
+			BoundingBoxMaximalGroupOverlap< ViewId > bbDet = new BoundingBoxMaximalGroupOverlap<>( views, spimData );
 						
-			BoundingBox bbOverlap = bbDet.getMaxOverlapBoundingBox( views );			
+			BoundingBox bbOverlap = bbDet.estimate( "max overlap" );			
 			System.out.println( "Overlap BB: " + Util.printInterval( bbOverlap ) );
 			
 			GenericDialog gd = new GenericDialog( "Virtual Fusion" );

@@ -202,7 +202,7 @@ public class TransformationTools
 			final AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd
 			)
 	{
-		IterativeBoundingBoxDetermination< V > ibbd = new IterativeBoundingBoxDetermination< V >((SequenceDescription)sd, vrs);
+		
 		final List< Pair<  Group< V >,  Group< V > > > removedPairs = new ArrayList<>();
 		
 		for (int i = pairs.size() - 1; i >= 0; i--)
@@ -211,7 +211,8 @@ public class TransformationTools
 			pairAsGroups.add( pairs.get( i ).getA().getViews() );
 			pairAsGroups.add( pairs.get( i ).getB().getViews() );
 			
-			BoundingBox bb = ibbd.getMaxOverlapBoundingBox( pairAsGroups );
+			final BoundingBoxMaximalGroupOverlap< V > ibbd = new BoundingBoxMaximalGroupOverlap< V >(pairAsGroups, sd, vrs);
+			BoundingBox bb = ibbd.estimate( "max overlap" );
 			
 			if (bb == null)
 			{
