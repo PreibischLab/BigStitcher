@@ -26,7 +26,7 @@ public class Stitching_Explorer implements PlugIn
 	@Override
 	public void run( String arg )
 	{
-		final LoadParseQueryXML result = new LoadParseQueryXML();
+		final LoadParseQueryXML result = new EasterEggLoadParseQueryXML();
 
 		result.addButton( "Define a new dataset", new ActionListener()
 		{
