@@ -68,7 +68,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 	private StitchingResults stitchingResults;
 	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 
-	public static final String[] ds = { "1", "2", "4", "8" };
+	public static final String[] ds = { "1", "2", "4", "8", "16", "32", "64" };
 
 	public CalculatePCPopup()
 	{
