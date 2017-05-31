@@ -200,7 +200,12 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 					globalOptResults.forEach( (k, v) -> {
 						
 						final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
-						final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", v );
+						
+						AffineTransform3D viewTransform = new AffineTransform3D();
+						viewTransform.set( v );
+						viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr, viewTransform );
+
+						final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
 						vr.preconcatenateTransform( vt );
 						vr.updateModel();	
 
@@ -220,8 +225,11 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 					globalOptResults.forEach( (k, v) -> {
 						
 						final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
-						final AffineTransform3D viewTransform = new AffineTransform3D();
+						AffineTransform3D viewTransform = new AffineTransform3D();
 						viewTransform.set( v.getModel().getMatrix( null ) );
+						
+						viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr, viewTransform );
+						
 						final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform);
 						vr.preconcatenateTransform( vt );
 						vr.updateModel();	
