@@ -45,7 +45,6 @@ import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.boundingbox.BoundingBox;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
-import spim.process.fusion.boundingbox.overlap.IterativeBoundingBoxDetermination;
 import spim.process.interestpointregistration.global.GlobalOpt;
 import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
 import spim.process.interestpointregistration.global.pointmatchcreating.ImageCorrelationPointMatchCreator;
