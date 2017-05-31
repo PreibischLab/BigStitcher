@@ -1,16 +1,9 @@
 package algorithm.globalopt;
 
 
-import input.GenerateSpimData;
-import spim.fiji.spimdata.SpimDataTools;
-import spim.fiji.spimdata.ViewSetupUtils;
-import spim.fiji.spimdata.boundingbox.BoundingBox;
-import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -20,39 +13,26 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import algorithm.DownsampleTools;
 import algorithm.GroupedViewAggregator;
+import algorithm.GroupedViewAggregator.ActionType;
 import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
 import algorithm.TransformTools;
-import algorithm.GroupedViewAggregator.ActionType;
-import bdv.BigDataViewer;
 import gui.popup.DisplayOverlapTestPopup;
 import ij.IJ;
 import input.GenerateSpimData;
-import mpicbg.models.Tile;
 import mpicbg.models.TranslationModel3D;
-import mpicbg.pointdescriptor.LocalCoordinateSystemPointDescriptor;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.generic.sequence.ImgLoaders;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Channel;
-import mpicbg.spim.data.sequence.Illumination;
-import mpicbg.spim.data.sequence.ImgLoader;
 import mpicbg.spim.data.sequence.SequenceDescription;
-import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
-import net.imglib2.Cursor;
-import net.imglib2.Dimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealInterval;
-import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Translation;
@@ -62,8 +42,9 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
-import spim.Threads;
-import spim.process.fusion.ImagePortion;
+import spim.fiji.spimdata.boundingbox.BoundingBox;
+import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
 import spim.process.fusion.boundingbox.overlap.IterativeBoundingBoxDetermination;
 import spim.process.interestpointregistration.global.GlobalOpt;
 import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
@@ -89,13 +70,11 @@ public class TransformationTools
 			downsampleDbl[d] = downsampleFactors[d];
 
 		// get Overlap Bounding Box
-		// TODO: remove cast of sd, change constructor?
-		IterativeBoundingBoxDetermination< ViewId > bbDet = new IterativeBoundingBoxDetermination<ViewId>( (SequenceDescription) sd, vrs );
-
 		final List<List<ViewId>> views = new ArrayList<>();
 		views.add( new ArrayList<>(viewIdsA.getViews()) );
 		views.add( new ArrayList<>(viewIdsB.getViews()) );
-		BoundingBox bbOverlap = bbDet.getMaxOverlapBoundingBox( views );
+		BoundingBoxMaximalGroupOverlap< ViewId > bbDet = new BoundingBoxMaximalGroupOverlap<ViewId>( views, sd, vrs );
+		BoundingBox bbOverlap = bbDet.estimate( "Max Overlap" );
 
 		
 		List<RandomAccessibleInterval< FloatType >> raiOverlaps = new ArrayList<>();		
@@ -161,13 +140,11 @@ public class TransformationTools
 		final AffineTransform3D dsCorrectionT = new AffineTransform3D();
 
 		// get Overlap Bounding Box
-		// TODO: remove cast of sd, change constructor?
-		IterativeBoundingBoxDetermination< ViewId > bbDet = new IterativeBoundingBoxDetermination<ViewId>( (SequenceDescription) sd, vrs );
-
 		final List<List<ViewId>> views = new ArrayList<>();
 		views.add( new ArrayList<>(viewIdsA.getViews()) );
 		views.add( new ArrayList<>(viewIdsB.getViews()) );
-		BoundingBox bbOverlap = bbDet.getMaxOverlapBoundingBox( views );
+		BoundingBoxMaximalGroupOverlap< ViewId > bbDet = new BoundingBoxMaximalGroupOverlap<ViewId>( views, sd, vrs );
+		BoundingBox bbOverlap = bbDet.estimate( "Max Overlap" );
 
 		// this should be caught outside of this method already, but check nonetheless
 		if (bbOverlap == null)
@@ -315,7 +292,7 @@ public class TransformationTools
 
 					serviceLocal.shutdown();
 
-					// show progress in ImageJ progress bar
+					// show progress in ImageJ progress bar (TODO: should we really do this here or leave it GUI-independent?)
 					int nCompletedI = nCompleted.incrementAndGet();
 					IJ.showProgress( (double) nCompletedI / nComparisions );
 					
@@ -368,7 +345,7 @@ public class TransformationTools
 		}
 		catch ( final Exception e )
 		{
-			IOFunctions.println( "Failed to compute min/max: " + e );
+			IOFunctions.println( "Failed to compute pairwise shift: " + e );
 			e.printStackTrace();
 			return null;
 		}
