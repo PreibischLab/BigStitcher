@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -335,7 +336,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		final JPanel footerGroupChannels = new JPanel();
 		footerGroupChannels.setLayout( new BoxLayout( footerGroupChannels, BoxLayout.LINE_AXIS ) );
 		footerGroupChannels.add( new JLabel( "Group Channels:" ) );
-		final JCheckBox checkboxGroupChannels = new JCheckBox( "Group Channels", true );
+		final JCheckBox checkboxGroupChannels = new JCheckBox( "", true );
 		checkboxGroupChannels.addActionListener( new ActionListener()
 		{
 
@@ -355,12 +356,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			}
 		} );
 		footerGroupChannels.add( checkboxGroupChannels );
+		footerGroupChannels.setAlignmentX( RIGHT_ALIGNMENT );
 
 		// checkbox to toggle illumination grouping
 		final JPanel footerGroupIllums = new JPanel();
 		footerGroupIllums.setLayout( new BoxLayout( footerGroupIllums, BoxLayout.LINE_AXIS ) );
 		footerGroupIllums.add( new JLabel( "Group Illuminations:" ) );
-		final JCheckBox checkboxGroupIllums = new JCheckBox( "Group Illuminations", true );
+		final JCheckBox checkboxGroupIllums = new JCheckBox( "", true );
 		checkboxGroupIllums.addActionListener( new ActionListener()
 		{
 
@@ -380,6 +382,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			}
 		} );
 		footerGroupIllums.add( checkboxGroupIllums );
+		footerGroupIllums.setAlignmentX( RIGHT_ALIGNMENT );
 
 		final JPanel footerComboboxes = new JPanel();
 		footerComboboxes.setLayout( new BoxLayout( footerComboboxes, BoxLayout.PAGE_AXIS ) );
