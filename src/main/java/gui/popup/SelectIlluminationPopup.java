@@ -243,7 +243,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		
 		final List<ViewId> missingViewsList = new ArrayList<>( missingViews );
 		
-		if (!ignoreOldMissingViews)
+		if (!ignoreOldMissingViews && sdOld.getMissingViews() != null )
 			sdOld.getMissingViews().getMissingViews().forEach( mv -> missingViewsList.add( mv ) );
 		
 		final SequenceDescription sequenceDescription = 

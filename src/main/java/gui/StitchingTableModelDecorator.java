@@ -86,7 +86,9 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 			
 			final ViewId vid = decorated.getElements().get(rowIndex).get(0);
 			
-			if (decorated.getPanel().getSpimData().getSequenceDescription().getMissingViews().getMissingViews().contains( vid ))
+			if (
+					decorated.getPanel().getSpimData().getSequenceDescription().getMissingViews() != null && 
+					decorated.getPanel().getSpimData().getSequenceDescription().getMissingViews().getMissingViews().contains( vid ))
 				return "View missing";
 			
 			final ViewRegistration vr = decorated.getPanel().getSpimData().getViewRegistrations().getViewRegistration(vid);
