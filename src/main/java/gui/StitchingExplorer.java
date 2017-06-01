@@ -20,6 +20,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import bdv.BigDataViewer;
+import spim.fiji.spimdata.SpimData2;
+import spim.fiji.spimdata.XmlIoSpimData2;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
@@ -165,6 +167,6 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 	{
 		new ImageJ();
 		//new ViewSetupExplorer<>( GenerateSpimData.grid3x2(), null, null );
-		new StitchingExplorer< SpimData, XmlIoSpimData >( GenerateSpimData.grid3x2(), null, null );
+		new StitchingExplorer< SpimData2, XmlIoSpimData2 >( SpimData2.convert( GenerateSpimData.grid3x2()), null, null );
 	}
 }
