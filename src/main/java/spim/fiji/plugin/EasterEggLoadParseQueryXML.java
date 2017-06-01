@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 import input.FractalSpimDataGenerator;
+import simulation.imgloader.SimulatedBeadsImgLoader;
 import simulation.imgloader.SimulatedBeadsImgLoader2;
 import spim.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import spim.fiji.plugin.queryXML.LoadParseQueryXML;
@@ -34,9 +35,9 @@ public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 
 			return true;
 		}
-		else if ( input.equals( "beads" ) )
+		else if ( input.equals( "genericbeads" ) )
 		{
-			this.data = SpimData2.convert( SimulatedBeadsImgLoader2.createSpimDataFromUserInput());
+			this.data = SpimData2.convert( SimulatedBeadsImgLoader2.createSpimDataFromUserInput() );
 			this.attributes = getAttributes( data, comparator );
 
 			final ArrayList< HashSet< Integer > > numEntitiesPerAttrib = entitiesPerAttribute();
@@ -47,6 +48,28 @@ public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 			this.color = GUIHelper.good;
 
 			return true;
+		}
+		else if ( input.equals( "beads" ) )
+		{
+			this.data = SpimData2.convert( SimulatedBeadsImgLoader.spimdataExample() );
+			this.attributes = getAttributes( data, comparator );
+
+			final ArrayList< HashSet< Integer > > numEntitiesPerAttrib = entitiesPerAttribute();
+			populateAttributesEntities( attributes.size(), numEntitiesPerAttrib );
+
+			this.message1 = "These are simulated beads for testing.";
+			this.message2 = GenericLoadParseQueryXML.getSpimDataDescription( data, attributes, numEntitiesPerAttrib, attributes.size() );
+			this.color = GUIHelper.good;
+
+			return true;
+		}
+		else if ( input.equals( "easter" ) )
+		{
+			this.message1 = "Following options exists:";
+			this.message2 = "fractal, beads, genericbeads";
+
+			this.color = GUIHelper.warning;
+			return false;
 		}
 		else
 		{
