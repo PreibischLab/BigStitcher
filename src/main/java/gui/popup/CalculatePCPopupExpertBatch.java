@@ -3,6 +3,7 @@ package gui.popup;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,6 +24,7 @@ import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.ViewId;
+import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.TranslationGet;
@@ -114,6 +116,7 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 						stitchingResults.setPairwiseResultForPair(psr.pair(), psr );
 					}
 					
+					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": DONE." );
 					
 				}
 			}).run();

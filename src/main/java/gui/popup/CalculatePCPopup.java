@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -232,10 +233,12 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 						
 						if (psr == null)
 							continue;
-												
+
 
 						stitchingResults.setPairwiseResultForPair( psr.pair(), psr );
 					}
+
+					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": DONE." );
 				}
 			} ).start();
 

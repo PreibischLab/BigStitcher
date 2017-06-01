@@ -173,16 +173,22 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		if ( previewMode )
 		{
-			initLinkExplorer();
+			int oldFirstSelection = table.getSelectionModel().getMinSelectionIndex();
 			table.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
-			updateBDVPreviewMode();
+			table.setRowSelectionInterval( oldFirstSelection, oldFirstSelection );
+			initLinkExplorer();
+			if (bdvPopup().bdvRunning())
+				updateBDVPreviewMode();
 		}
 		else
 		{
 			quitLinkExplorer();
 			linkOverlay.clearActiveLinks();
+			int oldFirstSelection = table.getSelectionModel().getMinSelectionIndex();
 			table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
-			updateBDV( bdvPopup().bdv, colorMode, data, firstSelectedVD, selectedRows );
+			table.setRowSelectionInterval( oldFirstSelection, oldFirstSelection );
+			if (bdvPopup().bdvRunning())
+				updateBDV( bdvPopup().bdv, colorMode, data, firstSelectedVD, selectedRows );
 		}
 	}
 
