@@ -1,16 +1,13 @@
 package spim.fiji.plugin;
 
 
-import ij.ImageJ;
-import ij.plugin.PlugIn;
-import input.FractalSpimDataGenerator;
-import mpicbg.spim.io.IOFunctions;
-import simulation.imgloader.SimulatedBeadsImgLoader2;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import gui.StitchingExplorer;
+import ij.ImageJ;
+import ij.plugin.PlugIn;
+import mpicbg.spim.io.IOFunctions;
 import spim.fiji.ImgLib2Temp.Pair;
 import spim.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import spim.fiji.plugin.queryXML.LoadParseQueryXML;
@@ -20,8 +17,6 @@ import spim.fiji.spimdata.XmlIoSpimData2;
 public class Stitching_Explorer implements PlugIn
 {
 	boolean newDataset = false;
-	boolean useFractal = false;
-	boolean useSimulatedBeads = false;
 
 	@Override
 	public void run( String arg )
@@ -39,29 +34,7 @@ public class Stitching_Explorer implements PlugIn
 			}
 		});
 
-		result.addButton( "Simulated Fractal Example", new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				result.setReturnFalse( true );
-				result.getGenericDialog().dispose();
-				setUseFractal();
-			}
-		});
-		
-		result.addButton( "Simulated Beads Example", new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				result.setReturnFalse( true );
-				result.getGenericDialog().dispose();
-				useSimulatedBeads = true;
-			}
-		});
-
-		if ( !result.queryXML( "Stitching Explorer", "", false, false, false, false, false ) && !newDataset && !useFractal && !useSimulatedBeads )
+		if ( !result.queryXML( "Stitching Explorer", "", false, false, false, false, false ) && !newDataset )
 			return;
 
 		final SpimData2 data;
@@ -79,20 +52,6 @@ public class Stitching_Explorer implements PlugIn
 			xml = dataset.getB();
 			io = new XmlIoSpimData2( "" );
 		}
-		else if ( useFractal )
-		{
-			data = FractalSpimDataGenerator.createVirtualSpimData();
-			xml = null;
-			io = null;
-		}
-		
-		else if (useSimulatedBeads)
-		{
-			data = SpimData2.convert( SimulatedBeadsImgLoader2.createSpimDataFromUserInput());
-			xml = null;
-			io = null;
-		}
-		
 		else
 		{
 			data = result.getData();
@@ -109,11 +68,6 @@ public class Stitching_Explorer implements PlugIn
 	protected void setDefineNewDataset()
 	{
 		this.newDataset = true;
-	}
-
-	protected void setUseFractal()
-	{
-		this.useFractal = true;
 	}
 
 	public static void main( String[] args )

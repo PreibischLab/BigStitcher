@@ -13,6 +13,7 @@ import spim.fiji.spimdata.SpimData2;
 public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 {
 	SpimData2 virtual;
+	boolean isEasterEgg;
 
 	@Override
 	protected boolean tryParsing( final String xmlfile, final boolean parseAllTypes )
@@ -23,18 +24,23 @@ public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 		{
 			this.data = FractalSpimDataGenerator.createVirtualSpimData();
 			this.attributes = getAttributes( data, comparator );
+
 			final ArrayList< HashSet< Integer > > numEntitiesPerAttrib = entitiesPerAttribute();
+			populateAttributesEntities( attributes.size(), numEntitiesPerAttrib );
 
 			this.message1 = "This is a simulated fractal for testing.";
 			this.message2 = GenericLoadParseQueryXML.getSpimDataDescription( data, attributes, numEntitiesPerAttrib, attributes.size() );
 			this.color = GUIHelper.good;
+
 			return true;
 		}
 		else if ( input.equals( "beads" ) )
 		{
 			this.data = SpimData2.convert( SimulatedBeadsImgLoader2.createSpimDataFromUserInput());
 			this.attributes = getAttributes( data, comparator );
+
 			final ArrayList< HashSet< Integer > > numEntitiesPerAttrib = entitiesPerAttribute();
+			populateAttributesEntities( attributes.size(), numEntitiesPerAttrib );
 
 			this.message1 = "These are simulated beads for testing.";
 			this.message2 = GenericLoadParseQueryXML.getSpimDataDescription( data, attributes, numEntitiesPerAttrib, attributes.size() );
@@ -42,7 +48,9 @@ public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 
 			return true;
 		}
-
-		return super.tryParsing( xmlfile, parseAllTypes );
+		else
+		{
+			return super.tryParsing( xmlfile, parseAllTypes );
+		}
 	}
 }
