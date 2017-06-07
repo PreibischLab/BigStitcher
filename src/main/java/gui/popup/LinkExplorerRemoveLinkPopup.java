@@ -42,8 +42,7 @@ public class LinkExplorerRemoveLinkPopup extends JMenuItem implements StitchingR
 			public void actionPerformed(ActionEvent e)
 			{
 				final Pair< Group<ViewId>, Group<ViewId> > pair = panel.getModel().getActiveLinks().get( panel.getTable().getSelectedRow() );
-				final Pair< Set<ViewId>, Set<ViewId> > viewSetPair = new ValuePair< Set<ViewId>, Set<ViewId> >( pair.getA().getViews(), pair.getB().getViews() );
-				results.removePairwiseResultForPair( viewSetPair );
+				results.removePairwiseResultForPair( pair );
 				((StitchingExplorerPanel< ?, ? >)stitchingExplorer).updateBDVPreviewMode();
 				
 				panel.selectedViewDescriptions( new ArrayList<>(((GroupedRowWindow)stitchingExplorer).selectedRowsGroups()) );

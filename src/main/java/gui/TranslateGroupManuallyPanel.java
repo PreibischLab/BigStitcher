@@ -40,7 +40,7 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 	private static final long serialVersionUID = 1L;
 	private final static AffineTransform3D identity = new AffineTransform3D();
 	private final static int conversionFactor = 10;
-	private final static double eps = 0.1;
+	private final static double eps = 0.001;
 
 	private final Set< ViewId > selected;
 	private SpimData2 data;	

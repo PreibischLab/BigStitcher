@@ -701,7 +701,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			}
 		}
 
-		linkOverlay.setActiveLinks( activeLinks, selectedVids);
+		linkOverlay.setActiveLinks( activeLinks, new Group<ViewId>( selectedVids ));
 		
 
 		setVisibleSources( bdvPopup().bdv.getViewer().getVisibilityAndGrouping(), active );
