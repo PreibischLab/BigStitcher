@@ -829,6 +829,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					if ( p != null && p.bdv != null && p.bdv.getViewerFrame().isVisible() )
 					{
 						updateBDV( p.bdv, colorMode, data, null, selectedRows );
+
+						if (previewMode)
+							updateBDVPreviewMode();
+
 						if (!colorMode)
 							BDVPopupStitching.colorByChannels( p.bdv, data );
 						else
