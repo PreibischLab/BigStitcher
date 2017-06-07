@@ -19,6 +19,7 @@ import algorithm.TransformTools;
 import algorithm.globalopt.TransformationTools;
 import algorithm.globalopt.GroupedViews;
 import gui.StitchingResultsSettable;
+import ij.gui.GenericDialog;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
@@ -75,29 +76,41 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 				@Override
 				public void run()
 				{
-				
+
 					FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
 					SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
-					
+
 					filteringAndGrouping.askUserForFiltering( panelFG );
 					if (filteringAndGrouping.getDialogWasCancelled())
 						return;
-					
+
 					filteringAndGrouping.askUserForGrouping( panelFG );
 					if (filteringAndGrouping.getDialogWasCancelled())
 						return;
-					
+
 					filteringAndGrouping.askUserForGroupingAggregator();
 					if (filteringAndGrouping.getDialogWasCancelled())
 						return;
-					
-					PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
-					
+
+					final GenericDialog gd = new GenericDialog( "Parameters for Stitching" );
+					PairwiseStitchingParameters.addQueriesToGD( gd );
+					gd.addCheckbox( "clear_previous_results", true );
+
+					gd.showDialog();
+
+					if(gd.wasCanceled())
+						return;
+
+					final PairwiseStitchingParameters params = PairwiseStitchingParameters.getParametersFromGD( gd );
+					final boolean resetResults = gd.getNextBoolean();
+
+					if ( params == null )
+						return;
+
 					long[] dsFactors = CalculatePCPopup.askForDownsampling( panel.getSpimData(), false );
 					if (dsFactors == null)
 						return;
-					
-					
+
 					List< Pair< Group< BasicViewDescription< ? extends BasicViewSetup > >, Group< BasicViewDescription< ? extends BasicViewSetup > > > > pairs = filteringAndGrouping.getComparisons();
 
 					final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
@@ -105,19 +118,23 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 							filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
 							dsFactors );
 
+					// user wants us to clear previous results
+					if (resetResults)
+					{
+						stitchingResults.getPairwiseResults().clear();
+					}
+
 					// update StitchingResults with Results
 					for ( final PairwiseStitchingResult< ViewId > psr : results )
 					{
-						
 						if (psr == null)
 							continue;
-						
-						
+
 						stitchingResults.setPairwiseResultForPair(psr.pair(), psr );
 					}
-					
+
 					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": DONE." );
-					
+
 				}
 			}).run();
 		}

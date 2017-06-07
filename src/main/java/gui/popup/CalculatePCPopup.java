@@ -49,6 +49,8 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import spim.fiji.datasetmanager.FileListDatasetDefinition;
+import spim.fiji.datasetmanager.FileListDatasetDefinitionUtil;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.ViewSetupUtils;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
@@ -185,8 +187,8 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 				@Override
 				public void run()
 				{
-					FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
-					SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
+					final FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
+					final SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
 
 					// use whatever is selected in panel as filters
 					filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
@@ -215,11 +217,22 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					if (downSamplingFactors == null)
 						return;
 
-					PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
+					final GenericDialog gd = new GenericDialog( "Parameters for Stitching" );
+					PairwiseStitchingParameters.addQueriesToGD( gd );
+					gd.addCheckbox( "clear_previous_results", true );
+
+					gd.showDialog();
+
+					if(gd.wasCanceled())
+						return;
+
+					final PairwiseStitchingParameters params = PairwiseStitchingParameters.getParametersFromGD( gd );
+					final boolean resetResults = gd.getNextBoolean();
+
 					if ( params == null )
 						return;
 
-					List< Pair< Group< BasicViewDescription< ? extends BasicViewSetup > >, Group< BasicViewDescription< ? extends BasicViewSetup > > > > pairs 
+					final List< Pair< Group< BasicViewDescription< ? extends BasicViewSetup > >, Group< BasicViewDescription< ? extends BasicViewSetup > > > > pairs 
 						= filteringAndGrouping.getComparisons();
 
 					final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
@@ -227,13 +240,18 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 							filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
 							downSamplingFactors );
 
+
+					// user wants us to clear previous results
+					if (resetResults)
+					{
+						stitchingResults.getPairwiseResults().clear();
+					}
+
 					// update StitchingResults with Results
 					for ( final PairwiseStitchingResult< ViewId > psr : results )
 					{
-						
 						if (psr == null)
 							continue;
-
 
 						stitchingResults.setPairwiseResultForPair( psr.pair(), psr );
 					}
