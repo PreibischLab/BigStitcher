@@ -5,12 +5,19 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.sequence.ViewId;
+import net.imglib2.Dimensions;
+import net.imglib2.FinalDimensions;
+import net.imglib2.Interval;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.ui.OverlayRenderer;
 import net.imglib2.ui.TransformListener;
@@ -30,7 +37,7 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 	public boolean isActive;
 	private ArrayList<Pair<Group< ViewId>, Group<ViewId>>> activeLinks;
 	private ValuePair<Group<ViewId>, Group< ViewId>> selectedLink;
-	private Set<ViewId> reference;
+	private Group<ViewId> reference;
 	
 	public void clearActiveLinks()
 	{
@@ -38,7 +45,7 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		this.reference = null;
 	}
 	
-	public void setActiveLinks(List<Pair<Group<ViewId>, Group<ViewId>>> vids, Set<ViewId> reference)
+	public void setActiveLinks(List<Pair<Group<ViewId>, Group<ViewId>>> vids, Group<ViewId> reference)
 	{
 		activeLinks.clear();
 		activeLinks.addAll( vids );
@@ -81,6 +88,71 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		viewerTransform.set( transform );
 	}
 
+	public static void drawViewOutlines( final Graphics2D g, final Dimensions dims, final AffineTransform3D transfrom, final Color color )
+	{
+		final int n = dims.numDimensions();
+
+		final Queue< List< Boolean > > worklist = new LinkedList<>();
+		// add 0,0,..
+		final List< Boolean > origin = new ArrayList<>();
+		for (int d = 0; d < n; d++)
+			origin.add( false );
+		worklist.add( origin );
+
+		while ( worklist.size() > 0 )
+		{
+			final List< Boolean > vertex1 = worklist.poll();
+			final List< List< Boolean > > neighbors = getHigherVertices( vertex1 );
+
+			worklist.addAll( neighbors );
+
+			for (final List<Boolean> vertex2 : neighbors)
+			{
+				final double[] v1Pos = new double[ n ];
+				final double[] v2Pos = new double[ n ];
+
+				for (int d = 0; d < n; d++)
+				{
+					v1Pos[d] = vertex1.get( d ) ? dims.dimension( d ) - 1.0 : 0.0;
+					v2Pos[d] = vertex2.get( d ) ? dims.dimension( d ) - 1.0 : 0.0;
+				}
+
+				transfrom.apply( v1Pos, v1Pos );
+				transfrom.apply( v2Pos, v2Pos );
+
+				g.setColor( color );
+				g.setStroke( new BasicStroke( 1.0f ) );
+				g.drawLine((int) v1Pos[0],(int) v1Pos[1],(int) v2Pos[0],(int) v2Pos[1] );
+			}
+			
+		}
+		
+	}
+	
+	/**
+	 * take a vertex of a unit hypercube (coordinates represented by booleans)
+	 * and generate all vertices reachable by *incrementing* in one dimension
+	 * e.g. (0,0) -> ((0,1), (1,0))
+	 * @param from - the vertex to start from
+	 * @return - the vertices reachable by one increment
+	 */
+	public static List< List< Boolean > > getHigherVertices(List< Boolean > from)
+	{
+		final ArrayList< List< Boolean > > higherVertices = new ArrayList<>();
+		
+		for (int d = 0; d < from.size(); d++)
+		{
+			if (from.get( d ))
+				continue;
+			
+			final ArrayList< Boolean > movedInD = new ArrayList<>(from);
+			movedInD.set( d, true );
+			higherVertices.add( movedInD );
+		}
+		
+		return higherVertices;		
+	}
+	
 	@Override
 	public void drawOverlays( final Graphics g )
 	{
@@ -100,6 +172,8 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 		}
 		
 		//System.out.println( activeLinks );
+		
+		final Set< ViewId > outlinedViews = new HashSet<>();
 		
 		for (Pair< Group<ViewId>, Group<ViewId> > p : stitchingResults.getPairwiseResults().keySet())
 		{
@@ -121,9 +195,6 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 			// TODO: this uses the transform of the first view in the set, maybe do something better?
 			AffineTransform3D vt1 = spimData.getViewRegistrations().getViewRegistration( p.getA().getViews().iterator().next() ).getModel();
 			AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB().getViews().iterator().next() ).getModel();
-			
-			final AffineTransform3D transform = new AffineTransform3D();
-			transform.preConcatenate( viewerTransform );
 
 			for(int i = 0; i < 3; i++)
 			{
@@ -134,10 +205,14 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 
 			vt1.apply( lPos1, lPos1 );
 			vt2.apply( lPos2, lPos2 );
-			stitchingResults.getPairwiseResults().get( p ).getTransform().applyInverse( lPos2, lPos2 );
+			
+			if (!p.getA().equals( reference ))
+				stitchingResults.getPairwiseResults().get( p ).getTransform().applyInverse( lPos2, lPos2 );
+			if (!p.getB().equals( reference ))
+				stitchingResults.getPairwiseResults().get( p ).getTransform().apply( lPos1, lPos1 );
 
-			transform.apply( lPos1, gPos1 );
-			transform.apply( lPos2, gPos2 );
+			viewerTransform.apply( lPos1, gPos1 );
+			viewerTransform.apply( lPos2, gPos2 );
 			
 			// if we have an active link, color it white, else red->yellow->green depending on the correlation
 			if (p.equals( selectedLink ))
@@ -147,6 +222,48 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 			
 			graphics.setStroke( new BasicStroke( 2.0f ) );
 			graphics.drawLine((int) gPos1[0],(int) gPos1[1],(int) gPos2[0],(int) gPos2[1] );
+			
+			
+			// draw outlines for views in A
+			for (final ViewId vid : p.getA().getViews())
+			{
+				if (outlinedViews.contains( vid ))
+					continue;
+
+				final boolean isReference = p.getA().equals( reference );
+				
+				final Dimensions dims = spimData.getSequenceDescription().getViewDescriptions().get( vid ).getViewSetup().getSize();
+				final AffineTransform3D resgistration = spimData.getViewRegistrations().getViewRegistration( vid ).getModel();
+				final AffineTransform3D finalTransform = 
+						resgistration.copy()
+						.preConcatenate( isReference ? new AffineTransform3D() : stitchingResults.getPairwiseResults().get( p ).getInverseTransform() )
+						.preConcatenate( viewerTransform );
+				
+				drawViewOutlines( graphics, dims, finalTransform, Color.GRAY );
+				outlinedViews.add( vid );
+			}
+
+			// draw outlines for views in B
+			for ( final ViewId vid : p.getB().getViews() )
+			{
+				if ( outlinedViews.contains( vid ) )
+					continue;
+
+				final boolean isReference = p.getB().equals( reference );
+				
+				final Dimensions dims = spimData.getSequenceDescription().getViewDescriptions().get( vid )
+						.getViewSetup().getSize();
+				final AffineTransform3D registration = spimData.getViewRegistrations().getViewRegistration( vid )
+						.getModel();
+				final AffineTransform3D finalTransform = 
+						registration.copy()
+						.preConcatenate( isReference ? new AffineTransform3D() : stitchingResults.getPairwiseResults().get( p ).getTransform() )
+						.preConcatenate( viewerTransform );
+
+				drawViewOutlines( graphics, dims, finalTransform, Color.GRAY );
+				outlinedViews.add( vid );
+			}
+			
 			
 		}
 	}
@@ -168,5 +285,9 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 			final double green = r > 0.5 ? 1 : Math.max( 0, 2*r );
 			System.out.println( red + " " + green );
 		}
+		
+		List< Boolean > start = Arrays.asList( false, false, false );
+		List< List< Boolean > > moves = getHigherVertices( start );
+		moves.forEach( System.out::println );
 	}
 }
