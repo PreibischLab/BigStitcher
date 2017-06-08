@@ -19,6 +19,7 @@ import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
 {
@@ -63,8 +64,8 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 				Set<ViewId> vid2 = new HashSet<>(viewIds.get( 1 ));
 				
 				// try both ways
-				results.removePairwiseResultForPair( new ValuePair<>( vid1, vid2 ) );
-				results.removePairwiseResultForPair( new ValuePair<>( vid2, vid1 ) );
+				results.removePairwiseResultForPair( new ValuePair<>( new Group<ViewId>(vid1), new Group<ViewId>(vid2) ) );
+				results.removePairwiseResultForPair( new ValuePair<>( new Group<ViewId>(vid2), new Group<ViewId>(vid1) ) );
 			}
 		} );
 	}
