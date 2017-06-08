@@ -171,8 +171,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 					
 					service.shutdown();					
 
-					final List< List< BasicViewDescription< ? > > > groupedViewsList = null;
-					groupedViews.stream().map( g -> {
+					final List< List< BasicViewDescription< ? > > > groupedViewsList = groupedViews.stream().map( g -> {
 						final ArrayList<BasicViewDescription< ? >> views = new ArrayList<>(g.getViews());
 						Collections.sort( views );
 						return views;
