@@ -170,7 +170,6 @@ public class PhaseCorrelationPeak2 {
 			nPixel *= intervals.getA().dimension(i);
 		}
 		
-		
 		if (nPixel < minOverlapPx){
 			crossCorr = Double.NEGATIVE_INFINITY;
 			nPixel = 0;

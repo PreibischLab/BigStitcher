@@ -230,13 +230,13 @@ public class PairwiseStitching
 		System.out.println( "2: " + TransformTools.printRealInterval( localOverlap2 ) );
 		System.out.println( "2: " + Util.printInterval( interval2 ) );
 
-		// test if the overlap is too small to begin with
-		long nPixel = 1;
-		for ( int d = 0; d < img1.numDimensions(); ++d )
-			nPixel *= img1.dimension( d );
-
-		if ( nPixel < params.minOverlap )
-			return null;
+//		// test if the overlap is too small to begin with
+//		long nPixel = 1;
+//		for ( int d = 0; d < img1.numDimensions(); ++d )
+//			nPixel *= img1.dimension( d );
+//
+//		if ( nPixel < params.minOverlap )
+//			return null;
 
 		//
 		// call the phase correlation
@@ -244,6 +244,14 @@ public class PairwiseStitching
 		final int[] extension = new int[img1.numDimensions()];
 		Arrays.fill( extension, 10 );
 
+		//
+		// the min overlap is in percent of the current overlap interval
+		//
+		long minOverlap = 1;
+		for (int d = 0; d < interval1.numDimensions(); d++)
+			minOverlap *= interval1.dimension( d );
+		minOverlap *= params.minOverlap;
+		//System.out.println( "Min overlap is: " + minOverlap );
 
 		System.out.println( "FFT" );
 		// TODO: Do not extend by mirror inside, but do that out here on the
@@ -257,7 +265,9 @@ public class PairwiseStitching
 
 		final PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift( pcm,
 				Views.zeroMin( Views.interval( img1, interval1 ) ), Views.zeroMin( Views.interval( img2, interval2 ) ),
-				params.peaksToCheck, params.minOverlap, params.doSubpixel, service );
+				params.peaksToCheck, minOverlap, params.doSubpixel, service );
+
+		//System.out.println( "Actual overlap of best shift is: " + shiftPeak.getnPixel() );
 
 		// the best peak is horrible or no peaks were found at all, return null
 		if ( shiftPeak == null || Double.isInfinite( shiftPeak.getCrossCorr() ) )
