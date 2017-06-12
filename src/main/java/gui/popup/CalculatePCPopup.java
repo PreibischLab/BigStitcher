@@ -1,5 +1,6 @@
 package gui.popup;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 
 import com.jgoodies.common.base.Strings;
 
@@ -28,6 +30,8 @@ import algorithm.globalopt.GroupedViews;
 import algorithm.globalopt.PairwiseStrategyTools;
 import algorithm.globalopt.TransformationTools;
 import fiji.util.gui.GenericDialogPlus;
+import gui.StitchingExplorer;
+import gui.StitchingExplorerPanel;
 import gui.StitchingResultsSettable;
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -257,8 +261,17 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					}
 
 					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": DONE." );
+
+					// ask user if they want to switch to preview mode
+					if (panel instanceof StitchingExplorerPanel)
+					{
+						final int choice = JOptionPane.showConfirmDialog( (Component) panel, "Pairwise shift calculation done. Switch to preview mode?", "Preview Mode", JOptionPane.YES_NO_OPTION );
+						if (choice == JOptionPane.YES_OPTION)
+							((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode();
+					}
 				}
 			} ).start();
+
 
 		}
 	}

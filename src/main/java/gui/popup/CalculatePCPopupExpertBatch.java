@@ -1,5 +1,6 @@
 package gui.popup;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -12,12 +13,14 @@ import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 
 import algorithm.PairwiseStitchingParameters;
 import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.TransformTools;
 import algorithm.globalopt.TransformationTools;
 import algorithm.globalopt.GroupedViews;
+import gui.StitchingExplorerPanel;
 import gui.StitchingResultsSettable;
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -135,6 +138,13 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 
 					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": DONE." );
 
+					// ask user if they want to switch to preview mode
+					if (panel instanceof StitchingExplorerPanel)
+					{
+						final int choice = JOptionPane.showConfirmDialog( (Component) panel, "Pairwise shift calculation done. Switch to preview mode?", "Preview Mode", JOptionPane.YES_NO_OPTION );
+						if (choice == JOptionPane.YES_OPTION)
+							((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode();
+					}
 				}
 			}).run();
 		}
