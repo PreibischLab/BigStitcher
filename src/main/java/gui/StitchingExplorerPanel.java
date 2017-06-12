@@ -18,6 +18,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -595,6 +597,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	public void updateBDVPreviewMode()
 	{
 
+		// BDV is not open, nothing to do
+		if (!bdvPopup().bdvRunning())
+			return;
+
 		// we always set the fused mode
 		setFusedModeSimple( bdvPopup().bdv, data );
 
@@ -622,8 +628,12 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		// get all pairwise results which involve the views of the selected row
 		Set< ViewId > selectedVids = new HashSet< >( selectedRow );
-		ArrayList< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults
+		List< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults
 				.getAllPairwiseResultsForViewId( selectedVids );
+		
+		// if links have been filtered out, do not display them
+		if (linkExplorer != null)
+			resultsForId = resultsForId.stream().filter( r -> linkExplorer.model.getActiveLinks().contains( r.pair() ) ).collect( Collectors.toList() );
 
 		// get the Translations of first View
 		ViewRegistration selectedVr = data.getViewRegistrations().getViewRegistration( selectedVids.iterator().next() );

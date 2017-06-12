@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.table.AbstractTableModel;
 
-
+import algorithm.FilteredStitchingResults;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
@@ -27,7 +27,7 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 
 	public List< Pair< Group<ViewId>, Group<ViewId> > > getActiveLinks()
 	{
-		return activeLinks;
+		return activeLinksAfterFilter;
 	}
 
 	@Override
@@ -37,24 +37,40 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	}
 
 
-	private List<Pair<Group<ViewId>, Group<ViewId>>> activeLinks;
+	private List<Pair<Group<ViewId>, Group<ViewId>>> activeLinksBeforeFilter;
+	private List<Pair<Group<ViewId>, Group<ViewId>>> activeLinksAfterFilter;
+	
 	private StitchingResults results;
+	private FilteredStitchingResults filteredResults;
+	
+	public StitchingResults getStitchingResults() { return results; }
 	
 	public LinkExplorerTableModel()
 	{
-		activeLinks = new ArrayList<>();
+		activeLinksBeforeFilter = new ArrayList<>();
+		activeLinksAfterFilter = new ArrayList<>();
 	}
 	
 	public void setActiveLinks(List<Pair<Group<ViewId>, Group<ViewId>>> links)
 	{
-		activeLinks.clear();
-		activeLinks.addAll( links );
+		activeLinksBeforeFilter.clear();
+		activeLinksAfterFilter.clear();
+		links.forEach( l ->  {
+			activeLinksBeforeFilter.add( l );
+			if (filteredResults.getPairwiseResults().keySet().contains( l ))
+				activeLinksAfterFilter.add( l );
+		});
+	}
+	
+	public FilteredStitchingResults getFilteredResults()
+	{
+		return filteredResults;
 	}
 	
 	@Override
 	public int getRowCount()
 	{
-		return activeLinks == null ? 0 : activeLinks.size();
+		return activeLinksAfterFilter == null ? 0 : activeLinksAfterFilter.size();
 	}
 
 	@Override
@@ -68,20 +84,20 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	{
 		if (columnIndex == 0)
 		{
-			final Group< ViewId > views = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getA();
+			final Group< ViewId > views = filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).pair().getA();
 			return views.toString();
 		}
 			
 		else if (columnIndex == 1)
 		{
-			final Group< ViewId > views = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).pair().getB();
+			final Group< ViewId > views = filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).pair().getB();
 			return views.toString();
 		}
 		else if (columnIndex == 2)
-			return results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).r();
+			return filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).r();
 		else if (columnIndex == 3)
 		{
-			double[] shift = results.getPairwiseResults().get( activeLinks.get( rowIndex ) ).getTransform().getRowPackedCopy();
+			double[] shift = filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).getTransform().getRowPackedCopy();
 			
 			StringBuilder res = new StringBuilder();
 			// round to 3 decimal places
@@ -107,7 +123,15 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	@Override
 	public void setStitchingResults(StitchingResults res)
 	{
-		this.results = res;		
+		this.results = res;
+		this.filteredResults = new FilteredStitchingResults( results );
+	}
+
+	@Override
+	public void fireTableDataChanged()
+	{
+		setActiveLinks( new ArrayList<>(activeLinksBeforeFilter) );
+		super.fireTableDataChanged();
 	}
 	
 	
