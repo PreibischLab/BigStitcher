@@ -1,18 +1,25 @@
 package gui;
 
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.WindowEvent;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.JTextField;
 import javax.swing.event.ChangeListener;
+
+import com.google.common.base.Strings;
 
 import algorithm.TransformTools;
 import bdv.SpimSource;
@@ -41,17 +48,22 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 	private final static AffineTransform3D identity = new AffineTransform3D();
 	private final static int conversionFactor = 10;
 	private final static double eps = 0.001;
+	private final static int VALUE_TEXT_LEN = 6;
 
 	private final Set< ViewId > selected;
 	private SpimData2 data;	
 	private AffineTransform3D theTransform;
 	private Interval bb;
 	private BasicBDVPopup bdvPopup;
-	
+
 	private JFrame parent;
 	private JSlider xslider;
 	private JSlider yslider;
 	private JSlider zslider;
+
+	private JLabel xValueTextField;
+	private JLabel yValueTextField;
+	private JLabel zValueTextField;
 
 	public TranslateGroupManuallyPanel(SpimData2 data, Collection< ? extends ViewId > selectedInitial, BasicBDVPopup bdvPopup, JFrame parent)
 	{
@@ -71,6 +83,7 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 	private void initGUI()
 	{
 		this.setLayout( new BoxLayout( this, BoxLayout.PAGE_AXIS ) );
+		this.setBorder( BorderFactory.createEmptyBorder( 10, 20, 10, 20 ) );
 		
 		if (bb != null)
 		{
@@ -88,17 +101,47 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 			zslider.setEnabled( false );
 		}
 		
+		xslider.setPreferredSize( new Dimension( 300, 20 ) );
+		yslider.setPreferredSize( new Dimension( 300, 20 ) );
+		zslider.setPreferredSize( new Dimension( 300, 20 ) );
+		
 		xslider.addChangeListener( event -> slidersUpdated());
 		yslider.addChangeListener( event -> slidersUpdated());
 		zslider.addChangeListener( event -> slidersUpdated());
 		
-		this.add( xslider );
-		this.add( yslider );
-		this.add( zslider );
+		xValueTextField = new JLabel( padLeft( "0.0", VALUE_TEXT_LEN ) );
+		yValueTextField = new JLabel( padLeft( "0.0", VALUE_TEXT_LEN ) );
+		zValueTextField = new JLabel( padLeft( "0.0", VALUE_TEXT_LEN ) );
+		xValueTextField.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+		yValueTextField.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+		zValueTextField.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+		
+		final JPanel xSliderPanel = new JPanel();
+		xSliderPanel.setLayout( new BoxLayout( xSliderPanel, BoxLayout.LINE_AXIS ) );
+		xSliderPanel.add( new JLabel( "X: " ) );
+		xSliderPanel.add( xslider );
+		xSliderPanel.add( xValueTextField );
+		
+		final JPanel ySliderPanel = new JPanel();
+		ySliderPanel.setLayout( new BoxLayout( ySliderPanel, BoxLayout.LINE_AXIS ) );
+		ySliderPanel.add( new JLabel( "Y: " ) );
+		ySliderPanel.add( yslider );
+		ySliderPanel.add( yValueTextField );
+		
+		final JPanel zSliderPanel = new JPanel();
+		zSliderPanel.setLayout( new BoxLayout( zSliderPanel, BoxLayout.LINE_AXIS ) );
+		zSliderPanel.add( new JLabel( "Z: " ) );
+		zSliderPanel.add( zslider );
+		zSliderPanel.add( zValueTextField );
+		
+		this.add( xSliderPanel );
+		this.add( ySliderPanel );
+		this.add( zSliderPanel );
 		
 		
 		final JPanel footer = new JPanel();
 		footer.setLayout( new BoxLayout( footer, BoxLayout.LINE_AXIS ) );
+		footer.setBorder( BorderFactory.createEmptyBorder( 10, 0, 0, 0 ) );
 
 		final JButton applyButton = new JButton( "Apply" );
 		final JButton closeButton = new JButton( "Close" );
@@ -157,6 +200,10 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 			zslider.setEnabled( false );
 		}
 
+		xValueTextField.setText( padLeft( "0.0", VALUE_TEXT_LEN ) );
+		yValueTextField.setText( padLeft( "0.0", VALUE_TEXT_LEN ) );
+		zValueTextField.setText( padLeft( "0.0", VALUE_TEXT_LEN ) );
+		
 		// add listeners again
 		for ( ChangeListener cl : changeListenersX )
 			xslider.addChangeListener( cl );
@@ -166,10 +213,15 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 			zslider.addChangeListener( cl );
 	}
 	
+	public static String padLeft(String in, int minLength)
+	{
+		return Strings.repeat( " ", (int) Math.max( minLength - in.length(), 0 ) ) + in;
+	}
+	
 	private void applyTranslation()
 	{
 		// ask user once more
-		int userConfirm = JOptionPane.showConfirmDialog( this, "Apply manual transformation to data", "Confirm", JOptionPane.OK_CANCEL_OPTION );
+		int userConfirm = JOptionPane.showConfirmDialog( this, "Apply manual transformation to data?", "Confirm", JOptionPane.OK_CANCEL_OPTION );
 		if (userConfirm == JOptionPane.CANCEL_OPTION)
 			return;
 		
@@ -205,6 +257,10 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 		theTransform.set( xslider.getValue() / (double) conversionFactor, 0, 3 );
 		theTransform.set( yslider.getValue() / (double) conversionFactor, 1, 3 );
 		theTransform.set( zslider.getValue() / (double) conversionFactor, 2, 3 );
+
+		xValueTextField.setText( padLeft( Double.toString( xslider.getValue() / (double) conversionFactor ), VALUE_TEXT_LEN ) );
+		yValueTextField.setText( padLeft( Double.toString( yslider.getValue() / (double) conversionFactor ), VALUE_TEXT_LEN ) );
+		zValueTextField.setText( padLeft( Double.toString( zslider.getValue() / (double) conversionFactor ), VALUE_TEXT_LEN ) );
 		
 		if (!bdvPopup.bdvRunning())
 			return;
