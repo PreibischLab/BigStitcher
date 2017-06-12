@@ -49,9 +49,9 @@ import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 
 public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends JPanel implements SelectedViewDescriptionListener< AS >
 {
-	
+
 	/*
-	 * get int array from 3 comma-separated numbers, return null if fragments cannot be parsed as int or there are != 3 numbers
+	 * get int array from 2 or 3 comma-separated numbers, return null if fragments cannot be parsed as int or there are != 2|3 numbers
 	 */
 	private static int[] getSteps(String s)
 	{
@@ -70,7 +70,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 			return null;
 		}
 		
-		if (steps.size() < 2)
+		if ((steps.size() < 2) || (steps.size() > 3))
 			return null;
 		
 		int[] res = new int[3];
@@ -92,6 +92,8 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		for (int i = 0; i < splitted.size(); ++i)
 			splitted.set( i, splitted.get( i ).replaceAll( "\\s+", "" ).toUpperCase() );
 
+		if ((splitted.size() < 2) || (splitted.size() > 3))
+			return null;
 		
 		Set<String> splittedSet = new HashSet<>(splitted);
 		splittedSet.add( "Z" );
@@ -359,17 +361,8 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		// dimension order
 		orderTextField = new JTextField( "x, y", 30 );
 		orderWarningLabel = new JLabel("");
-		orderTextField.getDocument().addDocumentListener( new DocumentListener()
-		{			
-			@Override
-			public void removeUpdate(DocumentEvent e){  }
-			
-			@Override
-			public void insertUpdate(DocumentEvent e){  }
-			
-			@Override
-			public void changedUpdate(DocumentEvent e){ update(); }
-		} ); 
+		orderTextField.getDocument().addDocumentListener( new LinkExplorerPanel.SimpleDocumentListener( ev -> update() ) ); 
+		
 		this.add( new JLabel( "Dimension order" ) );
 		this.add( orderTextField );
 		this.add( orderWarningLabel );
@@ -377,17 +370,8 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		// steps in each dimension
 		stepsTextField = new JTextField( "4, 4", 30 );
 		stepsWarningLabel = new JLabel( "" );
-		stepsTextField.getDocument().addDocumentListener( new DocumentListener()
-		{			
-			@Override
-			public void removeUpdate(DocumentEvent e){  }
-			
-			@Override
-			public void insertUpdate(DocumentEvent e){  }
-			
-			@Override
-			public void changedUpdate(DocumentEvent e){ update(); }
-		} ); 
+		stepsTextField.getDocument().addDocumentListener(  new LinkExplorerPanel.SimpleDocumentListener( ev -> update() ) );
+		
 		this.add( new JLabel( "Tiles in each dimension" ) );
 		this.add( stepsTextField );
 		this.add( stepsWarningLabel );
@@ -439,15 +423,18 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		
 		dimensionOrder = getDimensionOrder( orderTextField.getText() );
 		if (dimensionOrder == null)
-			orderWarningLabel.setText( "<html><p style=\"color:red \"> WARNING: dimension order must be x,y and z separated by commas </p></html>" );
+			orderWarningLabel.setText( "<html><p style=\"color:red \"> WARNING: dimension order must be two or three of x,y or z separated by commas </p></html>" );
 		else
 			orderWarningLabel.setText("");
 
 		steps = getSteps( stepsTextField.getText() );
 		if (steps == null)
-			stepsWarningLabel.setText( "<html><p style=\"color:red \"> WARNING: steps must be three numbers separated by commas </p></html>" );
+			stepsWarningLabel.setText( "<html><p style=\"color:red \"> WARNING: steps must be two or three numbers separated by commas </p></html>" );
 		else
 			stepsWarningLabel.setText("");
+		
+		if ((dimensionOrder == null) || (steps == null))
+			return;
 		
 		updateBDV();
 		

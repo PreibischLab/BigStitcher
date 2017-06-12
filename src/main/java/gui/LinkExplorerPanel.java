@@ -45,7 +45,7 @@ import spim.process.interestpointregistration.pairwise.constellation.grouping.Gr
 public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData<?> >
 {
 
-	class SimpleDocumentListener implements DocumentListener
+	public static class SimpleDocumentListener implements DocumentListener
 	{
 		final Consumer< DocumentEvent > callback;
 
@@ -89,23 +89,21 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		model.setActiveLinks( links );
 		model.fireTableDataChanged();
 	}
-	
-	
-	
+
 	public LinkExplorerPanel (StitchingResults results, StitchingExplorerPanel< ?, ? > parent)
 	{
 		this.results = results;
 		this.parent = parent;
 		activeLinks = new ArrayList<>();
-		
+
 		model = new LinkExplorerTableModel();
 		model.setStitchingResults( results );
-		
+
 		table = new JTable();
 		table.setModel( model );
 		table.setSurrendersFocusOnKeystroke( true );
 		table.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
-		
+
 		final DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
 
@@ -113,33 +111,33 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		for ( int column = 0; column < model.getColumnCount(); ++column ){
 			table.getColumnModel().getColumn( column ).setCellRenderer( centerRenderer );
 		}
-		
+
 		table.setPreferredScrollableViewportSize( new Dimension( 400, 300 ) );
 		table.getSelectionModel().addListSelectionListener( getSelectionListener() );
-		
+
 		final JPanel footer = new JPanel();
 		footer.setLayout( new BoxLayout( footer, BoxLayout.PAGE_AXIS ) );
-		
+
 		final JPanel corrPanel = new JPanel();
 		corrPanel.setLayout( new BoxLayout( corrPanel, BoxLayout.LINE_AXIS ) );		
 		final JCheckBox corrCB = new JCheckBox( "filter by correlation coefficient" );
 		final JTextField minCorrTextField = new JTextField();
 		final JTextField maxCorrTextField = new JTextField();
-		
+
 		corrPanel.add( corrCB );
 		corrPanel.add( new JLabel( "min R: " ) );
 		corrPanel.add( minCorrTextField );
 		corrPanel.add( new JLabel( "max R: " ) );
 		corrPanel.add( maxCorrTextField );
 		footer.add( corrPanel );
-		
+
 		final JPanel shiftAbsPanel = new JPanel();
 		shiftAbsPanel.setLayout( new BoxLayout( shiftAbsPanel, BoxLayout.LINE_AXIS ) );
 		final JCheckBox absoluteShiftCB = new JCheckBox( "filter by shift in dimensions" );
 		final JTextField shiftXTextField = new JTextField();
 		final JTextField shiftYTextField = new JTextField();
 		final JTextField shiftZTextField = new JTextField();
-		
+
 		shiftAbsPanel.add( absoluteShiftCB );
 		shiftAbsPanel.add( new JLabel( "X: " ) );
 		shiftAbsPanel.add( shiftXTextField );
@@ -148,16 +146,16 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		shiftAbsPanel.add( new JLabel( "Z: " ) );
 		shiftAbsPanel.add( shiftZTextField );
 		footer.add( shiftAbsPanel );
-		
+
 		final JPanel shiftMagPanel = new JPanel();
 		shiftMagPanel.setLayout( new BoxLayout( shiftMagPanel, BoxLayout.LINE_AXIS ) );
 		final JCheckBox shiftMagnitudeCB = new JCheckBox( "filter by shift magnitude" );
 		final JTextField shiftMagTextField = new JTextField();
-		
+
 		shiftMagPanel.add( shiftMagnitudeCB );
 		shiftMagPanel.add( shiftMagTextField );
 		footer.add( shiftMagPanel );
-		
+
 		final SimpleDocumentListener corrCallback = new SimpleDocumentListener( e -> 
 		{
 			double minCorr = -1.0;
@@ -176,10 +174,10 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 			parent.updateBDVPreviewMode();
 			
 		});
-		
+
 		minCorrTextField.getDocument().addDocumentListener( corrCallback );
 		maxCorrTextField.getDocument().addDocumentListener( corrCallback );
-		
+
 		corrCB.addActionListener( e -> {
 			if ( corrCB.isSelected())
 				corrCallback.changedUpdate( null );
@@ -189,31 +187,31 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 			model.fireTableDataChanged();
 			parent.updateBDVPreviewMode();
 		});
-		
+
 		final SimpleDocumentListener absShiftCallback = new SimpleDocumentListener( ev -> {
-			
+
 			double[] maxShift = new double[3];
 			Arrays.fill( maxShift, Double.MAX_VALUE );
-			
+
 			try { maxShift[0] = Double.parseDouble( shiftXTextField.getText() ); }
 			catch (Exception e1) {}
 			try { maxShift[1] = Double.parseDouble( shiftYTextField.getText() ); }
 			catch (Exception e1) {}
 			try { maxShift[2] = Double.parseDouble( shiftZTextField.getText() ); }
 			catch (Exception e1) {}
-			
+
 			if (absoluteShiftCB.isSelected())
 				model.getFilteredResults().addFilter( new FilteredStitchingResults.AbsoluteShiftFilter( maxShift ) );
 
 			model.fireTableDataChanged();
 			parent.updateBDVPreviewMode();
-			
+
 		});
-		
+
 		shiftXTextField.getDocument().addDocumentListener( absShiftCallback );
 		shiftYTextField.getDocument().addDocumentListener( absShiftCallback );
 		shiftZTextField.getDocument().addDocumentListener( absShiftCallback );
-		
+
 		absoluteShiftCB.addActionListener( ev -> {
 			if (absoluteShiftCB.isSelected())
 				absShiftCallback.changedUpdate( null );
@@ -223,7 +221,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 			parent.updateBDVPreviewMode();
 
 		});
-		
+
 		final SimpleDocumentListener shiftMagCallback = new SimpleDocumentListener( ev -> {
 			double maxShift = Double.MAX_VALUE;
 
@@ -236,27 +234,27 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 			model.fireTableDataChanged();
 			parent.updateBDVPreviewMode();
 		});
-		
+
 		shiftMagTextField.getDocument().addDocumentListener( shiftMagCallback );
-		
+
 		shiftMagnitudeCB.addActionListener( ev -> {
 			if (shiftMagnitudeCB.isSelected())
 				shiftMagCallback.changedUpdate( null );
 			else
 				model.getFilteredResults().clearFilter( FilteredStitchingResults.ShiftMagnitudeFilter.class );
-			
+
 			model.fireTableDataChanged();
 			parent.updateBDVPreviewMode();
 		});
-		
-		
+
+
 		final JPanel buttons = new JPanel();
 		buttons.setLayout( new BoxLayout( buttons, BoxLayout.LINE_AXIS ) );
-		
+
 		final JButton applyButton = new JButton( "Apply" );
 		final JButton applyAllButton = new JButton( "Apply to All Links" );
 		final JButton closeButton = new JButton( "Close" );
-		
+
 		closeButton.addActionListener( ev -> parent.togglePreviewMode() );
 		applyButton.addActionListener( ev -> {
 			final int sizeFiltered = model.getActiveLinks().size();
@@ -264,47 +262,46 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 			IOFunctions.println( "Removing " + ( sizeUnfiltered - sizeFiltered ) + " of " + sizeUnfiltered + " links." );
 			model.getFilteredResults().applyToWrappedSubset( activeLinks );
 		});
-		
+
 		applyAllButton.addActionListener( ev -> {
 			final int sizeUnfiltered = model.getStitchingResults().getPairwiseResults().size();
 			final int sizeFiltered = model.getFilteredResults().getPairwiseResults().size();
 			IOFunctions.println( "Removing " + ( sizeUnfiltered - sizeFiltered ) + " of " + sizeUnfiltered + " links." );
 			model.getFilteredResults().applyToWrappedAll();
 		});
-		
+
 		buttons.add( applyButton );
 		buttons.add( applyAllButton );
 		buttons.add( closeButton );
-		
+
 		footer.add( buttons );
-		
-		
+
+
 		this.setLayout( new BorderLayout() );
 		this.add( new JScrollPane( table ), BorderLayout.CENTER );
 		this.add( footer, BorderLayout.SOUTH );
-		
+
 		final JPopupMenu popupMenu = new JPopupMenu();
 		LinkExplorerRemoveLinkPopup rlp = new LinkExplorerRemoveLinkPopup(this);
 		rlp.setStitchingResults( results );
 		popupMenu.add( rlp.setExplorerWindow( parent ) );
-		
+
 		table.setComponentPopupMenu( popupMenu );
-		
+
 		parent.addListener( this );
-		
 	}
 
 	private ListSelectionListener getSelectionListener()
 	{
 		return new ListSelectionListener()
 		{
-			
+
 			@Override
 			public void valueChanged(ListSelectionEvent e)
 			{
-				
+
 				int rowIdx = table.getSelectedRow();
-				
+
 				if (rowIdx < 0)
 				{
 					parent.linkOverlay.setSelectedLink( null );
@@ -312,12 +309,12 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 				}
 				Pair< Group<ViewId>, Group<ViewId> > p = model.getActiveLinks().get( rowIdx );
 				parent.linkOverlay.setSelectedLink( p );
-				
+
 				// repaint BDV if it is open
 				if (parent.bdvPopup().bdv != null)
 					parent.bdvPopup().bdv.getViewer().requestRepaint();	
-				
-				
+
+
 				//System.out.println( p.getA() + "," + p.getB() );
 			}
 		};
