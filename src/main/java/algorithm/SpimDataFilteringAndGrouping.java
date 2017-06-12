@@ -294,9 +294,10 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 
 		GenericDialogPlus gdp1 = new GenericDialogPlus( "Select Views To Process" );
 		
-		gdp1.addMessage( "<html><strong>Select wether you want to process all instances of an attribute <br>"
+		final String msg = ( "<html><strong>Select wether you want to process all instances of an attribute <br>"
 				+ " or just the currently selected Views</strong> <br>"
 				+ "NOTE: use 'all' or a specific ID (TODO) if you plan to call this from a macro.</html>" ) ;
+		FileListDatasetDefinition.addMessageAsJLabel(msg, gdp1);
 		
 		String[] viewSelectionChoices = new String[] {"all", "selected"};
 		
@@ -352,11 +353,11 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	{	
 		GenericDialogPlus gdp2 = new GenericDialogPlus( "Select How to Process Views" );
 		
-		gdp2.addMessage( "<html><strong>Select how to process the different attributes </strong> <br>"
+		final String msg = ( "<html><strong>Select how to process the different attributes </strong> <br>"
 				+ "<strong>COMPARE:</strong> calculate pairwise shift between instances <br>"
 				+ "<strong>GROUP:</strong> combine all instances into one view<br>"
 				+ "<strong>TREAT INDIVIDUALLY:</strong> process instances one after the other, but do not compare or group <br> </html>");
-
+		FileListDatasetDefinition.addMessageAsJLabel(msg, gdp2);
 		
 		
 		String[] computeChoices = new String[] {"compare", "group", "treat individually"};
@@ -396,8 +397,8 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		// ask what to do with grouped views
 		
 		GenericDialogPlus gdp3 = new GenericDialogPlus( "Select How to Treat Grouped Views" );		
-		gdp3.addMessage( "<html><strong>Select which instances of attributes to use in Grouped Views </strong> <br></html>");
 		
+		FileListDatasetDefinition.addMessageAsJLabel("<html><strong>Select which instances of attributes to use in Grouped Views </strong> <br></html>", gdp3);
 		
 		// filter first
 		final List<BasicViewDescription< ? > > ungroupedElements =
