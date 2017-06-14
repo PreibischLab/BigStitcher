@@ -132,7 +132,7 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 	/**
 	 * take a vertex of a unit hypercube (coordinates represented by booleans)
 	 * and generate all vertices reachable by *incrementing* in one dimension
-	 * e.g. (0,0) -> ((0,1), (1,0))
+	 * e.g. {@literal(0,0) -> ((0,1), (1,0))}
 	 * @param from - the vertex to start from
 	 * @return - the vertices reachable by one increment
 	 */

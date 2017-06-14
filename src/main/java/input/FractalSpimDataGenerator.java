@@ -137,11 +137,11 @@ public class FractalSpimDataGenerator
 	}
 
 	/**
-	 * 
+	 * @param start the first interval
 	 * @param n number of tiles in x
 	 * @param m number of tiles in y
 	 * @param overlap overlap e (0-1)
-	 * @return
+	 * @return intervals
 	 */
 	public static List<Interval> generateTileList(Interval start, int n, int m, double overlap)
 	{
@@ -190,8 +190,8 @@ public class FractalSpimDataGenerator
 	
 	/**
 	 * create SpimData containing Views at each Interval
-	 * @param intervals
-	 * @return
+	 * @param intervals list of intervals
+	 * @return generated SpimData
 	 */
 	public SpimData generateSpimData(final List<Interval> intervals)
 	{
@@ -207,9 +207,9 @@ public class FractalSpimDataGenerator
 	
 	/**
 	 * create SpimData containing Views at each Interval, set the initial Registration for each to mins
-	 * @param intervals
-	 * @param mins
-	 * @return
+	 * @param intervals list of source intervals
+	 * @param mins potentially wrong list of minima for each interval
+	 * @return generated SpimData
 	 */
 	public SpimData2 generateSpimData(final List<Interval> intervals, final List<RealLocalizable> mins)
 	{

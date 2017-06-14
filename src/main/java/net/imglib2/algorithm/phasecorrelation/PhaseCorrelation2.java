@@ -29,12 +29,16 @@ public class PhaseCorrelation2 {
 	
 	
 	
-	/**
+	/*
 	 * calculate the phase correlation of fft1 and fft2, save result to res
 	 * fft1 and fft2 will be altered by the function
-	 * @param fft1
-	 * @param fft2
-	 * @param pcm
+	 * @param fft1 fft of first image
+	 * @param fft2 fft of second image
+	 * @param pcm 
+	 * @param service
+	 * @param <T>
+	 * @param <S>
+	 * @param <R>
 	 */
 	public static <T extends ComplexType<T>, S extends ComplexType<S>, R extends RealType<R>> void calculatePCMInPlace(
 			RandomAccessibleInterval<T> fft1, RandomAccessibleInterval<S> fft2, RandomAccessibleInterval<R> pcm, ExecutorService service)
@@ -42,7 +46,7 @@ public class PhaseCorrelation2 {
 		calculatePCM( fft1, fft1, fft2, fft2, pcm , service);
 	}
 	
-	/**
+	/*
 	 * calculate the phase correlation of fft1 and fft2, save result to res
 	 * fft1 and fft2 will NOT be altered by the function
 	 * @param fft1
@@ -68,7 +72,7 @@ public class PhaseCorrelation2 {
 	}
 	
 	
-	/**
+	/*
 	 * calculate phase correlation of fft1 and fft2, return result in a new Img
 	 * @param fft1
 	 * @param fft2
@@ -88,7 +92,7 @@ public class PhaseCorrelation2 {
 		return res;
 	}
 	
-	/**
+	/*
 	 * calculate phase correlation of fft1 and fft2, doing the calculations in copies of the ffts, return result in a new Img
 	 * @param fft1
 	 * @param fft2
@@ -124,7 +128,7 @@ public class PhaseCorrelation2 {
 		return res;
 	}
 	
-	/**
+	/*
 	 * calculate and return the phase correlation matrix of two images
 	 * @param img1
 	 * @param img2
@@ -156,7 +160,7 @@ public class PhaseCorrelation2 {
 		
 	}
 	
-	/**
+	/*
 	 * calculate PCM with default extension
 	 * @param img1
 	 * @param img2
@@ -172,7 +176,7 @@ public class PhaseCorrelation2 {
 	}
 	
 	
-	/**
+	/*
 	 * calculate the shift between two images from the phase correlation matrix
 	 * @param pcm
 	 * @param img1
@@ -205,9 +209,9 @@ public class PhaseCorrelation2 {
 			return null;
 	}
 	
-	/**
+	/*
 	 * calculate the sift with default parameters (5 highest pcm peaks are considered, no minimum overlap, temporary thread pool)
-	 * @param pcm
+	 * @param pcm 
 	 * @param img1
 	 * @param img2
 	 * @return

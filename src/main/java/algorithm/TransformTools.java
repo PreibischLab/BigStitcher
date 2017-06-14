@@ -152,7 +152,7 @@ public class TransformTools {
 	}
 	
 	/**
-	 * check for all a_i, b_i: abs(a_i - b_i) <= eps 
+	 * check for all a_i, b_i: {@literal abs(a_i - b_i) <= eps} 
 	 * @param a double array a
 	 * @param b double array b
 	 * @param eps tolerance

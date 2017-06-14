@@ -72,6 +72,7 @@ public class Align<T extends RealType< T >>
 	
 	/**
 	 * returns true if the last align() call did not run for the maximum allowed number of iterations
+	 * @return true or false
 	 */
 	public boolean didConverge()
 	{
@@ -118,7 +119,7 @@ public class Align<T extends RealType< T >>
 	 * Each steepest descent image comprises the partial derivatives of template
 	 * intensities with respect to one parameter of the warp function.
 	 *
-	 * The result is stored in the <em>n+1</em> dimensional {@link #target}
+	 * The result is stored in the <em>n+1</em> dimensional target
 	 * image. Dimension <em>n</em> is used to index the partial derivative. For
 	 * example, the partial derivative by the second parameter of the warp
 	 * function is stored in slice <em>n=1</em>.
@@ -137,6 +138,8 @@ public class Align<T extends RealType< T >>
 	 *            warp function. For example, the partial derivative of the
 	 *            template image intensity by parameter 2 of the warp function
 	 *            at pixel <em>(x,y)</em> is stored at position <em>(x,y,1)</em>
+	 * @param <T>
+	 *            pixel type
 	 *            .
 	 */
 	public static <T extends NumericType< T >> void computeSteepestDescents(
@@ -163,6 +166,9 @@ public class Align<T extends RealType< T >>
 
 	/**
 	 * Compute the inverse Hessian matrix from the the steepest descent images.
+	 * @param descent descent image
+	 * @param <T> pixel type
+	 * @return Hessian
 	 */
 	public static <T extends RealType< T >> double[][] computeInverseHessian(
 			final RandomAccessibleInterval< T > descent)
@@ -192,7 +198,7 @@ public class Align<T extends RealType< T >>
 		return new Matrix( H ).inverse().getArray();
 	}
 
-	/**
+	/*
 	 * Computed and return the affine transform that aligns image to template.
 	 */
 	public AffineTransform align(final RandomAccessibleInterval< T > image, final int maxIterations,
@@ -286,6 +292,8 @@ public class Align<T extends RealType< T >>
 	 *            specified dimension.
 	 * @param dimension
 	 *            along which dimension the partial derivatives are computed
+	 * @param <T> pixel type source
+	 * @param <S> pixel type target
 	 */
 	public static < T extends RealType< T >, S extends RealType< S > > void gradient(
 			final RandomAccessible< T > source,
@@ -316,6 +324,8 @@ public class Align<T extends RealType< T >>
 	 *            n+1 dimensional output image. Dimension n is used to index the
 	 *            partial derivative. For example, the partial derivative by Y
 	 *            is stored in slice n=1.
+	 * @param <T> pixel type source
+	 * @param <S> pixel type target
 	 */
 	public static < T extends RealType< T >, S extends RealType<S> > void gradients(
 			final RandomAccessible< T > source,
@@ -340,6 +350,9 @@ public class Align<T extends RealType< T >>
 	 * @param difference
 	 *            Output image. The pixel-wise difference between the
 	 *            transformed source image and the target image is stored here.
+	 *            
+	 * @param <T> pixel type source
+	 * @param <S> pixel type target
 	 */
 	public static < T extends RealType< T >,  S extends RealType< S > > void computeDifference(
 			final RandomAccessible< T > source,

@@ -25,9 +25,11 @@ public class FourNeighborhoodExtrema
 	
 	/**
 	 * merge the pre-sorted lists in lists, keep at most the maxN biggest values from any list in the result
-	 * @param lists
-	 * @param maxN
-	 * @return
+	 * @param lists lists to merge
+	 * @param maxN maximum size of output list
+	 * @param compare comparator
+	 * @param <T> list content type
+	 * @return merged list with size {@literal < maxN}
 	 */	
 	public static <T> ArrayList<T> merge(List<List<T>> lists, final int maxN, Comparator<T> compare){
 		ArrayList<T> res = new ArrayList<T>();
@@ -75,9 +77,9 @@ public class FourNeighborhoodExtrema
 	
 	/**
 	 * split the given Interval into nSplits intervals along the largest dimension
-	 * @param interval
-	 * @param nSplits
-	 * @return
+	 * @param interval input interval
+	 * @param nSplits how may splits
+	 * @return list of intervals input was split into
 	 */
 	public static List<Interval> splitAlongLargestDimension(Interval interval, int nSplits){
 		

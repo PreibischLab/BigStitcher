@@ -45,9 +45,11 @@ public class IlluminationSelectionPreviewGUI
 	/**
 	 * zip two collections into one List of Pairs [(s_o, t_0), (s_1, t_1), ...]
 	 * the size of the result will be the smaller size of the two input Collections 
-	 * @param s
-	 * @param t
-	 * @return
+	 * @param s first
+	 * @param t second
+	 * @param <S> first item type
+	 * @param <T> second item type
+	 * @return zipped list of pairs
 	 */
 	public static <S,T> List<Pair<S,T>> zip(Collection<S> s, Collection<T> t)
 	{

@@ -21,8 +21,9 @@ public interface WarpFunction
 	 * @param d
 	 *            dimension of the warped image coordinate whose derivative to
 	 *            take.
-	 * @param p
+	 * @param param
 	 *            parameter by which to derive.
+	 * @return the partial derivative
 	 */
 	public double partial( RealLocalizable pos, int d, int param );
 
@@ -30,6 +31,7 @@ public interface WarpFunction
 	 * get affine transform corresponding to a given parameter vector.
 	 *
 	 * @param p parameter vector
+	 * @return the transform
 	 */
 	public AffineGet getAffine( double[] p );
 }

@@ -41,7 +41,7 @@ import spim.process.fusion.ImagePortion;
 
 public class PhaseCorrelation2Util {
 	
-	/**
+	/*
 	 * copy source to dest. they do not have to be of the same size, but source must fit in dest
 	 * @param source
 	 * @param dest
@@ -91,9 +91,9 @@ public class PhaseCorrelation2Util {
 	
 	/**
 	 * calculate the size difference of two Dimensions objects (dim2-dim1)
-	 * @param dim1
-	 * @param dim2
-	 * @return
+	 * @param dim1 first Dimensions
+	 * @param dim2 second Dimensions
+	 * @return int array of difference
 	 */	
 	public static int[] getSizeDifference(Dimensions dim1, Dimensions dim2) {
 		int[] diff = new int[dim1.numDimensions()];
@@ -106,10 +106,10 @@ public class PhaseCorrelation2Util {
 	/**
 	 * calculate the size of an extended image big enough to hold dim1 and dim2
 	 * with each dimension also enlarged by extension pixels on each side (but at most by the original image size)
-	 * @param dim1
-	 * @param dim2
+	 * @param dim1 first Dimensions
+	 * @param dim2 second Dimensions
 	 * @param extension: number of pixels to add at each side in each dimension
-	 * @return
+	 * @return extended dimensions
 	 */
 	public static FinalDimensions getExtendedSize(Dimensions dim1, Dimensions dim2, int [] extension) {
 		long[] extDims = new long[dim1.numDimensions()];
@@ -121,7 +121,7 @@ public class PhaseCorrelation2Util {
 		return new FinalDimensions(extDims);		
 	}
 	
-	/**
+	/*
 	 * return a BlendedExtendedMirroredRandomAccesible of img extended extension pixels on each side (but at most by the original image size)
 	 * @param img
 	 * @param extension: number of blending pixels to add at each side in each dimension
@@ -136,7 +136,7 @@ public class PhaseCorrelation2Util {
 		return new BlendedExtendedMirroredRandomAccesible2<T>(img, extEachSide);
 	}
 	
-	/**
+	/*
 	 * returns the extension at each side if an image is enlarged by a factor of extensionFactor at each side
 	 * @param dims
 	 * @param extensionFactor
@@ -151,7 +151,7 @@ public class PhaseCorrelation2Util {
 	}
 	
 	
-	/**
+	/*
 	 * return a BlendedExtendedMirroredRandomAccesible of img extended to extDims
 	 * @param img
 	 * @param extDims
@@ -166,7 +166,7 @@ public class PhaseCorrelation2Util {
 		return new BlendedExtendedMirroredRandomAccesible2<T>(img, extEachSide);
 	}
 	
-	/**
+	/*
 	 * calculate the crosscorrelation of img1 and img2 for all shifts represented by a PhasecorrelationPeak List in parallel using a specified
 	 * ExecutorService. service remains functional after the call
 	 * @param peaks
@@ -204,7 +204,7 @@ public class PhaseCorrelation2Util {
 		}
 	}
 	
-	/**
+	/*
 	 * find local maxima in PCM
 	 * @param pcm
 	 * @param service
@@ -230,7 +230,7 @@ public class PhaseCorrelation2Util {
 		return res;		
 	}
 	
-	/**
+	/*
 	 * find maxima in PCM, use a temporary thread pool for calculation
 	 * @param pcm
 	 * @param nMax 
@@ -243,7 +243,7 @@ public class PhaseCorrelation2Util {
 		return res;
 	}
 	
-	/**
+	/*
 	 * sort PCM Peaks by phaseCorrelation and return a new list containing just the nToKeep highest peaks
 	 * @param rawPeaks
 	 * @param nToKeep
@@ -258,7 +258,7 @@ public class PhaseCorrelation2Util {
 		}
 		return res;
 	}
-	/**
+	/*
 	 * expand a list of PCM maxima to to a list containing all possible shifts corresponding to these maxima
 	 * @param peaks
 	 * @param pcmDims
@@ -276,7 +276,7 @@ public class PhaseCorrelation2Util {
 		peaks.addAll(res);
 	}
 	
-	/**
+	/*
 	 * expand a single maximum in the PCM to a list of possible shifts corresponding to that peak
 	 * an offset due to different images sizes is accounted for
 	 * @param peak
@@ -336,7 +336,7 @@ public class PhaseCorrelation2Util {
 		return shiftedPeaks;
 	}
 	
-	/**
+	/*
 	 * get intervals corresponding to overlapping area in two images (relative to image origins)
 	 * will return null if there is no overlap
 	 * @param img1
@@ -418,7 +418,7 @@ public class PhaseCorrelation2Util {
 		return res;		
 	}
 	
-	/**
+	/*
 	 * multiply complex numbers c1 and c2, set res to the result of multiplication
 	 * @param c1
 	 * @param c2
@@ -435,7 +435,7 @@ public class PhaseCorrelation2Util {
 		res.setImaginary(a*d + b*c);
 	}
 	
-	/**
+	/*
 	 * pixel-wise multiplication of img1 and img2
 	 * res is overwritten by the result
 	 * @param img1
@@ -511,7 +511,7 @@ public class PhaseCorrelation2Util {
 		
 	}
 	
-	/**
+	/*
 	 * calculate complex conjugate of c, save result to res
 	 * @param c
 	 * @param res
@@ -520,7 +520,7 @@ public class PhaseCorrelation2Util {
 		res.setComplexNumber(c.getRealDouble(), - c.getImaginaryDouble());
 	}
 	
-	/**
+	/*
 	 * calculate element-wise complex conjugate of img, save result to res
 	 * @param img
 	 * @param res
@@ -587,7 +587,7 @@ public class PhaseCorrelation2Util {
 		
 	}
 	
-	/**
+	/*
 	 * normalize complex number c1 to length 1, save result to res
 	 * if the length of c1 is less than normalizationThreshold, set res to 0
 	 * @param c1
@@ -606,7 +606,7 @@ public class PhaseCorrelation2Util {
 		
 	}
 	
-	/**
+	/*
 	 * normalization with default threshold
 	 * @param c1
 	 * @param res
@@ -616,7 +616,7 @@ public class PhaseCorrelation2Util {
 	}	
 
 
-	/**
+	/*
 	 * normalize complex valued img to length 1, pixel-wise, saving result to res
 	 * if the length of a pixel is less than normalizationThreshold, set res to 0
 	 * @param img
@@ -687,7 +687,7 @@ public class PhaseCorrelation2Util {
 		
 		
 	}
-	/**
+	/*
 	 * normalization with default threshold
 	 * @param img
 	 * @param res
@@ -697,7 +697,7 @@ public class PhaseCorrelation2Util {
 		normalizeInterval(img, res, 1E-5, service);
 	}
 	
-	/**
+	/*
 	 * get the mean pixel intensity of an img
 	 * @param img
 	 * @return
@@ -715,7 +715,7 @@ public class PhaseCorrelation2Util {
 		return sum/n;
 	}
 	
-	/**
+	/*
 	 * get pixel-value correlation of two RandomAccessibleIntervals
 	 * @param img1
 	 * @param img2
@@ -758,7 +758,7 @@ public class PhaseCorrelation2Util {
 	}
 
 	
-	/**
+	/*
 	 * test stitching, create new image with img2 copied over img1 at the specified shift
 	 * @param img1
 	 * @param img2

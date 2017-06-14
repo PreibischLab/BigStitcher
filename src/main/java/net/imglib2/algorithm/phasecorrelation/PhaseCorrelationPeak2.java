@@ -93,7 +93,7 @@ public class PhaseCorrelationPeak2 {
 		this.nPixel = nPixel;
 	}
 	
-	/**
+	/*
 	 * constructor with just raw PCM location and value
 	 * @param pcmPosition
 	 * @param phaseCorr
@@ -109,7 +109,7 @@ public class PhaseCorrelationPeak2 {
 		this.nPixel = 0;
 	}
 	
-	/**
+	/*
 	 * copy contructor
 	 * @param src
 	 */
@@ -143,7 +143,7 @@ public class PhaseCorrelationPeak2 {
 	}
 	
 	
-	/**
+	/*
 	 * checks the cross correlation of two images shifted as indicated by this phaseCorrelationPeak,
 	 * update the values of crossCor and nPixels accordingly
 	 * if the images do not overlap (or overlap less than a specified minimal overlap),
@@ -202,7 +202,7 @@ public class PhaseCorrelationPeak2 {
 		
 	}
 	
-	/**
+	/*
 	 * calculate cross correlation of two images with no minimal overlap size
 	 * @param img1
 	 * @param img2
@@ -211,7 +211,7 @@ public class PhaseCorrelationPeak2 {
 		calculateCrossCorr(img1, img2, 0);
 	}
 	
-	/**
+	/*
 	 * refine the shift using subpixel localization in the original PCM
 	 * @param pcm
 	 */

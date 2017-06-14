@@ -191,8 +191,9 @@ public class TransformationTools
 	/**
 	 * 
 	 * @param pairs list of potentially overlapping pairs of view groups, this will be modified!
-	 * @param vrs 
-	 * @param sd
+	 * @param vrs the view registrations
+	 * @param sd the sequence description
+	 * @param <V> view id type
 	 * @return list of the pairs that were removed
 	 */
 	public static <V extends ViewId> List< Pair< Group< V >, Group< V > > > filterNonOverlappingPairs(
