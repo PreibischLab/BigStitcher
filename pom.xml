@@ -23,8 +23,14 @@
 	
   <dependencies>
   	<dependency>
+  		<groupId>sc.fiji</groupId>
+  		<artifactId>SPIM_Registration</artifactId>
+  		<version>6.0.5-SNAPSHOT</version>
+  	</dependency>
+  	<dependency>
   		<groupId>net.imglib2</groupId>
   		<artifactId>imglib2</artifactId>
+  		<version>4.2.0</version>
   	</dependency>
   	<dependency>
   		<groupId>net.imglib2</groupId>
@@ -41,11 +47,7 @@
   	<dependency>
   		<groupId>net.imglib2</groupId>
   		<artifactId>imglib2-ui</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>sc.fiji</groupId>
-  		<artifactId>SPIM_Registration</artifactId>
-  		<version>6.0.5-SNAPSHOT</version>
+  		<version>2.0.0-beta-32</version>
   	</dependency>
   	<dependency>
   		<groupId>junit</groupId>
@@ -60,12 +62,12 @@
   	<dependency>
   		<groupId>sc.fiji</groupId>
   		<artifactId>bigdataviewer-vistools</artifactId>
-  		<version>1.0.0-beta-4-SNAPSHOT</version>
+  		<version>1.0.0-beta-5</version>
   	</dependency>
   	<dependency>
   		<groupId>sc.fiji</groupId>
   		<artifactId>bigdataviewer-core</artifactId>
-  		<version>2.5.2-SNAPSHOT</version>
+  		<version>4.1.0</version>
   	</dependency>
   </dependencies>
 </project>

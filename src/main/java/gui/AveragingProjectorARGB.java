@@ -18,7 +18,7 @@ public class AveragingProjectorARGB extends AccumulateProjector< ARGBType, ARGBT
 		@Override
 		public VolatileProjector createAccumulateProjector(ArrayList< VolatileProjector > sourceProjectors,
 				ArrayList< Source< ? > > sources,
-				ArrayList< ? extends RandomAccessible< ARGBType > > sourceScreenImages,
+				ArrayList< ? extends RandomAccessible< ? extends ARGBType > > sourceScreenImages,
 				RandomAccessibleInterval< ARGBType > targetScreenImage, int numThreads, ExecutorService executorService)
 		{
 			return new AveragingProjectorARGB( sourceProjectors, sourceScreenImages, targetScreenImage, numThreads, executorService );
@@ -27,7 +27,7 @@ public class AveragingProjectorARGB extends AccumulateProjector< ARGBType, ARGBT
 
 	public AveragingProjectorARGB(
 			final ArrayList< VolatileProjector > sourceProjectors,
-			final ArrayList< ? extends RandomAccessible< ARGBType > > sources,
+			final ArrayList< ? extends RandomAccessible< ? extends ARGBType > > sources,
 			final RandomAccessibleInterval< ARGBType > target,
 			final int numThreads,
 			final ExecutorService executorService )
@@ -36,11 +36,11 @@ public class AveragingProjectorARGB extends AccumulateProjector< ARGBType, ARGBT
 	}
 
 	@Override
-	protected void accumulate( final Cursor< ARGBType >[] accesses, final ARGBType target )
+	protected void accumulate( final Cursor< ? extends ARGBType >[] accesses, final ARGBType target )
 	{
 		int aSum = 0, rSum = 0, gSum = 0, bSum = 0;
 		int nonZeroAccesses = 0;
-		for ( final Cursor< ARGBType > access : accesses )
+		for ( final Cursor< ? extends ARGBType > access : accesses )
 		{
 			final int value = access.get().get();
 			final int a = ARGBType.alpha( value );
