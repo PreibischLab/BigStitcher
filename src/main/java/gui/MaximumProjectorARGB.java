@@ -17,10 +17,13 @@ public class MaximumProjectorARGB extends AccumulateProjector< ARGBType, ARGBTyp
 	public static AccumulateProjectorFactory< ARGBType > factory = new AccumulateProjectorFactory< ARGBType >()
 	{
 		@Override
-		public VolatileProjector createAccumulateProjector(ArrayList< VolatileProjector > sourceProjectors,
+		public VolatileProjector createAccumulateProjector(
+				ArrayList< VolatileProjector > sourceProjectors,
 				ArrayList< Source< ? > > sources,
-				ArrayList< ? extends RandomAccessible< ARGBType > > sourceScreenImages,
-				RandomAccessibleInterval< ARGBType > targetScreenImage, int numThreads, ExecutorService executorService)
+				ArrayList< ? extends RandomAccessible< ? extends ARGBType > > sourceScreenImages,
+				RandomAccessibleInterval< ARGBType > targetScreenImage,
+				int numThreads,
+				ExecutorService executorService)
 		{
 			return new MaximumProjectorARGB( sourceProjectors, sourceScreenImages, targetScreenImage, numThreads, executorService );
 		}
@@ -28,7 +31,7 @@ public class MaximumProjectorARGB extends AccumulateProjector< ARGBType, ARGBTyp
 
 	public MaximumProjectorARGB(
 			final ArrayList< VolatileProjector > sourceProjectors,
-			final ArrayList< ? extends RandomAccessible< ARGBType > > sources,
+			final ArrayList< ? extends RandomAccessible< ? extends ARGBType > > sources,
 			final RandomAccessibleInterval< ARGBType > target,
 			final int numThreads,
 			final ExecutorService executorService )
@@ -37,10 +40,10 @@ public class MaximumProjectorARGB extends AccumulateProjector< ARGBType, ARGBTyp
 	}
 
 	@Override
-	protected void accumulate( final Cursor< ARGBType >[] accesses, final ARGBType target )
+	protected void accumulate( final Cursor< ? extends ARGBType >[] accesses, final ARGBType target )
 	{
 		int aMax = 0, rMax = 0, gMax = 0, bMax = 0;
-		for ( final Cursor< ARGBType > access : accesses )
+		for ( final Cursor< ? extends ARGBType > access : accesses )
 		{
 			final int value = access.get().get();
 			final int a = ARGBType.alpha( value );
