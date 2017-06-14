@@ -637,8 +637,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			firstVD = selectedRow.get( 0 );
 
 		final Pair< Group< ViewId >, Group< ViewId > > selectedPair = linkExplorer.getSelectedPair();
+		// we have a pair selected, hide all other views
 		if (selectedPair != null)
-			whiteSources( bdvPopup().bdv.getSetupAssignments().getConverterSetups() );
+			for (final ConverterSetup cs : bdvPopup().bdv.getSetupAssignments().getConverterSetups())
+				cs.setColor(new ARGBType(ARGBType.rgba( 0, 0, 0, 0) ) );
 		
 		// always use the first timepoint
 		final TimePoint firstTP = firstVD.getTimePoint();
