@@ -166,11 +166,13 @@ public class PairwiseStitching
 
 	 * @param input1 - zero-min interval, starting at (0,0,...)
 	 * @param input2 - zero-min interval, starting at (0,0,...)
-	 * @param t1
-	 * @param t2
-	 * @param params
-	 * @param service
-	 * @return
+	 * @param t1 - translation of input1
+	 * @param t2 - translation of input2
+	 * @param params - stitching parameters
+	 * @param service - executor service to use
+	 * @param <T> pixel type input1
+	 * @param <S> pixel type input2
+	 * @return pair of shift vector and cross correlation coefficient or null if no shift could be determined
 	 */
 	public static <T extends RealType< T >, S extends RealType< S >> Pair< double[], Double > getShift(
 			final RandomAccessibleInterval< T > input1, final RandomAccessibleInterval< S > input2,

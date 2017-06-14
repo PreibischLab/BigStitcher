@@ -122,9 +122,9 @@ public class TransformTools {
 
 	/**
 	 * 
-	 * @param vr
-	 * @param is2d
-	 * @param dsCorrectionT
+	 * @param vr the ViewRegistration to decompose
+	 * @param is2d true or false
+	 * @param dsCorrectionT downsampling correction 
 	 * @return (1) the ViewRegistration without Translation part and the translation, with the inverse of (1) and dsCorrection applied
 	 */
 	public static Pair<AffineGet, TranslationGet> getInitialTransforms( final ViewRegistration vr, final boolean is2d, final AffineTransform3D dsCorrectionT )
@@ -153,10 +153,10 @@ public class TransformTools {
 	
 	/**
 	 * check for all a_i, b_i: abs(a_i - b_i) <= eps 
-	 * @param a
-	 * @param b
-	 * @param eps
-	 * @return
+	 * @param a double array a
+	 * @param b double array b
+	 * @param eps tolerance
+	 * @return true or false
 	 */
 	public static boolean allAlmostEqual(double[] a, double[] b, double eps)
 	{
@@ -207,9 +207,9 @@ public class TransformTools {
 	
 	/**
 	 * get overlap in local image coordinates (assuming min = (0,0,..))
-	 * @param img
-	 * @param overlap
-	 * @return
+	 * @param img image interval (global coordinates)
+	 * @param overlap overlap interval (global coordinates)
+	 * @return overlap interval  in local coordinates
 	 */
 	public static FinalRealInterval getLocalOverlap(RealInterval img, RealInterval overlap){
 		final int n = img.numDimensions();
@@ -227,8 +227,8 @@ public class TransformTools {
 	/**
 	 * create an integer interval from real interval, being conservatie on the size
 	 * (min is ceiled, max is floored)
-	 * @param overlap
-	 * @return
+	 * @param overlap real input
+	 * @return interger interval, with mins ceiled and maxs floored
 	 */
 	public static FinalInterval getLocalRasterOverlap(RealInterval overlap)
 	{

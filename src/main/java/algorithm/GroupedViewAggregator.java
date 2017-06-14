@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.scijava.Context;
 
-import algorithm.globalopt.GroupedViews;
+
 import ij.ImageJ;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.base.Entity;
@@ -80,13 +80,13 @@ public class GroupedViewAggregator
 		{
 			Set<Class<? extends Entity>> groupingSet = new HashSet<>();
 			groupingSet.add( entityClass );
-			List< List< BasicViewDescription< ? > > > grouped = 
-					SpimDataTools.groupByAttributes( new ArrayList<>(input.keySet()), groupingSet );
+			List< Group< BasicViewDescription< ? > > > grouped = 
+					Group.combineBy( new ArrayList<>(input.keySet()), groupingSet );
 			
 			
 			Map<BasicViewDescription<?>, RandomAccessibleInterval<T>> res = new HashMap<>();			
 			
-			for (List< BasicViewDescription< ? > > g : grouped)
+			for (Group< BasicViewDescription< ? > > g : grouped)
 			{
 				List<RandomAccessibleInterval<T>> rais = new ArrayList<>();
 				for (BasicViewDescription< ? > vd : g)
@@ -94,14 +94,16 @@ public class GroupedViewAggregator
 				
 				RandomAccessibleInterval< T > resG;
 				
-				if (actionType == ActionType.PICK_BRIGHTEST)
-					resG = pickBrightest(g, rais);
-				else if (actionType == ActionType.PICK_SPECIFIC)
-					resG = pickSpecific(g, rais);
-				else //if (actionType == ActionType.AVERAGE)
-					resG = average(g, rais);
+				List< BasicViewDescription< ? > > gl = new ArrayList<>(g.getViews());
 				
-				BasicViewDescription< ? > fistVD = g.get( 0 );
+				if (actionType == ActionType.PICK_BRIGHTEST)
+					resG = pickBrightest(gl, rais);
+				else if (actionType == ActionType.PICK_SPECIFIC)
+					resG = pickSpecific(gl, rais);
+				else //if (actionType == ActionType.AVERAGE)
+					resG = average(gl, rais);
+				
+				BasicViewDescription< ? > fistVD = gl.get( 0 );
 				
 				res.put( fistVD, resG );				
 			}

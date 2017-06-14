@@ -35,7 +35,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import algorithm.SpimDataFilteringAndGrouping;
-import algorithm.SpimDataTools;
+
 import bdv.BigDataViewer;
 import bdv.img.hdf5.Hdf5ImageLoader;
 import bdv.tools.brightness.ConverterSetup;
@@ -75,6 +75,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.util.Pair;
 import spim.fiji.spimdata.SpimData2;
+import spim.fiji.spimdata.SpimDataTools;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;

@@ -48,10 +48,11 @@ import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import spim.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
 
+@Deprecated
 public class GlobalTileOptimization
 {
 	
-	/**
+	/*
 	 * @param model an instance of the model we wish to fit to data
 	 * @param viewSets identifieres of the sets of "views" to be stitched
 	 * @param fixedViews identifieres of the fixed views
@@ -207,7 +208,7 @@ public class GlobalTileOptimization
 	}
 
 	
-	/**
+	/*
 	 * build TileConfiguration for 2-round global optimization
 	 * @param model
 	 * @param views
@@ -217,6 +218,7 @@ public class GlobalTileOptimization
 	 * @param firstPassTransforms
 	 * @return
 	 */
+	@Deprecated
 	public static < M extends AbstractAffineModel3D< M >, C> Pair<TileConfiguration, Map<Set<C>, Tile<M>>>  prepareTileConfiguration(
 			final M model,
 			final Collection< Set<C> > views,

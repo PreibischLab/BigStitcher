@@ -14,7 +14,6 @@ import java.util.SortedSet;
 
 import javax.swing.JOptionPane;
 
-import algorithm.SpimDataTools;
 import bdv.AbstractSpimSource;
 import bdv.BigDataViewer;
 import bdv.BigDataViewerActions;
@@ -49,6 +48,7 @@ import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.ui.TransformListener;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import spim.fiji.spimdata.SpimDataTools;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
@@ -57,6 +57,7 @@ import spim.fiji.spimdata.explorer.popup.BDVPopup;
 import spim.fiji.spimdata.explorer.popup.BDVPopup.MyActionListener;
 import spim.fiji.spimdata.explorer.util.ColorStream;
 import spim.fiji.spimdata.imgloaders.AbstractImgLoader;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class BDVPopupStitching extends BDVPopup
 {
@@ -147,14 +148,15 @@ public class BDVPopupStitching extends BDVPopup
 			vdToCs.put( vd, cs );
 		}
 		
-		List< List< BasicViewDescription< ? > > > vdGroups = SpimDataTools.collapseByAttributes( vds, groupingFactors );
+		List< Group< BasicViewDescription< ? > > > vdGroups = Group.splitBy( vds, groupingFactors );
+		
 		
 		// nothing to group
 		if (vdGroups.size() <= 1)
 			return;
 		List<ArrayList<ConverterSetup>> groups =  new ArrayList<>();
 		
-		for (List< BasicViewDescription< ? > > lVd : vdGroups)
+		for (Group< BasicViewDescription< ? > > lVd : vdGroups)
 		{
 			ArrayList< ConverterSetup > lCs = new ArrayList<>();
 			for (BasicViewDescription< ? > vd : lVd)
@@ -209,11 +211,11 @@ public class BDVPopupStitching extends BDVPopup
 		}
 
 		
-		List< List< BasicViewDescription< ? > > > groupByAttributes = SpimDataTools.groupByAttributes( vds, groupingFactors );
+		List< Group< BasicViewDescription< ? > > > groupByAttributes = Group.combineBy( vds, groupingFactors );
 		
 		for (int gi = 0; gi < groupByAttributes.size(); gi ++)
 		{
-			List< BasicViewDescription< ? > > vdsI = groupByAttributes.get( gi );
+			Group< BasicViewDescription< ? > > vdsI = groupByAttributes.get( gi );
 			for (BasicViewDescription< ? > vd : vdsI)
 			{
 				bdv.getViewer().getVisibilityAndGrouping().addSourceToGroup( vdToSource.get( vd ), gi );
@@ -242,7 +244,7 @@ public class BDVPopupStitching extends BDVPopup
 			vdToCs.put( vd, cs );
 		}
 		
-		List< List< BasicViewDescription< ? > > > vdGroups = SpimDataTools.collapseByAttributes( vds, groupingFactors );
+		List< Group< BasicViewDescription< ? > > > vdGroups = Group.splitBy( vds, groupingFactors );
 		
 		// nothing to group
 		if (vdGroups.size() < 1)
@@ -257,7 +259,7 @@ public class BDVPopupStitching extends BDVPopup
 		
 		List<ArrayList<ConverterSetup>> groups =  new ArrayList<>();
 		
-		for (List< BasicViewDescription< ? > > lVd : vdGroups)
+		for (Group< BasicViewDescription< ? > > lVd : vdGroups)
 		{
 			ArrayList< ConverterSetup > lCs = new ArrayList<>();
 			for (BasicViewDescription< ? > vd : lVd)

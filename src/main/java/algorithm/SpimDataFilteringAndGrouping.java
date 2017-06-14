@@ -203,9 +203,9 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 
 	/**
 	 * get all instances of the attribute class cl in the (grouped) views vds. 
-	 * @param vds
-	 * @param cl
-	 * @return
+	 * @param vds collection of view description lists
+	 * @param cl Class of entity to get instances of
+	 * @return all instances of cl in the views in vds
 	 */
 	public static Set<Entity> getInstancesOfAttributeGrouped(Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > vds, Class<? extends Entity> cl)
 	{	
@@ -226,9 +226,9 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		
 	/**
 	 * get the instances of class cl that are present in at least one ViewDescription of each of the groups in vds.
-	 * @param vds
-	 * @param cl
-	 * @return
+	 * @param vds collection of view description iterables
+	 * @param cl Class of entity to get instances of
+	 * @return all instances of cl in the views in vds
 	 */
 	public static List<? extends Entity> getInstancesInAllGroups(Collection< ? extends Iterable< BasicViewDescription< ? extends BasicViewSetup > > > vds, Class<? extends Entity> cl)
 	{
