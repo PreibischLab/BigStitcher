@@ -11,6 +11,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 
+import algorithm.SpimDataFilteringAndGrouping;
 import gui.StitchingExplorerPanel;
 import gui.TranslateGroupManuallyPanel;
 import gui.popup.TogglePreviewPopup.MyActionListener;
@@ -21,6 +22,7 @@ import mpicbg.spim.io.IOFunctions;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
+import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import spim.fiji.spimdata.explorer.popup.ApplyTransformationPopup;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 
@@ -59,7 +61,7 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 			final JFrame theFrame = new JFrame( "Move Views" );			
 			TranslateGroupManuallyPanel tgmp = new TranslateGroupManuallyPanel( (SpimData2) panel.getSpimData(), viewIds, panel.bdvPopup(), theFrame);
 			
-			((FilteredAndGroupedExplorerPanel< ?, ? >) panel).addListener( tgmp );
+			((FilteredAndGroupedExplorerPanel< AbstractSpimData<?>, ? >) panel).addListener(  tgmp );
 			
 			theFrame.add( tgmp );
 			theFrame.pack();

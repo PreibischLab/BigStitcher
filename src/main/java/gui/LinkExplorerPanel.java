@@ -2,19 +2,16 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.text.Format;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -30,7 +27,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 import algorithm.FilteredStitchingResults;
 import gui.popup.LinkExplorerRemoveLinkPopup;
-import gui.popup.SimpleRemoveLinkPopup;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
@@ -75,7 +71,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 	}
 
 	private StitchingResults results;
-	private StitchingExplorerPanel< ?, ? > parent;
+	private StitchingExplorerPanel< AbstractSpimData< ? >, ? > parent;
 	LinkExplorerTableModel model;
 	protected JTable table;
 	private List<Pair<Group<ViewId>, Group<ViewId>>> activeLinks;
@@ -91,7 +87,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		model.fireTableDataChanged();
 	}
 
-	public LinkExplorerPanel (StitchingResults results, StitchingExplorerPanel< ?, ? > parent)
+	public LinkExplorerPanel (StitchingResults results, StitchingExplorerPanel< AbstractSpimData< ? >, ? > parent)
 	{
 		this.results = results;
 		this.parent = parent;

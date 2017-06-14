@@ -458,7 +458,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 						}
 							
 
-					selectedRows.add( tableModel.getElements().get( row ) );
+					// FIXME: some generics fixes necessary to avoid this ugly cast (which is necessary for maven to compile)
+					selectedRows.add( (List<BasicViewDescription< ? extends BasicViewSetup >>) (Object) tableModel.getElements().get( row ) );
 				}
 
 				List< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedList = new ArrayList< >();
@@ -522,7 +523,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		if ( linkExplorer != null )
 			return;
 
-		linkExplorer = new LinkExplorerPanel( stitchingResults, this );
+		linkExplorer = new LinkExplorerPanel( stitchingResults, (StitchingExplorerPanel< AbstractSpimData< ? >, ? >) this );
 		// init the LinkExplorer
 		linkFrame = new JFrame( "Link Explorer" );
 		linkFrame.add( linkExplorer, BorderLayout.CENTER );

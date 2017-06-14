@@ -5,11 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -17,9 +13,7 @@ import javax.swing.JOptionPane;
 
 import algorithm.PairwiseStitchingParameters;
 import algorithm.SpimDataFilteringAndGrouping;
-import algorithm.TransformTools;
 import algorithm.globalopt.TransformationTools;
-import algorithm.globalopt.GroupedViews;
 import gui.StitchingExplorerPanel;
 import gui.StitchingResultsSettable;
 import ij.gui.GenericDialog;
@@ -29,11 +23,7 @@ import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
-import net.imglib2.Dimensions;
-import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.util.Pair;
-import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -81,7 +71,7 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 				{
 
 					FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
-					SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
+					SpimDataFilteringAndGrouping< AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
 
 					filteringAndGrouping.askUserForFiltering( panelFG );
 					if (filteringAndGrouping.getDialogWasCancelled())

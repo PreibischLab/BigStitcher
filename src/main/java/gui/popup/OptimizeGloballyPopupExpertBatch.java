@@ -86,7 +86,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 			if (params == null)
 				return;
 			
-			SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping;
+			SpimDataFilteringAndGrouping< AbstractSpimData< ? > > filteringAndGrouping;
 			if (((StitchingExplorerPanel< ?, ? >) panel).getSavedFilteringAndGrouping() == null)
 			{
 				FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
@@ -102,7 +102,8 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 			}
 			else
 			{
-				filteringAndGrouping = ((StitchingExplorerPanel< ?, ? >) panel).getSavedFilteringAndGrouping();
+				// FIXME: there is some generics work to be done, obviously
+				filteringAndGrouping = (SpimDataFilteringAndGrouping< AbstractSpimData< ? >> )(Object)((StitchingExplorerPanel< ?, ? >) panel).getSavedFilteringAndGrouping();
 			}
 			
 			
