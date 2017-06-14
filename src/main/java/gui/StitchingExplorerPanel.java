@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collector;
@@ -28,6 +29,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -37,6 +39,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.SpimDataTools;
 import algorithm.TransformTools;
 import mpicbg.spim.data.SpimDataException;
@@ -119,6 +122,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	LinkExplorerPanel linkExplorer;
 	JFrame linkFrame;
 	
+	// save SpimDataFilteringAndGrouping so we can go preview -> global opt
+	SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > savedFilteringAndGrouping;
+	
 	// offset to get different "random" colors
 	private long colorOffset = 0;
 
@@ -147,6 +153,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				bdvPopup().bdv = BDVPopupStitching.createBDV( this, linkOverlay );
 		}
 
+		savedFilteringAndGrouping = null;
 	}
 	
 	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
@@ -185,6 +192,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		}
 		else
 		{
+			boolean doGlobalOpt = false;
+			if (savedFilteringAndGrouping != null)
+				doGlobalOpt = JOptionPane.showConfirmDialog( linkFrame, "Proceed to Global Optimization?", "Optimize Globally?", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION;
+
 			quitLinkExplorer();
 			linkOverlay.clearActiveLinks();
 			int oldFirstSelection = table.getSelectionModel().getMinSelectionIndex();
@@ -192,6 +203,15 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			table.setRowSelectionInterval( oldFirstSelection, oldFirstSelection );
 			if (bdvPopup().bdvRunning())
 				updateBDV( bdvPopup().bdv, colorMode, data, firstSelectedVD, selectedRows );
+
+			if (doGlobalOpt)
+			{
+				Optional< ExplorerWindowSetable > globalOptPopupOpt = popups.stream().filter( p -> OptimizeGloballyPopupExpertBatch.class.isInstance( p ) ).findFirst();
+				OptimizeGloballyPopupExpertBatch globalOptPopup = (OptimizeGloballyPopupExpertBatch) globalOptPopupOpt.get();
+				globalOptPopup.doClick();
+			}
+			// discard the temp. SpimDataFilteringAndGrouping
+			savedFilteringAndGrouping = null;
 		}
 	}
 
@@ -933,6 +953,16 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					appleKeyDown = true;
 			}
 		} );
+	}
+
+	public SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > getSavedFilteringAndGrouping()
+	{
+		return savedFilteringAndGrouping;
+	}
+
+	public void setSavedFilteringAndGrouping(SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > savedFilteringAndGrouping)
+	{
+		this.savedFilteringAndGrouping = savedFilteringAndGrouping;
 	}
 
 }

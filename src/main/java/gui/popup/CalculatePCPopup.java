@@ -267,7 +267,10 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					{
 						final int choice = JOptionPane.showConfirmDialog( (Component) panel, "Pairwise shift calculation done. Switch to preview mode?", "Preview Mode", JOptionPane.YES_NO_OPTION );
 						if (choice == JOptionPane.YES_OPTION)
+						{
+							((StitchingExplorerPanel< ?, ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
 							((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode();
+						}
 					}
 				}
 			} ).start();

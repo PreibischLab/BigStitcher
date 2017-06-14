@@ -18,6 +18,7 @@ import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.TransformTools;
 import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GlobalTileOptimization;
+import gui.StitchingExplorerPanel;
 import gui.StitchingResultsSettable;
 import mpicbg.models.Tile;
 import mpicbg.models.TranslationModel3D;
@@ -85,16 +86,24 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem implements Explo
 			if (params == null)
 				return;
 			
-			FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
-			SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
-			
-			filteringAndGrouping.askUserForFiltering( panelFG );
-			if (filteringAndGrouping.getDialogWasCancelled())
-				return;
-			
-			filteringAndGrouping.askUserForGrouping( panelFG );
-			if (filteringAndGrouping.getDialogWasCancelled())
-				return;
+			SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping;
+			if (((StitchingExplorerPanel< ?, ? >) panel).getSavedFilteringAndGrouping() == null)
+			{
+				FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
+				filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
+				
+				filteringAndGrouping.askUserForFiltering( panelFG );
+				if (filteringAndGrouping.getDialogWasCancelled())
+					return;
+				
+				filteringAndGrouping.askUserForGrouping( panelFG );
+				if (filteringAndGrouping.getDialogWasCancelled())
+					return;
+			}
+			else
+			{
+				filteringAndGrouping = ((StitchingExplorerPanel< ?, ? >) panel).getSavedFilteringAndGrouping();
+			}
 			
 			
 			// why can type not be BasicViewDescription?
