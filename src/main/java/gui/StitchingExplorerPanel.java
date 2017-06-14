@@ -177,9 +177,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		if ( previewMode )
 		{
 			int oldFirstSelection = table.getSelectionModel().getMinSelectionIndex();
+			initLinkExplorer();
 			table.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 			table.setRowSelectionInterval( oldFirstSelection, oldFirstSelection );
-			initLinkExplorer();
 			if (bdvPopup().bdvRunning())
 				updateBDVPreviewMode();
 		}
@@ -596,13 +596,18 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 	public void updateBDVPreviewMode()
 	{
-
 		// BDV is not open, nothing to do
 		if (!bdvPopup().bdvRunning())
 			return;
 
 		// we always set the fused mode
 		setFusedModeSimple( bdvPopup().bdv, data );
+
+		// first, re-color sources (we might have set one or two of them to green/magenta)
+		if (!colorMode)
+			BDVPopupStitching.colorByChannels( bdvPopup().bdv, data );
+		else
+			colorSources( bdvPopup().bdv.getSetupAssignments().getConverterSetups(), colorOffset );
 
 		if ( selectedRowsGroups().size() < 1 )
 			return;
@@ -611,14 +616,16 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		List< BasicViewDescription< ? extends BasicViewSetup > > selectedRow = selectedRowsGroups().iterator().next();
 		BasicViewDescription< ? extends BasicViewSetup > firstVD = firstSelectedVD;
 
-		// System.out.println( selectedRow );
-
 		if ( selectedRow == null || selectedRow.size() == 0 )
 			return;
 
 		if ( firstVD == null )
 			firstVD = selectedRow.get( 0 );
 
+		final Pair< Group< ViewId >, Group< ViewId > > selectedPair = linkExplorer.getSelectedPair();
+		if (selectedPair != null)
+			whiteSources( bdvPopup().bdv.getSetupAssignments().getConverterSetups() );
+		
 		// always use the first timepoint
 		final TimePoint firstTP = firstVD.getTimePoint();
 		bdvPopup().bdv.getViewer().setTimepoint( getBDVTimePointIndex( firstTP, data ) );
@@ -650,6 +657,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		List< Pair< Group< ViewId >, Group< ViewId > > > activeLinks = new ArrayList< >();
 
+		
 		for ( PairwiseStitchingResult< ViewId > psr : resultsForId )
 		{
 			activeLinks.add( psr.pair() );
@@ -667,6 +675,18 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				// there is a link selected -> other
 				if ( psr.pair().getA().getViews().equals( selectedVids ) && psr.pair().getB().getViews().containsAll( group ) )
 				{
+					if (psr.pair().equals( selectedPair ))
+					{
+						for (ViewId vid : psr.pair().getA())
+							for (final ConverterSetup cs : bdvPopup().bdv.getSetupAssignments().getConverterSetups())
+								if (cs.getSetupId() == vid.getViewSetupId())
+									cs.setColor(new ARGBType(ARGBType.rgba( 0, 255, 0, 255) ) );
+						for (ViewId vid : psr.pair().getB())
+							for (final ConverterSetup cs : bdvPopup().bdv.getSetupAssignments().getConverterSetups())
+								if (cs.getSetupId() == vid.getViewSetupId())
+									cs.setColor(new ARGBType(ARGBType.rgba( 255, 0, 255, 255) ) );
+					}
+					
 					for ( final BasicViewDescription< ? > vd : group )
 						if ( vd.getTimePointId() == firstTP.getId() )
 						{
@@ -690,6 +710,18 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				// there is a link other -> selected
 				if ( psr.pair().getB().getViews().equals( selectedVids ) && psr.pair().getA().getViews().containsAll( group ) )
 				{
+					if (psr.pair().equals( selectedPair ))
+					{
+						for (ViewId vid : psr.pair().getB())
+							for (final ConverterSetup cs : bdvPopup().bdv.getSetupAssignments().getConverterSetups())
+								if (cs.getSetupId() == vid.getViewSetupId())
+									cs.setColor(new ARGBType(ARGBType.rgba( 0, 255, 0, 255) ) );
+						for (ViewId vid : psr.pair().getA())
+							for (final ConverterSetup cs : bdvPopup().bdv.getSetupAssignments().getConverterSetups())
+								if (cs.getSetupId() == vid.getViewSetupId())
+									cs.setColor(new ARGBType(ARGBType.rgba( 255, 0, 255, 255) ) );
+					}
+					
 					for ( final BasicViewDescription< ? > vd : group )
 						if ( vd.getTimePointId() == firstTP.getId() )
 						{
@@ -702,6 +734,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							// accumulative transform determined by stitching
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getInverseTransform().getRowPackedCopy() );
+
+							if (psr.pair().equals( selectedPair ))
+							{
+								for (final ConverterSetup cs : bdvPopup().bdv.getSetupAssignments().getConverterSetups())
+									if (cs.getSetupId() == vd.getViewSetupId())
+										cs.setColor(new ARGBType(ARGBType.rgba( 255, 0, 255, 255) ) );
+							}
 
 							( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( trans );
 

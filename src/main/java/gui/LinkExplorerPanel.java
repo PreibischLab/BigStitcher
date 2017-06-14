@@ -79,6 +79,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 	LinkExplorerTableModel model;
 	protected JTable table;
 	private List<Pair<Group<ViewId>, Group<ViewId>>> activeLinks;
+	private Pair< Group<ViewId>, Group<ViewId> > selectedPair;
 	
 	public void setActiveLinks(List<Pair<Group<ViewId>, Group<ViewId>>> links)
 	{
@@ -95,6 +96,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		this.results = results;
 		this.parent = parent;
 		activeLinks = new ArrayList<>();
+		selectedPair = null;
 
 		model = new LinkExplorerTableModel();
 		model.setStitchingResults( results );
@@ -305,14 +307,19 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 				if (rowIdx < 0)
 				{
 					parent.linkOverlay.setSelectedLink( null );
+					selectedPair = null;
 					return;
 				}
+
 				Pair< Group<ViewId>, Group<ViewId> > p = model.getActiveLinks().get( rowIdx );
 				parent.linkOverlay.setSelectedLink( p );
+				selectedPair = p;
 
 				// repaint BDV if it is open
 				if (parent.bdvPopup().bdv != null)
-					parent.bdvPopup().bdv.getViewer().requestRepaint();	
+				{	parent.updateBDVPreviewMode();
+					parent.bdvPopup().bdv.getViewer().requestRepaint();
+				}
 
 
 				//System.out.println( p.getA() + "," + p.getB() );
@@ -349,5 +356,12 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 
 	@Override
 	public void quit() {} // not implemented yet
+
+
+
+	public Pair< Group< ViewId >, Group< ViewId > > getSelectedPair()
+	{
+		return selectedPair;
+	}
 
 }
