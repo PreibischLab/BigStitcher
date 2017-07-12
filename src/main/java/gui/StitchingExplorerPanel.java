@@ -35,7 +35,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import algorithm.SpimDataFilteringAndGrouping;
-
 import bdv.BigDataViewer;
 import bdv.img.hdf5.Hdf5ImageLoader;
 import bdv.tools.brightness.ConverterSetup;
@@ -120,6 +119,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	// offset to get different "random" colors
 	private long colorOffset = 0;
 
+	protected JCheckBox checkboxGroupChannels;
+	protected JCheckBox checkboxGroupIllums;
+
 	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
 			final X io, boolean startBDVifHDF5)
 	{
@@ -153,7 +155,29 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	{
 		this(explorer, data, xml, io, true);
 	}
-	
+
+	@Override
+	public boolean tilesGrouped() { return false; }
+
+	@Override
+	public boolean channelsGrouped()
+	{
+		if ( checkboxGroupChannels == null || !checkboxGroupChannels.isSelected() )
+			return false;
+		else
+			return true;
+	}
+
+	@Override
+	public boolean illumsGrouped()
+	{
+		if ( checkboxGroupIllums == null || !checkboxGroupIllums.isSelected() )
+			return false;
+		else
+			return true;
+	}
+
+
 
 	void quitLinkExplorer()
 	{
@@ -357,7 +381,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		final JPanel footerGroupChannels = new JPanel();
 		footerGroupChannels.setLayout( new BoxLayout( footerGroupChannels, BoxLayout.LINE_AXIS ) );
 		footerGroupChannels.add( new JLabel( "Group Channels:" ) );
-		final JCheckBox checkboxGroupChannels = new JCheckBox( "", true );
+		this.checkboxGroupChannels = new JCheckBox( "", true );
 		checkboxGroupChannels.addActionListener( new ActionListener()
 		{
 
@@ -383,7 +407,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		final JPanel footerGroupIllums = new JPanel();
 		footerGroupIllums.setLayout( new BoxLayout( footerGroupIllums, BoxLayout.LINE_AXIS ) );
 		footerGroupIllums.add( new JLabel( "Group Illuminations:" ) );
-		final JCheckBox checkboxGroupIllums = new JCheckBox( "", true );
+		this.checkboxGroupIllums = new JCheckBox( "", true );
 		checkboxGroupIllums.addActionListener( new ActionListener()
 		{
 
