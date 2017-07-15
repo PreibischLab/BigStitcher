@@ -23,8 +23,6 @@ import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
-import net.imglib2.algorithm.neighborhood.Neighborhood;
-import net.imglib2.algorithm.neighborhood.RectangleShape;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.ComplexType;
@@ -34,7 +32,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
-import spim.process.fusion.FusionHelper;
+import spim.process.fusion.FusionTools;
 import spim.process.fusion.ImagePortion;
 
 
@@ -48,7 +46,7 @@ public class PhaseCorrelation2Util {
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>> void copyRealImage(final IterableInterval<T> source, final RandomAccessibleInterval<S> dest, ExecutorService service) {
 		
-		final Vector<ImagePortion> portions = FusionHelper.divideIntoPortions(source.size(), Runtime.getRuntime().availableProcessors() * 4);
+		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions(source.size(), Runtime.getRuntime().availableProcessors() * 4);
 		ArrayList<Future<?>> futures = new ArrayList<Future<?>>();		
 		final AtomicInteger ai = new AtomicInteger(-1);
 		
@@ -447,7 +445,7 @@ public class PhaseCorrelation2Util {
 	{
 		
 		
-		final Vector<ImagePortion> portions = FusionHelper.divideIntoPortions(Views.iterable(img1).size(), Runtime.getRuntime().availableProcessors() * 4);		
+		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions(Views.iterable(img1).size(), Runtime.getRuntime().availableProcessors() * 4);		
 		List<Future<?>> futures = new ArrayList<Future<?>>();
 		final AtomicInteger ai = new AtomicInteger(-1);
 		
@@ -529,7 +527,7 @@ public class PhaseCorrelation2Util {
 			final RandomAccessibleInterval<R>	img, final RandomAccessibleInterval<S> res, ExecutorService service)
 	{
 		
-		final Vector<ImagePortion> portions = FusionHelper.divideIntoPortions(Views.iterable(img).size(), Runtime.getRuntime().availableProcessors() * 4);		
+		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions(Views.iterable(img).size(), Runtime.getRuntime().availableProcessors() * 4);		
 		List<Future<?>> futures = new ArrayList<Future<?>>();
 		final AtomicInteger ai = new AtomicInteger(-1);
 		
@@ -627,7 +625,7 @@ public class PhaseCorrelation2Util {
 			final RandomAccessibleInterval<T> img, final RandomAccessibleInterval<S> res, final double normalizationThreshold, ExecutorService service) 
 	{
 		
-		final Vector<ImagePortion> portions = FusionHelper.divideIntoPortions(Views.iterable(img).size(), Runtime.getRuntime().availableProcessors() * 4);		
+		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions(Views.iterable(img).size(), Runtime.getRuntime().availableProcessors() * 4);		
 		List<Future<?>> futures = new ArrayList<Future<?>>();
 		final AtomicInteger ai = new AtomicInteger(-1);
 		

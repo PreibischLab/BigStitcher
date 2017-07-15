@@ -42,12 +42,11 @@ import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
-import spim.process.fusion.FusionHelper;
+import spim.process.fusion.FusionTools;
 import spim.process.fusion.transformed.FusedRandomAccessibleInterval;
 import spim.process.fusion.transformed.TransformView;
 import spim.process.fusion.transformed.TransformVirtual;
 import spim.process.fusion.transformed.TransformWeight;
-import spim.process.fusion.weightedavg.ProcessFusion;
 
 public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindowSetable {
 
@@ -184,10 +183,10 @@ public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindow
 				vr.updateModel();
 				AffineTransform3D model = vr.getModel();
 
-				final float[] blending = ProcessFusion.defaultBlendingRange.clone();
-				final float[] border = ProcessFusion.defaultBlendingBorder.clone();
+				final float[] blending = FusionTools.defaultBlendingRange.clone();
+				final float[] border = FusionTools.defaultBlendingBorder.clone();
 
-				FusionHelper.adjustBlending( sd.getViewDescriptions().get( viewId ), blending, border );
+				FusionTools.adjustBlending( sd.getViewDescriptions().get( viewId ), blending, border );
 
 				model = model.copy();
 				TransformVirtual.scaleTransform( model, inverse(downsamplingFactors) );
