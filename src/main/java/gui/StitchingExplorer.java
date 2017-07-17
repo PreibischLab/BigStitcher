@@ -4,6 +4,8 @@ import ij.ImageJ;
 import input.GenerateSpimData;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -39,7 +41,9 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 	private String xml;
 	private X io;
 	private Mode currentMode;
-	
+
+	private JButton bStitching, bMV;
+
 	public enum Mode{
 		STITCHING,
 		MULTIVIEW
@@ -60,16 +64,16 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 		JPanel buttons = new JPanel( );
 		buttons.setLayout( new BoxLayout( buttons, BoxLayout.LINE_AXIS ) );
 		
-		JButton bStitching = new JButton( "Stitching" );
+		this.bStitching = new JButton( "Stitching" );
 		buttons.add( bStitching );
 		bStitching.addActionListener( (e) -> switchMode(Mode.STITCHING));
 		
 		
-		JButton bMV = new JButton( "Multiview" );
+		this.bMV = new JButton( "Multiview" );
 		buttons.add( bMV );
 		bMV.addActionListener( (e) -> switchMode(Mode.MULTIVIEW));
 		
-		
+		updateButtons();
 		
 		panel = new StitchingExplorerPanel< AS, X >( this, data, xml, io );
 
@@ -93,13 +97,31 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 		// set the initial focus to the table
 		panel.table.requestFocus();
 	}
-	
+
+	public void updateButtons()
+	{
+		if ( currentMode == Mode.STITCHING )
+		{
+			bStitching.setForeground( Color.BLACK );
+			bStitching.setFont( bStitching.getFont().deriveFont( Font.BOLD ) );
+			bMV.setForeground( Color.GRAY );
+			bMV.setFont( bMV.getFont().deriveFont( Font.PLAIN ) );
+		}
+		else
+		{
+			bMV.setForeground( Color.BLACK );
+			bMV.setFont( bMV.getFont().deriveFont( Font.BOLD ) );
+			bStitching.setForeground( Color.GRAY );
+			bStitching.setFont( bStitching.getFont().deriveFont( Font.PLAIN ) );
+		}
+	}
+
 	public void switchMode(Mode mode)
 	{
 		// we are already in the desired mode
 		if (mode == currentMode)
 			return;
-				
+
 		frame.setTitle( mode == Mode.STITCHING ? "Stitching Explorer" : "Multiview Explorer" );
 		
 		// TODO: is there a smarter way than closing and reopening BDV?
@@ -147,6 +169,8 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 		
 		frame.requestFocus();
 		currentMode = mode;
+
+		updateButtons();
 	}
 	
 	public void quit()
