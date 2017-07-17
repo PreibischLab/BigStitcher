@@ -46,6 +46,7 @@ import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
+import spim.fiji.spimdata.pointspreadfunctions.PointSpreadFunctions;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
@@ -257,9 +258,10 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 			viewsInterestPoints.createViewInterestPoints( data.getSequenceDescription().getViewDescriptions() );
 		
 		final BoundingBoxes boundingBoxes = SpimData2.class.isInstance( data ) ? ((SpimData2)data).getBoundingBoxes() : new BoundingBoxes();
+		final PointSpreadFunctions psfs = SpimData2.class.isInstance( data ) ? ((SpimData2)data).getPointSpreadFunctions() : new PointSpreadFunctions();
 		final StitchingResults stitchingResults = SpimData2.class.isInstance( data ) ? ((SpimData2)data).getStitchingResults() : new StitchingResults();
 				
-		final SpimData2 dataNew = new SpimData2( basePath, sequenceDescription, viewRegistrations, viewsInterestPoints, boundingBoxes, stitchingResults );
+		final SpimData2 dataNew = new SpimData2( basePath, sequenceDescription, viewRegistrations, viewsInterestPoints, boundingBoxes, psfs, stitchingResults );
 		return dataNew;
 	}
 
