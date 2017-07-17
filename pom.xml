@@ -24,7 +24,7 @@
   	<dependency>
   		<groupId>sc.fiji</groupId>
   		<artifactId>SPIM_Registration</artifactId>
-		<version>6.0.8</version>
+		<version>6.1.0</version>
   	</dependency>
   	<dependency>
   		<groupId>net.imglib2</groupId>
