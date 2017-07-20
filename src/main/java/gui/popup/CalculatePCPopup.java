@@ -35,6 +35,7 @@ import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointdetection.methods.downsampling.DownsampleTools;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
@@ -76,7 +77,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 				data.getSequenceDescription().getViewDescriptions().values().stream().filter( v -> v.isPresent() ).findFirst();
 		
 		boolean askForManualDownsampling = true;
-		final long[] downSamplingFactors = new long[] {1, 1, 1};
+		long[] downSamplingFactors = new long[] {1, 1, 1};
 		
 		// ask for precomputed levels if we have at least one present view and a MultiResolutionImgLoader
 		if (firstPresent.isPresent())
@@ -87,20 +88,9 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 				askForManualDownsampling = false;
 				
 				GenericDialog gd = new GenericDialog( "Use precomputed downsampling" );
-				
-				final MultiResolutionImgLoader mrImgLoader = (MultiResolutionImgLoader) data.getSequenceDescription().getImgLoader();
-				final double[][] mipmapResolutions = mrImgLoader.getSetupImgLoader( firstPresent.get().getViewSetupId()).getMipmapResolutions();
-				final String[] dsStrings = new String[mipmapResolutions.length];
-				
-				for (int i = 0; i<mipmapResolutions.length; i++)
-				{
-					final String fx = ((Long)Math.round( mipmapResolutions[i][0] )).toString(); 
-					final String fy = ((Long)Math.round( mipmapResolutions[i][1] )).toString(); 
-					final String fz = ((Long)Math.round( mipmapResolutions[i][2] )).toString();
-					final String dsString = String.join( ", ", fx, fy, fz );
-					dsStrings[i] = dsString;
-				}
-				
+
+				final String[] dsStrings = DownsampleTools.availableDownsamplings( data, firstPresent.get() );
+
 				gd.addChoice( "downsampling (x, y, z)", dsStrings, dsStrings[0] );
 				gd.addCheckbox( "manually select downsampling", false );
 				
@@ -108,15 +98,10 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 
 				if ( gd.wasCanceled() )
 					return null;
-				
-				final String dsChoice = gd.getNextChoice();
-				final String[] choiceSplit = dsChoice.split( ", " );
-				downSamplingFactors[0] = Long.parseLong( choiceSplit[0] );
-				downSamplingFactors[1] = Long.parseLong( choiceSplit[1] );
-				downSamplingFactors[2] = Long.parseLong( choiceSplit[2] );
-				
+
+				downSamplingFactors = DownsampleTools.parseDownsampleChoice( gd.getNextChoice() );
+
 				askForManualDownsampling = gd.getNextBoolean();
-			
 			}
 		}
 		
