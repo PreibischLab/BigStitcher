@@ -78,7 +78,7 @@ public class Stitching_Explorer implements PlugIn
 		if ( !System.getProperty("os.name").toLowerCase().contains( "mac" ) )
 			GenericLoadParseQueryXML.defaultXMLfilename = "/home/preibisch/Documents/Microscopy/SPIM/HisYFP-SPIM//dataset_tp18.xml";
 		else
-			GenericLoadParseQueryXML.defaultXMLfilename = "/Users/spreibi/Documents/Microscopy/SPIM/HisYFP-SPIM//dataset.xml";
+			GenericLoadParseQueryXML.defaultXMLfilename = "/Users/spreibi/Documents/Grants and CV/BIMSB/Projects/Big Data Sticher/Dros_converted/dataset.xml";
 
 		new Stitching_Explorer().run( null );
 	}
