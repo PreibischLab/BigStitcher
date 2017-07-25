@@ -58,10 +58,13 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 	 */
 	private static final long serialVersionUID = -8153572686300701480L;
 	private StitchingResults stitchingResults;
-	private ExplorerWindow<? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
-	
+	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+
 	@Override
-	public void setStitchingResults(StitchingResults res) { this.stitchingResults = res; }
+	public void setStitchingResults(StitchingResults res)
+	{
+		this.stitchingResults = res;
+	}
 
 	@Override
 	public JComponent setExplorerWindow(
@@ -70,276 +73,198 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 		this.panel = panel;
 		return this;
 	}
-	
+
 	public OptimizeGloballyPopup()
 	{
 		super( "Optimize Globally And Apply Shift" );
 		this.addActionListener( new MyActionListener() );
 	}
-	
-	public class MyActionListener implements ActionListener{
+
+	public class MyActionListener implements ActionListener
+	{
 
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			
-			GlobalOptimizationParameters params = GlobalOptimizationParameters.askUserForParameters();
-			if (params == null)
-				return;
-			
-			final AbstractSpimData< ? > d =  panel.getSpimData();
-			
-			final ArrayList< Set<ViewId> > viewIds = new ArrayList<>();			
-			for (List<ViewId> vidl : ((GroupedRowWindow)panel).selectedRowsViewIdGroups())
-				viewIds.add( new HashSet<ViewId>( vidl ) );
-			
-			
-			Collections.sort( viewIds, new Comparator< Set<ViewId > >()
+			new Thread( new Runnable()
 			{
+
 				@Override
-				public int compare(Set< ViewId > o1, Set< ViewId > o2)
+				public void run()
 				{
-					final ArrayList< ViewId > o1List = new ArrayList<>(o1);
-					final ArrayList< ViewId > o2List = new ArrayList<>(o2);
-					Collections.sort( o1List );
-					Collections.sort( o2List );
-					Iterator< ViewId > it1 = o1List.iterator();
-					Iterator< ViewId > it2 = o2List.iterator();
-					while(it1.hasNext() && it2.hasNext())
-					{
-						int comp = it1.next().compareTo( it2.next() );
-						if (comp != 0)
-							return comp;
-					}
-					// list 1 is longer
-					if (it1.hasNext())
-						return -1;
-					// list 2 is longer
-					if (it2.hasNext())
-						return 1;
-					// lists equal
-					else
-						return 0;
-				}
-			} );
-			
-			// define fixed tiles
-			// the first selected Tile will be fixed
-			final ArrayList< Set<ViewId> > fixedViews = new ArrayList<>();
-			
-			GenericDialog gdFixing = new GenericDialog( "Pick view (group) to fix" );
-			List<String> choices = new ArrayList<>();
-			for (Set< ViewId > s : viewIds)
-			{
-				List< String > descs = s.stream().map( view -> "(View " + view.getViewSetupId() + ", Timepoint " + view.getTimePointId() + ")" ).collect( Collectors.toList() );
-				choices.add( "[" + String.join( ", ", descs ) + "]" );
-			}
-			gdFixing.addChoice( "view (group) to fix", choices.toArray( new String[choices.size()] ), choices.get( 0 ) );
-			
-			
-			gdFixing.showDialog();
-			if (gdFixing.wasCanceled())
-				return;
-			
-			fixedViews.add( viewIds.get( gdFixing.getNextChoiceIndex() ) );
+					GlobalOptimizationParameters params = GlobalOptimizationParameters.askUserForParameters();
+					if ( params == null )
+						return;
 
-			
-			List< PairwiseStitchingResult<ViewId> > results = new ArrayList<>(stitchingResults.getPairwiseResults().values());
-			final Map<ViewId, AffineGet> translations = new HashMap<>();
-			Map<ViewId, Dimensions> dims = new HashMap<>();
-			
-			
-			boolean allHaveSize = true;
-			for (Set<ViewId> sid : viewIds){
-				for (ViewId id : sid)
-				{
-					AffineGet a3d = d.getViewRegistrations().getViewRegistration( id ).getModel();
-	//				Translation3D tr = new Translation3D( a3d.get( 0, 3 ),
-	//						a3d.get( 1, 3 ), a3d.get( 2, 3 ) );
-					translations.put( id, a3d );
-					
-					if (allHaveSize)
+					final AbstractSpimData< ? > d = panel.getSpimData();
+
+					final ArrayList< Set< ViewId > > viewIds = new ArrayList<>();
+					for ( List< ViewId > vidl : ( (GroupedRowWindow) panel ).selectedRowsViewIdGroups() )
+						viewIds.add( new HashSet< ViewId >( vidl ) );
+
+					Collections.sort( viewIds, new Comparator< Set< ViewId > >()
 					{
-						BasicViewSetup vs = d.getSequenceDescription().getViewDescriptions().get( id ).getViewSetup();
-						if (!vs.hasSize())
+						@Override
+						public int compare(Set< ViewId > o1, Set< ViewId > o2)
 						{
-							allHaveSize = false;
-							continue;
+							final ArrayList< ViewId > o1List = new ArrayList<>( o1 );
+							final ArrayList< ViewId > o2List = new ArrayList<>( o2 );
+							Collections.sort( o1List );
+							Collections.sort( o2List );
+							Iterator< ViewId > it1 = o1List.iterator();
+							Iterator< ViewId > it2 = o2List.iterator();
+							while ( it1.hasNext() && it2.hasNext() )
+							{
+								int comp = it1.next().compareTo( it2.next() );
+								if ( comp != 0 )
+									return comp;
+							}
+							// list 1 is longer
+							if ( it1.hasNext() )
+								return -1;
+							// list 2 is longer
+							if ( it2.hasNext() )
+								return 1;
+							// lists equal
+							else
+								return 0;
 						}
-						dims.put( id, vs.getSize() );
+					} );
+
+					// define fixed tiles
+					// the first selected Tile will be fixed
+					final ArrayList< Set< ViewId > > fixedViews = new ArrayList<>();
+
+					GenericDialog gdFixing = new GenericDialog( "Pick view (group) to fix" );
+					List< String > choices = new ArrayList<>();
+					for ( Set< ViewId > s : viewIds )
+					{
+						List< String > descs = s.stream().map( view -> "(View " + view.getViewSetupId() + ", Timepoint "
+								+ view.getTimePointId() + ")" ).collect( Collectors.toList() );
+						choices.add( "[" + String.join( ", ", descs ) + "]" );
 					}
-				
+					gdFixing.addChoice( "view (group) to fix", choices.toArray( new String[choices.size()] ),
+							choices.get( 0 ) );
+
+					gdFixing.showDialog();
+					if ( gdFixing.wasCanceled() )
+						return;
+
+					fixedViews.add( viewIds.get( gdFixing.getNextChoiceIndex() ) );
+
+					List< PairwiseStitchingResult< ViewId > > results = new ArrayList<>(
+							stitchingResults.getPairwiseResults().values() );
+					final Map< ViewId, AffineGet > translations = new HashMap<>();
+					Map< ViewId, Dimensions > dims = new HashMap<>();
+
+					boolean allHaveSize = true;
+					for ( Set< ViewId > sid : viewIds )
+					{
+						for ( ViewId id : sid )
+						{
+							AffineGet a3d = d.getViewRegistrations().getViewRegistration( id ).getModel();
+
+							translations.put( id, a3d );
+
+							if ( allHaveSize )
+							{
+								BasicViewSetup vs = d.getSequenceDescription().getViewDescriptions().get( id )
+										.getViewSetup();
+								if ( !vs.hasSize() )
+								{
+									allHaveSize = false;
+									continue;
+								}
+								dims.put( id, vs.getSize() );
+							}
+
+						}
+
+					}
+
+					if ( !allHaveSize )
+						dims = null;
+
+					ArrayList< Group< ViewId > > groupsIn = new ArrayList< Group< ViewId > >();
+					viewIds.forEach( vids -> groupsIn.add( new Group<>( vids ) ) );
+
+					// filter to only process links between selected views
+					results = results.stream().filter(
+							psr -> groupsIn.contains( psr.pair().getA() ) && groupsIn.contains( psr.pair().getB() ) )
+							.collect( Collectors.toList() );
+
+					if ( params.doTwoRound )
+					{
+						HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
+								new TranslationModel3D(),
+								new ImageCorrelationPointMatchCreator( results, params.correlationT ),
+								new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
+										params.relativeThreshold, params.absoluteThreshold ),
+								new MaxErrorLinkRemoval(),
+								new MetaDataWeakLinkFactory( panel.getSpimData().getViewRegistrations() ),
+								new ConvergenceStrategy( Double.MAX_VALUE ), fixedViews.iterator().next(),
+								new HashSet<>( groupsIn ) );
+
+						globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
+						globalOptResults.forEach( (k, v) -> {
+
+							final ViewRegistration vr = panel.getSpimData().getViewRegistrations()
+									.getViewRegistration( k );
+
+							AffineTransform3D viewTransform = new AffineTransform3D();
+							viewTransform.set( v );
+
+							// TODO: this works only for raw data shifts
+							viewTransform = getAccumulativeTransformForRawDataTransform( vr, viewTransform );
+
+							System.out.println( viewTransform );
+
+							final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
+							vr.preconcatenateTransform( vt );
+							vr.updateModel();
+
+						} );
+					}
+					else
+					{
+						HashMap< ViewId, Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute(
+								new TranslationModel3D(),
+								new ImageCorrelationPointMatchCreator( results, params.correlationT ),
+								new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
+										params.relativeThreshold, params.absoluteThreshold ),
+								new MaxErrorLinkRemoval(), fixedViews.iterator().next(), new HashSet<>( groupsIn ) );
+
+						globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
+						globalOptResults.forEach( (k, v) -> {
+
+							final ViewRegistration vr = panel.getSpimData().getViewRegistrations()
+									.getViewRegistration( k );
+							AffineTransform3D viewTransform = new AffineTransform3D();
+							viewTransform.set( v.getModel().getMatrix( null ) );
+
+							// TODO: this works only for raw data shifts
+							viewTransform = getAccumulativeTransformForRawDataTransform( vr, viewTransform );
+
+							final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
+							vr.preconcatenateTransform( vt );
+							vr.updateModel();
+
+						} );
+					}
+
+					panel.bdvPopup().updateBDV();
+
 				}
-				
-			}
-			
-			if (!allHaveSize)
-				dims = null;
-			
-			
-			ArrayList< Group< ViewId > > groupsIn = new ArrayList<Group<ViewId>>();
-			viewIds.forEach( vids -> groupsIn.add( new Group<>(vids) ) );
-			
-			// filter to only process links between selected views
-			results = results.stream().filter( psr -> groupsIn.contains( psr.pair().getA() ) && groupsIn.contains( psr.pair().getB() ) ).collect( Collectors.toList() );
+			} ).start();
 
-			if (params.doTwoRound)
-			{
-				HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
-						new TranslationModel3D(), 
-						new ImageCorrelationPointMatchCreator( results, params.correlationT ),
-						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold, params.relativeThreshold, params.absoluteThreshold ),
-						new MaxErrorLinkRemoval(),
-						new MetaDataWeakLinkFactory( panel.getSpimData().getViewRegistrations() ),
-						new ConvergenceStrategy( Double.MAX_VALUE ),
-						fixedViews.iterator().next(),
-						new HashSet<>(groupsIn) );
-				
-				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
-				globalOptResults.forEach( (k, v) -> {
-					
-					
-					final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
-					
-					AffineTransform3D viewTransform = new AffineTransform3D();
-					viewTransform.set( v );
-
-					// TODO: this works only for raw data shifts
-					viewTransform = getAccumulativeTransformForRawDataTransform( vr, viewTransform );
-
-					System.out.println( viewTransform );
-
-					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
-					vr.preconcatenateTransform( vt );
-					vr.updateModel();	
-
-				} );
-			}
-			else
-			{
-				HashMap< ViewId, Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute( 
-						new TranslationModel3D(),
-						new ImageCorrelationPointMatchCreator( results, params.correlationT ),
-						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold, params.relativeThreshold, params.absoluteThreshold ),
-						new MaxErrorLinkRemoval(), 
-						fixedViews.iterator().next(),
-						new HashSet<>(groupsIn) );
-				
-				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
-				globalOptResults.forEach( (k, v) -> {
-					
-					final ViewRegistration vr = panel.getSpimData().getViewRegistrations().getViewRegistration( k );
-					AffineTransform3D viewTransform = new AffineTransform3D();
-					viewTransform.set( v.getModel().getMatrix( null ) );
-					
-					// TODO: this works only for raw data shifts
-					viewTransform = getAccumulativeTransformForRawDataTransform( vr, viewTransform );
-					
-					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform);
-					vr.preconcatenateTransform( vt );
-					vr.updateModel();	
-
-				} );
-			}
-
-			panel.bdvPopup().updateBDV();
-
-			/*
-			if (true)
-				return;
-			
-			Map< Set< ViewId >, AffineGet > models = GlobalTileOptimization.twoRoundGlobalOptimization( 
-														new TranslationModel3D(),
-														viewIds,
-														fixedViews,
-														translations,
-														dims,
-														results, 
-														params );
-			
-			
-			
-			
-			
-			// view transformation of the first fixed view - every result will be relative to this
-			AffineGet vtFixed = new AffineTransform3D();
-			( (AffineTransform3D) vtFixed ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ).iterator().next() ).getModel().getRowPackedCopy());
-			
-		//			(AffineGet) panel.getSpimData().getViewRegistrations().getViewRegistration( fixedViews.get( 0 ) ).getModel().copy();
-			
-			for (Set<ViewId> vid : models.keySet())
-			{
-				// the transformation determined by stitching
-				AffineGet ag = models.get( vid );//.getModel().getTranslation();
-				AffineTransform3D at = new AffineTransform3D();
-				at.set(ag.getRowPackedCopy() );
-				
-				for (ViewId vidi : vid)
-				{
-					
-					// the original view transform of this tile
-					AffineGet transformOriginal = new AffineTransform3D();
-					( (AffineTransform3D) transformOriginal ).set( panel.getSpimData().getViewRegistrations().getViewRegistration( vidi ).getModel().getRowPackedCopy());
-					
-					
-					
-					
-					// transformation from fixed to original
-					AffineGet mapBackToFixed = TransformTools.mapBackTransform( transformOriginal, vtFixed );
-					// difference to transformation determined by optimization -> result
-					AffineTransform3D mapBackToOriginal = new AffineTransform3D();
-					
-					mapBackToOriginal.set( mapBackToFixed.getRowPackedCopy() );
-					mapBackToOriginal.preConcatenate(  at.inverse() );
-					//mapBackToOriginal.set( TransformTools.mapBackTransform( at.inverse(), mapBackToFixed ).getRowPackedCopy());
-					
-					
-					System.out.println( "viewID: " + vid.iterator().next().getViewSetupId() );
-					System.out.println( "original:" + transformOriginal );
-					System.out.println( "tranform determined by optim:" + at );
-					System.out.println( "mapback to original inverse :" + mapBackToOriginal.inverse() );
-					System.out.println( "mapback to fixed:" + mapBackToFixed );
-					
-					//at.preConcatenate( mapBackToFixed );
-					
-					
-					//ViewTransform vt = new ViewTransformAffine( "Translation", at);
-					
-					// set the shift in stitchingResults
-					stitchingResults.getGlobalShifts().put( vid.iterator().next(), ag );
-					
-					
-							
-								
-								
-								ViewRegistration vr = d.getViewRegistrations().getViewRegistration( vidi );
-								
-	//							AffineTransform3D atI = at.copy();
-	//							atI.set( atI.get( 0, 3 ) - vr.getModel().get( 0, 3 ), 0, 3  );
-	//							atI.set( atI.get( 1, 3 ) - vr.getModel().get( 1, 3 ), 1, 3  );
-	//							atI.set( atI.get( 2, 3 ) - vr.getModel().get( 2, 3 ), 2, 3  );
-								
-								ViewTransform vt = new ViewTransformAffine( "stitching transformation", mapBackToOriginal.inverse() );
-								//if (d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().size() < 2)
-									d.getViewRegistrations().getViewRegistration( vidi ).preconcatenateTransform( vt );
-								//else
-								//	d.getViewRegistrations().getViewRegistration( vid2 ).getTransformList().set( 1 , vt);
-								d.getViewRegistrations().getViewRegistration( vidi ).updateModel();
-							
-					
-				
-				}
-			}
-			
-			panel.bdvPopup().updateBDV();
-			*/
 		}
-		
+
 	}
-	
-	public static AffineTransform3D getAccumulativeTransformForRawDataTransform(ViewRegistration viewRegistration, AffineGet rawTransform)
-	{		
-		final AffineTransform3D vrModel = viewRegistration.getModel();		
+
+	public static AffineTransform3D getAccumulativeTransformForRawDataTransform(ViewRegistration viewRegistration,
+			AffineGet rawTransform)
+	{
+		final AffineTransform3D vrModel = viewRegistration.getModel();
 		final AffineTransform3D result = vrModel.inverse().copy();
 		result.preConcatenate( rawTransform ).preConcatenate( vrModel );
 		return result;
