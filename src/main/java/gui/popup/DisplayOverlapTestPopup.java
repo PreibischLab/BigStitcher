@@ -47,6 +47,7 @@ import spim.process.fusion.transformed.FusedRandomAccessibleInterval;
 import spim.process.fusion.transformed.TransformView;
 import spim.process.fusion.transformed.TransformVirtual;
 import spim.process.fusion.transformed.TransformWeight;
+import spim.process.interestpointdetection.methods.downsampling.DownsampleTools;
 
 public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindowSetable {
 
@@ -192,7 +193,7 @@ public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindow
 				TransformVirtual.scaleTransform( model, inverse(downsamplingFactors) );
 
 
-				final RandomAccessibleInterval inputImg = TransformView.openDownsampled( imgLoader, viewId, model );
+				final RandomAccessibleInterval inputImg = DownsampleTools.openDownsampled( imgLoader, viewId, model );
 				
 								
 				System.out.println( model.inverse() );
