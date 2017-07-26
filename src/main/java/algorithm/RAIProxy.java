@@ -9,6 +9,8 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPositionable;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
+//import spim.process.interestpointdetection.methods.downsampling.DownsampleTools;
+
 
 public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterval< T >
 {
@@ -30,6 +32,7 @@ public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterva
 	
 	private void loadIfNecessary()
 	{
+		// FIXME: use DownsampleTools from SPIM_Registration
 		if (rai == null)
 			rai = DownsampleTools.openAndDownsample( imgLoader, vid, downsampleFactors, dsCorrectionT );
 	}
