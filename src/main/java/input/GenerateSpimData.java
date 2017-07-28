@@ -99,29 +99,29 @@ public class GenerateSpimData
 
 			final Tile tile = vs.getTile();
 
-			final AffineTransform3D translation = new AffineTransform3D();
-
-			if ( tile.hasLocation() )
-			{
-				translation.set( tile.getLocation()[ 0 ], 0, 3 );
-				translation.set( tile.getLocation()[ 1 ], 1, 3 );
-				translation.set( tile.getLocation()[ 2 ], 2, 3 );
-			}
-
-			vr.concatenateTransform( new ViewTransformAffine( "Translation", translation ) );
-
 			final double minResolution = Math.min( Math.min( vs.getVoxelSize().dimension( 0 ), vs.getVoxelSize().dimension( 1 ) ), vs.getVoxelSize().dimension( 2 ) );
 			
 			final double calX = vs.getVoxelSize().dimension( 0 ) / minResolution;
 			final double calY = vs.getVoxelSize().dimension( 1 ) / minResolution;
 			final double calZ = vs.getVoxelSize().dimension( 2 ) / minResolution;
-			
+
 			final AffineTransform3D m = new AffineTransform3D();
 			m.set( calX, 0.0f, 0.0f, 0.0f, 
 				   0.0f, calY, 0.0f, 0.0f,
 				   0.0f, 0.0f, calZ, 0.0f );
 			final ViewTransform vt = new ViewTransformAffine( "Calibration", m );
 			vr.preconcatenateTransform( vt );
+
+			final AffineTransform3D translation = new AffineTransform3D();
+
+			if ( tile.hasLocation() )
+			{
+				translation.set( tile.getLocation()[ 0 ] / calX, 0, 3 );
+				translation.set( tile.getLocation()[ 1 ] / calY, 1, 3 );
+				translation.set( tile.getLocation()[ 2 ] / calZ, 2, 3 );
+			}
+
+			vr.preconcatenateTransform( new ViewTransformAffine( "Translation", translation ) );
 
 			vr.updateModel();		
 			
