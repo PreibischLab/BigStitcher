@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,12 +15,14 @@ import javax.swing.JOptionPane;
 
 import algorithm.PairwiseStitchingParameters;
 import algorithm.SpimDataFilteringAndGrouping;
+import algorithm.GroupedViewAggregator.ActionType;
 import algorithm.globalopt.TransformationTools;
 import fiji.util.gui.GenericDialogPlus;
 import gui.StitchingExplorerPanel;
 import gui.StitchingResultsSettable;
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.generic.AbstractSpimData;
+import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
@@ -167,7 +170,12 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 						filteringAndGrouping.addComparisonAxis( Illumination.class );
 
 					// ask user what to do with grouped views
-					filteringAndGrouping.askUserForGroupingAggregator();
+					// use AVERAGE as pre-set choice for illuminations
+					// (this will cause no overhead if only one illum is present)
+					final HashMap< Class<? extends Entity>, ActionType > illumDefaultAggregation = new HashMap<>();
+					illumDefaultAggregation.put( Illumination.class, ActionType.AVERAGE );
+
+					filteringAndGrouping.askUserForGroupingAggregator(illumDefaultAggregation);
 					if (filteringAndGrouping.getDialogWasCancelled())
 						return;
 
