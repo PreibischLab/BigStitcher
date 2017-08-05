@@ -392,24 +392,31 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	}
 	
 	
-	public SpimDataFilteringAndGrouping< AS> askUserForGroupingAggregator()
-	{	
-		
+	/**
+	 * ask user how to aggregate grouped views (for all the entity classes we group by)
+	 * if a default choice for a class is provided, the user will not be asked for that class
+	 * @param defaultChoices pre-set choices for specific classes (NB: may not be 'pick specific')
+	 * @return self
+	 */
+	public SpimDataFilteringAndGrouping< AS> askUserForGroupingAggregator(final Map<Class<? extends Entity>, ActionType> defaultChoices)
+	{
 		// ask what to do with grouped views
-		
 		GenericDialogPlus gdp3 = new GenericDialogPlus( "Select How to Treat Grouped Views" );		
-		
+
 		FileListDatasetDefinition.addMessageAsJLabel("<html><strong>Select which instances of attributes to use in Grouped Views </strong> <br></html>", gdp3);
-		
+
 		// filter first
 		final List<BasicViewDescription< ? > > ungroupedElements =
 						SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), getFilters());
 		// then group
 		final List< Group< BasicViewDescription< ?  > >> groupedElements = 
 						Group.combineBy( ungroupedElements, getGroupingFactors());
-		
+
 		for (Class<? extends Entity> cl : getGroupingFactors())
 		{
+			if (defaultChoices != null && defaultChoices.containsKey( cl ))
+				continue;
+
 			List<String> selection = new ArrayList<>();
 			selection.add( "average" );
 			selection.add(  "pick brightest" );
@@ -425,16 +432,22 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 			String[] selectionArray = selection.toArray( new String[selection.size()] );
 			gdp3.addChoice( cl.getSimpleName(), selectionArray, selectionArray[0] );
 		}
-		
+
 		gdp3.showDialog();
 		if (gdp3.wasCanceled())
 		{
 			dialogWasCancelled = true;
 			return this;
 		}
-		
+
 		for (Class<? extends Entity> cl : getGroupingFactors())
 		{
+			if (defaultChoices != null && defaultChoices.containsKey( cl ))
+			{
+				getGroupedViewAggregator().addAction(defaultChoices.get( cl ), cl, null);
+				continue;
+			}
+
 			List< ? extends Entity > instancesInAllGroups = getInstancesInAllGroups( groupedElements, cl );
 			int nextChoiceIndex = gdp3.getNextChoiceIndex();
 			if (nextChoiceIndex == 0)
@@ -448,7 +461,8 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		return this;
 	}
 	
-	
-	
-
+	public SpimDataFilteringAndGrouping< AS> askUserForGroupingAggregator()
+	{
+		return askUserForGroupingAggregator( new HashMap<>() );
+	}
 }
