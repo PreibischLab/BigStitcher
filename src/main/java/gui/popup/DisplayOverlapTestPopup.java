@@ -187,16 +187,14 @@ public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindow
 				final float[] blending = Util.getArrayFromValue( FusionTools.defaultBlendingRange, 3 );
 				final float[] border = Util.getArrayFromValue( FusionTools.defaultBlendingBorder, 3 );
 
-				FusionTools.adjustBlending( sd.getViewDescriptions().get( viewId ), blending, border );
-
 				model = model.copy();
 				TransformVirtual.scaleTransform( model, inverse(downsamplingFactors) );
 
-
 				final RandomAccessibleInterval inputImg = DownsampleTools.openDownsampled( imgLoader, viewId, model );
-				
-								
+
 				System.out.println( model.inverse() );
+
+				FusionTools.adjustBlending( sd.getViewDescriptions().get( viewId ), blending, border, model );
 
 				images.add( TransformView.transformView( inputImg, model, bbSc, 0, 1 ) );
 				weights.add( TransformWeight.transformBlending( inputImg, border, blending, model, bbSc ) );
