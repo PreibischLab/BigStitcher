@@ -232,13 +232,17 @@ public class PairwiseStitching
 		System.out.println( "2: " + TransformTools.printRealInterval( localOverlap2 ) );
 		System.out.println( "2: " + Util.printInterval( interval2 ) );
 
-//		// test if the overlap is too small to begin with
-//		long nPixel = 1;
-//		for ( int d = 0; d < img1.numDimensions(); ++d )
-//			nPixel *= img1.dimension( d );
-//
-//		if ( nPixel < params.minOverlap )
-//			return null;
+		// check whether we have 0-sized (or negative sized) or unequal raster overlapIntervals
+		// (this should just happen with overlaps < 1px in some dimension)
+		// ignore this pair in that case
+		for (int d = 0; d < interval1.numDimensions(); ++d)
+		{
+			if (interval1.dimension( d ) <= 0 || interval2.dimension( d ) <= 0 || interval1.dimension( d ) != interval2.dimension( d ) )
+			{
+				System.out.println( "Rastered overlap volume is zero, skipping." );
+				return null;
+			}
+		}
 
 		//
 		// call the phase correlation
