@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -24,6 +25,7 @@ import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -112,9 +114,22 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 							dsFactors );
 
 					// user wants us to clear previous results
+					// we will clear results for all selected pairs
 					if (resetResults)
 					{
-						stitchingResults.getPairwiseResults().clear();
+						// this is just a cast of pairs to Group<ViewId>
+						final List< ValuePair< Group< ViewId >, Group< ViewId > > > castPairs = pairs.stream().map( p -> {
+							final Group< ViewId > vidGroupA = new Group<>( p.getA().getViews().stream().map( v -> (ViewId) v ).collect( Collectors.toSet() ) );
+							final Group< ViewId > vidGroupB = new Group<>( p.getB().getViews().stream().map( v -> (ViewId) v ).collect( Collectors.toSet() ) );
+							return new ValuePair<>( vidGroupA, vidGroupB );
+						}).collect( Collectors.toList() );
+
+						for (ValuePair< Group< ViewId >, Group< ViewId > > pair : castPairs)
+						{
+							// try to remove a -> b and b -> a, just to make sure
+							stitchingResults.getPairwiseResults().remove( pair );
+							stitchingResults.getPairwiseResults().remove( new ValuePair<>( pair.getB(), pair.getA() ) );
+						}
 					}
 
 					// update StitchingResults with Results
