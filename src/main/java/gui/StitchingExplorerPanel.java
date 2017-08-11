@@ -878,16 +878,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					for ( final String label : vipl.getHashMap().keySet() )
 					{
 						final InterestPointList ipl = vipl.getInterestPointList( label );
-
-						if ( ipl.getInterestPointsCopy() == null )
-							ipl.loadInterestPoints();
-
-						ipl.saveInterestPoints(false);
-
-						if ( ipl.getCorrespondingInterestPointsCopy() == null )
-							ipl.loadCorrespondingInterestPoints();
-
-						ipl.saveCorrespondingInterestPoints(false);
+						ipl.saveInterestPoints( false );
+						ipl.saveCorrespondingInterestPoints( false );
 					}
 				}
 			}
