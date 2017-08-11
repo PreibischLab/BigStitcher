@@ -55,7 +55,10 @@ public class StitchingPairwise
 			IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Computed shift: " + Util.printCoordinates( r.getA() ) + ", R=" + r.getB() );
 
 			for ( int d = 0; d < correct.length; ++d )
+			{
+				r.getA()[ d ] *= downsample;
 				r.getA()[ d ] = correct[ d ] - r.getA()[ d ];
+			}
 
 			distances.add( r.getA() );
 		}
