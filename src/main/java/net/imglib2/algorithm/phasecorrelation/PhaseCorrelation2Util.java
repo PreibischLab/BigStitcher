@@ -11,6 +11,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import algorithm.PairwiseStitching;
+import algorithm.PairwiseStitchingParameters;
 import net.imglib2.Cursor;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
@@ -25,9 +27,12 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.ComplexType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.BenchmarkHelper;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
@@ -163,7 +168,15 @@ public class PhaseCorrelation2Util {
 		}
 		return new BlendedExtendedMirroredRandomAccesible2<T>(img, extEachSide);
 	}
-	
+
+
+	public static <T extends RealType<T>, S extends RealType<S>> void calculateCrossCorrParallel(
+			List<PhaseCorrelationPeak2> peaks, final RandomAccessibleInterval<T> img1, final RandomAccessibleInterval<S> img2,
+			final long minOverlapPx, ExecutorService service)
+	{
+		calculateCrossCorrParallel( peaks, img1, img2, minOverlapPx, service, false );
+	}
+
 	/*
 	 * calculate the crosscorrelation of img1 and img2 for all shifts represented by a PhasecorrelationPeak List in parallel using a specified
 	 * ExecutorService. service remains functional after the call
@@ -175,20 +188,19 @@ public class PhaseCorrelation2Util {
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>> void calculateCrossCorrParallel(
 			List<PhaseCorrelationPeak2> peaks, final RandomAccessibleInterval<T> img1, final RandomAccessibleInterval<S> img2,
-			final long minOverlapPx, ExecutorService service)
+			final long minOverlapPx, ExecutorService service, boolean interpolateSubpixel)
 	{
 		List<Future<?>> futures = new ArrayList<Future<?>>();
-		
+
 		for (final PhaseCorrelationPeak2 p : peaks){
 			futures.add(service.submit(new Runnable() {
-				
 				@Override
 				public void run() {
-					p.calculateCrossCorr(img1, img2, minOverlapPx);					
+					p.calculateCrossCorr(img1, img2, minOverlapPx, interpolateSubpixel);
 				}
 			}));
 		}
-		
+
 		for (Future<?> f: futures){
 			try {
 				f.get();
@@ -724,24 +736,38 @@ public class PhaseCorrelation2Util {
 	{
 		final double m1 = getMean(img1);
 		final double m2 = getMean(img2);
-		
+
 		// square sums
 		double sum11 = 0.0, sum22 = 0.0, sum12 = 0.0; 
-		
+
 		final Cursor<T> c1 = Views.iterable(img1).cursor();
-		final RandomAccess<S> r2 = img2.randomAccess();
-		
-		while (c1.hasNext()){
-			final double c = c1.next().getRealDouble();
-			r2.setPosition(c1);
 
-			final double r = r2.get().getRealDouble();
+		if (Views.iterable( img1 ).iterationOrder().equals( Views.iterable( img2 ).iterationOrder() ))
+		{
+			final Cursor< S > c2 = Views.iterable( img2 ).cursor();
+			while (c1.hasNext()){
+				final double c = c1.next().getRealDouble();
+				final double r = c2.next().getRealDouble();
 
-			sum11 += (c - m1) * (c - m1);
-			sum22 += (r - m2) * (r - m2);
-			sum12 += (c - m1) * (r - m2);
+				sum11 += (c - m1) * (c - m1);
+				sum22 += (r - m2) * (r - m2);
+				sum12 += (c - m1) * (r - m2);
+			}
 		}
-		
+		else
+		{
+			final RandomAccess<S> r2 = img2.randomAccess();
+			while (c1.hasNext()){
+				final double c = c1.next().getRealDouble();
+				r2.setPosition(c1);
+				final double r = r2.get().getRealDouble();
+
+				sum11 += (c - m1) * (c - m1);
+				sum22 += (r - m2) * (r - m2);
+				sum12 += (c - m1) * (r - m2);
+			}
+		}
+
 		// all pixels had the same color....
 		if (sum11 == 0 || sum22 == 0)
 		{
@@ -750,9 +776,8 @@ public class PhaseCorrelation2Util {
 			else
 				return 0;
 		}
-		
+
 		return sum12 / Math.sqrt(sum11 * sum22);
-		
 	}
 
 	
@@ -796,23 +821,40 @@ public class PhaseCorrelation2Util {
 	{
 		final Point p = new Point( 90, 90 ); // identical to (-10,-10), so subpixel localization can move on periodic condition outofbounds
 		PhaseCorrelationPeak2 pcp = new PhaseCorrelationPeak2( p, 5 );
-		
+
 		Dimensions pcmDims = new FinalDimensions( 100, 100 );
 		Dimensions p1 = new FinalDimensions( 80, 81 );
 		Dimensions p2 = new FinalDimensions( 91, 90 );
-		
+
 		final List<PhaseCorrelationPeak2> peaks = expandPeakToPossibleShifts( pcp, pcmDims, p1, p2 );
-		
+
 		for ( final PhaseCorrelationPeak2 pc : peaks )
 			System.out.println( Util.printCoordinates( pc.getShift() ) );
 
-		Img< FloatType > a = ImgLib2Util.openAs32Bit( new File( "a.tif" ) );
-		Img< FloatType > b = ImgLib2Util.openAs32Bit( new File( "a0.25.tif" ) );
-		Img< FloatType > c = ImgLib2Util.openAs32Bit( new File( "a0.5.tif" ) );
-		
-		System.out.println( getCorrelation ( a, a ) );
-		System.out.println( getCorrelation ( a, b ) );
-		System.out.println( getCorrelation ( a, c ) );
-		System.out.println( getCorrelation ( b, c ) );
+		Img< FloatType > a = ImgLib2Util.openAs32Bit( new File( "73.tif.zip" ) );
+		Img< FloatType > b = ImgLib2Util.openAs32Bit( new File( "74.tif.zip" ) );
+
+//		BenchmarkHelper.benchmarkAndPrint( 10, true, new Runnable()
+//		{
+//			@Override
+//			public void run()
+//			{
+//				System.out.println( getCorrelation ( a, b ) );
+//			}
+//		} );
+
+		BenchmarkHelper.benchmarkAndPrint( 10, true, new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				PairwiseStitching.getShift( a, b, new Translation3D(), new Translation3D(),
+						new PairwiseStitchingParameters(), Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() ) );
+			}
+		} );
+
+//		System.out.println( getCorrelation ( a, b ) );
+//		System.out.println( getCorrelation ( a, c ) );
+//		System.out.println( getCorrelation ( b, c ) );
 	}
 }

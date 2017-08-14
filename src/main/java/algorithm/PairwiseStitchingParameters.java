@@ -9,19 +9,22 @@ public class PairwiseStitchingParameters
 	public boolean doSubpixel;
 	public boolean doLucasKanade;
 	public int maxIterations;
+	public boolean interpolateCrossCorrelation;
 
 	public PairwiseStitchingParameters()
 	{
-		this(0, 5, true, false, 1000);
+		this(0, 5, true, false, 1000, false);
 	}
 
-	public PairwiseStitchingParameters(double minOverlap, int peaksToCheck, boolean doSubpixel, boolean doLucasKanade, int maxIterations)
+	public PairwiseStitchingParameters(double minOverlap, int peaksToCheck, boolean doSubpixel, boolean doLucasKanade, int maxIterations,
+			boolean interpolateCrossCorrelation)
 	{
 		this.minOverlap = minOverlap;
 		this.peaksToCheck = peaksToCheck;
 		this.doSubpixel = doSubpixel;
 		this.doLucasKanade = doLucasKanade;
 		this.maxIterations = maxIterations;
+		this.interpolateCrossCorrelation = interpolateCrossCorrelation;
 	}
 
 	public static void addQueriesToGD(final GenericDialog gd)
@@ -31,6 +34,7 @@ public class PairwiseStitchingParameters
 		gd.addCheckbox( "subpixel accuracy", true );
 		//gd.addCheckbox( "use Lucas-Kanade algorithm", false );
 		//gd.addNumericField( "max number of iterations", 500, 0 );
+		gd.addCheckbox( "interpolate_subpixel_cross_correlation_(warning: slow!)", false );
 	}
 
 	public static PairwiseStitchingParameters getParametersFromGD(final GenericDialog gd)
@@ -43,8 +47,9 @@ public class PairwiseStitchingParameters
 		boolean doSubpixel = gd.getNextBoolean();
 		//boolean doLucasKanade = gd.getNextBoolean();
 		//int maxIterations = (int) gd.getNextNumber();
+		boolean interpolateSubpixel = gd.getNextBoolean();
 
-		return new PairwiseStitchingParameters(minOverlap, peaksToCheck, doSubpixel, false, 0);
+		return new PairwiseStitchingParameters(minOverlap, peaksToCheck, doSubpixel, false, 0, interpolateSubpixel);
 	}
 
 	public static PairwiseStitchingParameters askUserForParameters()
