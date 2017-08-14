@@ -159,7 +159,7 @@ public class PhaseCorrelation2 {
 		return pcm;
 		
 	}
-	
+
 	/*
 	 * calculate PCM with default extension
 	 * @param img1
@@ -174,21 +174,22 @@ public class PhaseCorrelation2 {
 		Arrays.fill(extension, 10);
 		return calculatePCM(img1, img2, extension, factory, type, fftFactory, fftType, service);
 	}
-	
-	
-	/*
+
+	/**
 	 * calculate the shift between two images from the phase correlation matrix
-	 * @param pcm
-	 * @param img1
-	 * @param img2
-	 * @param nHighestPeaks
-	 * @param minOverlap
-	 * @param service
-	 * @return
+	 * @param pcm the phase correlation matrix of img1 and img2
+	 * @param img1 source image 1
+	 * @param img2 source image 2
+	 * @param nHighestPeaks the number of peaks in pcm to check via cross. corr.
+	 * @param minOverlap minimal overlap (in pixels)
+	 * @param subpixelAccuracy whether to do subpixel shift peak localization or not
+	 * @param interpolateSubpixel whether to interpolate the subpixel shift in cross. corr.
+	 * @param service thread pool
+	 * @return best (highest c.c.) shift peak
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>> PhaseCorrelationPeak2 getShift(
 			RandomAccessibleInterval<R> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, int nHighestPeaks,
-			long minOverlap, boolean subpixelAccuracy, ExecutorService service)
+			long minOverlap, boolean subpixelAccuracy, boolean interpolateSubpixel, ExecutorService service)
 	{
 		System.out.println( "PCM" );
 		List<PhaseCorrelationPeak2> peaks = PhaseCorrelation2Util.getPCMMaxima(pcm, service, nHighestPeaks, subpixelAccuracy);
@@ -197,7 +198,7 @@ public class PhaseCorrelation2 {
 		PhaseCorrelation2Util.expandPeakListToPossibleShifts(peaks, pcm, img1, img2);
 		System.out.print( "cross " );
 		long t = System.currentTimeMillis();
-		PhaseCorrelation2Util.calculateCrossCorrParallel(peaks, img1, img2, minOverlap, service);
+		PhaseCorrelation2Util.calculateCrossCorrParallel(peaks, img1, img2, minOverlap, service, interpolateSubpixel);
 		System.out.println( (System.currentTimeMillis() - t) );
 		System.out.println( "sort" );
 		Collections.sort(peaks, Collections.reverseOrder(new PhaseCorrelationPeak2.ComparatorByCrossCorrelation()));
@@ -208,25 +209,42 @@ public class PhaseCorrelation2 {
 		else
 			return null;
 	}
-	
-	/*
-	 * calculate the sift with default parameters (5 highest pcm peaks are considered, no minimum overlap, temporary thread pool)
-	 * @param pcm 
-	 * @param img1
-	 * @param img2
-	 * @return
+
+	/**
+	 * get shift, do not interpolate subpixel offset for cross correlation 
+	 * @param pcm the phase correlation matrix of img1 and img2
+	 * @param img1 source image 1
+	 * @param img2 source image 2
+	 * @param nHighestPeaks the number of peaks in pcm to check via cross. corr.
+	 * @param minOverlap minimal overlap (in pixels)
+	 * @param subpixelAccuracy whether to do subpixel shift peak localization or not
+	 * @param service thread pool
+	 * @return best (highest c.c.) shift peak
+	 */
+	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>> PhaseCorrelationPeak2 getShift(
+			RandomAccessibleInterval<R> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, int nHighestPeaks,
+			long minOverlap, boolean subpixelAccuracy, ExecutorService service)
+	{
+		return getShift( pcm, img1, img2, nHighestPeaks, minOverlap, subpixelAccuracy, false, service );
+	}
+
+	/**
+	 * calculate the sift with default parameters (5 highest pcm peaks are considered, no minimum overlap, temporary thread pool,
+	 * no subpixel interpolation)
+	 * @param pcm the phase correlation matrix of img1 and img2
+	 * @param img1 source image 1
+	 * @param img2 source image 2
+	 * @return best (highest c.c.) shift peak
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>> PhaseCorrelationPeak2 getShift(
 			RandomAccessibleInterval<R> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2)
 	{
 		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-		PhaseCorrelationPeak2 res = getShift(pcm, img1, img2, 5, 0, true, service);
+		PhaseCorrelationPeak2 res = getShift(pcm, img1, img2, 5, 0, true, false, service);
 		service.shutdown();
-		return res;		
-	}	
-	
-	
-		
+		return res;
+	}
+
 	public static void main(String[] args) {
 		
 		new ImageJ();
