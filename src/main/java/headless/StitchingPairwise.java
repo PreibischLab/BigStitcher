@@ -29,20 +29,18 @@ public class StitchingPairwise
 	{
 		new ImageJ();
 
-		final double overlap = 0.2;
+		final double minOverlap = 0.4;
 		final float snr = 8;
 
-		final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, overlap );
+		final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, Util.getArrayFromValue( minOverlap, 3 ) );
 
 		final PairwiseStitchingParameters params = new PairwiseStitchingParameters( 0.1, 5, true, false, 100 );
 		final ExecutorService service = DeconViews.createExecutorService();
 
 		final Random rnd = new Random( 34 );
 
-		for ( int downsample = 4; downsample <= 8; downsample *= 2 )
+		for ( int downsample = 8; downsample <= 8; downsample *= 2 )
 		{
-			PhaseCorrelationPeak2.downsampling = downsample;
-
 			int[] ds = new int[ 3 ];
 			ds[ 0 ] = downsample;
 			ds[ 1 ] = downsample;
@@ -52,14 +50,21 @@ public class StitchingPairwise
 			IOFunctions.println( "downsample: " + downsample + " ["  + Util.printCoordinates( ds ) + "]" );
 			IOFunctions.println( "------------------------------" );
 
-			final ArrayList< double[] > distances = new ArrayList<>();
+			double avgDist = 0;
+			double avgX = 0;
+			double avgY = 0;
+			double avgZ = 0;
+			final int numTests = 10;
 
-			for ( int i = 0; i < 10; ++i )
+			for ( int i = 0; i < numTests; ++i )
 			{
-				sts.init( ( overlap / 2.0 ) + (rnd.nextDouble() / 10.0)  );
+				final double[] ov = new double[ 3 ];
+				for ( int d = 0; d < ov.length; ++d )
+					ov[ d ] = minOverlap + (rnd.nextDouble() / 10.0);
+				sts.init( ov );
 
 				final double[] correct = sts.getCorrectTranslation();
-				IOFunctions.println( "Known shift (right relative to left): " + Util.printCoordinates( correct ) );
+				System.out.println( "Known shift (right relative to left): " + Util.printCoordinates( correct ) );
 
 				final Pair< Img< FloatType >, Img< FloatType > > pair = sts.getNextPair( snr );
 
@@ -77,35 +82,24 @@ public class StitchingPairwise
 	
 				for ( int d = 0; d < correct.length; ++d )
 					r.getA()[ d ] *= ds[ d ];
-	
-				IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Computed shift: " + Util.printCoordinates( r.getA() ) + ", R=" + r.getB() );
-	
+
 				for ( int d = 0; d < correct.length; ++d )
 					r.getA()[ d ] -= correct[ d ];
-	
-				distances.add( r.getA() );
-			}
-	
-			double avgDist = 0;
-			double avgX = 0;
-			double avgY = 0;
-			double avgZ = 0;
-	
-			for ( final double[] dist : distances )
-			{
-				double d = dist( dist );
-				avgDist += d;
-				avgX += dist[ 0 ];
-				avgY += dist[ 1 ];
-				avgZ += dist[ 2 ];
 
-				IOFunctions.println( dist[ 0 ] + "\t" + dist[ 1 ]  + "\t" + dist[ 2 ] + "\t" + d );
-			}
+				double d = dist( r.getA() );
+
+				IOFunctions.println( r.getA()[ 0 ] + "\t" + r.getA()[ 1 ]  + "\t" + r.getA()[ 2 ] + "\t" + d + "\t" + r.getB() );
 	
-			IOFunctions.println( "avg : " + avgDist / (double)distances.size() );
-			IOFunctions.println( "avgX: " + avgX / (double)distances.size() );
-			IOFunctions.println( "avgY: " + avgY / (double)distances.size() );
-			IOFunctions.println( "avgZ: " + avgZ / (double)distances.size() );
+				avgDist += d;
+				avgX += r.getA()[ 0 ];
+				avgY += r.getA()[ 1 ];
+				avgZ += r.getA()[ 2 ];
+			}
+
+			IOFunctions.println( "avg : " + avgDist / (double)numTests );
+			IOFunctions.println( "avgX: " + avgX / (double)numTests );
+			IOFunctions.println( "avgY: " + avgY / (double)numTests );
+			IOFunctions.println( "avgZ: " + avgZ / (double)numTests );
 		}
 	}
 
