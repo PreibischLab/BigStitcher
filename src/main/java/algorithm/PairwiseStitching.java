@@ -271,7 +271,7 @@ public class PairwiseStitching
 
 		final PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift( pcm,
 				Views.zeroMin( Views.interval( img1, interval1 ) ), Views.zeroMin( Views.interval( img2, interval2 ) ),
-				params.peaksToCheck, minOverlap, params.doSubpixel, service );
+				params.peaksToCheck, minOverlap, params.doSubpixel, params.interpolateCrossCorrelation, service );
 
 		//System.out.println( "Actual overlap of best shift is: " + shiftPeak.getnPixel() );
 
