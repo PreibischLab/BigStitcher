@@ -43,6 +43,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.boundingbox.BoundingBox;
+import spim.fiji.spimdata.interestpoints.InterestPoint;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
 import spim.process.interestpointregistration.global.GlobalOpt;
@@ -179,7 +180,21 @@ public class TransformationTools
 		
 		for (int i = 0; i< result.getA().length; ++i)			
 			result.getA()[i] *= downsampleFactors[i];
-		
+
+		/*
+		IOFunctions.println("(" + new Date(System.currentTimeMillis()) + "): Correcting coordinates for downsampling using AffineTransform: " + t );
+		final double[] tmp = new double[ ips.get( 0 ).getL().length ];
+
+		for ( final InterestPoint ip : ips )
+		{
+			t.apply( ip.getL(), tmp );
+
+			ip.getL()[ 0 ] = tmp[ 0 ];
+			ip.getL()[ 1 ] = tmp[ 1 ];
+			ip.getL()[ 2 ] = tmp[ 2 ];
+		}
+		 * 
+		 */
 		//t1.getA().apply( result.getA(), result.getA() );
 
 		System.out.println("shift: " + Util.printCoordinates(result.getA()));

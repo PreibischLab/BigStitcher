@@ -107,9 +107,9 @@ public class DownsampleTools
 		t.set( t.get( 2, 2 ) * dsz, 2, 2 );
 
 		// fix translation
-		t.set( t.get( 0, 3 ) * dsx, 0, 3 );
-		t.set( t.get( 1, 3 ) * dsy, 1, 3 );
-		t.set( t.get( 2, 3 ) * dsz, 2, 3 );
+		//t.set( t.get( 0, 3 ) * dsx, 0, 3 );
+		//t.set( t.get( 1, 3 ) * dsy, 1, 3 );
+		//t.set( t.get( 2, 3 ) * dsz, 2, 3 );
 
 		ImgFactory< T > f = null;
 		
