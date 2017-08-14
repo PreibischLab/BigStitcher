@@ -1,28 +1,48 @@
 package net.imglib2.algorithm.phasecorrelation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
+import mpicbg.models.IllDefinedDataPointsException;
+import mpicbg.models.NotEnoughDataPointsException;
+import net.imglib2.Cursor;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
+import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.Localizable;
 import net.imglib2.Point;
+import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.algorithm.localextrema.RefinedPeak;
 import net.imglib2.algorithm.localextrema.SubpixelLocalization;
+import net.imglib2.algorithm.localization.EllipticGaussianOrtho;
+import net.imglib2.algorithm.localization.Gaussian;
+import net.imglib2.algorithm.localization.LevenbergMarquardtSolver;
+import net.imglib2.algorithm.localization.MLEllipticGaussianEstimator;
+import net.imglib2.algorithm.localization.MLGaussianEstimator;
+import net.imglib2.algorithm.localization.PeakFitter;
+import net.imglib2.img.Img;
+import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
+import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.InvertibleRealTransform;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.realtransform.Translation2D;
 import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
+import net.imglib2.util.Util;
 import net.imglib2.view.Views;
+import simulation.SimulateTileStitching;
+
 
 
 public class PhaseCorrelationPeak2 {
@@ -210,7 +230,7 @@ public class PhaseCorrelationPeak2 {
 	public <T extends RealType<T>, S extends RealType<S>> void calculateCrossCorr(RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2){
 		calculateCrossCorr(img1, img2, 0);
 	}
-	
+
 	/*
 	 * refine the shift using subpixel localization in the original PCM
 	 * @param pcm
@@ -234,12 +254,113 @@ public class PhaseCorrelationPeak2 {
 
 		final RefinedPeak< Point > rp = res.get( 0 );
 		this.subpixelPcmLocation = new RealPoint( rp );
+		/*
+		final long[] range = Util.getArrayFromValue( 4l, pcm.numDimensions() );
+		final Gradient derivative = new GradientOnDemand< T >( Views.extendPeriodic( pcm ) );
+		final ArrayList< long[] > peaksRS = new ArrayList<>();
+
+		final long[] loc = new long[ pcm.numDimensions() ];
+		pcmLocation.localize( loc );
+		peaksRS.add( loc );
+
+		final ArrayList< Spot > spots = Spot.extractSpots( peaksRS, derivative, range );
+		try
+		{
+			Spot.fitCandidates( spots );
+			System.out.println( "rs: " + Util.printCoordinates( spots.get( 0 ) ) );
+			//Spot.ransac( spots, 1000, 0.1, 1.0/100.0 );
+			//System.out.println( "rsransac: " + Util.printCoordinates( spots.get( 0 ) ) );
+			
+		} catch ( Exception e )
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
+		final long[] minSF = new long[ pcm.numDimensions() ];
+		final long[] maxSF = new long[ pcm.numDimensions() ];
+
+		pcmLocation.localize( minSF );
+		pcmLocation.localize( maxSF );
+
+		for ( int d = 0; d < pcm.numDimensions(); ++d )
+		{
+			minSF[ d ] -= 2;
+			maxSF[ d ] += 2;
+		}
+
+		final Cursor< T > cursor = Views.iterable( Views.interval( Views.extendPeriodic( pcm ), minSF, maxSF ) ).localizingCursor();
+
+		double[] sumW = new double[ pcm.numDimensions() ];
+		double[] sum = new double[ pcm.numDimensions() ];
+
+		while ( cursor.hasNext() )
+		{
+			double w = cursor.next().getRealDouble();
+
+			for ( int d = 0; d < pcm.numDimensions(); ++d )
+			{
+				sumW[ d ] += w;
+				sum[ d ] += cursor.getLongPosition( d ) * w;
+			}
+
+			//System.out.println( Util.printCoordinates( cursor ) + ": " + w );
+		}
+
+		double[] simpleFit = new double[ pcm.numDimensions() ];
+		for ( int d = 0; d < pcm.numDimensions(); ++d )
+			simpleFit[ d ] = sum[ d ] / sumW[ d ];
+
+		long size = 41;
+		Img< FloatType > img = ArrayImgs.floats( Util.getArrayFromValue( size, pcm.numDimensions() ) );
+		Cursor< FloatType > c = img.localizingCursor();
+		RandomAccess< T > r = Views.extendPeriodic( pcm ).randomAccess();
+		long[] pos = new long[ img.numDimensions() ];
+
+		while ( c.hasNext() )
+		{
+			c.fwd();
+			c.localize( pos );
+			for ( int d = 0; d < pcm.numDimensions(); ++d )
+			{
+				// relative to center
+				pos[ d ] = size / 2 - pos[ d ];
+				pos[ d ] += pcmLocation.getLongPosition( d );
+			}
+			r.setPosition( pos );
+			c.get().set( r.get().getRealFloat() );
+		}
+
+		Collection<Localizable> peaksG = new ArrayList<Localizable>();
+		peaksG.add( new Point( Util.getArrayFromValue( size/2, pcm.numDimensions() ) ) );
+
+		PeakFitter<FloatType> pf = new PeakFitter<>(img, peaksG,
+											new LevenbergMarquardtSolver(), new EllipticGaussianOrtho(),
+										new MLEllipticGaussianEstimator( Util.getArrayFromValue( 0.9, pcm.numDimensions() ) ) );
+		
+		//ImageJFunctions.show( img );
+		if ( !pf.process() )
+			System.out.println( pf.getErrorMessage() );
+
+		final double[] peakGauss = pf.getResult().values().iterator().next();
+
+		for ( int d = 0; d < pcm.numDimensions(); ++d )
+			peakGauss[ d ] = peakGauss[ d ] - size/2 + pcmLocation.getLongPosition( d );
+
+		System.out.println( "gf: " + Util.printCoordinates( peakGauss ) );
+		System.out.println( "sf: " + Util.printCoordinates( simpleFit ) );
+		System.out.println( "qf: " + Util.printCoordinates( subpixelPcmLocation ) );
+		System.out.println();
+
+		//this.subpixelPcmLocation = new RealPoint( spots.get( 0 ) );
 
 		double maxDist = 0.0;
 
 		for ( int d = 0; d < n; ++d )
 			maxDist = Math.max( maxDist, Math.abs( rp.getOriginalPeak().getDoublePosition( d ) - this.subpixelPcmLocation.getDoublePosition( d ) ) );
 
+		//ImageJFunctions.show( pcm );
+		//SimpleMultiThreading.threadHaltUnClean();
 		// not a stable peak
 		if ( maxDist > 0.75 )
 		{
