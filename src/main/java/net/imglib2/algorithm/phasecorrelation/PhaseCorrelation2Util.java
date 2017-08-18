@@ -51,7 +51,7 @@ public class PhaseCorrelation2Util {
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>> void copyRealImage(final IterableInterval<T> source, final RandomAccessibleInterval<S> dest, ExecutorService service) {
 		
-		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions(source.size(), Runtime.getRuntime().availableProcessors() * 4);
+		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions( source.size() );
 		ArrayList<Future<?>> futures = new ArrayList<Future<?>>();		
 		final AtomicInteger ai = new AtomicInteger(-1);
 		
@@ -457,7 +457,7 @@ public class PhaseCorrelation2Util {
 	{
 		
 		
-		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions(Views.iterable(img1).size(), Runtime.getRuntime().availableProcessors() * 4);		
+		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions (Views.iterable(img1).size() );		
 		List<Future<?>> futures = new ArrayList<Future<?>>();
 		final AtomicInteger ai = new AtomicInteger(-1);
 		
@@ -539,7 +539,7 @@ public class PhaseCorrelation2Util {
 			final RandomAccessibleInterval<R>	img, final RandomAccessibleInterval<S> res, ExecutorService service)
 	{
 		
-		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions(Views.iterable(img).size(), Runtime.getRuntime().availableProcessors() * 4);		
+		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions( Views.iterable(img).size() );		
 		List<Future<?>> futures = new ArrayList<Future<?>>();
 		final AtomicInteger ai = new AtomicInteger(-1);
 		
@@ -637,7 +637,7 @@ public class PhaseCorrelation2Util {
 			final RandomAccessibleInterval<T> img, final RandomAccessibleInterval<S> res, final double normalizationThreshold, ExecutorService service) 
 	{
 		
-		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions(Views.iterable(img).size(), Runtime.getRuntime().availableProcessors() * 4);		
+		final Vector<ImagePortion> portions = FusionTools.divideIntoPortions( Views.iterable(img).size() );		
 		List<Future<?>> futures = new ArrayList<Future<?>>();
 		final AtomicInteger ai = new AtomicInteger(-1);
 		
