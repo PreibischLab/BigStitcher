@@ -76,7 +76,7 @@ public class Stitching_Explorer implements PlugIn
 		new ImageJ();
 
 		if ( System.getProperty("os.name").toLowerCase().contains( "win" ) )
-			GenericLoadParseQueryXML.defaultXMLfilename = "C:/Users/preibisch/Downloads/StageVIIprimordium/dataset.xml";
+			GenericLoadParseQueryXML.defaultXMLfilename = "Z:\\Data\\Expansion Microscopy/dataset.xml";
 		else if ( !System.getProperty("os.name").toLowerCase().contains( "mac" ) )
 			GenericLoadParseQueryXML.defaultXMLfilename = "/home/preibisch/Documents/Microscopy/SPIM/HisYFP-SPIM//dataset_tp18.xml";
 		else
