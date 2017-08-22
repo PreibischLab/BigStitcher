@@ -18,6 +18,7 @@ import algorithm.PairwiseStitchingParameters;
 import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.GroupedViewAggregator.ActionType;
 import algorithm.globalopt.TransformationTools;
+import algorithm.lucaskanade.LucasKanadeParameters;
 import fiji.util.gui.GenericDialogPlus;
 import gui.StitchingExplorerPanel;
 import gui.StitchingResultsSettable;
@@ -35,6 +36,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import spim.fiji.plugin.resave.ProgressWriterIJ;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -54,6 +56,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 
 	public static final String[] ds = { "1", "2", "4", "8", "16", "32", "64" };
+	public static final String[] methods = {"Phase Correlation", "Iterative Intensity Based (Lucas-Kanade)"};
 
 	public CalculatePCPopup()
 	{
@@ -188,8 +191,9 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					if (downSamplingFactors == null)
 						return;
 
-					final GenericDialog gd = new GenericDialog( "Parameters for Stitching" );
-					PairwiseStitchingParameters.addQueriesToGD( gd );
+					final GenericDialog gd = new GenericDialog( "Pairwise Alignment Method" );
+
+					gd.addChoice( "alignment_method", methods, methods[0] );
 					gd.addCheckbox( "clear_previous_results", true );
 
 					gd.showDialog();
@@ -197,19 +201,44 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					if(gd.wasCanceled())
 						return;
 
-					final PairwiseStitchingParameters params = PairwiseStitchingParameters.getParametersFromGD( gd );
 					final boolean resetResults = gd.getNextBoolean();
+					final int methodIdx = gd.getNextChoiceIndex();
+					
+					
 
-					if ( params == null )
-						return;
+					
 
 					final List< Pair< Group< BasicViewDescription< ? extends BasicViewSetup > >, Group< BasicViewDescription< ? extends BasicViewSetup > > > > pairs 
 						= filteringAndGrouping.getComparisons();
 
-					final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
-							pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
-							filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
-							downSamplingFactors );
+					final ArrayList< PairwiseStitchingResult< ViewId > > results;
+
+					if (methodIdx == 0) // do phase correlation
+					{
+						PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
+						if ( params == null )
+							return;
+
+						results = TransformationTools.computePairs(
+								pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
+								filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
+								downSamplingFactors );
+					}
+					else if (methodIdx == 1) // do Lucas-Kanade
+					{
+						LucasKanadeParameters params = LucasKanadeParameters.askUserForParameters();
+						if ( params == null )
+							return;
+
+						results = TransformationTools.computePairsLK(
+								pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
+								filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
+								downSamplingFactors, new ProgressWriterIJ());
+					}
+					else
+					{
+						results = null; // should not happen, just to stop compiler from complaining
+					}
 
 
 					// user wants us to clear previous results
