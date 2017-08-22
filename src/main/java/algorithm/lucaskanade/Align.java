@@ -222,7 +222,7 @@ public class Align<T extends RealType< T >>
 		int i = 0;
 		while ( i < maxIterations )
 		{
-			System.out.println( ++i );
+			++i;
 			if ( alignStep( image, service ) < minParameterChange )
 			{
 				lastAlignConverged = true;
@@ -439,7 +439,7 @@ public class Align<T extends RealType< T >>
 		final Interval interval2 = TransformTools.getLocalRasterOverlap( localOverlap2 );
 
 		//final WarpFunction warp = new TranslationWarp(3);
-		final WarpFunction warp = new RigidWarp3D();
+		final WarpFunction warp = new RigidWarp(3);
 		//final WarpFunction warp = new AffineWarp( 3 );
 
 		// rotate second image
@@ -447,14 +447,14 @@ public class Align<T extends RealType< T >>
 		rot.rotate( 2, 2 * Math.PI / 180 );
 		RandomAccessibleInterval< FloatType > rotated = Views.interval(
 				RealViews.affine( 
-						Views.interpolate( Views.extendMirrorSingle( Views.zeroMin( Views.interval( b, interval2 ) ) ), new NLinearInterpolatorFactory<>() ),
+						Views.interpolate( Views.extendBorder( Views.zeroMin( Views.interval( b, interval2 ) ) ), new NLinearInterpolatorFactory<>() ),
 						rot.copy() ),
 				interval2);
 
 		// show input
 		new ImageJ();
-		ImageJFunctions.show( Views.interval( a,  interval1 ) );
-		ImageJFunctions.show( rotated );
+		ImageJFunctions.show( Views.interval( a,  interval1 ), "target" );
+		ImageJFunctions.show( rotated, "in");
 
 		// downsample input
 		RandomAccessibleInterval< FloatType > simple2x1 = Downsample.simple2x( Views.zeroMin( Views.interval( a, interval1 ) ), new ArrayImgFactory<>(), new boolean[] {true, true, false} );
@@ -468,17 +468,23 @@ public class Align<T extends RealType< T >>
 		//final AffineTransform transform = lk.align( Views.zeroMin( rotated ), 100, 0.01 );
 		final AffineTransform transform = lk.align( simple2x2, 100, 0.01 );
 
+		final AffineTransform scale = new AffineTransform( 3 );
+		scale.set( 2, 0, 0 );
+		scale.set( 1, 1, 1 );
+
+		transform.preConcatenate( scale );
+
 		// transformation matrix
 		System.out.println( Util.printCoordinates( transform.getRowPackedCopy() ) );
 
 		// correct input and show
 		RandomAccessibleInterval< FloatType > backRotated = Views.interval(
 				RealViews.affine( 
-						Views.interpolate( Views.extendMirrorSingle( Views.zeroMin( Views.interval( b, interval2 ) ) ), new NLinearInterpolatorFactory<>() ),
+						Views.interpolate( Views.extendBorder( Views.zeroMin( Views.interval( b, interval2 ) ) ), new NLinearInterpolatorFactory<>() ),
 						rot.copy().preConcatenate( transform ).copy() ),
 				interval2);
 
-		ImageJFunctions.show( backRotated );
+		ImageJFunctions.show( backRotated, "out" );
 
 		// constructor needs column packed matrix, therefore the transpose
 		Matrix mt = new Matrix( transform.getRowPackedCopy(), 4).transpose();
