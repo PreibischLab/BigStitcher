@@ -129,17 +129,18 @@ public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindow
 			
 			ExecutorService service = Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() * 2 );
 			
-			Pair< double[], Double > shift = PairwiseStitching.getShift( rai1, rai2, 
+			Pair< Translation, Double > shift = PairwiseStitching.getShift( rai1, rai2, 
 					new Translation( rai1.numDimensions() ), new Translation( rai1.numDimensions() ),
 					PairwiseStitchingParameters.askUserForParameters(), service );
 			
-			System.out.println( Util.printCoordinates( shift.getA() ) );
+			final double[] translation = shift.getA().getTranslationCopy();
+			System.out.println( Util.printCoordinates( translation ) );
 			System.out.println( shift.getB() );
 			
-			for (int d = 0; d < shift.getA().length; d++)
-				shift.getA()[d] *= downsampling;
+			for (int d = 0; d <translation.length; d++)
+				translation[d] *= downsampling;
 			
-			System.out.println( spimData.getViewRegistrations().getViewRegistration( views.get( 1 ).get( 0 ) ).getModel().copy().concatenate( new Translation(shift.getA()) ) );
+			System.out.println( spimData.getViewRegistrations().getViewRegistration( views.get( 1 ).get( 0 ) ).getModel().copy().concatenate( new Translation(translation) ) );
 			
 		}
 		
