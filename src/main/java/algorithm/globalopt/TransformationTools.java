@@ -135,7 +135,7 @@ public class TransformationTools
 		final AffineTransform resCorrected = new AffineTransform( result.getA().numDimensions() );
 		resCorrected.set( result.getA() );
 		resCorrected.concatenate( vr );
-		resCorrected.preConcatenate( vr.inverse() );
+		resCorrected.preConcatenate( vr.copy().inverse() );
 
 		System.out.println("shift: " + Util.printCoordinates(result.getA().getTranslationCopy()));
 		System.out.print("cross-corr: " + result.getB());
@@ -220,7 +220,7 @@ public class TransformationTools
 		final AffineTransform resCorrected = new AffineTransform( result.getA().numDimensions() );
 		resCorrected.set( result.getA() );
 		resCorrected.concatenate( vr );
-		resCorrected.preConcatenate( vr.inverse() );
+		resCorrected.preConcatenate( vr.copy().inverse() );
 
 		IOFunctions.println("resulting transformation: " + Util.printCoordinates(result.getA().getRowPackedCopy()));
 
