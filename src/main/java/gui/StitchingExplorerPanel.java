@@ -50,6 +50,7 @@ import gui.popup.CalculatePCPopup;
 import gui.popup.CalculatePCPopupExpertBatch;
 import gui.popup.OptimizeGloballyPopup;
 import gui.popup.OptimizeGloballyPopupExpertBatch;
+import gui.popup.PairwiseInterestPointRegistrationPopup;
 import gui.popup.RegularGridPopup;
 import gui.popup.SelectIlluminationPopup;
 import gui.popup.SimpleRemoveLinkPopup;
@@ -83,6 +84,7 @@ import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
 import spim.fiji.spimdata.explorer.popup.BDVPopup;
 import spim.fiji.spimdata.explorer.popup.BoundingBoxPopup;
+import spim.fiji.spimdata.explorer.popup.DetectInterestPointsPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayFusedImagesPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayRawImagesPopup;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -613,6 +615,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new ApplyBDVTransformationPopup() );
 		popups.add( new TogglePreviewPopup() );
 		//popups.add( new BoundingBoxPopup() );
+		popups.add( new PairwiseInterestPointRegistrationPopup() );
+		popups.add( new DetectInterestPointsPopup() );
 
 		popups.add( new Separator() );
 
