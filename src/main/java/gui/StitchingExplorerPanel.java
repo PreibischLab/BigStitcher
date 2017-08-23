@@ -228,8 +228,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				OptimizeGloballyPopupExpertBatch globalOptPopup = (OptimizeGloballyPopupExpertBatch) globalOptPopupOpt.get();
 				globalOptPopup.doClick();
 			}
-			// discard the temp. SpimDataFilteringAndGrouping
-			savedFilteringAndGrouping = null;
+			else
+			{
+				// discard the temp. SpimDataFilteringAndGrouping
+				// if we discard it right now, but want to do global opt (which runs asynchronously)
+				// it would not work. therefore, the global optimization will take care of this
+				savedFilteringAndGrouping = null;
+			}
 		}
 	}
 
