@@ -50,6 +50,7 @@ import gui.popup.CalculatePCPopup;
 import gui.popup.CalculatePCPopupExpertBatch;
 import gui.popup.OptimizeGloballyPopup;
 import gui.popup.OptimizeGloballyPopupExpertBatch;
+import gui.popup.PairwiseInterestPointRegistrationPopup;
 import gui.popup.RegularGridPopup;
 import gui.popup.SelectIlluminationPopup;
 import gui.popup.SimpleRemoveLinkPopup;
@@ -83,6 +84,7 @@ import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
 import spim.fiji.spimdata.explorer.popup.BDVPopup;
 import spim.fiji.spimdata.explorer.popup.BoundingBoxPopup;
+import spim.fiji.spimdata.explorer.popup.DetectInterestPointsPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayFusedImagesPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayRawImagesPopup;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -226,8 +228,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				OptimizeGloballyPopupExpertBatch globalOptPopup = (OptimizeGloballyPopupExpertBatch) globalOptPopupOpt.get();
 				globalOptPopup.doClick();
 			}
-			// discard the temp. SpimDataFilteringAndGrouping
-			savedFilteringAndGrouping = null;
+			else
+			{
+				// discard the temp. SpimDataFilteringAndGrouping
+				// if we discard it right now, but want to do global opt (which runs asynchronously)
+				// it would not work. therefore, the global optimization will take care of this
+				savedFilteringAndGrouping = null;
+			}
 		}
 	}
 
@@ -613,6 +620,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new ApplyBDVTransformationPopup() );
 		popups.add( new TogglePreviewPopup() );
 		//popups.add( new BoundingBoxPopup() );
+		popups.add( new PairwiseInterestPointRegistrationPopup() );
+		popups.add( new DetectInterestPointsPopup() );
 
 		popups.add( new Separator() );
 
@@ -740,6 +749,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							// accumulative transform determined by stitching
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getTransform().getRowPackedCopy() );
+							trans.concatenate( selectedModel.inverse() );
+							trans.preConcatenate( selectedModel );
 
 							( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( trans );
 						}
@@ -774,6 +785,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							// accumulative transform determined by stitching
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getInverseTransform().getRowPackedCopy() );
+							
+							trans.concatenate( selectedModel.inverse() );
+							trans.preConcatenate( selectedModel );
 
 							if (psr.pair().equals( selectedPair ))
 							{

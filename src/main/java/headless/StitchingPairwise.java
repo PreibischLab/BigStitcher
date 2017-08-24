@@ -14,6 +14,7 @@ import net.imglib2.algorithm.phasecorrelation.PhaseCorrelationPeak2;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.multithreading.SimpleMultiThreading;
+import net.imglib2.realtransform.Translation;
 import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
@@ -34,7 +35,7 @@ public class StitchingPairwise
 
 		final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, Util.getArrayFromValue( minOverlap, 3 ) );
 
-		final PairwiseStitchingParameters params = new PairwiseStitchingParameters( 0.1, 5, true, false, 100, true );
+		final PairwiseStitchingParameters params = new PairwiseStitchingParameters( 0.1, 5, true, true );
 		final ExecutorService service = DeconViews.createExecutorService();
 
 		final Random rnd = new Random( 34 );
@@ -80,22 +81,24 @@ public class StitchingPairwise
 				final Translation3D t1 = new Translation3D( 0, 0, 0 );
 				final Translation3D t2 = new Translation3D( 0, 0, 0 );
 		
-				final Pair< double[], Double > r = PairwiseStitching.getShift( img1, img2, t1, t2, params, service );
+				final Pair< Translation, Double > r = PairwiseStitching.getShift( img1, img2, t1, t2, params, service );
 	
+				double[] shift = r.getA().getTranslationCopy();
+				
 				for ( int d = 0; d < correct.length; ++d )
-					r.getA()[ d ] *= ds[ d ];
+					shift[ d ] *= ds[ d ];
 
 				for ( int d = 0; d < correct.length; ++d )
-					r.getA()[ d ] -= correct[ d ];
+					shift[ d ] -= correct[ d ];
 
-				double d = dist( r.getA() );
+				double d = dist( shift );
 
-				IOFunctions.println( r.getA()[ 0 ] + "\t" + r.getA()[ 1 ]  + "\t" + r.getA()[ 2 ] + "\t" + d + "\t" + r.getB() );
+				IOFunctions.println( shift[ 0 ] + "\t" + shift[ 1 ]  + "\t" + shift[ 2 ] + "\t" + d + "\t" + r.getB() );
 	
 				avgDist += d;
-				avgX += r.getA()[ 0 ];
-				avgY += r.getA()[ 1 ];
-				avgZ += r.getA()[ 2 ];
+				avgX += shift[ 0 ];
+				avgY += shift[ 1 ];
+				avgZ += shift[ 2 ];
 			}
 
 			IOFunctions.println( "avg : " + avgDist / (double)numTests );

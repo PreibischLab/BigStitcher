@@ -97,7 +97,8 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 						return;
 
 					SpimDataFilteringAndGrouping< AbstractSpimData< ? > > filteringAndGrouping;
-					if ( ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping() == null )
+					final boolean isSavedFaG = ( ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping() == null );
+					if ( isSavedFaG )
 					{
 						FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
 						filteringAndGrouping = new SpimDataFilteringAndGrouping< AbstractSpimData< ? > >(
@@ -277,6 +278,12 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 							} );
 						}
 
+					}
+
+					if (isSavedFaG)
+					{
+						// remove saved filtering and grouping once we are done here
+						( (StitchingExplorerPanel< ?, ? >) panel ).setSavedFilteringAndGrouping( null );
 					}
 
 					panel.bdvPopup().updateBDV();

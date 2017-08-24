@@ -21,6 +21,7 @@ import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GlobalTileOptimization;
 import gui.StitchingResultsSettable;
 import ij.gui.GenericDialog;
+import mpicbg.models.RigidModel3D;
 import mpicbg.models.Tile;
 import mpicbg.models.TileConfiguration;
 import mpicbg.models.TranslationModel3D;

@@ -13,6 +13,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.Translation;
 import net.imglib2.realtransform.Translation2D;
 import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
@@ -52,13 +53,13 @@ public class PhaseCorrelationTest2
 		PairwiseStitchingParameters params = new PairwiseStitchingParameters();
 		params.doSubpixel = true;
 		
-		Pair< double[], Double > shift = PairwiseStitching.getShift( image1, image2,
+		Pair< Translation, Double > shift = PairwiseStitching.getShift( image1, image2,
 									new Translation3D(),
 									translation2, 
 									params,
 									Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() ) );
 		
-		System.out.println( Util.printCoordinates( shift.getA() ));
+		System.out.println( Util.printCoordinates( shift.getA().getTranslationCopy() ));
 		System.out.print( shift.getB() );
 	}
 }

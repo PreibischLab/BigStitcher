@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,9 +18,11 @@ import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GlobalTileOptimization;
 import algorithm.lucaskanade.AffineWarp;
 import algorithm.lucaskanade.Align;
+import algorithm.lucaskanade.LucasKanadeParameters;
 import input.FractalImgLoader;
 import input.FractalSpimDataGenerator;
 import mpicbg.models.TranslationModel3D;
+import mpicbg.spim.io.IOFunctions;
 import net.imagej.ops.Ops.Copy.Img;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
@@ -51,11 +54,13 @@ import spim.process.interestpointregistration.pairwise.constellation.grouping.Gr
 public class PairwiseStitching
 {
 
-	public static <T extends RealType< T >, S extends RealType< S >> Pair< double[], Double > getShiftLucasKanade(
+	public static <T extends RealType< T >, S extends RealType< S >> Pair< AffineTransform, Double > getShiftLucasKanade(
 			final RandomAccessibleInterval< T > input1, final RandomAccessibleInterval< T > input2,
-			final TranslationGet t1, final TranslationGet t2, final PairwiseStitchingParameters params,
+			final TranslationGet t1, final TranslationGet t2, final LucasKanadeParameters params,
 			final ExecutorService service)
 	{
+		// TODO: allow arbitrary pre-registration
+
 		// check if we have singleton dimensions
 		boolean[] singletonDims = new boolean[input1.numDimensions()];
 		for ( int d = 0; d < input1.numDimensions(); ++d )
@@ -69,7 +74,7 @@ public class PairwiseStitching
 		final RandomAccessibleInterval< T > img1;
 		final RandomAccessibleInterval< T > img2;
 
-		// make sure it is zero-min
+		// make sure everything is zero-min
 		if ( !Views.isZeroMin( input1 ) )
 			img1 = Views.dropSingletonDimensions( Views.zeroMin( input1 ) );
 		else
@@ -79,9 +84,6 @@ public class PairwiseStitching
 			img2 = Views.dropSingletonDimensions( Views.zeroMin( input2 ) );
 		else
 			img2 = Views.dropSingletonDimensions( input2 );
-
-		// ImageJFunctions.show( img1 );
-		// ImageJFunctions.show( img2 );
 
 		System.out.println( "1: " + Util.printInterval( img1 ) );
 		System.out.println( "1: " + TransformTools.printRealInterval( transformed1 ) );
@@ -106,58 +108,82 @@ public class PairwiseStitching
 		System.out.println( "2: " + TransformTools.printRealInterval( localOverlap2 ) );
 		System.out.println( "2: " + Util.printInterval( interval2 ) );
 
-		long nPixel = 1;
-		// test if the overlap is too small to begin with
-		for ( int d = 0; d < img1.numDimensions(); ++d )
-			nPixel *= img1.dimension( d );
+		// check whether we have 0-sized (or negative sized) or unequal raster
+		// overlapIntervals
+		// (this should just happen with overlaps < 1px in some dimension)
+		// ignore this pair in that case
+		for ( int d = 0; d < interval1.numDimensions(); ++d )
+		{
+			if ( interval1.dimension( d ) <= 0 || interval2.dimension( d ) <= 0
+					|| interval1.dimension( d ) != interval2.dimension( d ) )
+			{
+				System.out.println( "Rastered overlap volume is zero, skipping." );
+				return null;
+			}
+		}
 
-		if ( nPixel < params.minOverlap )
-			return null;
+		// do the alignment
+		Align< T > lkAlign = new Align< T >( Views.zeroMin( Views.interval( img1, interval1 ) ),
+				new ArrayImgFactory< FloatType >(), params.getWarpFunctionInstance( img1.numDimensions() ) );
 
-		//
-		// call the phase correlation
-		//
-		final int[] extension = new int[img1.numDimensions()];
-		Arrays.fill( extension, 10 );
+		AffineTransform res = lkAlign.align( Views.zeroMin( Views.interval( img2, interval2 ) ), params.maxNumIterations,
+				params.minParameterChange );
 
-		Align< T > align = new Align< T >( Views.zeroMin( Views.interval( img1, interval1 ) ),
-				new ArrayImgFactory< FloatType >(), new AffineWarp( img1.numDimensions() ), new AffineTransform3D() );
-		AffineTransform align2 = align.align( Views.zeroMin( Views.interval( img2, interval2 ) ), params.maxIterations,
-				0.1 );
+		if (lkAlign.didConverge())
+			IOFunctions.println("(" + new Date( System.currentTimeMillis() ) + ") determined transformation:" +  Util.printCoordinates( res.getRowPackedCopy() ) );
+		else
+			IOFunctions.println("(" + new Date( System.currentTimeMillis() ) + ") registration did not converge" );
 
-		System.out.println( align2 );
+		final int nFull =  input1.numDimensions();
+		AffineTransform resFull = new AffineTransform( nFull );
 
-		// adapt shift for the entire image, not only the overlapping parts
-		final double[] entireIntervalShift = new double[input1.numDimensions()];
+		// increase dimensionality of transform if necessary
+		int dReducedDims = 0;
+		for ( int d = 0; d < nFull; ++d )
+		{
+			if (! singletonDims[d] )
+			{
+				int dReducedDimsCol = 0;
+				for ( int dCol = 0; dCol < nFull + 1; ++dCol )
+				{
+					if (dCol == nFull || !singletonDims[dCol] )
+					{
+						resFull.set( res.get( dReducedDims, dReducedDimsCol ), d, dCol );
+						dReducedDimsCol++;
+					}
+				}
+				dReducedDims++;
+			}
+		}
 
+		// get subpixel offset before alignment
+		final double[] subpixelOffset = new double[ nFull ];
 		int d2 = 0;
-		for ( int d = 0; d < input1.numDimensions(); ++d )
+		for ( int d = 0; d < nFull; ++d )
 		{
 			if ( singletonDims[d] )
 			{
-				entireIntervalShift[d] = t2.getTranslation( d ) - t1.getTranslation( d );
+				// NOP, we did not calculate any transformation in this dimension
 			}
 			else
 			{
 				// correct for the int/real coordinate mess
 				final double intervalSubpixelOffset1 = interval1.realMin( d2 ) - localOverlap1.realMin( d2 ); // a_s
 				final double intervalSubpixelOffset2 = interval2.realMin( d2 ) - localOverlap2.realMin( d2 ); // b_s
-
-				// final double localRasterShift = shift.getDoublePosition( d2
-				// ); // d'
-				final double localRasterShift = align2.get( d2, img1.numDimensions() ); // d'
-				System.out.println( intervalSubpixelOffset1 + "," + intervalSubpixelOffset2 + "," + localRasterShift );
-				final double localRelativeShift = localRasterShift
-						- ( intervalSubpixelOffset2 - intervalSubpixelOffset1 );
-
-				// correct for the initial shift between the two inputs
-				entireIntervalShift[d] = ( transformed2.realMin( d2 ) - transformed1.realMin( d2 ) )
-						+ localRelativeShift;
+				subpixelOffset[d] = ( intervalSubpixelOffset2 - intervalSubpixelOffset1 );
 				d2++;
 			}
 		}
 
-		return new ValuePair<>( entireIntervalShift, align.didConverge() ? 1.0 : 0.0 );
+		// correct for subpixel offset
+		final AffineTransform subpixelT = new AffineTransform( nFull );
+		for (int d = 0; d<nFull; d++)
+			subpixelT.set( subpixelOffset[d], d, nFull );
+		resFull.preConcatenate( subpixelT );
+
+		// TODO: more meaningful "quality measure" than binary didConverge
+		// TODO: return null if no convergence
+		return new ValuePair<>( resFull, lkAlign.didConverge() ? 1.0 : 0.0 );
 	}
 	/**
 	 * The absolute shift of input2 relative to after PCM input1 (without t1 and
@@ -174,7 +200,7 @@ public class PairwiseStitching
 	 * @param <S> pixel type input2
 	 * @return pair of shift vector and cross correlation coefficient or null if no shift could be determined
 	 */
-	public static <T extends RealType< T >, S extends RealType< S >> Pair< double[], Double > getShift(
+	public static <T extends RealType< T >, S extends RealType< S >> Pair< Translation, Double > getShift(
 			final RandomAccessibleInterval< T > input1, final RandomAccessibleInterval< S > input2,
 			final TranslationGet t1, final TranslationGet t2, final PairwiseStitchingParameters params,
 			final ExecutorService service)
@@ -184,7 +210,7 @@ public class PairwiseStitching
 		boolean[] singletonDims = new boolean[input1.numDimensions()];
 		for ( int d = 0; d < input1.numDimensions(); ++d )
 			singletonDims[d] = !(input1.dimension( d ) > 1 && input2.dimension( d ) > 1);
-			// TODO: should we consider cases where a dimension is singleton in one image but not the other?
+		// TODO: should we consider cases where a dimension is singleton in one image but not the other?
 
 		final RealInterval transformed1 = TransformTools.applyTranslation( input1, t1, singletonDims );
 		final RealInterval transformed2 = TransformTools.applyTranslation( input2, t2, singletonDims );
@@ -235,11 +261,13 @@ public class PairwiseStitching
 		// check whether we have 0-sized (or negative sized) or unequal raster overlapIntervals
 		// (this should just happen with overlaps < 1px in some dimension)
 		// ignore this pair in that case
+		// TODO: in pre-transformed views (e.g. both rotated), we might sometimes have unequal overlap due to numerical imprecision?
+		//    -> look into this
 		for (int d = 0; d < interval1.numDimensions(); ++d)
 		{
 			if (interval1.dimension( d ) <= 0 || interval2.dimension( d ) <= 0 || interval1.dimension( d ) != interval2.dimension( d ) )
 			{
-				System.out.println( "Rastered overlap volume is zero, skipping." );
+				System.out.println( "Rastered overlap volume is zero or unequal, skipping." );
 				return null;
 			}
 		}
@@ -311,8 +339,42 @@ public class PairwiseStitching
 			}
 		}
 
-		return new ValuePair< >( finalShift, shiftPeak.getCrossCorr() );
+		return new ValuePair< >( new Translation(finalShift), shiftPeak.getCrossCorr() );
 	}
+
+	public static <T extends RealType< T >, C extends Comparable< C >> List< PairwiseStitchingResult< C > > getPairwiseShiftsLucasKanade(
+			final Map< C, RandomAccessibleInterval< T > > rais, final Map< C, TranslationGet > translations,
+			final LucasKanadeParameters params, final ExecutorService service)
+	{
+		List< C > indexes = new ArrayList< >( rais.keySet() );
+		Collections.sort( indexes );
+
+		List< PairwiseStitchingResult< C > > result = new ArrayList< >();
+
+		// got through all pairs with index1 < index2
+		for ( int i = 0; i < indexes.size(); i++ )
+		{
+			for ( int j = i + 1; j < indexes.size(); j++ )
+			{
+				Pair< AffineTransform, Double > resT = getShiftLucasKanade( rais.get( indexes.get( i ) ), rais.get( indexes.get( j ) ),
+						translations.get( indexes.get( i ) ), translations.get( indexes.get( j ) ), params, service );
+
+				if ( resT != null )
+				{
+					Set<C> setA = new HashSet<>();
+					setA.add( indexes.get( i ) );
+					Set<C> setB = new HashSet<>();
+					setA.add( indexes.get( j ) );
+					Pair< Group<C>, Group<C> > key = new ValuePair<>(new Group<>(setA), new Group<>(setB));
+					result.add( new PairwiseStitchingResult< C >( key, null, resT.getA() , resT.getB() ) );
+				}
+				
+			}
+		}
+
+		return result;
+	}
+
 
 	public static <T extends RealType< T >, C extends Comparable< C >> List< PairwiseStitchingResult< C > > getPairwiseShifts(
 			final Map< C, RandomAccessibleInterval< T > > rais, final Map< C, TranslationGet > translations,
@@ -328,17 +390,9 @@ public class PairwiseStitching
 		{
 			for ( int j = i + 1; j < indexes.size(); j++ )
 			{
-				Pair< double[], Double > resT;
-				if (params.doLucasKanade)
-				{
-					resT = getShiftLucasKanade( rais.get( indexes.get( i ) ), rais.get( indexes.get( j ) ),
-							translations.get( indexes.get( i ) ), translations.get( indexes.get( j ) ), params, service );
-				}
-				else
-				{
-					resT = getShift( rais.get( indexes.get( i ) ), rais.get( indexes.get( j ) ),
-							translations.get( indexes.get( i ) ), translations.get( indexes.get( j ) ), params, service );
-				}
+				final Pair< Translation, Double > resT = getShift( rais.get( indexes.get( i ) ), rais.get( indexes.get( j ) ),
+						translations.get( indexes.get( i ) ), translations.get( indexes.get( j ) ), params, service );
+
 				if ( resT != null )
 				{
 					Set<C> setA = new HashSet<>();
@@ -346,7 +400,7 @@ public class PairwiseStitching
 					Set<C> setB = new HashSet<>();
 					setA.add( indexes.get( j ) );
 					Pair< Group<C>, Group<C> > key = new ValuePair<>(new Group<>(setA), new Group<>(setB));
-					result.add( new PairwiseStitchingResult< C >( key, null, new Translation( resT.getA() ), resT.getB() ) );
+					result.add( new PairwiseStitchingResult< C >( key, null, resT.getA(), resT.getB() ) );
 				}
 			}
 		}
