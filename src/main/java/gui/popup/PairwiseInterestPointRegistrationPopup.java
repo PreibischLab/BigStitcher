@@ -15,6 +15,8 @@ import javax.swing.JMenuItem;
 
 import algorithm.globalopt.TransformationTools;
 import ij.gui.GenericDialog;
+import mpicbg.spim.data.generic.AbstractSpimData;
+import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.sequence.TimePoint;
@@ -51,7 +53,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenuItem implements
 
 	@Override
 	public JComponent setExplorerWindow(
-			ExplorerWindow< ? , ? > panel)
+			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel )
 	{
 		this.panel = panel;
 		return this;
