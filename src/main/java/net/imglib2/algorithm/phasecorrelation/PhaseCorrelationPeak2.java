@@ -1,49 +1,28 @@
 package net.imglib2.algorithm.phasecorrelation;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-import mpicbg.models.IllDefinedDataPointsException;
-import mpicbg.models.NotEnoughDataPointsException;
-import net.imglib2.Cursor;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
-import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.Localizable;
 import net.imglib2.Point;
-import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.algorithm.localextrema.RefinedPeak;
 import net.imglib2.algorithm.localextrema.SubpixelLocalization;
-import net.imglib2.algorithm.localization.EllipticGaussianOrtho;
-import net.imglib2.algorithm.localization.Gaussian;
-import net.imglib2.algorithm.localization.LevenbergMarquardtSolver;
-import net.imglib2.algorithm.localization.MLEllipticGaussianEstimator;
-import net.imglib2.algorithm.localization.MLGaussianEstimator;
-import net.imglib2.algorithm.localization.PeakFitter;
-import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
-import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.InvertibleRealTransform;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.realtransform.Translation2D;
 import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
-import net.imglib2.util.Util;
 import net.imglib2.view.Views;
-import simulation.SimulateTileStitching;
-
-
 
 public class PhaseCorrelationPeak2 {
 	
@@ -278,7 +257,7 @@ public class PhaseCorrelationPeak2 {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		*/
+
 		final long[] minSF = new long[ pcm.numDimensions() ];
 		final long[] maxSF = new long[ pcm.numDimensions() ];
 
@@ -355,13 +334,13 @@ public class PhaseCorrelationPeak2 {
 		System.out.println();
 
 		//this.subpixelPcmLocation = new RealPoint( spots.get( 0 ) );
+		*/
 
 		double maxDist = 0.0;
 
 		for ( int d = 0; d < n; ++d )
 			maxDist = Math.max( maxDist, Math.abs( rp.getOriginalPeak().getDoublePosition( d ) - this.subpixelPcmLocation.getDoublePosition( d ) ) );
 
-		//ImageJFunctions.show( pcm );
 		//SimpleMultiThreading.threadHaltUnClean();
 		// not a stable peak
 		if ( maxDist > 0.75 )
