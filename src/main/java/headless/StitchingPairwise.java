@@ -29,7 +29,7 @@ public class StitchingPairwise
 	{
 		new ImageJ();
 
-		final double minOverlap = 0.4;
+		final double minOverlap = 0.85;
 		final float snr = 8;
 
 		final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, Util.getArrayFromValue( minOverlap, 3 ) );
@@ -61,6 +61,8 @@ public class StitchingPairwise
 				final double[] ov = new double[ 3 ];
 				for ( int d = 0; d < ov.length; ++d )
 					ov[ d ] = minOverlap + (rnd.nextDouble() / 10.0);
+
+				System.out.println( Util.printCoordinates( ov ) );
 				sts.init( ov );
 
 				final double[] correct = sts.getCorrectTranslation();
