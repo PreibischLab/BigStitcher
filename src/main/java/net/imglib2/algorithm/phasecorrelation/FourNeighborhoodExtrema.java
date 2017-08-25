@@ -17,6 +17,7 @@ import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Pair;
+import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 
@@ -81,7 +82,7 @@ public class FourNeighborhoodExtrema
 	 * @param nSplits how may splits
 	 * @return list of intervals input was split into
 	 */
-	public static List<Interval> splitAlongLargestDimension(Interval interval, int nSplits){
+	public static List<Interval> splitAlongLargestDimension(Interval interval, long nSplits){
 		
 		List<Interval> res = new ArrayList<Interval>();
 		
@@ -94,7 +95,10 @@ public class FourNeighborhoodExtrema
 		for (int i = 0; i< interval.numDimensions(); i++){
 			if (interval.dimension(i) > interval.dimension(splitDim)) splitDim = i;
 		}
-		
+
+		// there could be more splits than actual dimension entries
+		nSplits = Math.min( nSplits, interval.dimension(splitDim) );
+
 		long chunkSize = interval.dimension(splitDim) / nSplits;
 		long maxSplitDim = max[splitDim];
 		
@@ -150,10 +154,8 @@ public class FourNeighborhoodExtrema
 				return (int) Math.signum(o1.getB() - o2.getB());
 			}
 		});
-		
+
 		return res;
-		
-		
 	}
 	
 	public static < T extends RealType< T > > ArrayList< Pair< Localizable, Double > > findMax( final RandomAccessible< T > img, final Interval region, final int maxN )
