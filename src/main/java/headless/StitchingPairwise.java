@@ -93,7 +93,7 @@ public class StitchingPairwise
 
 				double d = dist( shift );
 
-				IOFunctions.println( shift[ 0 ] + "\t" + shift[ 1 ]  + "\t" + shift[ 2 ] + "\t" + d + "\t" + r.getB() );
+				IOFunctions.println( shift[ 0 ] + " " + shift[ 1 ]  + " " + shift[ 2 ] + " " + d + " " + r.getB() );
 	
 				avgDist += d;
 				avgX += shift[ 0 ];
