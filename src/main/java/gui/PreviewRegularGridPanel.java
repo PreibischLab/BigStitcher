@@ -43,12 +43,14 @@ import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AffineTransform3D;
+import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 
 public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends JPanel implements SelectedViewDescriptionListener< AS >
 {
+	public static boolean expertMode = false;
 
 	/*
 	 * get int array from 2 or 3 comma-separated numbers, return null if fragments cannot be parsed as int or there are != 2|3 numbers
@@ -508,17 +510,20 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		String message1 = "<html><strong>WARNING:</strong> this will overwrite all tranformations but the calibration with the new translations</html>";
 		String message2 = "<html>apply to all TimePoints?</html>";
 		int confirm1 = JOptionPane.showConfirmDialog( this, message1, "Apply to dataset", JOptionPane.OK_CANCEL_OPTION );
-		
+
 		if (confirm1 == JOptionPane.CANCEL_OPTION)
 			return;
-		
-		int confirm2 = JOptionPane.showConfirmDialog( this, message2, "Apply to dataset", JOptionPane.YES_NO_CANCEL_OPTION );
-		
-		if (confirm2 == JOptionPane.CANCEL_OPTION)
-			return;
-		
-		boolean allTPs = confirm2 == JOptionPane.YES_OPTION;
-		
+
+		final boolean onlyOneTP = parent.getSpimData().getSequenceDescription().getTimePoints().getTimePointsOrdered().size() <= 1;
+		boolean allTPs = false;
+		if (!onlyOneTP)
+		{
+			int confirm2 = JOptionPane.showConfirmDialog( this, message2, "Apply to dataset", JOptionPane.YES_NO_CANCEL_OPTION );
+			if (confirm2 == JOptionPane.CANCEL_OPTION)
+				return;
+			allTPs = confirm2 == JOptionPane.YES_OPTION;
+		}
+
 		RegularTranslationParameters params = new RegularTranslationParameters();
 		params.nDimensions = 3;
 		params.alternating = alternating;
@@ -526,19 +531,18 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		params.increasing = increasing;
 		params.overlaps = overlaps;
 		params.nSteps = steps;
-		
+
 		applyToSpimData( parent.getSpimData() , selectedVDs, params, allTPs );
-		
+
 		// reset viewer transform to recall to current transform & update with new sources
 		parent.bdvPopup().getBDV().getViewer().getState().getViewerTransform( oldViewerTransform );
 		parent.bdvPopup().updateBDV();
-		
+
 		// close the window
 		((JFrame)this.getTopLevelAncestor()).dispose();
 		quit();
-		
 	}
-	
+
 	public static <AS extends AbstractSpimData<?> > void applyToSpimData(
 			AS data, 
 			List< List< BasicViewDescription< ? extends BasicViewSetup > > > viewDescriptions,
@@ -555,7 +559,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		}
 				
 	}
-	
+
 	private static <AS extends AbstractSpimData<?> > void applyToSpimDataSingleTP(
 			AS data, 
 			List< List< BasicViewDescription< ? extends BasicViewSetup > > > viewDescriptions,
