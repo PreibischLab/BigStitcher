@@ -52,66 +52,32 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 {
 	public static boolean expertMode = false;
 
-	/*
-	 * get int array from 2 or 3 comma-separated numbers, return null if fragments cannot be parsed as int or there are != 2|3 numbers
-	 */
-	private static int[] getSteps(String s)
-	{
-		List<String> splitted = Arrays.asList( s.split( "," ) );
-		
-		for (int i = 0; i < splitted.size(); ++i)
-			splitted.set( i, splitted.get( i ).replaceAll( "\\s+", "" ));
-		
-		List<Integer> steps;
-		try
-		{
-			steps = splitted.stream().map( ( st ) -> Integer.parseInt( st ) ).collect( Collectors.toList() );
-		}
-		catch (NumberFormatException e)
-		{
-			return null;
-		}
-		
-		if ((steps.size() < 2) || (steps.size() > 3))
-			return null;
-		
-		int[] res = new int[3];
-		res[0] = steps.get( 0 );
-		res[1] = steps.get( 1 );
-		res[2] = steps.size() == 3 ? steps.get( 2 ) : 1;
-		
-		return res;
-	}
-	
-	/*
-	 * get dimension order array from string containing x,y and z separated by commas
-	 * returns null for malformed strings
-	 */
-	private static int[] getDimensionOrder(String s)
-	{
-		List<String> splitted = Arrays.asList( s.split( "," ) );
-		
-		for (int i = 0; i < splitted.size(); ++i)
-			splitted.set( i, splitted.get( i ).replaceAll( "\\s+", "" ).toUpperCase() );
+	private ExplorerWindow< AS, ?> parent;
 
-		if ((splitted.size() < 2) || (splitted.size() > 3))
-			return null;
-		
-		Set<String> splittedSet = new HashSet<>(splitted);
-		splittedSet.add( "Z" );
-		
-		//System.out.println( splittedSet );
-		if (!(splittedSet.size() == 3 ) || !splittedSet.contains( "X" ) || !splittedSet.contains( "Y" ) || !splittedSet.contains( "Z" ))
-			return null;
-		
-		int res[] = new int[3];
-		res[0] = (int)(char)splitted.get( 0 ).charAt( 0 ) - 88;
-		res[1] = (int)(char)splitted.get( 1 ).charAt( 0 ) - 88;
-		res[2] = splitted.size() == 3 ? (int)(char)splitted.get( 2 ).charAt( 0 ) - 88 : 2;
-		
-		return res;
-	}
-	
+	// UI elements
+	private List<JCheckBox> alternatingCheckboxes;
+	private List<JCheckBox> increasingCheckboxes;
+	private List<JSlider> overlapSliders;
+	private JTextField orderTextField;
+	private JTextField stepsTextField;
+	private JLabel orderWarningLabel;
+	private JLabel stepsWarningLabel;
+
+	// state
+	private boolean[] alternating;
+	private boolean[] increasing;
+	private int[] dimensionOrder;
+	private int[] steps;
+	private double[] overlaps;
+	private List<List<BasicViewDescription< ? >>> selectedVDs;
+
+	private boolean linkedOverlaps = true;
+	private boolean zEnabled = false;
+
+	// save old transformation to undo if we cancel
+	private AffineTransform3D oldViewerTransform;
+
+
 	private final static String[] dimensionNames = new String[] {"X", "Y", "Z"};
 
 	private final static String[][] imageFiles = new String[][]{
@@ -136,18 +102,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		
 	}
 	
-	private void applyGridPreset(GridPreset gp)
-	{
-		for (int i = 0; i < gp.alternating.length; i ++)
-			alternatingCheckboxes.get( i ).setSelected( gp.alternating[i] );
-		
-		for (int i = 0; i < gp.increasing.length; i ++)
-			increasingCheckboxes.get( i ).setSelected( gp.increasing[i] );
-		
-		orderTextField.setText( gp.dimensionOrder );
-		
-		update();
-	}
+	
 	
 	private static final List<GridPreset> presets = new ArrayList<>();
 	static
@@ -172,72 +127,13 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		presets.add( new GridPreset( new boolean[] {true, false}, new boolean[] {false, false} , "y,x" ) );
 		presets.add( new GridPreset( new boolean[] {false, true}, new boolean[] {false, false} , "x,y" ) );
 	}
-	
-	private ExplorerWindow< AS, ?> parent;
-	
-	
-	// UI elements
-	private List<JCheckBox> alternatingCheckboxes;
-	private List<JCheckBox> increasingCheckboxes;
-	private List<JSlider> overlapSliders;
-	private JTextField orderTextField;
-	private JTextField stepsTextField;
-	private JLabel orderWarningLabel;
-	private JLabel stepsWarningLabel;
-	
-	// state
-	private boolean[] alternating;
-	private boolean[] increasing;
-	private int[] dimensionOrder;
-	private int[] steps;
-	private double[] overlaps;
-	private List<List<BasicViewDescription< ? >>> selectedVDs;
-	
-	private boolean linkedOverlaps = true;
-	private boolean zEnabled = false;
-	
-	// save old transformation to undo if we cancel
-	private AffineTransform3D oldViewerTransform;
-	
-	/*
-	 * save old BDV View Transformation if we haven't done that before
-	 * move to origin, keep zoom level
-	 */
-	private void saveOldTransformAndMoveToOriginIfNecessary()
-	{
-		if (oldViewerTransform == null)
-		{
-			if (parent.bdvPopup() == null)
-				return;
-			
-			BigDataViewer bdv = parent.bdvPopup().getBDV();
-			
-			if (bdv == null)
-				return;
-			
-			oldViewerTransform = new AffineTransform3D();
-			bdv.getViewer().getState().getViewerTransform( oldViewerTransform );
-			
-			AffineTransform3D t = oldViewerTransform.copy();
-			t.set( 0.0, 0, 3 );
-			t.set( 0.0, 1, 3 );
-			t.set( 0.0, 2, 3 );
-			bdv.getViewer().setCurrentViewerTransform( t );
-			
-			bdv.getViewer().requestRepaint();
-		}
-	}
-	
-	
+
+
 	public PreviewRegularGridPanel(ExplorerWindow< AS, ? > parent)
 	{
 		int iconSizeX = 80;
 		int iconSizeY = 80;
-		
-		
-			
-		
-		
+
 		Image[][] images = new Image[2][8];
 		try
 		{
@@ -249,16 +145,16 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		{
 			IOFunctions.printErr( "WARNING: Could not load preset icons" );
 		}
-		
+
 		this.parent = parent;
-		
+
 		saveOldTransformAndMoveToOriginIfNecessary();
-				
+
 		this.setLayout( new BoxLayout( this, BoxLayout.PAGE_AXIS ) );
-		
-		
+
+
 		// preset Icon panel
-		
+
 		JPanel presetPanel = new JPanel();
 		presetPanel.setLayout( new BoxLayout( presetPanel, BoxLayout.PAGE_AXIS ) );
 		
@@ -281,20 +177,18 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 			imgI.addActionListener( e -> applyGridPreset( presets.get( 8 + ii ) ) );
 			presetPanelRow2.add( imgI );
 		}
-		
+
 		presetPanel.add( presetPanelRow1 );
 		presetPanel.add( presetPanelRow2 );
 		this.add( presetPanel );
-		
-		
+
 		// checkboxes to set wether the grid alternates along a given axis
 		alternatingCheckboxes = new ArrayList<>();
 		alternatingCheckboxes.add( new JCheckBox( "X", true ));
 		alternatingCheckboxes.add( new JCheckBox( "Y", true ));
 		alternatingCheckboxes.add( new JCheckBox( "Z", true ));
 		alternatingCheckboxes.get( 2 ).setEnabled( false );
-		
-		
+
 		JPanel alternatingCheckboxesPanel = new JPanel();
 		alternatingCheckboxesPanel.setLayout( new BoxLayout( alternatingCheckboxesPanel, BoxLayout.LINE_AXIS ) );
 		
@@ -303,10 +197,10 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 			alternatingCheckboxesPanel.add( c );
 			c.addActionListener( (e) -> update() );
 		}
-		
+
 		this.add( new JLabel( "Alternating in dimensions" ) );
 		this.add( alternatingCheckboxesPanel );
-		
+
 		// checkboxes to set wether the coordinates increase along a given axis
 		increasingCheckboxes = new ArrayList<>();
 		increasingCheckboxes.add( new JCheckBox( "X", true ));
@@ -325,7 +219,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		
 		this.add( new JLabel( "Increasing in dimensions" ) );
 		this.add( increasingCheckboxesPanel );
-		
+
 		// sliders for overlap percents
 		overlapSliders = new ArrayList<>();
 		overlapSliders.add( new JSlider( JSlider.HORIZONTAL, 0, 100, 10 ) );
@@ -358,28 +252,25 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		
 		this.add( new JLabel( "Overlap in dimensions" ) );
 		this.add( overlapSlidersPanel );
-		
-		
+
 		// dimension order
 		orderTextField = new JTextField( "x, y", 30 );
 		orderWarningLabel = new JLabel("");
 		orderTextField.getDocument().addDocumentListener( new LinkExplorerPanel.SimpleDocumentListener( ev -> update() ) ); 
-		
+
 		this.add( new JLabel( "Dimension order" ) );
 		this.add( orderTextField );
 		this.add( orderWarningLabel );
-		
+
 		// steps in each dimension
 		stepsTextField = new JTextField( "4, 4", 30 );
 		stepsWarningLabel = new JLabel( "" );
 		stepsTextField.getDocument().addDocumentListener(  new LinkExplorerPanel.SimpleDocumentListener( ev -> update() ) );
-		
+
 		this.add( new JLabel( "Tiles in each dimension" ) );
 		this.add( stepsTextField );
 		this.add( stepsWarningLabel );
-		
-		
-		
+
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout( new BoxLayout( buttonPanel, BoxLayout.LINE_AXIS ) );
 		
@@ -390,20 +281,56 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		applyButton.addActionListener( ( e ) -> {applyButtonClicked(); }) ; 
 		buttonPanel.add( cancelButton );
 		buttonPanel.add( applyButton );
-		
+
 		this.add( buttonPanel );
-		
+
 		// add this as a listener for selection changes in parent view explorer
 		// this should trigger update immediately
 		FilteredAndGroupedExplorerPanel< AS,? > FilteredAndGroupedExplorerPanel = (FilteredAndGroupedExplorerPanel< AS,? >)parent;
 		FilteredAndGroupedExplorerPanel.addListener( this );
-		
-					
 	}
-	
-	
-	
-	
+
+	private void applyGridPreset(GridPreset gp)
+	{
+		for (int i = 0; i < gp.alternating.length; i ++)
+			alternatingCheckboxes.get( i ).setSelected( gp.alternating[i] );
+
+		for (int i = 0; i < gp.increasing.length; i ++)
+			increasingCheckboxes.get( i ).setSelected( gp.increasing[i] );
+
+		orderTextField.setText( gp.dimensionOrder );
+		update();
+	}
+
+	/*
+	 * save old BDV View Transformation if we haven't done that before
+	 * move to origin, keep zoom level
+	 */
+	private void saveOldTransformAndMoveToOriginIfNecessary()
+	{
+		if (oldViewerTransform == null)
+		{
+			if (parent.bdvPopup() == null)
+				return;
+
+			BigDataViewer bdv = parent.bdvPopup().getBDV();
+
+			if (bdv == null)
+				return;
+
+			oldViewerTransform = new AffineTransform3D();
+			bdv.getViewer().getState().getViewerTransform( oldViewerTransform );
+
+			AffineTransform3D t = oldViewerTransform.copy();
+			t.set( 0.0, 0, 3 );
+			t.set( 0.0, 1, 3 );
+			t.set( 0.0, 2, 3 );
+			bdv.getViewer().setCurrentViewerTransform( t );
+
+			bdv.getViewer().requestRepaint();
+		}
+	}
+
 	public void update()
 	{
 		
@@ -504,7 +431,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		}
 
 	}
-	
+
 	private void applyButtonClicked()
 	{
 		String message1 = "<html><strong>WARNING:</strong> this will overwrite all tranformations but the calibration with the new translations</html>";
@@ -583,7 +510,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 					vr.getTransformList().clear();
 					vr.getTransformList().add( calibration );
 					vr.updateModel();
-					
+
 					// get translation and multiply shift with calibration
 					AffineTransform3D translation = generateRegularGrid.get( i ).copy();
 					translation.set( translation.get( 0, 3 ) * calibration.asAffine3D().get( 0, 0 ), 0, 3 );
@@ -591,10 +518,9 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 					translation.set( translation.get( 2, 3 ) * calibration.asAffine3D().get( 2, 2 ), 2, 3 );
 					vr.preconcatenateTransform( new ViewTransformAffine( "translation", translation ));
 					vr.updateModel();
-					
+
 					System.out.println(translation);
 				}
-				
 			}
 			i++;
 		}
@@ -657,6 +583,63 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		
 	}
 
-	
+	/*
+	 * get int array from 2 or 3 comma-separated numbers, return null if fragments cannot be parsed as int or there are != 2|3 numbers
+	 */
+	private static int[] getSteps(String s)
+	{
+		List<String> splitted = Arrays.asList( s.split( "," ) );
 
+		for (int i = 0; i < splitted.size(); ++i)
+			splitted.set( i, splitted.get( i ).replaceAll( "\\s+", "" ));
+
+		List<Integer> steps;
+		try
+		{
+			steps = splitted.stream().map( ( st ) -> Integer.parseInt( st ) ).collect( Collectors.toList() );
+		}
+		catch (NumberFormatException e)
+		{
+			return null;
+		}
+
+		if ((steps.size() < 2) || (steps.size() > 3))
+			return null;
+
+		int[] res = new int[3];
+		res[0] = steps.get( 0 );
+		res[1] = steps.get( 1 );
+		res[2] = steps.size() == 3 ? steps.get( 2 ) : 1;
+
+		return res;
+	}
+
+	/*
+	 * get dimension order array from string containing x,y and z separated by commas
+	 * returns null for malformed strings
+	 */
+	private static int[] getDimensionOrder(String s)
+	{
+		List<String> splitted = Arrays.asList( s.split( "," ) );
+
+		for (int i = 0; i < splitted.size(); ++i)
+			splitted.set( i, splitted.get( i ).replaceAll( "\\s+", "" ).toUpperCase() );
+
+		if ((splitted.size() < 2) || (splitted.size() > 3))
+			return null;
+
+		Set<String> splittedSet = new HashSet<>(splitted);
+		splittedSet.add( "Z" );
+
+		//System.out.println( splittedSet );
+		if (!(splittedSet.size() == 3 ) || !splittedSet.contains( "X" ) || !splittedSet.contains( "Y" ) || !splittedSet.contains( "Z" ))
+			return null;
+
+		int res[] = new int[3];
+		res[0] = (int)(char)splitted.get( 0 ).charAt( 0 ) - 88;
+		res[1] = (int)(char)splitted.get( 1 ).charAt( 0 ) - 88;
+		res[2] = splitted.size() == 3 ? (int)(char)splitted.get( 2 ).charAt( 0 ) - 88 : 2;
+
+		return res;
+	}
 }
