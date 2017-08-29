@@ -15,8 +15,11 @@ import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.util.Util;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import spim.process.interestpointregistration.global.GlobalOpt;
+import spim.process.interestpointregistration.global.GlobalOptIterative;
 import spim.process.interestpointregistration.global.GlobalOptTwoRound;
 import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
 import spim.process.interestpointregistration.global.convergence.IterativeConvergenceStrategy;
@@ -59,22 +62,35 @@ public class TestGlobalOptTwoRound
 
 		final long[] dsFactors = new long[]{ 4, 4, 1 };
 
+		// the result are shifts relative to the current registration of the dataset!
+		// that's because we find overlapping areas in global coordinates for which we run the Stitching
 		final ArrayList< PairwiseStitchingResult< ViewId > > pairwiseResults = TransformationTools.computePairs(
 				filteringAndGrouping.getComparisons(),
 				params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
 				filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
 				dsFactors );
 
-		SimpleMultiThreading.threadHaltUnClean();
-
 		final ArrayList< ViewId > fixed = new ArrayList<>();
 		fixed.add( views.get( 0 ) );
 
-		final IterativeConvergenceStrategy cs = new SimpleIterativeConvergenceStrategy( 10.0, 10.0, 10.0 );
+		final IterativeConvergenceStrategy cs = new SimpleIterativeConvergenceStrategy( 10.0, 2.0, 10.0 );
 		final PointMatchCreator pmc = new ImageCorrelationPointMatchCreator( pairwiseResults, 0.8 );
-		
+
 		Group.toGroups( views );
-		
+
+		final HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > computeResults = GlobalOptIterative.compute(
+				new TranslationModel3D(),
+				pmc,
+				cs,
+				new MaxErrorLinkRemoval(),
+				fixed,
+				Group.toViewIdGroups( views ) );
+
+		computeResults.forEach( ( k, v) -> {
+			System.out.println( Group.pvid( k ) + ": " + Util.printCoordinates( v.getModel().getTranslation() ) );
+		});
+
+		/*
 		final HashMap< ViewId, AffineTransform3D > computeResults = GlobalOptTwoRound.compute(
 				new TranslationModel3D(),
 				pmc,
@@ -84,9 +100,10 @@ public class TestGlobalOptTwoRound
 				new ConvergenceStrategy( Double.MAX_VALUE ),
 				fixed,
 				Group.toViewIdGroups( views ) );
-		
+
 		computeResults.forEach( ( k, v) -> {
-			System.out.println( k + ": " + v );
+			System.out.println( Group.pvid( k ) + ": " + Util.printCoordinates( v.getTranslation() ) );
 		});
+		*/
 	}
 }
