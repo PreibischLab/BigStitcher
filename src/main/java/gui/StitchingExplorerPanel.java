@@ -652,7 +652,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		// first, re-color sources (we might have set one or two of them to green/magenta)
 		if (!colorMode)
-			BDVPopupStitching.colorByChannels( bdvPopup().bdv, data );
+			BDVPopupStitching.colorByChannels( bdvPopup().bdv, data, colorOffset );
 		else
 			colorSources( bdvPopup().bdv.getSetupAssignments().getConverterSetups(), colorOffset );
 
@@ -929,7 +929,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							updateBDVPreviewMode();
 
 						if (!colorMode)
-							BDVPopupStitching.colorByChannels( p.bdv, data );
+							BDVPopupStitching.colorByChannels( p.bdv, data, colorOffset );
 						else
 						{
 							// cycle between color schemes

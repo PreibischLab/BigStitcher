@@ -223,15 +223,15 @@ public class BDVPopupStitching extends BDVPopup
 		}
 	}
 	
-	public static void colorByChannels(BigDataViewer bdv, AbstractSpimData< ? > data)
+	public static void colorByChannels(BigDataViewer bdv, AbstractSpimData< ? > data, long cOffset)
 	{
 		Set< Class< ? extends Entity> > groupingFactors = new HashSet<>();
 		groupingFactors.add( Channel.class );
 		groupingFactors.add( Illumination.class );
-		colorByFactors( bdv, data, groupingFactors );
+		colorByFactors( bdv, data, groupingFactors, cOffset );
 	}
 	
-	public static void colorByFactors(BigDataViewer bdv, AbstractSpimData< ? > data, Set<Class<? extends Entity>> groupingFactors)
+	public static void colorByFactors(BigDataViewer bdv, AbstractSpimData< ? > data, Set<Class<? extends Entity>> groupingFactors, long cOffset)
 	{
 		List<BasicViewDescription< ? > > vds = new ArrayList<>();
 		Map<BasicViewDescription< ? >, ConverterSetup> vdToCs = new HashMap<>();
@@ -268,7 +268,9 @@ public class BDVPopupStitching extends BDVPopup
 		}
 				
 		Iterator< ARGBType > colorIt = ColorStream.iterator();
-				
+		for (long i = 0; i<cOffset; ++i)
+			colorIt.next();
+
 		for (ArrayList< ConverterSetup > csg : groups)
 		{
 			ARGBType color = colorIt.next();
@@ -334,7 +336,7 @@ public class BDVPopupStitching extends BDVPopup
 		
 		
 		minMaxGroupByChannels( bdv, panel.getSpimData() );
-		colorByChannels( bdv, panel.getSpimData() );
+		colorByChannels( bdv, panel.getSpimData(), 0 );
 		
 		
 		// FIXME: source grouping is quite hacky atm
@@ -369,7 +371,7 @@ public class BDVPopupStitching extends BDVPopup
 		
 		
 		minMaxGroupByChannels( bdv, panel.getSpimData() );
-		colorByChannels( bdv, panel.getSpimData() );
+		colorByChannels( bdv, panel.getSpimData(), 0);
 		
 		
 		// FIXME: source grouping is quite hacky atm
