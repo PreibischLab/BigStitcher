@@ -79,7 +79,7 @@ public class DownsampleTools
 			long[] downsampleFactors )
 	{
 		
-		IOFunctions.println(
+		System.out.println(
 				"(" + new Date(System.currentTimeMillis()) + "): "
 				+ "Requesting Img from ImgLoader (tp=" + vd.getTimePointId() + ", setup=" + vd.getViewSetupId() + ")" );
 
