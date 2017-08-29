@@ -23,10 +23,12 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
+import javax.swing.SpinnerNumberModel;
+
+import org.apache.commons.math3.primes.Primes;
 
 import bdv.BigDataViewer;
 import bdv.tools.transformation.TransformedSource;
@@ -43,14 +45,22 @@ import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AffineTransform3D;
-import spim.fiji.spimdata.SpimData2;
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
+import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 
 public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends JPanel implements SelectedViewDescriptionListener< AS >
 {
 	public static boolean expertMode = false;
+
+	public static int[] oldTiling = null;
+	public static double[] oldOverlap = null;
+	public static boolean[] alternatingOld = null;
+	public static boolean[] increasingOld = null;
+	public static int[] dimensionOrderOld = null;
 
 	private ExplorerWindow< AS, ?> parent;
 
@@ -58,10 +68,11 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	private List<JCheckBox> alternatingCheckboxes;
 	private List<JCheckBox> increasingCheckboxes;
 	private List<JSlider> overlapSliders;
+	private List<JSpinner> tileCounts;
 	private JTextField orderTextField;
-	private JTextField stepsTextField;
 	private JLabel orderWarningLabel;
 	private JLabel stepsWarningLabel;
+	private JPanel presetPanel;
 
 	// state
 	private boolean[] alternating;
@@ -107,25 +118,25 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	private static final List<GridPreset> presets = new ArrayList<>();
 	static
 	{
-		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {true, true} , "y,x" ) );
-		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {false, true} , "y,x" ) );
-		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {true, false} , "y,x" ) );
-		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {false, false} , "y,x" ) );
-		
-		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {true, true} , "x,y" ) );
-		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {false, true} , "x,y" ) );
-		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {true, false} , "x,y" ) );
-		presets.add( new GridPreset( new boolean[] {false, false}, new boolean[] {false, false} , "x,y" ) );
-		
-		presets.add( new GridPreset( new boolean[] {true, false}, new boolean[] {true, true} , "x,y" ) );
-		presets.add( new GridPreset( new boolean[] {false, true}, new boolean[] {true, false} , "y,x" ) );
-		presets.add( new GridPreset( new boolean[] {true, false}, new boolean[] {false, true} , "x,y" ) );
-		presets.add( new GridPreset( new boolean[] {false, true}, new boolean[] {false, false} , "y,x" ) );
-		
-		presets.add( new GridPreset( new boolean[] {true, false}, new boolean[] {true, false} , "x,y" ) );
-		presets.add( new GridPreset( new boolean[] {false, true}, new boolean[] {true, false} , "y,x" ) );
-		presets.add( new GridPreset( new boolean[] {true, false}, new boolean[] {false, false} , "y,x" ) );
-		presets.add( new GridPreset( new boolean[] {false, true}, new boolean[] {false, false} , "x,y" ) );
+		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {true, true, true} , "y,x,z" ) );
+		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {false, true, true} , "y,x,z" ) );
+		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {true, false, true} , "y,x,z" ) );
+		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {false, false, true} , "y,x,z" ) );
+
+		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {true, true, true} , "x,y,z" ) );
+		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {false, true, true} , "x,y,z" ) );
+		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {true, false, true} , "x,y,z" ) );
+		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {false, false, true} , "x,,zy" ) );
+
+		presets.add( new GridPreset( new boolean[] {true, false, false}, new boolean[] {true, true, true} , "x,y,z" ) );
+		presets.add( new GridPreset( new boolean[] {false, true, false}, new boolean[] {true, false, true} , "y,x,z" ) );
+		presets.add( new GridPreset( new boolean[] {true, false, false}, new boolean[] {false, true, true} , "x,y,z" ) );
+		presets.add( new GridPreset( new boolean[] {false, true, false}, new boolean[] {false, false, true} , "y,x,z" ) );
+
+		presets.add( new GridPreset( new boolean[] {true, false, false}, new boolean[] {true, false, true} , "x,y,z" ) );
+		presets.add( new GridPreset( new boolean[] {false, true, false}, new boolean[] {true, false, true} , "y,x,z" ) );
+		presets.add( new GridPreset( new boolean[] {true, false, false}, new boolean[] {false, false, true} , "y,x,z" ) );
+		presets.add( new GridPreset( new boolean[] {false, true, false}, new boolean[] {false, false, true} , "x,y,z" ) );
 	}
 
 
@@ -155,7 +166,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 
 		// preset Icon panel
 
-		JPanel presetPanel = new JPanel();
+		presetPanel = new JPanel();
 		presetPanel.setLayout( new BoxLayout( presetPanel, BoxLayout.PAGE_AXIS ) );
 		
 		JPanel presetPanelRow1 = new JPanel();
@@ -182,67 +193,52 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		presetPanel.add( presetPanelRow2 );
 		this.add( presetPanel );
 
-		// checkboxes to set wether the grid alternates along a given axis
-		alternatingCheckboxes = new ArrayList<>();
-		alternatingCheckboxes.add( new JCheckBox( "X", true ));
-		alternatingCheckboxes.add( new JCheckBox( "Y", true ));
-		alternatingCheckboxes.add( new JCheckBox( "Z", true ));
-		alternatingCheckboxes.get( 2 ).setEnabled( false );
+		final Pair< Integer, Integer > suggestedTiling = suggestTiles( ((GroupedRowWindow)parent).selectedRowsViewIdGroups().size() );
+		// steps in each dimension
+		tileCounts = new ArrayList<>();
+		tileCounts.add( new JSpinner( new SpinnerNumberModel( oldTiling == null ? (int) suggestedTiling.getA() : oldTiling[0], 1, Integer.MAX_VALUE, 1 ) ) );
+		tileCounts.add( new JSpinner( new SpinnerNumberModel( oldTiling == null ? (int) suggestedTiling.getB() : oldTiling[1], 1, Integer.MAX_VALUE, 1 ) ) );
+		tileCounts.add( new JSpinner( new SpinnerNumberModel( oldTiling == null ? 1 : oldTiling[2], 1, Integer.MAX_VALUE, 1 ) ) );
 
-		JPanel alternatingCheckboxesPanel = new JPanel();
-		alternatingCheckboxesPanel.setLayout( new BoxLayout( alternatingCheckboxesPanel, BoxLayout.LINE_AXIS ) );
-		
-		for (JCheckBox c : alternatingCheckboxes)
+		JPanel tileSpinnerPanel = new JPanel();
+		tileSpinnerPanel.setLayout( new BoxLayout( tileSpinnerPanel, BoxLayout.LINE_AXIS ) );
+		int i = 0;
+		for (JSpinner tileSpinner : tileCounts)
 		{
-			alternatingCheckboxesPanel.add( c );
-			c.addActionListener( (e) -> update() );
+			JLabel dimensionLab = new JLabel( dimensionNames[i++] );
+			dimensionLab.setBorder( BorderFactory.createEmptyBorder( 0, 18, 0, 0 ) );
+			tileSpinnerPanel.add( dimensionLab );
+			tileSpinnerPanel.add( tileSpinner );
+			tileSpinner.addChangeListener( (e) -> update()); 
 		}
+	
 
-		this.add( new JLabel( "Alternating in dimensions" ) );
-		this.add( alternatingCheckboxesPanel );
-
-		// checkboxes to set wether the coordinates increase along a given axis
-		increasingCheckboxes = new ArrayList<>();
-		increasingCheckboxes.add( new JCheckBox( "X", true ));
-		increasingCheckboxes.add( new JCheckBox( "Y", true ));
-		increasingCheckboxes.add( new JCheckBox( "Z", true ));
-		increasingCheckboxes.get( 2 ).setEnabled( false );
-		
-		JPanel increasingCheckboxesPanel = new JPanel();
-		increasingCheckboxesPanel.setLayout( new BoxLayout( increasingCheckboxesPanel, BoxLayout.LINE_AXIS ) );
-		
-		for (JCheckBox c : increasingCheckboxes)
-		{
-			increasingCheckboxesPanel.add( c );
-			c.addActionListener( (e) -> update() );
-		}
-		
-		this.add( new JLabel( "Increasing in dimensions" ) );
-		this.add( increasingCheckboxesPanel );
+		this.add( new JLabel( "Tiles in each dimension" ) );
+		this.add( tileSpinnerPanel );
 
 		// sliders for overlap percents
 		overlapSliders = new ArrayList<>();
-		overlapSliders.add( new JSlider( JSlider.HORIZONTAL, 0, 100, 10 ) );
-		overlapSliders.add( new JSlider( JSlider.HORIZONTAL, 0, 100, 10 ) );
-		overlapSliders.add( new JSlider( JSlider.HORIZONTAL, 0, 100, 10 ) );
-		overlapSliders.get( 2 ).setEnabled( false );
+		overlapSliders.add( new JSlider( JSlider.HORIZONTAL, 0, 100, oldOverlap == null ? 10 : (int) Math.round( oldOverlap[0] * 100) ) );
+		overlapSliders.add( new JSlider( JSlider.HORIZONTAL, 0, 100, oldOverlap == null ? 10 : (int) Math.round( oldOverlap[1] * 100) ) );
+		overlapSliders.add( new JSlider( JSlider.HORIZONTAL, 0, 100, oldOverlap == null ? 10 : (int) Math.round( oldOverlap[2] * 100) ) );
+		overlapSliders.get( 2 ).setEnabled( zEnabled );
 		
 		JPanel overlapSlidersPanel = new JPanel();
 		overlapSlidersPanel.setLayout( new BoxLayout( overlapSlidersPanel, BoxLayout.LINE_AXIS ) );
-		int i = 0;
+		i = 0;
 		for (JSlider c : overlapSliders)
 		{
 			JLabel dimensionLab = new JLabel( dimensionNames[i++] );
 			dimensionLab.setBorder( BorderFactory.createEmptyBorder( 0, 18, 0, 0 ) );
 			overlapSlidersPanel.add( dimensionLab );
 			overlapSlidersPanel.add( c );
-			final JLabel valueDisplay = new JLabel( Integer.toString( c.getValue() ) );
+			final JLabel valueDisplay = new JLabel( Integer.toString( c.getValue() ) + " %" );
 			overlapSlidersPanel.add( valueDisplay );
 			c.addChangeListener( (e) -> {	if (linkedOverlaps)
 												for (JSlider olS : overlapSliders)
 													olS.setValue(c.getValue());
 											update();
-											valueDisplay.setText( Integer.toString( c.getValue() ) );
+											valueDisplay.setText( Integer.toString( c.getValue() ) + " %" );
 											} );
 		}
 		JToggleButton linkButton = new JToggleButton( "link" );
@@ -253,23 +249,63 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		this.add( new JLabel( "Overlap in dimensions" ) );
 		this.add( overlapSlidersPanel );
 
+		// checkboxes to set wether the grid alternates along a given axis
+		alternatingCheckboxes = new ArrayList<>();
+		alternatingCheckboxes.add( new JCheckBox( "X", alternatingOld == null ? true : alternatingOld[0] ) );
+		alternatingCheckboxes.add( new JCheckBox( "Y", alternatingOld == null ? true : alternatingOld[1] ) );
+		alternatingCheckboxes.add( new JCheckBox( "Z", alternatingOld == null ? true : alternatingOld[2] ) );
+		alternatingCheckboxes.get( 2 ).setEnabled( zEnabled );
+
+		JPanel alternatingCheckboxesPanel = new JPanel();
+		alternatingCheckboxesPanel.setLayout( new BoxLayout( alternatingCheckboxesPanel, BoxLayout.LINE_AXIS ) );
+
+		for ( JCheckBox c : alternatingCheckboxes )
+		{
+			alternatingCheckboxesPanel.add( c );
+			c.addActionListener( (e) -> update() );
+		}
+
+		if (expertMode)
+		{
+			this.add( new JLabel( "Alternating in dimensions" ) );
+			this.add( alternatingCheckboxesPanel );
+		}
+
+		// checkboxes to set wether the coordinates increase along a given axis
+		increasingCheckboxes = new ArrayList<>();
+		increasingCheckboxes.add( new JCheckBox( "X", increasingOld == null ? true : increasingOld[0] ) );
+		increasingCheckboxes.add( new JCheckBox( "Y", increasingOld == null ? true : increasingOld[1] ) );
+		increasingCheckboxes.add( new JCheckBox( "Z", increasingOld == null ? true : increasingOld[2] ) );
+		increasingCheckboxes.get( 2 ).setEnabled( zEnabled );
+
+		JPanel increasingCheckboxesPanel = new JPanel();
+		increasingCheckboxesPanel.setLayout( new BoxLayout( increasingCheckboxesPanel, BoxLayout.LINE_AXIS ) );
+
+		for ( JCheckBox c : increasingCheckboxes )
+		{
+			increasingCheckboxesPanel.add( c );
+			c.addActionListener( (e) -> update() );
+		}
+
+		if (expertMode)
+		{
+			this.add( new JLabel( "Increasing in dimensions" ) );
+			this.add( increasingCheckboxesPanel );
+		}
+
 		// dimension order
-		orderTextField = new JTextField( "x, y", 30 );
+		orderTextField = new JTextField( dimensionOrderOld == null ? "x, y" : 
+			String.join( ",", dimensionNames[dimensionOrderOld[0]], dimensionNames[dimensionOrderOld[1]], dimensionNames[dimensionOrderOld[2]] ), 30 );
 		orderWarningLabel = new JLabel("");
 		orderTextField.getDocument().addDocumentListener( new LinkExplorerPanel.SimpleDocumentListener( ev -> update() ) ); 
 
-		this.add( new JLabel( "Dimension order" ) );
-		this.add( orderTextField );
-		this.add( orderWarningLabel );
+		if (expertMode)
+		{
+			this.add( new JLabel( "Dimension order" ) );
+			this.add( orderTextField );
+			this.add( orderWarningLabel );
+		}
 
-		// steps in each dimension
-		stepsTextField = new JTextField( "4, 4", 30 );
-		stepsWarningLabel = new JLabel( "" );
-		stepsTextField.getDocument().addDocumentListener(  new LinkExplorerPanel.SimpleDocumentListener( ev -> update() ) );
-
-		this.add( new JLabel( "Tiles in each dimension" ) );
-		this.add( stepsTextField );
-		this.add( stepsWarningLabel );
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout( new BoxLayout( buttonPanel, BoxLayout.LINE_AXIS ) );
@@ -288,6 +324,11 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		// this should trigger update immediately
 		FilteredAndGroupedExplorerPanel< AS,? > FilteredAndGroupedExplorerPanel = (FilteredAndGroupedExplorerPanel< AS,? >)parent;
 		FilteredAndGroupedExplorerPanel.addListener( this );
+		
+		if (oldOverlap == null)
+		{
+			((JButton)presetPanelRow1.getComponent( 0 )).doClick();
+		}
 	}
 
 	private void applyGridPreset(GridPreset gp)
@@ -356,15 +397,20 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		else
 			orderWarningLabel.setText("");
 
-		steps = getSteps( stepsTextField.getText() );
-		if (steps == null)
-			stepsWarningLabel.setText( "<html><p style=\"color:red \"> WARNING: steps must be two or three numbers separated by commas </p></html>" );
-		else
-			stepsWarningLabel.setText("");
+		steps = new int[3];
+		steps[0] = (int) tileCounts.get( 0 ).getValue();
+		steps[1] = (int) tileCounts.get( 1 ).getValue();
+		steps[2] = (int) tileCounts.get( 2 ).getValue();
 		
 		if ((dimensionOrder == null) || (steps == null))
 			return;
 		
+		// enable z settings if we have more than 1 tile in z
+		zEnabled = steps[2] != 1;		
+		overlapSliders.get( 2 ).setEnabled( zEnabled );
+		alternatingCheckboxes.get( 2 ).setEnabled( zEnabled );
+		increasingCheckboxes.get( 2 ).setEnabled( zEnabled );
+
 		updateBDV();
 		
 	}
@@ -459,11 +505,20 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		params.overlaps = overlaps;
 		params.nSteps = steps;
 
+		alternatingOld = alternating.clone();
+		dimensionOrderOld = dimensionOrder.clone();
+		increasingOld = increasing.clone();
+		oldOverlap = overlaps.clone();
+		oldTiling = steps.clone();
+
 		applyToSpimData( parent.getSpimData() , selectedVDs, params, allTPs );
 
 		// reset viewer transform to recall to current transform & update with new sources
-		parent.bdvPopup().getBDV().getViewer().getState().getViewerTransform( oldViewerTransform );
-		parent.bdvPopup().updateBDV();
+		if (parent.bdvPopup().bdvRunning())
+		{
+			parent.bdvPopup().getBDV().getViewer().getState().getViewerTransform( oldViewerTransform );
+			parent.bdvPopup().updateBDV();
+		}
 
 		// close the window
 		((JFrame)this.getTopLevelAncestor()).dispose();
@@ -496,7 +551,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		Dimensions size = data.getSequenceDescription().getViewDescriptions()
 				.get( viewDescriptions.get( 0 ).get( 0 ) ).getViewSetup().getSize();
 		List< AffineTransform3D > generateRegularGrid = RegularTranformHelpers.generateRegularGrid( params, size );
-		
+
 		int i = 0;
 		for (List<BasicViewDescription< ? >> lvd : viewDescriptions)
 		{
@@ -522,7 +577,11 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 					System.out.println(translation);
 				}
 			}
-			i++;
+
+			// break if we do not have any more transforms to apply
+			// the remaining views will be left as-is
+			if(++i >= generateRegularGrid.size())
+				break;
 		}
 		
 		
@@ -612,6 +671,25 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		res[2] = steps.size() == 3 ? steps.get( 2 ) : 1;
 
 		return res;
+	}
+	
+	public static Pair<Integer, Integer> suggestTiles(int numTiles){
+		if (numTiles <= 2)
+			return new ValuePair< Integer, Integer >( numTiles, 1 );
+		// go to next non-prime
+		while (Primes.isPrime( numTiles ))
+			numTiles++;
+		List< Integer > factors = Primes.primeFactors( numTiles );
+		while (factors.size() > 2)
+		{
+			factors.set( 0, factors.get( 0 ) * factors.get( factors.size()-1 ));
+			factors.remove( factors.size() );
+			if (factors.size() == 2)
+				break;
+			factors.set( 1, factors.get( 1 ) * factors.get( factors.size()-1 ));
+			factors.remove( factors.size() );
+		}
+		return new ValuePair< Integer, Integer >( factors.get( 0 ), factors.get( 1 ) );
 	}
 
 	/*
