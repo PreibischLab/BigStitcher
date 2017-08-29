@@ -13,9 +13,7 @@ import net.imglib2.img.Img;
 import net.imglib2.img.ImgFactory;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.view.Views;
 import spim.process.interestpointdetection.methods.downsampling.Downsample;
 
 
@@ -24,11 +22,61 @@ public class DownsampleTools
 	
 	public static final int[] ds = { 1, 2, 4, 8 };
 
-	public static < T extends RealType<T> > RandomAccessibleInterval< T > openAndDownsample(
+	public static < T extends RealType<T> > void openAndDownsampleAdjustTransformation(
 			final BasicImgLoader imgLoader,
 			final ViewId vd,
 			long[] downsampleFactors,
 			final AffineTransform3D t )
+	{
+		long dsx = downsampleFactors[0];
+		long dsy = downsampleFactors[1];
+		long dsz = downsampleFactors[2];
+
+		if ( ( dsx > 1 || dsy > 1 || dsz > 1 ) && MultiResolutionImgLoader.class.isInstance( imgLoader ) )
+		{
+			MultiResolutionImgLoader mrImgLoader = ( MultiResolutionImgLoader ) imgLoader;
+
+			double[][] mipmapResolutions = mrImgLoader.getSetupImgLoader( vd.getViewSetupId() ).getMipmapResolutions();
+
+			int bestLevel = 0;
+			for ( int level = 0; level < mipmapResolutions.length; ++level )
+			{
+				double[] factors = mipmapResolutions[ level ];
+				
+				// this fails if factors are not ints
+				final int fx = (int)Math.round( factors[ 0 ] );
+				final int fy = (int)Math.round( factors[ 1 ] );
+				final int fz = (int)Math.round( factors[ 2 ] );
+				
+				if ( fx <= dsx && fy <= dsy && fz <= dsz && contains( fx, ds ) && contains( fy, ds ) && contains( fz, ds ) )
+					bestLevel = level;
+			}
+
+			final int fx = (int)Math.round( mipmapResolutions[ bestLevel ][ 0 ] );
+			final int fy = (int)Math.round( mipmapResolutions[ bestLevel ][ 1 ] );
+			final int fz = (int)Math.round( mipmapResolutions[ bestLevel ][ 2 ] );
+
+			t.set( mrImgLoader.getSetupImgLoader( vd.getViewSetupId() ).getMipmapTransforms()[ bestLevel ] );
+			
+			dsx /= fx;
+			dsy /= fy;
+			dsz /= fz;
+		}
+		else
+		{
+			t.identity();
+		}
+
+		// fix scaling
+		t.set( t.get( 0, 0 ) * dsx, 0, 0 );
+		t.set( t.get( 1, 1 ) * dsy, 1, 1 );
+		t.set( t.get( 2, 2 ) * dsz, 2, 2 );
+	}
+
+	public static < T extends RealType<T> > RandomAccessibleInterval< T > openAndDownsample(
+			final BasicImgLoader imgLoader,
+			final ViewId vd,
+			long[] downsampleFactors )
 	{
 		
 		IOFunctions.println(
@@ -66,8 +114,6 @@ public class DownsampleTools
 			final int fy = (int)Math.round( mipmapResolutions[ bestLevel ][ 1 ] );
 			final int fz = (int)Math.round( mipmapResolutions[ bestLevel ][ 2 ] );
 
-			t.set( mrImgLoader.getSetupImgLoader( vd.getViewSetupId() ).getMipmapTransforms()[ bestLevel ] );
-			
 			dsx /= fx;
 			dsy /= fy;
 			dsz /= fz;
@@ -82,16 +128,14 @@ public class DownsampleTools
 		else
 		{
 			input =  (RandomAccessibleInterval< T >) imgLoader.getSetupImgLoader( vd.getViewSetupId() ).getImage( vd.getTimePointId(), LOAD_COMPLETELY );
-			t.identity();
 		}
 
-		return downsample( input, new long[]{ dsx, dsy, dsz } , t);
+		return downsample( input, new long[]{ dsx, dsy, dsz } );
 	}
 	
 	public static < T extends RealType<T> > RandomAccessibleInterval< T > downsample(
 			RandomAccessibleInterval< T > input,
-			final long[] downsampleFactors,
-			final AffineTransform3D t)
+			final long[] downsampleFactors )
 	{
 		boolean is2d = input.numDimensions() == 2;
 		
@@ -100,16 +144,6 @@ public class DownsampleTools
 		long dsz = 1;
 		if (!is2d)
 			dsz = downsampleFactors[2];
-		
-		// fix scaling
-		t.set( t.get( 0, 0 ) * dsx, 0, 0 );
-		t.set( t.get( 1, 1 ) * dsy, 1, 1 );
-		t.set( t.get( 2, 2 ) * dsz, 2, 2 );
-
-		// fix translation
-		//t.set( t.get( 0, 3 ) * dsx, 0, 3 );
-		//t.set( t.get( 1, 3 ) * dsy, 1, 3 );
-		//t.set( t.get( 2, 3 ) * dsz, 2, 3 );
 
 		ImgFactory< T > f = null;
 		
