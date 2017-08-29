@@ -232,8 +232,8 @@ public class FractalSpimDataGenerator
 			double[] pos = new double[intervals.get( 0 ).numDimensions()];
 			mins.get( i ).localize( pos );
 			final Tile t = new Tile( i, "Tile " + i, pos );
-			setups.add( new ViewSetup( 2*i, "setup " + i, d0, vd0, t, c0, a0, i0 ) );
-			setups.add( new ViewSetup( 2*i + 1, "setup " + i, d0, vd0, t, c0, a0, i1 ) );
+			setups.add( new ViewSetup( 2*i, "setup " + 2*i, d0, vd0, t, c0, a0, i0 ) );
+			setups.add( new ViewSetup( 2*i + 1, "setup " + 2*i + 1, d0, vd0, t, c0, a0, i1 ) );
 		}
 
 		final ArrayList< TimePoint > t = new ArrayList< TimePoint >();
