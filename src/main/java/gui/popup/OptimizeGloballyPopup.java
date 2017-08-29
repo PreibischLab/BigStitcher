@@ -47,8 +47,8 @@ import spim.process.interestpointregistration.global.convergence.ConvergenceStra
 import spim.process.interestpointregistration.global.convergence.IterativeConvergenceStrategy;
 import spim.process.interestpointregistration.global.convergence.SimpleIterativeConvergenceStrategy;
 import spim.process.interestpointregistration.global.linkremoval.MaxErrorLinkRemoval;
-import spim.process.interestpointregistration.global.pointmatchcreating.ImageCorrelationPointMatchCreator;
-import spim.process.interestpointregistration.global.pointmatchcreating.MetaDataWeakLinkFactory;
+import spim.process.interestpointregistration.global.pointmatchcreating.strong.ImageCorrelationPointMatchCreator;
+import spim.process.interestpointregistration.global.pointmatchcreating.weak.MetaDataWeakLinkFactory;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable

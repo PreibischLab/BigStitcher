@@ -7,34 +7,30 @@ import net.imglib2.Positionable;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPositionable;
-import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
 //import spim.process.interestpointdetection.methods.downsampling.DownsampleTools;
 
 
 public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterval< T >
 {
-
 	private RandomAccessibleInterval< T > rai;
 	private BasicImgLoader imgLoader;
 	private ViewId vid;
 	private long[] downsampleFactors;
-	private AffineTransform3D dsCorrectionT;
-	
-	public RAIProxy(BasicImgLoader imgLoader, ViewId vid, long[] downsampleFactors, AffineTransform3D dsCorrectionT)
+
+	public RAIProxy(BasicImgLoader imgLoader, ViewId vid, long[] downsampleFactors )
 	{
 		this.rai = null;
 		this.downsampleFactors = downsampleFactors;
 		this.imgLoader = imgLoader;
 		this.vid = vid;
-		this.dsCorrectionT = dsCorrectionT;
 	}
 	
 	private void loadIfNecessary()
 	{
 		// FIXME: use DownsampleTools from SPIM_Registration
 		if (rai == null)
-			rai = DownsampleTools.openAndDownsample( imgLoader, vid, downsampleFactors, dsCorrectionT );
+			rai = DownsampleTools.openAndDownsample( imgLoader, vid, downsampleFactors );
 	}
 	
 	@Override

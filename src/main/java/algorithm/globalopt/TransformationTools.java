@@ -15,12 +15,11 @@ import java.util.stream.Collectors;
 
 import algorithm.GroupedViewAggregator;
 import algorithm.GroupedViewAggregator.ActionType;
-import algorithm.lucaskanade.LucasKanadeParameters;
-import bdv.BigDataViewer;
-import bdv.export.ProgressWriter;
 import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
 import algorithm.TransformTools;
+import algorithm.lucaskanade.LucasKanadeParameters;
+import bdv.export.ProgressWriter;
 import gui.popup.DisplayOverlapTestPopup;
 import ij.IJ;
 import input.GenerateSpimData;
@@ -28,7 +27,6 @@ import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.SequenceDescription;
@@ -47,12 +45,11 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.boundingbox.BoundingBox;
-import spim.fiji.spimdata.interestpoints.InterestPoint;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
 import spim.process.interestpointregistration.global.GlobalOpt;
 import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
-import spim.process.interestpointregistration.global.pointmatchcreating.ImageCorrelationPointMatchCreator;
+import spim.process.interestpointregistration.global.pointmatchcreating.strong.ImageCorrelationPointMatchCreator;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class TransformationTools
@@ -510,7 +507,8 @@ public class TransformationTools
 		// remove non-overlapping comparisons
 		final List< Pair< Group< V >, Group< V > > > removedPairs = filterNonOverlappingPairs( pairs, vrs, sd );
 		removedPairs.forEach( p -> System.out.println( "Skipping non-overlapping pair: " + p.getA() + " -> " + p.getB() ) );
-		
+		IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Removed " + removedPairs.size() + " non-overlapping view-pairs for computing." );
+
 		final int nComparisions = pairs.size();
 		AtomicInteger nCompleted = new AtomicInteger();
 		
@@ -524,8 +522,6 @@ public class TransformationTools
 				public Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > call() throws Exception
 				{
 					Pair<Pair< AffineGet, Double >, RealInterval> result = null;
-					
-					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() );
 
 					final ExecutorService serviceLocal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 4 ) );
 
@@ -567,10 +563,12 @@ public class TransformationTools
 					// show progress in ImageJ progress bar (TODO: should we really do this here or leave it GUI-independent?)
 					int nCompletedI = nCompleted.incrementAndGet();
 					IJ.showProgress( (double) nCompletedI / nComparisions );
-					
+
 					if (result != null)
 						IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": r=" + result.getA().getB() );
-					
+					else
+						IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": No shift found." );
+
 					return new ValuePair<>( p,  result );
 				}
 			});
