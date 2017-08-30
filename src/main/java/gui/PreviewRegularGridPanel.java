@@ -46,6 +46,7 @@ import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
+import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends JPanel implements SelectedViewDescriptionListener< AS >
 {
@@ -487,7 +488,8 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		oldTiling = steps.clone();
 		keepMetadataRotationOld = rotate;
 
-		RegularTranformHelpers.applyToSpimData( parent.getSpimData() , selectedVDs, params, allTPs );
+		List< Group< BasicViewDescription< ? > > > selectedVdsGroup = selectedVDs.stream().map( l -> Group.toGroup( l ).get( 0 ) ).collect( Collectors.toList() );
+		RegularTranformHelpers.applyToSpimData( parent.getSpimData() , selectedVdsGroup, params, allTPs );
 
 		// reset viewer transform to recall to current transform & update with new sources
 		if (parent.bdvPopup().bdvRunning())
