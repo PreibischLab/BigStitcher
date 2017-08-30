@@ -76,8 +76,7 @@ public class TestGlobalOptTwoRound
 		final IterativeConvergenceStrategy cs = new SimpleIterativeConvergenceStrategy( 10.0, 2.0, 10.0 );
 		final PointMatchCreator pmc = new ImageCorrelationPointMatchCreator( pairwiseResults, 0.8 );
 
-		Group.toGroups( views );
-
+		/*
 		final HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > computeResults = GlobalOptIterative.compute(
 				new TranslationModel3D(),
 				pmc,
@@ -89,8 +88,8 @@ public class TestGlobalOptTwoRound
 		computeResults.forEach( ( k, v) -> {
 			System.out.println( Group.pvid( k ) + ": " + Util.printCoordinates( v.getModel().getTranslation() ) );
 		});
+		*/
 
-		/*
 		final HashMap< ViewId, AffineTransform3D > computeResults = GlobalOptTwoRound.compute(
 				new TranslationModel3D(),
 				pmc,
@@ -104,6 +103,6 @@ public class TestGlobalOptTwoRound
 		computeResults.forEach( ( k, v) -> {
 			System.out.println( Group.pvid( k ) + ": " + Util.printCoordinates( v.getTranslation() ) );
 		});
-		*/
+
 	}
 }
