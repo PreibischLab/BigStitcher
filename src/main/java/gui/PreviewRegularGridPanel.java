@@ -5,9 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
@@ -28,25 +26,21 @@ import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.SpinnerNumberModel;
 
-import org.apache.commons.math3.primes.Primes;
-
 import bdv.BigDataViewer;
 import bdv.tools.transformation.TransformedSource;
 import bdv.viewer.state.SourceState;
+import gui.RegularTranformHelpers.GridPreset;
 import gui.RegularTranformHelpers.RegularTranslationParameters;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.data.registration.ViewTransform;
-import mpicbg.spim.data.registration.ViewTransformAffine;
-import mpicbg.spim.data.sequence.TimePoint;
-import mpicbg.spim.data.sequence.ViewId;
+import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.Translation3D;
 import net.imglib2.util.Pair;
-import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
@@ -61,6 +55,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	public static boolean[] alternatingOld = null;
 	public static boolean[] increasingOld = null;
 	public static int[] dimensionOrderOld = null;
+	public static Boolean keepMetadataRotationOld = null;
 
 	private ExplorerWindow< AS, ?> parent;
 
@@ -71,8 +66,9 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	private List<JSpinner> tileCounts;
 	private JTextField orderTextField;
 	private JLabel orderWarningLabel;
-	private JLabel stepsWarningLabel;
+	//private JLabel stepsWarningLabel;
 	private JPanel presetPanel;
+	private JCheckBox rotationCheckBox;
 
 	// state
 	private boolean[] alternating;
@@ -80,6 +76,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	private int[] dimensionOrder;
 	private int[] steps;
 	private double[] overlaps;
+	private boolean rotate;
 	private List<List<BasicViewDescription< ? >>> selectedVDs;
 
 	private boolean linkedOverlaps = true;
@@ -92,53 +89,13 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	private final static String[] dimensionNames = new String[] {"X", "Y", "Z"};
 
 	private final static String[][] imageFiles = new String[][]{
-		{"/images/column1.png","/images/column2.png","/images/column3.png","/images/column4.png",
-		"/images/row1.png","/images/row2.png","/images/row3.png","/images/row4.png"},
+		{		"/images/row1.png","/images/row2.png","/images/row3.png","/images/row4.png",
+			"/images/column1.png","/images/column2.png","/images/column3.png","/images/column4.png"},
 		{"/images/snake1.png","/images/snake2.png","/images/snake3.png","/images/snake4.png",
 		"/images/snake5.png","/images/snake6.png","/images/snake7.png","/images/snake8.png"}
 		};
 		
-	private static class GridPreset
-	{
-		boolean[] alternating;
-		boolean[] increasing;
-		String dimensionOrder;
-		
-		public GridPreset(boolean[] alternating, boolean[] increasing, String dimensionOrder)
-		{
-			this.alternating = alternating;
-			this.increasing = increasing;
-			this.dimensionOrder = dimensionOrder;
-		}
-		
-	}
 	
-	
-	
-	private static final List<GridPreset> presets = new ArrayList<>();
-	static
-	{
-		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {true, true, true} , "y,x,z" ) );
-		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {false, true, true} , "y,x,z" ) );
-		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {true, false, true} , "y,x,z" ) );
-		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {false, false, true} , "y,x,z" ) );
-
-		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {true, true, true} , "x,y,z" ) );
-		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {false, true, true} , "x,y,z" ) );
-		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {true, false, true} , "x,y,z" ) );
-		presets.add( new GridPreset( new boolean[] {false, false, false}, new boolean[] {false, false, true} , "x,,zy" ) );
-
-		presets.add( new GridPreset( new boolean[] {true, false, false}, new boolean[] {true, true, true} , "x,y,z" ) );
-		presets.add( new GridPreset( new boolean[] {false, true, false}, new boolean[] {true, false, true} , "y,x,z" ) );
-		presets.add( new GridPreset( new boolean[] {true, false, false}, new boolean[] {false, true, true} , "x,y,z" ) );
-		presets.add( new GridPreset( new boolean[] {false, true, false}, new boolean[] {false, false, true} , "y,x,z" ) );
-
-		presets.add( new GridPreset( new boolean[] {true, false, false}, new boolean[] {true, false, true} , "x,y,z" ) );
-		presets.add( new GridPreset( new boolean[] {false, true, false}, new boolean[] {true, false, true} , "y,x,z" ) );
-		presets.add( new GridPreset( new boolean[] {true, false, false}, new boolean[] {false, false, true} , "y,x,z" ) );
-		presets.add( new GridPreset( new boolean[] {false, true, false}, new boolean[] {false, false, true} , "x,y,z" ) );
-	}
-
 
 	public PreviewRegularGridPanel(ExplorerWindow< AS, ? > parent)
 	{
@@ -175,7 +132,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		{
 			JButton imgI = new JButton( new ImageIcon( images[0][i] ) );
 			final Integer ii = i;
-			imgI.addActionListener( e -> applyGridPreset( presets.get( ii ) ) );
+			imgI.addActionListener( e -> applyGridPreset( RegularTranformHelpers.presets.get( ii ) ) );
 			presetPanelRow1.add( imgI );
 		}
 
@@ -185,7 +142,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		{
 			JButton imgI = new JButton( new ImageIcon( images[1][i] ) );
 			final Integer ii = i;
-			imgI.addActionListener( e -> applyGridPreset( presets.get( 8 + ii ) ) );
+			imgI.addActionListener( e -> applyGridPreset(  RegularTranformHelpers.presets.get( 8 + ii ) ) );
 			presetPanelRow2.add( imgI );
 		}
 
@@ -193,7 +150,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		presetPanel.add( presetPanelRow2 );
 		this.add( presetPanel );
 
-		final Pair< Integer, Integer > suggestedTiling = suggestTiles( ((GroupedRowWindow)parent).selectedRowsViewIdGroups().size() );
+		final Pair< Integer, Integer > suggestedTiling = RegularTranformHelpers.suggestTiles( ((GroupedRowWindow)parent).selectedRowsViewIdGroups().size() );
 		// steps in each dimension
 		tileCounts = new ArrayList<>();
 		tileCounts.add( new JSpinner( new SpinnerNumberModel( oldTiling == null ? (int) suggestedTiling.getA() : oldTiling[0], 1, Integer.MAX_VALUE, 1 ) ) );
@@ -248,6 +205,11 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		
 		this.add( new JLabel( "Overlap in dimensions" ) );
 		this.add( overlapSlidersPanel );
+
+
+		rotationCheckBox = new JCheckBox( "Re-apply Angle rotation from metadata?", keepMetadataRotationOld == null ? true : keepMetadataRotationOld );
+		rotationCheckBox.addActionListener( (e) -> update());
+		this.add( rotationCheckBox );
 
 		// checkboxes to set wether the grid alternates along a given axis
 		alternatingCheckboxes = new ArrayList<>();
@@ -331,7 +293,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		}
 	}
 
-	private void applyGridPreset(GridPreset gp)
+	private void applyGridPreset( GridPreset gp)
 	{
 		for (int i = 0; i < gp.alternating.length; i ++)
 			alternatingCheckboxes.get( i ).setSelected( gp.alternating[i] );
@@ -374,7 +336,8 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 
 	public void update()
 	{
-		
+		rotate = rotationCheckBox.isSelected();
+
 		// update state from gui
 		alternating = new boolean[3];
 		alternating[0] = alternatingCheckboxes.get( 0 ).isSelected();
@@ -391,7 +354,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		overlaps[1] = (double) overlapSliders.get( 1 ).getValue() / 100.0;
 		overlaps[2] = (double) overlapSliders.get( 2 ).getValue() / 100.0;
 		
-		dimensionOrder = getDimensionOrder( orderTextField.getText() );
+		dimensionOrder = RegularTranformHelpers.getDimensionOrder( orderTextField.getText() );
 		if (dimensionOrder == null)
 			orderWarningLabel.setText( "<html><p style=\"color:red \"> WARNING: dimension order must be two or three of x,y or z separated by commas </p></html>" );
 		else
@@ -433,10 +396,11 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 			params.increasing = increasing;
 			params.overlaps = overlaps;
 			params.nSteps = steps;
+			params.keepRotation = rotate;
 
 			Dimensions size = parent.getSpimData().getSequenceDescription().getViewDescriptions()
 					.get( selectedVDs.get( 0 ).get( 0 ) ).getViewSetup().getSize();
-			List< AffineTransform3D > generateRegularGrid = RegularTranformHelpers.generateRegularGrid( params, size );
+			List< Translation3D > generateRegularGrid = RegularTranformHelpers.generateRegularGrid( params, size );
 			int i = 0;
 			for ( List< BasicViewDescription< ? > > lvd : selectedVDs )
 			{
@@ -448,24 +412,33 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 					
 
 					ViewRegistration vr = parent.getSpimData().getViewRegistrations().getViewRegistration( vd );
-					AffineTransform3D inv = vr.getModel().inverse();
+					AffineTransform3D inv = vr.getModel().copy().inverse();
 					AffineTransform3D calib = new AffineTransform3D();
 					calib.set( vr.getTransformList().get( vr.getTransformList().size() - 1 ).asAffine3D().getRowPackedCopy() );
-							
+
 					//invAndCalib.preConcatenate( vr.getTransformList().get( 0 ).asAffine3D() );
 
+					AffineTransform3D grid = new AffineTransform3D();
+					if (i < generateRegularGrid.size())
+						grid.set( generateRegularGrid.get( i ).getRowPackedCopy() );
+
 					AffineTransform3D gridTransform = ( i < generateRegularGrid.size() )
-							? generateRegularGrid.get( i ).copy().concatenate( inv ) : inv.copy();
+							? inv.preConcatenate( grid.copy() ) : inv.copy();
 
 					gridTransform.preConcatenate( calib );
-					//System.out.println( gridTransform );
-						
-					
+
+					if (rotate)
+					{
+						AffineTransform3D rotation = new AffineTransform3D();
+						Pair< Double, Integer > rotAngleAndAxis = RegularTranformHelpers.getRoatationFromMetadata( vd.getViewSetup().getAttribute( Angle.class ) );
+						if (rotAngleAndAxis != null)
+						{
+							rotation.rotate( rotAngleAndAxis.getB(), rotAngleAndAxis.getA() );
+							gridTransform.preConcatenate( rotation.copy() );
+						}
+					}
+
 					( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( gridTransform );
-					//( (TransformedSource< ? >) s.getSpimSource() ).setIncrementalTransform( gridTransform );
-					
-					
-					//System.out.println( i );
 
 				}
 				i++;
@@ -504,14 +477,16 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		params.increasing = increasing;
 		params.overlaps = overlaps;
 		params.nSteps = steps;
+		params.keepRotation = rotate;
 
 		alternatingOld = alternating.clone();
 		dimensionOrderOld = dimensionOrder.clone();
 		increasingOld = increasing.clone();
 		oldOverlap = overlaps.clone();
 		oldTiling = steps.clone();
+		keepMetadataRotationOld = rotate;
 
-		applyToSpimData( parent.getSpimData() , selectedVDs, params, allTPs );
+		RegularTranformHelpers.applyToSpimData( parent.getSpimData() , selectedVDs, params, allTPs );
 
 		// reset viewer transform to recall to current transform & update with new sources
 		if (parent.bdvPopup().bdvRunning())
@@ -525,68 +500,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		quit();
 	}
 
-	public static <AS extends AbstractSpimData<?> > void applyToSpimData(
-			AS data, 
-			List< List< BasicViewDescription< ? extends BasicViewSetup > > > viewDescriptions,
-			RegularTranslationParameters params,
-			boolean applyToAllTimePoints)
-	{
-		
-		if (!applyToAllTimePoints)
-			applyToSpimDataSingleTP( data, viewDescriptions, params, viewDescriptions.get( 0 ).get( 0 ).getTimePoint() );
-		else
-		{
-			for (TimePoint tp : data.getSequenceDescription().getTimePoints().getTimePointsOrdered())
-				applyToSpimDataSingleTP( data, viewDescriptions, params, tp );
-		}
-				
-	}
-
-	private static <AS extends AbstractSpimData<?> > void applyToSpimDataSingleTP(
-			AS data, 
-			List< List< BasicViewDescription< ? extends BasicViewSetup > > > viewDescriptions,
-			RegularTranslationParameters params,
-			TimePoint tp)
-	{
-		Dimensions size = data.getSequenceDescription().getViewDescriptions()
-				.get( viewDescriptions.get( 0 ).get( 0 ) ).getViewSetup().getSize();
-		List< AffineTransform3D > generateRegularGrid = RegularTranformHelpers.generateRegularGrid( params, size );
-
-		int i = 0;
-		for (List<BasicViewDescription< ? >> lvd : viewDescriptions)
-		{
-			for (BasicViewDescription< ? > vd : lvd)
-			{
-				// only do for present Views
-				if (data.getSequenceDescription().getViewDescriptions().get( new ViewId( tp.getId(), vd.getViewSetupId() ) ).isPresent())
-				{
-					ViewRegistration vr = data.getViewRegistrations().getViewRegistration( tp.getId(), vd.getViewSetupId() );
-					ViewTransform calibration = vr.getTransformList().get( vr.getTransformList().size() - 1 );
-					vr.getTransformList().clear();
-					vr.getTransformList().add( calibration );
-					vr.updateModel();
-
-					// get translation and multiply shift with calibration
-					AffineTransform3D translation = generateRegularGrid.get( i ).copy();
-					translation.set( translation.get( 0, 3 ) * calibration.asAffine3D().get( 0, 0 ), 0, 3 );
-					translation.set( translation.get( 1, 3 ) * calibration.asAffine3D().get( 1, 1 ), 1, 3 );
-					translation.set( translation.get( 2, 3 ) * calibration.asAffine3D().get( 2, 2 ), 2, 3 );
-					vr.preconcatenateTransform( new ViewTransformAffine( "translation", translation ));
-					vr.updateModel();
-
-					System.out.println(translation);
-				}
-			}
-
-			// break if we do not have any more transforms to apply
-			// the remaining views will be left as-is
-			if(++i >= generateRegularGrid.size())
-				break;
-		}
-		
-		
-		
-	}
+	
 
 	public void quit()
 	{
@@ -672,52 +586,16 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 
 		return res;
 	}
+
+
 	
-	public static Pair<Integer, Integer> suggestTiles(int numTiles){
-		if (numTiles <= 2)
-			return new ValuePair< Integer, Integer >( numTiles, 1 );
-		// go to next non-prime
-		while (Primes.isPrime( numTiles ))
-			numTiles++;
-		List< Integer > factors = Primes.primeFactors( numTiles );
-		while (factors.size() > 2)
-		{
-			factors.set( 0, factors.get( 0 ) * factors.get( factors.size()-1 ));
-			factors.remove( factors.size() );
-			if (factors.size() == 2)
-				break;
-			factors.set( 1, factors.get( 1 ) * factors.get( factors.size()-1 ));
-			factors.remove( factors.size() );
-		}
-		return new ValuePair< Integer, Integer >( factors.get( 0 ), factors.get( 1 ) );
-	}
-
-	/*
-	 * get dimension order array from string containing x,y and z separated by commas
-	 * returns null for malformed strings
-	 */
-	private static int[] getDimensionOrder(String s)
+	
+	public static void main(String[] args)
 	{
-		List<String> splitted = Arrays.asList( s.split( "," ) );
-
-		for (int i = 0; i < splitted.size(); ++i)
-			splitted.set( i, splitted.get( i ).replaceAll( "\\s+", "" ).toUpperCase() );
-
-		if ((splitted.size() < 2) || (splitted.size() > 3))
-			return null;
-
-		Set<String> splittedSet = new HashSet<>(splitted);
-		splittedSet.add( "Z" );
-
-		//System.out.println( splittedSet );
-		if (!(splittedSet.size() == 3 ) || !splittedSet.contains( "X" ) || !splittedSet.contains( "Y" ) || !splittedSet.contains( "Z" ))
-			return null;
-
-		int res[] = new int[3];
-		res[0] = (int)(char)splitted.get( 0 ).charAt( 0 ) - 88;
-		res[1] = (int)(char)splitted.get( 1 ).charAt( 0 ) - 88;
-		res[2] = splitted.size() == 3 ? (int)(char)splitted.get( 2 ).charAt( 0 ) - 88 : 2;
-
-		return res;
+		for (int i = 1; i<50; i++)
+		{
+			Pair< Integer, Integer > tiling = RegularTranformHelpers.suggestTiles( i );
+			System.out.println( tiling.getA() + "," + tiling.getB() );
+		}
 	}
 }
