@@ -282,6 +282,8 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		buttonPanel.add( cancelButton );
 		buttonPanel.add( applyButton );
 
+		String message1 = "<html><strong>WARNING:</strong> Applying will overwrite all tranformations but the calibration with the new translations</html>";
+		this.add( new JLabel( message1 ) );
 		this.add( buttonPanel );
 
 		// add this as a listener for selection changes in parent view explorer
@@ -455,12 +457,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 
 	private void applyButtonClicked()
 	{
-		String message1 = "<html><strong>WARNING:</strong> this will overwrite all tranformations but the calibration with the new translations</html>";
 		String message2 = "<html>apply to all TimePoints?</html>";
-		int confirm1 = JOptionPane.showConfirmDialog( this, message1, "Apply to dataset", JOptionPane.OK_CANCEL_OPTION );
-
-		if (confirm1 == JOptionPane.CANCEL_OPTION)
-			return;
 
 		final boolean onlyOneTP = parent.getSpimData().getSequenceDescription().getTimePoints().getTimePointsOrdered().size() <= 1;
 		boolean allTPs = false;
