@@ -169,6 +169,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					{
 						table.getSelectionModel().setSelectionInterval( 0, table.getRowCount() - 1 );
 						regularGridPopup.doClick();
+						// wait for regular grid movement to complete before continuing with the next angle
+						try {
+							synchronized ( this )
+							{
+								this.wait();
+							}
+						} catch ( InterruptedException e ) { e.printStackTrace(); }
 					}
 				}
 			}

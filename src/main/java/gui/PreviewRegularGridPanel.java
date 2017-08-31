@@ -521,8 +521,12 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 			FilteredAndGroupedExplorerPanel.resetBDVManualTransformations( parent.bdvPopup().getBDV() );
 			parent.bdvPopup().getBDV().getViewer().requestRepaint();
 		}
-		
-		
+
+		// in case the parent is waiting on completion: notify
+		synchronized ( parent )
+		{
+			parent.notifyAll();
+		}
 	}
 
 	@Override
