@@ -21,6 +21,7 @@ import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
+import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.ISpimDataTableModel;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
@@ -134,6 +135,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 		else if ( columnIndex - decorated.getColumnCount() == 1 )
 		{
 			final Set< ViewId > vid = new HashSet<>( decorated.getElements().get( rowIndex ) );
+			SpimData2.filterMissingViews( decorated.getPanel().getSpimData(), vid );
 
 			DecimalFormat df = new DecimalFormat( "#.###" );
 			df.setRoundingMode( RoundingMode.HALF_UP );
@@ -146,6 +148,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 		else if ( columnIndex - decorated.getColumnCount() == 2 )
 		{
 			final Set< ViewId > vid = new HashSet<>( decorated.getElements().get( rowIndex ) );
+			SpimData2.filterMissingViews( decorated.getPanel().getSpimData(), vid );
 			return ( res.getAllPairwiseResultsForViewId( vid ).size() );
 		}
 
@@ -153,6 +156,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 		else if ( columnIndex - decorated.getColumnCount() == 3 )
 		{
 			final Set< ViewId > vid = new HashSet<>( decorated.getElements().get( rowIndex ) );
+			SpimData2.filterMissingViews( decorated.getPanel().getSpimData(), vid );
 			final ArrayList< Double > errors = res.getErrors( vid );
 			DecimalFormat df = new DecimalFormat( "#.###" );
 			df.setRoundingMode( RoundingMode.HALF_UP );

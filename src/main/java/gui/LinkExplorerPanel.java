@@ -33,6 +33,7 @@ import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.util.Pair;
+import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
@@ -335,7 +336,9 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 			return;
 		}
 		// get pairwise results for first (and only) selected view group
-		ArrayList< PairwiseStitchingResult< ViewId > > pairwiseResults = results.getAllPairwiseResultsForViewId( new HashSet<>( viewDescriptions.iterator().next()));
+		final HashSet< ViewId > vid = new HashSet<>( viewDescriptions.iterator().next());
+		SpimData2.filterMissingViews( parent.getSpimData(), vid );
+		ArrayList< PairwiseStitchingResult< ViewId > > pairwiseResults = results.getAllPairwiseResultsForViewId( vid );
 		setActiveLinks( pairwiseResults.stream().map( (p) -> p.pair() ).collect( Collectors.toList() ) );
 	}
 

@@ -239,23 +239,26 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 				res.add( vd.getTimePoint() );
 			else
 				res.add( vd.getViewSetup().getAttribute( cl ) );
-		
-		it.forEachRemaining( ( vdli ) -> 
+
+		while (it.hasNext()) 
 		{
+			Iterable< BasicViewDescription< ? extends BasicViewSetup > > vdli = it.next();
 			Set<Entity> resI = new HashSet<>();
 			for (BasicViewDescription< ? extends BasicViewSetup > vd : vdli)
 				if (cl == TimePoint.class)
 					resI.add( vd.getTimePoint() );
 				else
 					resI.add( vd.getViewSetup().getAttribute( cl ) );
-			
-			for (Entity e : res)
+
+			Set<Entity> newRes = new HashSet<>();
+			for (Entity e : resI)
 			{
-				if(!resI.contains( e ))
-					res.remove( e );
+				if(res.contains( e ))
+					newRes.add( e );
 			}
+			res = newRes;
 		}
-		);
+
 		return new ArrayList<>(res);
 	}
 	

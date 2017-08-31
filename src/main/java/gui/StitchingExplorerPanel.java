@@ -704,6 +704,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		// get all pairwise results which involve the views of the selected row
 		Set< ViewId > selectedVids = new HashSet< >( selectedRow );
+		SpimData2.filterMissingViews( data, selectedVids );
 		List< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults
 				.getAllPairwiseResultsForViewId( selectedVids );
 		
@@ -740,9 +741,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 			for ( List< BasicViewDescription< ? > > group : elements )
 			{
-				
+				List< BasicViewDescription< ? > > groupInner = new ArrayList<>(group);
+				SpimData2.filterMissingViews( data, groupInner );
 				// there is a link selected -> other
-				if ( psr.pair().getA().getViews().equals( selectedVids ) && psr.pair().getB().getViews().containsAll( group ) )
+				if ( psr.pair().getA().getViews().equals( selectedVids ) && psr.pair().getB().getViews().containsAll( groupInner ) )
 				{
 					if (psr.pair().equals( selectedPair ))
 					{
@@ -756,7 +758,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 									cs.setColor(new ARGBType(ARGBType.rgba( 255, 0, 255, 255) ) );
 					}
 					
-					for ( final BasicViewDescription< ? > vd : group )
+					for ( final BasicViewDescription< ? > vd : groupInner )
 						if ( vd.getTimePointId() == firstTP.getId() )
 						{
 
@@ -779,7 +781,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				
 
 				// there is a link other -> selected
-				if ( psr.pair().getB().getViews().equals( selectedVids ) && psr.pair().getA().getViews().containsAll( group ) )
+				if ( psr.pair().getB().getViews().equals( selectedVids ) && psr.pair().getA().getViews().containsAll( groupInner ) )
 				{
 					if (psr.pair().equals( selectedPair ))
 					{
@@ -793,7 +795,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 									cs.setColor(new ARGBType(ARGBType.rgba( 255, 0, 255, 255) ) );
 					}
 					
-					for ( final BasicViewDescription< ? > vd : group )
+					for ( final BasicViewDescription< ? > vd : groupInner )
 						if ( vd.getTimePointId() == firstTP.getId() )
 						{
 							// set all views of the other group visible

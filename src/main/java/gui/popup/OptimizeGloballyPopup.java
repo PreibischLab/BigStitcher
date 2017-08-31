@@ -35,6 +35,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
+import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -101,7 +102,12 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 
 					final ArrayList< Set< ViewId > > viewIds = new ArrayList<>();
 					for ( List< ViewId > vidl : ( (GroupedRowWindow) panel ).selectedRowsViewIdGroups() )
-						viewIds.add( new HashSet< ViewId >( vidl ) );
+					{
+						final HashSet< ViewId > vidsTmp = new HashSet< ViewId >( vidl );
+						SpimData2.filterMissingViews( d, vidsTmp );
+						viewIds.add( vidsTmp );
+					}
+
 
 					Collections.sort( viewIds, new Comparator< Set< ViewId > >()
 					{
