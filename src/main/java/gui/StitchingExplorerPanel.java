@@ -93,6 +93,7 @@ import spim.fiji.spimdata.explorer.popup.RemoveTransformationPopup;
 import spim.fiji.spimdata.explorer.popup.ResavePopup;
 import spim.fiji.spimdata.explorer.popup.Separator;
 import spim.fiji.spimdata.explorer.util.ColorStream;
+import spim.fiji.spimdata.imgloaders.filemap2.FileMapImgLoaderLOCI2;
 import spim.fiji.spimdata.interestpoints.InterestPointList;
 import spim.fiji.spimdata.interestpoints.ViewInterestPointLists;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
@@ -107,6 +108,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	boolean previewMode = false;
 
 	LinkOverlay linkOverlay;
+	RegularGridPopup regularGridPopup; 
 	
 	DemoLinkOverlay demoLinkOverlay;
 
@@ -114,6 +116,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 	LinkExplorerPanel linkExplorer;
 	JFrame linkFrame;
+	JComboBox< ? > angleCB;
 	
 	// save SpimDataFilteringAndGrouping so we can go preview -> global opt
 	SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > savedFilteringAndGrouping;
@@ -125,7 +128,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	protected JCheckBox checkboxGroupIllums;
 
 	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
-			final X io, boolean startBDVifHDF5)
+			final X io, boolean requestStartBDV)
 	{
 		super( explorer, data, xml, io );
 
@@ -142,21 +145,37 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups = initPopups();
 		initComponent();
 
-		if ( startBDVifHDF5 && (Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
-				|| FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) ) )
+		if ( requestStartBDV && 
+				(Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) 
+				|| FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) 
+				|| (( data instanceof SpimData2 ) && ((SpimData2)data).gridMoveRequested )  
+				|| FileMapImgLoaderLOCI2.class.isInstance( data.getSequenceDescription().getImgLoader() ) ) )
 		{
 			if (!bdvPopup().bdvRunning())
 				bdvPopup().bdv = BDVPopupStitching.createBDV( this, linkOverlay );
 		}
 
+		if ( data instanceof SpimData2 )
+			if (((SpimData2)data).gridMoveRequested)
+			{
+				((SpimData2)data).gridMoveRequested = false;
+				for (int i = 0; i<angleCB.getItemCount(); i++)
+				{
+					IOFunctions.println("Defining grid for Angle " + (i+1) + " of " + angleCB.getItemCount());
+					angleCB.setSelectedIndex( i );
+					try { Thread.sleep( 100 ); } catch ( InterruptedException e ){}
+
+					if ( table.getRowCount() > 1 )
+					{
+						table.getSelectionModel().setSelectionInterval( 0, table.getRowCount() - 1 );
+						regularGridPopup.doClick();
+					}
+				}
+			}
+
 		savedFilteringAndGrouping = null;
 	}
-	
-	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
-			final X io)
-	{
-		this(explorer, data, xml, io, true);
-	}
+
 
 	@Override
 	public boolean tilesGrouped() { return false; }
@@ -358,7 +377,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					TimePoint.class, (String) timePointCB.getSelectedItem() ) );
 
 		// Angle ComboBox
-		final JComboBox< ? > angleCB = new JComboBox< >( vAngle );
+		angleCB = new JComboBox< >( vAngle );
 		angleCB.addActionListener( new ActionListener()
 		{
 			@Override
@@ -628,7 +647,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
 		popups.add( new TranslateGroupManuallyPopup() );
 		
-		popups.add( new RegularGridPopup() );
+		regularGridPopup = new RegularGridPopup();
+		popups.add( regularGridPopup );
 		popups.add( new BoundingBoxPopup() );
 		popups.add( new RemoveTransformationPopup() );
 		//popups.add( new DisplayOverlapTestPopup() );

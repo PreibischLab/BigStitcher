@@ -75,7 +75,7 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 		
 		updateButtons();
 		
-		panel = new StitchingExplorerPanel< AS, X >( this, data, xml, io );
+		panel = new StitchingExplorerPanel< AS, X >( this, data, xml, io , true);
 
 		frame.add( buttons, BorderLayout.NORTH );
 		frame.add( panel, BorderLayout.CENTER );

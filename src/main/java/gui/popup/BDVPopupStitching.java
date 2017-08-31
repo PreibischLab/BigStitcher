@@ -112,7 +112,7 @@ public class BDVPopupStitching extends BDVPopup
 						catch (Exception ex)
 						{
 							IOFunctions.println( "Could not run BigDataViewer: " + ex );
-							ex.printStackTrace();
+							ex.printStackTrace( System.err );
 							bdv = null;
 						}
 					}
