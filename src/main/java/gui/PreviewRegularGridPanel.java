@@ -282,8 +282,14 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		buttonPanel.add( cancelButton );
 		buttonPanel.add( applyButton );
 
+		JPanel warningPanel = new JPanel();
+		warningPanel.setLayout( new BoxLayout( warningPanel, BoxLayout.LINE_AXIS ) );
 		String message1 = "<html><strong>WARNING:</strong> Applying will overwrite all tranformations but the calibration with the new translations</html>";
-		this.add( new JLabel( message1 ) );
+		final JLabel warningLabel = new JLabel( message1 );
+		warningLabel.setBorder( BorderFactory.createEmptyBorder( 3, 18, 0, 0 ) );
+		warningPanel.add( warningLabel );
+
+		this.add( warningPanel );
 		this.add( buttonPanel );
 
 		// add this as a listener for selection changes in parent view explorer
