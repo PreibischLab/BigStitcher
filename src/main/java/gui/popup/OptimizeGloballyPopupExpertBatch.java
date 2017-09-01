@@ -97,8 +97,8 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 						return;
 
 					SpimDataFilteringAndGrouping< AbstractSpimData< ? > > filteringAndGrouping;
-					final boolean isSavedFaG = ( ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping() == null );
-					if ( isSavedFaG )
+					final boolean isSavedFaG = ( ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping() != null );
+					if ( !isSavedFaG )
 					{
 						FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
 						filteringAndGrouping = new SpimDataFilteringAndGrouping< AbstractSpimData< ? > >(

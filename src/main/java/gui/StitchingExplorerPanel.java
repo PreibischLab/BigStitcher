@@ -1,6 +1,8 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -80,8 +83,10 @@ import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedTableModel;
+import spim.fiji.spimdata.explorer.ISpimDataTableModel;
 import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
+import spim.fiji.spimdata.explorer.interestpoint.InterestPointTableModel;
 import spim.fiji.spimdata.explorer.popup.BDVPopup;
 import spim.fiji.spimdata.explorer.popup.BoundingBoxPopup;
 import spim.fiji.spimdata.explorer.popup.DetectInterestPointsPopup;
@@ -279,15 +284,109 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		table = new JTable();
 		table.setModel( tableModel );
 		table.setSurrendersFocusOnKeystroke( true );
+
+		final DefaultListSelectionModel selectionModel = new DefaultListSelectionModel()
+		{
+			private List<Integer> invalidIndices;
+
+			private void updateInvalidSelections()
+			{
+				invalidIndices = new ArrayList<>();
+				if (savedFilteringAndGrouping == null)
+					return;
+				final List< Group< BasicViewDescription< ? > > > savedGroups = savedFilteringAndGrouping.getGroupedViews( true );
+				final ISpimDataTableModel< AS > model = (ISpimDataTableModel< AS >) table.getModel();
+				final List< List< BasicViewDescription< ? > > > elements = model.getElements();
+			A:	for (int i = 0; i<elements.size(); i++)
+				{
+					List< BasicViewDescription< ? > > row = elements.get( i );
+					for (Group< BasicViewDescription< ? > > grp : savedGroups)
+						if (grp.getViews().containsAll( row ))
+							continue A;
+					invalidIndices.add( i );
+				}
+			}
+
+			private boolean isValidSelection(int index0, int index1)
+			{
+				for (Integer invalidIndex : invalidIndices)
+					if( index0 <= invalidIndex && index1 >= invalidIndex)
+						return false;
+				return true;
+			}
+
+			@Override
+			public void setSelectionInterval(int index0, int index1)
+			{
+				updateInvalidSelections();
+				if (isValidSelection( index0, index1 ))
+					super.setSelectionInterval( index0, index1 );
+			}
+
+			@Override
+			public void addSelectionInterval(int index0, int index1)
+			{
+				updateInvalidSelections();
+				if (isValidSelection( index0, index1 ))
+					super.addSelectionInterval( index0, index1 );
+			}
+		};
+
+		table.setSelectionModel( selectionModel );
 		table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
 
-		final DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+		final DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer()
+		{
+			final Color backgroundColor = getBackground();
+
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+					boolean hasFocus, int row, int column)
+			{
+				final Component c = super.getTableCellRendererComponent( table, value, isSelected, hasFocus, row,
+						column );
+				if (!isSelected)
+					c.setBackground( backgroundColor );
+
+				if (savedFilteringAndGrouping == null) { return c; }
+
+				final List< Group< BasicViewDescription< ? > > > savedGroups = savedFilteringAndGrouping.getGroupedViews( true );
+				final ISpimDataTableModel< AS > model = (ISpimDataTableModel< AS >) table.getModel();
+				final List< BasicViewDescription< ? > > views = model.getElements().get( row );
+
+				boolean isSavedSelection = false;
+				for (Group< BasicViewDescription< ? > > grp : savedGroups)
+					if (grp.getViews().containsAll( views ))
+					{
+						isSavedSelection = true;
+						break;
+					}
+
+				c.setForeground( Color.black );
+				if ( isSavedSelection )
+					if (isSelected)
+					{
+						c.setBackground( Color.orange );
+						c.setForeground( Color.white );
+					}
+					else
+						c.setBackground( Color.yellow );
+				else
+					if( isSelected)
+						c.setBackground( Color.pink );
+					else
+						c.setBackground( Color.gray );
+
+				return c;
+			}
+
+		};
+		cellRenderer.setHorizontalAlignment( JLabel.CENTER );
 
 		// center all columns
 		for ( int column = 0; column < tableModel.getColumnCount(); ++column )
 		{
-			table.getColumnModel().getColumn( column ).setCellRenderer( centerRenderer );
+			table.getColumnModel().getColumn( column ).setCellRenderer( cellRenderer );
 		}
 
 		// add listener to which row is selected
@@ -1022,6 +1121,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	public void setSavedFilteringAndGrouping(SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > savedFilteringAndGrouping)
 	{
 		this.savedFilteringAndGrouping = savedFilteringAndGrouping;
+		table.repaint();
 	}
 
 }
