@@ -2,8 +2,8 @@ package gui.popup;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,25 +14,13 @@ import java.util.SortedSet;
 
 import javax.swing.JOptionPane;
 
-import bdv.AbstractSpimSource;
 import bdv.BigDataViewer;
-import bdv.BigDataViewerActions;
 import bdv.SpimSource;
-import bdv.ViewerImgLoader;
-import bdv.spimdata.WrapBasicImgLoader;
-import bdv.tools.InitializeViewerState;
 import bdv.tools.brightness.ConverterSetup;
-import bdv.tools.brightness.MinMaxGroup;
 import bdv.tools.transformation.TransformedSource;
-import bdv.util.BdvFunctions;
-import bdv.util.BdvHandle;
-import bdv.util.BdvHandlePanel;
 import bdv.util.BehaviourTransformEventHandlerPlanar.BehaviourTransformEventHandlerPlanarFactory;
-import bdv.viewer.SourceAndConverter;
 import bdv.viewer.ViewerOptions;
 import bdv.viewer.state.SourceGroup;
-import bdv.viewer.state.SourceState;
-import gui.AveragingProjectorARGB;
 import gui.MaximumProjectorARGB;
 import gui.overlay.LinkOverlay;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -40,21 +28,13 @@ import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
-import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
-import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
-import net.imglib2.ui.TransformListener;
-import net.imglib2.util.Pair;
-import net.imglib2.util.ValuePair;
-import spim.fiji.spimdata.SpimDataTools;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
-import spim.fiji.spimdata.explorer.ViewSetupExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.BDVPopup;
-import spim.fiji.spimdata.explorer.popup.BDVPopup.MyActionListener;
 import spim.fiji.spimdata.explorer.util.ColorStream;
 import spim.fiji.spimdata.imgloaders.AbstractImgLoader;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
@@ -280,7 +260,7 @@ public class BDVPopupStitching extends BDVPopup
 	}
 	
 
-	public static BigDataViewer createBDV( final ExplorerWindow< ?, ? > panel , LinkOverlay lo)
+	public static BigDataViewer createBDV( final ExplorerWindow< ? , ? > panel , LinkOverlay lo)
 	{
 		if ( AbstractImgLoader.class.isInstance( panel.getSpimData().getSequenceDescription().getImgLoader() ) )
 		{
@@ -304,11 +284,27 @@ public class BDVPopupStitching extends BDVPopup
 		// TODO: this loads all views? why?
 		//BigDataViewer.initSetups( panel.getSpimData(), convSetups, sources );		
 		
+		boolean allViews2D = true;
+		@SuppressWarnings("unchecked")
+		final Collection< BasicViewDescription< ? > > viewDescriptions =
+			(Collection< BasicViewDescription< ? > >) panel.getSpimData().getSequenceDescription().getViewDescriptions().values();
+		for (final BasicViewDescription< ? > vd : viewDescriptions)
+			if (vd.isPresent() && vd.getViewSetup().hasSize() && vd.getViewSetup().getSize().dimension( 2 ) != 1)
+			{
+				allViews2D = false;
+				break;
+			}
+
+		final ViewerOptions options = ViewerOptions.options().accumulateProjectorFactory( MaximumProjectorARGB.factory );
+		if (allViews2D)
+		{
+			options.transformEventHandlerFactory(new BehaviourTransformEventHandlerPlanarFactory() );
+		}
+
 		BigDataViewer bdv = BigDataViewer.open( panel.getSpimData(), 
 												"BigDataViewer", 
 												null, 
-												ViewerOptions.options().accumulateProjectorFactory( MaximumProjectorARGB.factory ) );
-		
+												options );
 
 		/*
 		BigDataViewer bdv = new BigDataViewer( 	convSetups,
