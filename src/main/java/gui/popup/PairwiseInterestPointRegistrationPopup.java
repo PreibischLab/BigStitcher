@@ -1,5 +1,6 @@
 package gui.popup;
 
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -107,6 +108,10 @@ public class PairwiseInterestPointRegistrationPopup extends JMenuItem implements
 
 					// query algorithm parameters
 					GenericDialog gd = new GenericDialog( "Registration Parameters" );
+
+					gd.addMessage( "Algorithm parameters [" + brp.pwr.getDescription() + "]", new Font( Font.SANS_SERIF, Font.BOLD, 12 ) );
+					gd.addMessage( "" );
+
 					brp.pwr.addQuery( gd );
 
 					gd.showDialog();
