@@ -1,6 +1,7 @@
 package algorithm;
 
 
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,6 +29,7 @@ import mpicbg.spim.data.sequence.TimePoint;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import spim.fiji.datasetmanager.FileListDatasetDefinition;
+import spim.fiji.plugin.util.GUIHelper;
 import spim.fiji.spimdata.SpimDataTools;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
@@ -406,7 +408,8 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		// ask what to do with grouped views
 		GenericDialogPlus gdp3 = new GenericDialogPlus( "Select How to Treat Grouped Views" );		
 
-		FileListDatasetDefinition.addMessageAsJLabel("<html><strong>Select which instances of attributes to use in Grouped Views </strong> <br></html>", gdp3);
+//		FileListDatasetDefinition.addMessageAsJLabel("<html><strong>Select which instances of attributes to use in Grouped Views </strong> <br></html>", gdp3);
+		gdp3.addMessage( "Please specify how to deal with grouped Views.", new Font( Font.SANS_SERIF, Font.BOLD, 14 ), GUIHelper.neutral );
 
 		// filter first
 		final List<BasicViewDescription< ? > > ungroupedElements =
@@ -421,19 +424,19 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 				continue;
 
 			List<String> selection = new ArrayList<>();
-			selection.add( "average" );
-			selection.add(  "pick brightest" );
+			selection.add( "Average " + cl.getSimpleName() +"s" );
+//			selection.add(  "pick brightest" );
 			List< ? extends Entity > instancesInAllGroups = getInstancesInAllGroups( groupedElements, cl );
 			instancesInAllGroups.forEach( ( e ) -> 
 			{
 				if (e instanceof NamedEntity)
-					selection.add( ((NamedEntity)e).getName());
+					selection.add( "use " + cl.getSimpleName() + " " + ((NamedEntity)e).getName());
 				else
-					selection.add( Integer.toString( e.getId() ));
+					selection.add( "use " + cl.getSimpleName() + " " + Integer.toString( e.getId() ));
 			});
 			
 			String[] selectionArray = selection.toArray( new String[selection.size()] );
-			gdp3.addChoice( cl.getSimpleName(), selectionArray, selectionArray[0] );
+			gdp3.addChoice( cl.getSimpleName() + "s:", selectionArray, selectionArray[0] );
 		}
 
 		gdp3.showDialog();
@@ -455,10 +458,10 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 			int nextChoiceIndex = gdp3.getNextChoiceIndex();
 			if (nextChoiceIndex == 0)
 				getGroupedViewAggregator().addAction( ActionType.AVERAGE, cl, null );
-			else if (nextChoiceIndex == 1)
-				getGroupedViewAggregator().addAction( ActionType.PICK_BRIGHTEST, cl, null );
+//			else if (nextChoiceIndex == 1)
+//				getGroupedViewAggregator().addAction( ActionType.PICK_BRIGHTEST, cl, null );
 			else
-				getGroupedViewAggregator().addAction( ActionType.PICK_SPECIFIC, cl, instancesInAllGroups.get( nextChoiceIndex - 2 ) );
+				getGroupedViewAggregator().addAction( ActionType.PICK_SPECIFIC, cl, instancesInAllGroups.get( nextChoiceIndex - 1 ) );
 		}
 		
 		return this;
