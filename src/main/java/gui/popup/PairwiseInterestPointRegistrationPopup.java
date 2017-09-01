@@ -190,6 +190,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenuItem implements
 								setup,
 								brp.pwr,
 								InterestpointGroupingType.DO_NOT_GROUP,
+								0.0,
 								pair.getA().getViews(),
 								null,
 								null,
