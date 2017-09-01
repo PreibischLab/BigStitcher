@@ -32,16 +32,20 @@ import mpicbg.spim.data.sequence.TimePoints;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.data.sequence.ViewSetup;
 import mpicbg.spim.data.sequence.VoxelDimensions;
-import net.imagej.ops.OpService;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
+import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
+import spim.process.deconvolution.normalization.AdjustInput;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class GroupedViewAggregator
@@ -57,13 +61,11 @@ public class GroupedViewAggregator
 		ActionType actionType;
 		Class<? extends E> entityClass;
 		E instance;
-		private OpService ops;
 		
 		Action(ActionType at, Class<? extends E> entityClass, E instance){
 			this.actionType = at;
 			this.entityClass = entityClass;
 			this.instance = instance;
-			this.ops = new Context(OpService.class).getService( OpService.class );
 		}
 		
 		public <T extends RealType<T>> Map<BasicViewDescription<?>, RandomAccessibleInterval<T>> aggregate(
@@ -119,7 +121,8 @@ public class GroupedViewAggregator
 				if (rais.get( i ) == null)
 					continue;
 				
-				Double mean = ops.stats().mean( Views.iterable( rais.get( i ) )).getRealDouble();
+				IterableInterval< T > iterableImg = Views.iterable( rais.get( i ) );
+				double mean = AdjustInput.sumImg( iterableImg ) / (double)iterableImg.size();
 				if (mean > max)
 				{
 					max = mean;
@@ -280,8 +283,7 @@ public class GroupedViewAggregator
 	
 	public static void main(String[] args)
 	{
-		final OpService ops = new Context(OpService.class).getService( OpService.class );
-		
+
 		final ArrayList< ViewSetup > setups = new ArrayList< ViewSetup >();
 		final ArrayList< ViewRegistration > registrations = new ArrayList< ViewRegistration >();
 
@@ -322,9 +324,9 @@ public class GroupedViewAggregator
 					public RandomAccessibleInterval< UnsignedShortType > getImage(int timepointId,
 							ImgLoaderHint... hints)
 					{
-						RandomAccessibleInterval< UnsignedShortType > rai = ops.create().img( d0, new UnsignedShortType() );
-						RandomAccessibleInterval< UnsignedShortType > raiout = ops.create().img( d0, new UnsignedShortType() );
-						raiout = ops.math().add( raiout, Views.iterable( rai ), new UnsignedShortType( setupId ) );
+						Img< UnsignedShortType > raiout = new ArrayImgFactory<UnsignedShortType>().create( d0, new UnsignedShortType() );
+						for (UnsignedShortType t : raiout)
+							t.set( setupId );
 						return raiout;
 						
 					}
@@ -336,9 +338,9 @@ public class GroupedViewAggregator
 					public RandomAccessibleInterval< FloatType > getFloatImage(int timepointId, boolean normalize,
 							ImgLoaderHint... hints)
 					{
-						RandomAccessibleInterval< FloatType > rai = ops.create().img( d0, new FloatType() );
-						RandomAccessibleInterval< FloatType > raiout = ops.create().img( d0, new FloatType() );
-						raiout = ops.math().add( raiout, Views.iterable( rai ), new FloatType( setupId ) );
+						Img< FloatType > raiout = new ArrayImgFactory<FloatType>().create( d0, new FloatType() );
+						for (FloatType t : raiout)
+							t.set( setupId );
 						return raiout;
 					}
 

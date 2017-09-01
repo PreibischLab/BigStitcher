@@ -23,7 +23,6 @@ import input.FractalImgLoader;
 import input.FractalSpimDataGenerator;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.io.IOFunctions;
-import net.imagej.ops.Ops.Copy.Img;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;

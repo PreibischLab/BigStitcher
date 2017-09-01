@@ -1,8 +1,6 @@
 package algorithm.illuminationselection;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.scijava.Context;
 
@@ -12,21 +10,19 @@ import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import mpicbg.spim.data.sequence.MultiResolutionSetupImgLoader;
 import mpicbg.spim.data.sequence.ViewId;
-import net.imagej.ops.OpService;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.RealSum;
 import net.imglib2.view.Views;
+import spim.process.deconvolution.normalization.AdjustInput;
 
 public class BrightestViewSelection extends BasicViewSelection<ViewId>
 {
 
-	private OpService ops;
 	public BrightestViewSelection(AbstractSequenceDescription<?,?,?> sd) 
 	{	
 		super( sd );
-		this.ops = new Context(OpService.class).getService( OpService.class );
 	}
 	
 	public BrightestViewSelection(AbstractSpimData<AbstractSequenceDescription<?,?,?>> data) { this(data.getSequenceDescription()); }
@@ -39,7 +35,7 @@ public class BrightestViewSelection extends BasicViewSelection<ViewId>
 		BasicImgLoader imgLoader = sd.getImgLoader();
 		
 		ViewId currentBest = null;
-		T currentBestMean = null;
+		double currentBestMean = -Double.MAX_VALUE;
 		
 		if (MultiResolutionImgLoader.class.isInstance( imgLoader ))
 		{
@@ -47,19 +43,20 @@ public class BrightestViewSelection extends BasicViewSelection<ViewId>
 			
 			for (ViewId view : views)
 			{
-				
+
 				MultiResolutionSetupImgLoader< ? > setupImgLoader = mrImgLoader.getSetupImgLoader( view.getViewSetupId() );
-				
 
 				RandomAccessibleInterval< T > image = (RandomAccessibleInterval< T >) setupImgLoader.getImage( view.getTimePointId(), setupImgLoader.getMipmapResolutions().length - 1 );
-				T mean = ops.stats().mean( Views.iterable( image ) );
-				
+
+				IterableInterval< T > iterableImg = Views.iterable( image );
+				double mean = AdjustInput.sumImg( iterableImg ) / (double)iterableImg.size();
+
 				if (currentBest == null)
 				{
 					currentBest = view;
 					currentBestMean = mean;
 				}
-				else if (mean.compareTo( currentBestMean ) >= 0)
+				else if (mean >= currentBestMean )
 				{
 					currentBest = view;
 					currentBestMean = mean;
@@ -71,14 +68,16 @@ public class BrightestViewSelection extends BasicViewSelection<ViewId>
 			for (ViewId view : views)
 			{
 				RandomAccessibleInterval< T > image = (RandomAccessibleInterval< T >) imgLoader.getSetupImgLoader( view.getViewSetupId() ).getImage( view.getTimePointId() );
-				T mean = ops.stats().mean( Views.iterable( image ) );			
-				
+
+				IterableInterval< T > iterableImg = Views.iterable( image );
+				double mean = AdjustInput.sumImg( iterableImg ) / (double)iterableImg.size();
+
 				if (currentBest == null)
 				{
 					currentBest = view;
 					currentBestMean = mean;
 				}
-				else if (mean.compareTo( currentBestMean ) > 0)
+				else if (mean >= currentBestMean )
 				{
 					currentBest = view;
 					currentBestMean = mean;
