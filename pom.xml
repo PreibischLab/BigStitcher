@@ -24,7 +24,7 @@
   	<dependency>
   		<groupId>sc.fiji</groupId>
   		<artifactId>SPIM_Registration</artifactId>
-		<version>6.4.5</version>
+		<version>6.4.6-SNAPSHOT</version>
   	</dependency>
   	<dependency>
   		<groupId>net.imglib2</groupId>
@@ -51,11 +51,6 @@
   		<artifactId>junit</artifactId>
   	</dependency>
 
-  	<dependency>
-  		<groupId>net.imagej</groupId>
-  		<artifactId>imagej-ops</artifactId>
-  		<version>0.38.0</version>
-  	</dependency>
   	<dependency>
   		<groupId>sc.fiji</groupId>
   		<artifactId>bigdataviewer-vistools</artifactId>
