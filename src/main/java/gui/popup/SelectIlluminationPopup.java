@@ -214,7 +214,6 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 						
 						panel.setSpimData( dataNew );
 						panel.updateContent();
-						panel.saveXML();
 					}
 					else
 					{
