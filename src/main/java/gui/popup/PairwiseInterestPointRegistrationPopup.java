@@ -28,6 +28,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import spim.fiji.plugin.Interest_Point_Registration;
+import spim.fiji.plugin.interestpointregistration.TransformationModelGUI;
 import spim.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters;
 import spim.fiji.plugin.interestpointregistration.parameters.GroupParameters.InterestpointGroupingType;
 import spim.fiji.spimdata.SpimData2;
@@ -93,6 +94,12 @@ public class PairwiseInterestPointRegistrationPopup extends JMenuItem implements
 					// get selected groups, filter missing views, get all present and selected vids
 					final List< List< ViewId > > selectedGroupsAsLists = ((GroupedRowWindow)panel).selectedRowsViewIdGroups();
 					final SpimData2 data = (SpimData2) panel.getSpimData();
+
+					// by default the registration suggests what is selected in the dialog
+					Interest_Point_Registration.defaultGroupTiles = panel.tilesGrouped();
+					Interest_Point_Registration.defaultGroupIllums = panel.illumsGrouped();
+					Interest_Point_Registration.defaultGroupChannels = panel.channelsGrouped();
+
 					final List< Group< ViewId > > selectedGroups = selectedGroupsAsLists.stream().map( l -> new Group<>( l ) ).collect( Collectors.toList() );
 					final ArrayList< Group< ViewId > > presentGroups = SpimData2.filterGroupsForMissingViews( data, selectedGroups );
 					final List< ViewId > viewIds = new ArrayList<>(presentGroups.stream().map(g -> g.getViews()).reduce( new HashSet<>(), (s1, s2) -> { s1.addAll( s2 ); return s1;} ) );
@@ -102,7 +109,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenuItem implements
 					final int nAllTimepoints = data.getSequenceDescription().getTimePoints().size();
 
 					// query basic registration parameters
-					final BasicRegistrationParameters brp = new Interest_Point_Registration().basicRegistrationParameters( timepointToProcess, nAllTimepoints, data, viewIds );
+					final BasicRegistrationParameters brp = new Interest_Point_Registration().basicRegistrationParameters( timepointToProcess, nAllTimepoints, true, data, viewIds );
 					if ( brp == null )
 						return;
 
@@ -112,6 +119,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenuItem implements
 					gd.addMessage( "Algorithm parameters [" + brp.pwr.getDescription() + "]", new Font( Font.SANS_SERIF, Font.BOLD, 12 ) );
 					gd.addMessage( "" );
 
+					brp.pwr.presetTransformationModel( new TransformationModelGUI( 0 ) );
 					brp.pwr.addQuery( gd );
 
 					gd.showDialog();
@@ -181,7 +189,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenuItem implements
 						if ( ! new Interest_Point_Registration().processRegistration(
 								setup,
 								brp.pwr,
-								InterestpointGroupingType.ADD_ALL,
+								InterestpointGroupingType.DO_NOT_GROUP,
 								pair.getA().getViews(),
 								null,
 								null,
