@@ -618,8 +618,14 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new DisplayFusedImagesPopup() );
 		popups.add( new Separator() );
 
-		popups.add( new LabelPopUp( " Processing" ) );
+		popups.add( new LabelPopUp( " Preprocessing" ) );
+		popups.add( new TranslateGroupManuallyPopup() );
+		regularGridPopup = new RegularGridPopup();
+		popups.add( regularGridPopup );
+		popups.add( new SelectIlluminationPopup() );
+		popups.add( new Separator() );
 
+		popups.add( new LabelPopUp( " Stitching Wizard" ) );
 		CalculatePCPopup calculatePCPopup = new CalculatePCPopup();
 		calculatePCPopup.setStitchingResults( stitchingResults );
 		popups.add( calculatePCPopup );
@@ -643,23 +649,21 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		//DemoLinkOverlayPopup dlPopup = new DemoLinkOverlayPopup(demoLinkOverlay);
 		//popups.add( dlPopup );
 
-		popups.add( new ApplyBDVTransformationPopup() );
 		popups.add( new TogglePreviewPopup() );
-		//popups.add( new BoundingBoxPopup() );
 		popups.add( new PairwiseInterestPointRegistrationPopup() );
 		popups.add( new DetectInterestPointsPopup() );
+		popups.add( new Separator() );
 
+		popups.add( new LabelPopUp( "Step-by-step Stitching" ) );
+		popups.add( new Separator() );
+		
+		popups.add( new LabelPopUp( "Fusion" ) );
+		popups.add( new BoundingBoxPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
-		popups.add( new TranslateGroupManuallyPopup() );
-		
-		regularGridPopup = new RegularGridPopup();
-		popups.add( regularGridPopup );
-		popups.add( new BoundingBoxPopup() );
 		popups.add( new RemoveTransformationPopup() );
-		//popups.add( new DisplayOverlapTestPopup() );
-		popups.add( new SelectIlluminationPopup() );
+		popups.add( new ApplyBDVTransformationPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Modifications" ) );
