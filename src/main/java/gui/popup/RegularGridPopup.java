@@ -37,7 +37,7 @@ public class RegularGridPopup extends JMenuItem implements ExplorerWindowSetable
 
 	public RegularGridPopup() 
 	{
-		super( "Move Tiles to Regular Grid manually" );
+		super( "Move Tiles to Regular Grid ..." );
 		this.addActionListener( new MyActionListener() );
 	}
 

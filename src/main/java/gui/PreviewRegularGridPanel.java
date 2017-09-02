@@ -57,7 +57,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	public static boolean[] alternatingOld = null;
 	public static boolean[] increasingOld = null;
 	public static int[] dimensionOrderOld = null;
-	public static Boolean keepMetadataRotationOld = null;
+	public static Boolean keepMetadataRotationOld = true;
 
 	private ExplorerWindow< AS, ?> parent;
 
@@ -78,7 +78,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	private int[] dimensionOrder;
 	private int[] steps;
 	private double[] overlaps;
-	private boolean rotate;
+	private boolean rotate = true;
 	private List<List<BasicViewDescription< ? >>> selectedVDs;
 
 	private boolean linkedOverlaps = true;
@@ -209,9 +209,9 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		this.add( overlapSlidersPanel );
 
 
-		rotationCheckBox = new JCheckBox( "Re-apply Angle rotation from metadata?", keepMetadataRotationOld == null ? true : keepMetadataRotationOld );
-		rotationCheckBox.addActionListener( (e) -> update());
-		this.add( rotationCheckBox );
+//		rotationCheckBox = new JCheckBox( "Re-apply Angle rotation from metadata?", keepMetadataRotationOld == null ? true : keepMetadataRotationOld );
+//		rotationCheckBox.addActionListener( (e) -> update());
+//		this.add( rotationCheckBox );
 
 		// checkboxes to set wether the grid alternates along a given axis
 		alternatingCheckboxes = new ArrayList<>();
@@ -346,7 +346,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 
 	public void update()
 	{
-		rotate = rotationCheckBox.isSelected();
+//		rotate = rotationCheckBox.isSelected();
 
 		// update state from gui
 		alternating = new boolean[3];
