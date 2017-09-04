@@ -339,7 +339,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		final HashSet< ViewId > vid = new HashSet<>( viewDescriptions.iterator().next());
 		SpimData2.filterMissingViews( parent.getSpimData(), vid );
 		ArrayList< PairwiseStitchingResult< ViewId > > pairwiseResults = results.getAllPairwiseResultsForViewId( vid );
-		setActiveLinks( pairwiseResults.stream().map( (p) -> p.pair() ).collect( Collectors.toList() ) );
+		setActiveLinks( pairwiseResults.stream().map( (p) -> p.pair() ).filter( p ->  parent.getSavedFilteringAndGrouping().getComparisons().contains( p )).collect( Collectors.toList() ) );
 	}
 
 
