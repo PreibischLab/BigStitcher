@@ -17,6 +17,7 @@ import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.globalopt.TransformationTools;
 import gui.StitchingExplorerPanel;
 import gui.StitchingResultsSettable;
+import gui.StitchingUIHelper;
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
@@ -102,7 +103,7 @@ public class CalculatePCPopupExpertBatch extends JMenuItem implements ExplorerWi
 					if ( params == null )
 						return;
 
-					long[] dsFactors = CalculatePCPopup.askForDownsampling( panel.getSpimData(), false );
+					long[] dsFactors = StitchingUIHelper.askForDownsampling( panel.getSpimData(), false );
 					if (dsFactors == null)
 						return;
 
