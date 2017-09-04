@@ -263,6 +263,7 @@ public class TransformationTools
 
 		// get translations
 		// TODO: is the 2d check here meaningful?
+		// everything will probably be 3d at this point, since ImgLoaders return 3d images
 		boolean is2d = img1.numDimensions() == 2;
 		Pair< AffineGet, TranslationGet > t1 = TransformTools.getInitialTransforms( vrs.getViewRegistration(viewIdsA.iterator().next()), is2d, dsCorrectionT1 );
 		Pair< AffineGet, TranslationGet > t2 = TransformTools.getInitialTransforms( vrs.getViewRegistration(viewIdsB.iterator().next()), is2d, dsCorrectionT2 );
