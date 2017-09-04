@@ -27,7 +27,7 @@ public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindow
 		this.wizardMode = wizardMode;
 
 		if (!wizardMode)
-			phaseCorrSimple = new CalculatePCPopup( "Phase Correlation", false, Method.PHASECORRELATION, wizardMode );
+			phaseCorrSimple = new CalculatePCPopup( "Phase Correlation", true, Method.PHASECORRELATION, wizardMode );
 		else
 			phaseCorrSimple = null;
 			

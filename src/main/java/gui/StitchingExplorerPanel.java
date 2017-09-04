@@ -71,6 +71,7 @@ import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
+import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
@@ -240,10 +241,20 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			int oldFirstSelection = table.getSelectionModel().getMinSelectionIndex();
 
 			// remember whole selection
-			savedFilteringAndGrouping = new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( data );
-			savedFilteringAndGrouping.addFilters( getSelectedRows().stream().reduce( new ArrayList<>(), (x,y) -> {x.addAll( y ); return x;}) );
-			for (Class<? extends Entity> groupingFactor : tableModel.getGroupingFactors())
-				savedFilteringAndGrouping.addGroupingFactor( groupingFactor );
+			if (savedFilteringAndGrouping == null)
+			{
+				savedFilteringAndGrouping = new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( data );
+				savedFilteringAndGrouping.addFilters( getSelectedRows().stream().reduce( new ArrayList<>(), (x,y) -> {x.addAll( y ); return x;}) );
+				for (Class<? extends Entity> groupingFactor : tableModel.getGroupingFactors())
+					savedFilteringAndGrouping.addGroupingFactor( groupingFactor );
+				savedFilteringAndGrouping.addComparisonAxis( Tile.class );
+				if (!channelsGrouped())
+					savedFilteringAndGrouping.addComparisonAxis( Channel.class );
+				if (!illumsGrouped())
+					savedFilteringAndGrouping.addComparisonAxis( Illumination.class );
+				savedFilteringAndGrouping.addApplicationAxis( TimePoint.class );
+				savedFilteringAndGrouping.addApplicationAxis( Angle.class );
+			}
 
 			initLinkExplorer();
 			table.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
@@ -774,6 +785,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Step-by-step Stitching" ) );
+		CalculatePCPopupExpertBatch calculatePCPopupExpertStepByStep = new CalculatePCPopupExpertBatch("Calculate Pairwise Shifts ...", false);
+		calculatePCPopupExpertStepByStep.setStitchingResults( stitchingResults );
+		popups.add( calculatePCPopupExpertStepByStep );
 		popups.add( new Separator() );
 		
 		popups.add( new LabelPopUp( "Fusion" ) );

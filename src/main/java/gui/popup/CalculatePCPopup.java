@@ -131,7 +131,6 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 							return;
 					}
 
-
 					// ask user what to do with grouped views
 					// use AVERAGE as pre-set choice for illuminations
 					// (this will cause no overhead if only one illum is present)
@@ -146,17 +145,17 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					if (filteringAndGrouping.getDialogWasCancelled())
 						return;
 
-					// default parameters
+					boolean allViews2D = StitchingUIHelper.allViews2D( filteringAndGrouping.getFilteredViews() );
+					long[] dsFactors = StitchingUIHelper.askForDownsampling( panel.getSpimData(), allViews2D );
+					if (dsFactors == null)
+						return;
+
 					PairwiseStitchingParameters params = null;
 					LucasKanadeParameters LKParams = null;
 					if (method == Method.PHASECORRELATION)
 						params = simple ? new PairwiseStitchingParameters() : PairwiseStitchingParameters.askUserForParameters();
 					if (method == Method.LUCASKANADE)
 						LKParams = LucasKanadeParameters.askUserForParameters();
-						
-					long[] dsFactors = StitchingUIHelper.askForDownsampling( panel.getSpimData(), false );
-					if (dsFactors == null)
-						return;
 
 					if (method == Method.PHASECORRELATION)
 						Calculate_Pairwise_Shifts.processPhaseCorrelation( (SpimData2) panel.getSpimData(), filteringAndGrouping, params, dsFactors );
