@@ -300,8 +300,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		GenericDialogPlus gdp1 = new GenericDialogPlus( "Select Views To Process" );
 		
 		final String msg = ( "<html><strong>Select wether you want to process all instances of an attribute <br>"
-				+ " or just the currently selected Views</strong> <br>"
-				+ "NOTE: use 'all' or a specific ID (TODO) if you plan to call this from a macro.</html>" ) ;
+				+ " or just the currently selected Views</strong> </html>" ) ;
 		FileListDatasetDefinition.addMessageAsJLabel(msg, gdp1);
 		
 		String[] viewSelectionChoices = new String[] {"all", "selected"};

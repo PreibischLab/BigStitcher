@@ -1,7 +1,9 @@
 package gui;
 
 import java.awt.Choice;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -9,6 +11,7 @@ import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
 import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import mpicbg.spim.data.sequence.VoxelDimensions;
+import net.imglib2.Dimensions;
 import spim.fiji.plugin.util.GUIHelper;
 import spim.process.interestpointdetection.methods.downsampling.DownsampleTools;
 
@@ -17,6 +20,23 @@ public class StitchingUIHelper
 	public static final String[] ds = { "1", "2", "4", "8", "16", "32", "64"};
 	public static final String[] methods = {"Phase Correlation", "Iterative Intensity Based (Lucas-Kanade)"};
 	public static final long[] dsDefault = {4, 4, 2};
+
+	public static boolean allViews2D(final List< BasicViewDescription< ? > > views)
+	{
+		List< BasicViewDescription< ? > > all3DVds = views.stream().filter( vd -> {
+			if (!vd.getViewSetup().hasSize())
+				return true;
+			Dimensions dims = vd.getViewSetup().getSize();
+			boolean all3D = true;
+			for (int d = 0; d<dims.numDimensions(); d++)
+				if (dims.dimension( d ) == 1)
+					all3D = false;
+			return all3D;
+		}).collect( Collectors.toList() );
+
+		boolean is2d = all3DVds.size() == 0;
+		return is2d;
+	}
 
 	public static long[] askForDownsampling(AbstractSpimData< ? > data, boolean is2d)
 	{

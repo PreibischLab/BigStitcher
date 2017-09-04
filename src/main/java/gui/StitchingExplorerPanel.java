@@ -50,6 +50,7 @@ import gui.overlay.LinkOverlay;
 import gui.popup.ApplyBDVTransformationPopup;
 import gui.popup.BDVPopupStitching;
 import gui.popup.CalculatePCPopup;
+import gui.popup.CalculatePCPopup.Method;
 import gui.popup.CalculatePCPopupExpertBatch;
 import gui.popup.OptimizeGloballyPopup;
 import gui.popup.OptimizeGloballyPopupExpertBatch;
@@ -744,11 +745,11 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Stitching Wizard" ) );
-		CalculatePCPopup calculatePCPopup = new CalculatePCPopup();
+		CalculatePCPopup calculatePCPopup = new CalculatePCPopup("Stitch dataset ...", true, Method.PHASECORRELATION, true);
 		calculatePCPopup.setStitchingResults( stitchingResults );
 		popups.add( calculatePCPopup );
 
-		CalculatePCPopupExpertBatch calculatePCPopupExpert = new CalculatePCPopupExpertBatch();
+		CalculatePCPopupExpertBatch calculatePCPopupExpert = new CalculatePCPopupExpertBatch("Stitch dataset (expert) ...", true);
 		calculatePCPopupExpert.setStitchingResults( stitchingResults );
 		popups.add( calculatePCPopupExpert );
 
