@@ -77,6 +77,7 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.util.Pair;
+import spim.fiji.plugin.util.MultiWindowLayoutHelper;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.SpimDataTools;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
@@ -109,6 +110,9 @@ import spim.process.interestpointregistration.pairwise.constellation.grouping.Gr
 public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS >>
 		extends FilteredAndGroupedExplorerPanel< AS, X > implements ExplorerWindow< AS, X >
 {
+	public final static double xPosLinkExplorer = 0.6;
+	public final static double yPosLinkExplorer = 0.0;
+
 	// indicates whether we are in link preview mode or not
 	boolean previewMode = false;
 
@@ -233,6 +237,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		if ( previewMode )
 		{
 			int oldFirstSelection = table.getSelectionModel().getMinSelectionIndex();
+
+			// remember whole selection
+			savedFilteringAndGrouping = new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( data );
+			savedFilteringAndGrouping.addFilters( getSelectedRows().stream().reduce( new ArrayList<>(), (x,y) -> {x.addAll( y ); return x;}) );
+			for (Class<? extends Entity> groupingFactor : tableModel.getGroupingFactors())
+				savedFilteringAndGrouping.addGroupingFactor( groupingFactor );
+
 			initLinkExplorer();
 			table.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 			table.setRowSelectionInterval( oldFirstSelection, oldFirstSelection );
@@ -309,6 +320,12 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 			private boolean isValidSelection(int index0, int index1)
 			{
+				if (index0 > index1)
+				{
+					int index0Tmp = index0;
+					index0 = index1;
+					index1 = index0Tmp;
+				}
 				for (Integer invalidIndex : invalidIndices)
 					if( index0 <= invalidIndex && index1 >= invalidIndex)
 						return false;
@@ -698,6 +715,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		linkFrame.pack();
 		linkFrame.setVisible( true );
 		linkFrame.requestFocus();
+
+		MultiWindowLayoutHelper.moveToScreenFraction( linkFrame, xPosLinkExplorer, yPosLinkExplorer );
 	}
 
 	LinkExplorerPanel getLinkExplorer()
