@@ -17,7 +17,7 @@ public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindow
 	final CalculatePCPopup phaseCorrSimple;
 	final CalculatePCPopup phaseCorr;
 	final CalculatePCPopup lucasKanade;
-	final CalculatePCPopup interestPoint;
+	final PairwiseInterestPointRegistrationPopup interestPoint;
 	boolean wizardMode;
 
 	public CalculatePCPopupExpertBatch( String description, boolean wizardMode )
@@ -33,7 +33,7 @@ public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindow
 			
 		phaseCorr = new CalculatePCPopup( wizardMode ? "Phase Correlation" : "Phase Correlation (expert)", false, Method.PHASECORRELATION, wizardMode );
 		lucasKanade = new CalculatePCPopup( "Lucas-Kanade", false, Method.LUCASKANADE, wizardMode );
-		interestPoint = new CalculatePCPopup( "Lucas-Kanade", false, Method.LUCASKANADE, wizardMode );
+		interestPoint = new PairwiseInterestPointRegistrationPopup( "Interest point based", wizardMode, true );
 
 		if(!wizardMode)
 			this.add(phaseCorrSimple);
@@ -49,7 +49,6 @@ public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindow
 			this.phaseCorrSimple.setStitchingResults( res );
 		this.phaseCorr.setStitchingResults( res );
 		this.lucasKanade.setStitchingResults( res );
-		this.interestPoint.setStitchingResults( res );
 	}
 
 	@Override

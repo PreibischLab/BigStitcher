@@ -780,8 +780,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		//popups.add( dlPopup );
 
 		popups.add( new TogglePreviewPopup() );
-		popups.add( new PairwiseInterestPointRegistrationPopup() );
-		popups.add( new DetectInterestPointsPopup() );
+		//popups.add( new PairwiseInterestPointRegistrationPopup("Pairwise Registration using Interest Points ...", false, false) );
+		//popups.add( new DetectInterestPointsPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Step-by-step Stitching" ) );

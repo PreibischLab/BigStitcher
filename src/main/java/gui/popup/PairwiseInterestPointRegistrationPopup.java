@@ -1,10 +1,12 @@
 package gui.popup;
 
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,14 +14,26 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
+import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.globalopt.TransformationTools;
+import gui.StitchingExplorerPanel;
+import gui.StitchingUIHelper;
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
+import mpicbg.spim.data.sequence.Channel;
+import mpicbg.spim.data.sequence.Illumination;
+import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
@@ -27,6 +41,8 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
+import spim.fiji.plugin.Calculate_Pairwise_Shifts;
+import spim.fiji.plugin.Interest_Point_Detection;
 import spim.fiji.plugin.Interest_Point_Registration;
 import spim.fiji.plugin.interestpointregistration.TransformationModelGUI;
 import spim.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters;
@@ -34,24 +50,78 @@ import spim.fiji.plugin.interestpointregistration.parameters.GroupParameters.Int
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.boundingbox.BoundingBox;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
+import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.GroupedRowWindow;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.interestpoints.ViewInterestPointLists;
+import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
 import spim.process.interestpointregistration.pairwise.constellation.PairwiseSetup;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
-public class PairwiseInterestPointRegistrationPopup extends JMenuItem implements ExplorerWindowSetable
+public class PairwiseInterestPointRegistrationPopup extends JMenu implements ExplorerWindowSetable
 {
 
 	private static final long serialVersionUID = -396274656320474433L;
 	ExplorerWindow< ?, ? > panel;
 
-	public PairwiseInterestPointRegistrationPopup()
+	private JMenuItem withDetection;
+	private JMenuItem withoutDetection;
+
+	private boolean wizardMode;
+	private boolean expertGrouping;
+
+	public PairwiseInterestPointRegistrationPopup(String description, boolean wizardMode, boolean expertGrouping)
 	{
-		super( "Pairwise Registration using Interest Points ..." );
-		this.addActionListener( new MyActionListener() );	}
+		super( description );
+		this.addActionListener( new MyActionListener(false) );
+
+		this.wizardMode = wizardMode;
+		this.expertGrouping = expertGrouping;
+
+		withDetection = new JMenuItem( "With new Interest Points" );
+		withoutDetection = new JMenuItem( "With existing Interest Points" );
+
+		withDetection.addActionListener( new MyActionListener( false ) );
+		withoutDetection.addActionListener( new MyActionListener( true ) );
+
+		this.add( withDetection );
+		this.add( withoutDetection );
+
+		this.addMenuListener( new MenuListener()
+		{
+			@Override
+			public void menuSelected(MenuEvent e)
+			{
+				if (SpimData2.class.isInstance( panel.getSpimData() ))
+				{
+					final List< ViewId > selectedViews = ((GroupedRowWindow)panel).selectedRowsViewIdGroups().stream().reduce( new ArrayList<>(), (x,y) -> {x.addAll( y ); return x;} );
+					boolean allHaveIPs = true;
+					final ViewInterestPoints viewInterestPoints = ((SpimData2)panel.getSpimData()).getViewInterestPoints();
+					for (ViewId vid : selectedViews)
+						if (panel.getSpimData().getSequenceDescription().getMissingViews() != null &&
+							!panel.getSpimData().getSequenceDescription().getMissingViews().getMissingViews().contains( vid ))
+						{
+							if (!viewInterestPoints.getViewInterestPoints().containsKey( vid ) ||
+								viewInterestPoints.getViewInterestPoints().get( vid ).getHashMap().size() < 1)
+							{
+								allHaveIPs = false;
+								break;
+							}
+						}
+					withoutDetection.setEnabled( allHaveIPs );
+				}
+			}
+
+			@Override
+			public void menuDeselected(MenuEvent e){}
+
+			@Override
+			public void menuCanceled(MenuEvent e){}
+
+		} );
+	}
 
 	@Override
 	public JComponent setExplorerWindow(
@@ -63,6 +133,12 @@ public class PairwiseInterestPointRegistrationPopup extends JMenuItem implements
 
 	public class MyActionListener implements ActionListener
 	{
+		private boolean existingInterestPoints;
+
+		public MyActionListener(boolean existingInterestPoints)
+		{
+			this.existingInterestPoints = existingInterestPoints;
+		}
 
 		@Override
 		public void actionPerformed(ActionEvent e)
@@ -85,149 +161,81 @@ public class PairwiseInterestPointRegistrationPopup extends JMenuItem implements
 				return;
 			}
 
-			new Thread( new Runnable()
+			new Thread( () ->
 			{
+				// get selected groups, filter missing views, get all present and selected vids
+				final SpimData2 data = (SpimData2) panel.getSpimData();
+				@SuppressWarnings("unchecked")
+				FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
+				SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< SpimData2 >( (SpimData2) panel.getSpimData() );
 
-				@Override
-				public void run()
+				if (!expertGrouping)
 				{
-					// get selected groups, filter missing views, get all present and selected vids
-					final List< List< ViewId > > selectedGroupsAsLists = ((GroupedRowWindow)panel).selectedRowsViewIdGroups();
-					final SpimData2 data = (SpimData2) panel.getSpimData();
-
-					// by default the registration suggests what is selected in the dialog
-					Interest_Point_Registration.defaultGroupTiles = panel.tilesGrouped();
-					Interest_Point_Registration.defaultGroupIllums = panel.illumsGrouped();
-					Interest_Point_Registration.defaultGroupChannels = panel.channelsGrouped();
-
-					final List< Group< ViewId > > selectedGroups = selectedGroupsAsLists.stream().map( l -> new Group<>( l ) ).collect( Collectors.toList() );
-					final ArrayList< Group< ViewId > > presentGroups = SpimData2.filterGroupsForMissingViews( data, selectedGroups );
-					final List< ViewId > viewIds = new ArrayList<>(presentGroups.stream().map(g -> g.getViews()).reduce( new HashSet<>(), (s1, s2) -> { s1.addAll( s2 ); return s1;} ) );
-
-					// which timepoints are part of the data (we dont necessarily need them, but basicRegistrationParameters GUI wants them)
-					final List< TimePoint > timepointToProcess = SpimData2.getAllTimePointsSorted( data, viewIds );
-					final int nAllTimepoints = data.getSequenceDescription().getTimePoints().size();
-
-					// query basic registration parameters
-					final BasicRegistrationParameters brp = new Interest_Point_Registration().basicRegistrationParameters( timepointToProcess, nAllTimepoints, true, data, viewIds );
-					if ( brp == null )
-						return;
-
-					// query algorithm parameters
-					GenericDialog gd = new GenericDialog( "Registration Parameters" );
-
-					gd.addMessage( "Algorithm parameters [" + brp.pwr.getDescription() + "]", new Font( Font.SANS_SERIF, Font.BOLD, 12 ) );
-					gd.addMessage( "" );
-
-					brp.pwr.presetTransformationModel( new TransformationModelGUI( 0 ) );
-					brp.pwr.addQuery( gd );
-
-					gd.showDialog();
-
-					if ( gd.wasCanceled() )
-						return;
-					if ( !brp.pwr.parseDialog( gd ) )
-						return;
-
-					// get all possible group pairs
-					final List< Pair<  Group< ViewId >,  Group< ViewId > > > pairs = new ArrayList<>();
-					for (int i = 0; i < presentGroups.size(); i++)
-						for (int j = i+1; j<presentGroups.size(); j++)
-							pairs.add(new ValuePair<>( presentGroups.get( i ), presentGroups.get( j ) ));
-
-					// remove non-overlapping comparisons
-					final List< Pair< Group< ViewId >, Group< ViewId > > > removedPairs = TransformationTools.filterNonOverlappingPairs( pairs, data.getViewRegistrations(), data.getSequenceDescription() );
-					removedPairs.forEach( p -> System.out.println( "Skipping non-overlapping pair: " + p.getA() + " -> " + p.getB() ) );
-
-
-					for (final Pair< Group< ViewId >, Group< ViewId > > pair : pairs)
-					{
-						// all views in group pair
-						final HashSet< ViewId > vids = new HashSet<ViewId>();
-						vids.addAll( pair.getA().getViews() );
-						vids.addAll( pair.getB().getViews() );
-
-						// simple PairwiseSetup with just two groups (fully connected to each other)
-						final PairwiseSetup< ViewId > setup = new PairwiseSetup< ViewId >(new ArrayList<>(vids), new HashSet<>(Arrays.asList( pair.getA(), pair.getB() )))
-						{
-
-							@Override
-							protected List< Pair< ViewId, ViewId > > definePairsAbstract()
-							{
-								// all possible links between groups 
-								final List< Pair< ViewId, ViewId > > res = new ArrayList<>();
-								for (final ViewId vidA : pair.getA() )
-									for (final ViewId vidB : pair.getB() )
-										res.add( new ValuePair< ViewId, ViewId >( vidA, vidB ) );
-								return res;
-							}
-	
-							@Override
-							public List< ViewId > getDefaultFixedViews()
-							{
-								// first group will remain fixed -> we get the transform to align second group to this target
-								return new ArrayList<>(pair.getA().getViews());
-							}
-						};
-
-						// prepare setup
-						setup.definePairs();
-						setup.detectSubsets();
-
-						// get copies of view registrations (as they will be modified) and interest points
-						final Map<ViewId, ViewRegistration> registrationMap = new HashMap<>();
-						final Map<ViewId, ViewInterestPointLists> ipMap = new HashMap<>();
-						for (ViewId vid : vids)
-						{
-							final ViewRegistration vrOld = data.getViewRegistrations().getViewRegistration( vid );
-							final ViewInterestPointLists iplOld = data.getViewInterestPoints().getViewInterestPointLists( vid );
-							registrationMap.put( vid, new ViewRegistration( vid.getTimePointId(), vid.getViewSetupId(), new ArrayList<>(vrOld.getTransformList() ) ) );
-							ipMap.put( vid, iplOld );
-						}
-
-						// run the registration for this pair
-						if ( ! new Interest_Point_Registration().processRegistration(
-								setup,
-								brp.pwr,
-								InterestpointGroupingType.DO_NOT_GROUP,
-								0.0,
-								pair.getA().getViews(),
-								null,
-								null,
-								registrationMap,
-								ipMap,
-								brp.labelMap,
-								false ) )
-							continue;
-
-						// get newest Transformation of groupB (the accumulative transform determined by registration)
-						final ViewTransform vtB = registrationMap.get( pair.getB().iterator().next() ).getTransformList().get( 0 );
-
-						final AffineTransform3D result = new AffineTransform3D();
-						result.set( vtB.asAffine3D().getRowPackedCopy() );
-						IOFunctions.println("resulting transformation: " + Util.printCoordinates(result.getRowPackedCopy()));
-
-						// NB: in the global optimization, the final transform of a view will be VR^-1 * T * VR (T is the optimization result)
-						// the rationale behind this is that we can use "raw (pixel) coordinate" transforms T (the typical case when stitching)
-						//
-						// since we get results T' in world coordinates here, we calculate VR * T' * VR^-1 as the result here
-						// after the optimization, we will get VR^-1 * VR * T' * VR^-1 * VR = T' (i.e. the result will remain in world coordinates)
-						final AffineTransform3D oldVT = data.getViewRegistrations().getViewRegistration( pair.getB().iterator().next() ).getModel();
-						result.concatenate( oldVT );
-						result.preConcatenate( oldVT.copy().inverse() );
-
-						// get Overlap Bounding Box, which we need for stitching results
-						final List<List<ViewId>> groupListsForOverlap = new ArrayList<>();
-						groupListsForOverlap.add( new ArrayList<>(pair.getA().getViews()) );
-						groupListsForOverlap.add( new ArrayList<>(pair.getB().getViews()) );
-						BoundingBoxMaximalGroupOverlap< ViewId > bbDet = new BoundingBoxMaximalGroupOverlap<ViewId>( groupListsForOverlap, data.getSequenceDescription(), data.getViewRegistrations() );
-						BoundingBox bbOverlap = bbDet.estimate( "Max Overlap" );
-
-						// TODO: meaningful quality criterion (e.g. inlier ratio ), not just 1.0
-						data.getStitchingResults().getPairwiseResults().put( pair, new PairwiseStitchingResult<>( pair, bbOverlap, result, 1.0 ) );
-					}
+					// use whatever is selected in panel as filters
+					filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
 				}
-				
+				else
+				{
+					filteringAndGrouping.askUserForFiltering( panelFG );
+					if (filteringAndGrouping.getDialogWasCancelled())
+						return;
+				}
+
+				if (!expertGrouping)
+				{
+					// get the grouping from panel and compare Tiles
+					panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
+					filteringAndGrouping.addComparisonAxis( Tile.class );
+
+					// compare by Channel if channels were ungrouped in UI
+					if (!panelFG.getTableModel().getGroupingFactors().contains( Channel.class ))
+						filteringAndGrouping.addComparisonAxis( Channel.class );
+
+					// compare by Illumination if illums were ungrouped in UI
+					if (!panelFG.getTableModel().getGroupingFactors().contains( Illumination.class ))
+						filteringAndGrouping.addComparisonAxis( Illumination.class );
+				}
+				else
+				{
+					filteringAndGrouping.addComparisonAxis( Tile.class );
+					filteringAndGrouping.askUserForGrouping( panelFG );
+					if (filteringAndGrouping.getDialogWasCancelled())
+						return;
+				}
+
+				boolean allViews2D = StitchingUIHelper.allViews2D( filteringAndGrouping.getFilteredViews() );
+				if (allViews2D)
+				{
+					IOFunctions.println( "Interest point-based registration is currenty not supported for 2D: " + this.getClass().getSimpleName() );
+					return;
+				}
+
+				if (!existingInterestPoints)
+				{
+					// by default the registration suggests what is selected in the dialog
+					Interest_Point_Detection.defaultGroupTiles = filteringAndGrouping.getGroupingFactors().contains( Tile.class );
+					Interest_Point_Detection.defaultGroupIllums = filteringAndGrouping.getGroupingFactors().contains( Illumination.class );
+
+					if ( new Interest_Point_Detection().detectInterestPoints( (SpimData2)panel.getSpimData(), filteringAndGrouping.getFilteredViews() ) )
+						panel.updateContent(); // update interestpoint panel if available
+
+				}
+
+				if (Calculate_Pairwise_Shifts.processInterestPoint( data, filteringAndGrouping ))
+					if (wizardMode)
+					{
+						// ask user if they want to switch to preview mode
+						if (panel instanceof StitchingExplorerPanel)
+						{
+							final int choice = JOptionPane.showConfirmDialog( (Component) panel, "Pairwise shift calculation done. Switch to preview mode?", "Preview Mode", JOptionPane.YES_NO_OPTION );
+							if (choice == JOptionPane.YES_OPTION)
+							{
+								((StitchingExplorerPanel< ?, ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
+								((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode();
+							}
+						}
+					}
+
 			}).start();
 
 		}

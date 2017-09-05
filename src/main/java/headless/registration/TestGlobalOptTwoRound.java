@@ -10,11 +10,14 @@ import algorithm.globalopt.TransformationTools;
 import ij.ImageJ;
 import input.FractalSpimDataGenerator;
 import mpicbg.models.TranslationModel3D;
+import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
@@ -64,8 +67,9 @@ public class TestGlobalOptTwoRound
 
 		// the result are shifts relative to the current registration of the dataset!
 		// that's because we find overlapping areas in global coordinates for which we run the Stitching
+		final List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > pairs = (List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > >) filteringAndGrouping.getComparisons();
 		final ArrayList< PairwiseStitchingResult< ViewId > > pairwiseResults = TransformationTools.computePairs(
-				filteringAndGrouping.getComparisons(),
+				(List<Pair<Group<ViewId>, Group<ViewId>>>) pairs,
 				params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
 				filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
 				dsFactors );

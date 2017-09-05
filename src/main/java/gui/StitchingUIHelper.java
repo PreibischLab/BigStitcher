@@ -21,7 +21,7 @@ public class StitchingUIHelper
 	public static final String[] methods = {"Phase Correlation", "Iterative Intensity Based (Lucas-Kanade)"};
 	public static final long[] dsDefault = {4, 4, 2};
 
-	public static boolean allViews2D(final List< BasicViewDescription< ? > > views)
+	public static boolean allViews2D(final List< ? extends BasicViewDescription< ? > > views)
 	{
 		List< BasicViewDescription< ? > > all3DVds = views.stream().filter( vd -> {
 			if (!vd.getViewSetup().hasSize())
