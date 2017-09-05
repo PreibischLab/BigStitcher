@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.function.Consumer;
@@ -41,6 +42,8 @@ import spim.process.interestpointregistration.pairwise.constellation.grouping.Gr
 
 public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData<?> >
 {
+	public static double minCorrDefault = 0.4;
+	public static double maxCorrDefault = 1.0;
 
 	public static class SimpleDocumentListener implements DocumentListener
 	{
@@ -119,9 +122,9 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 
 		final JPanel corrPanel = new JPanel();
 		corrPanel.setLayout( new BoxLayout( corrPanel, BoxLayout.LINE_AXIS ) );		
-		final JCheckBox corrCB = new JCheckBox( "filter by correlation coefficient" );
-		final JTextField minCorrTextField = new JTextField();
-		final JTextField maxCorrTextField = new JTextField();
+		final JCheckBox corrCB = new JCheckBox( "filter by correlation coefficient", true );
+		final JTextField minCorrTextField = new JTextField(Double.toString( minCorrDefault ));
+		final JTextField maxCorrTextField = new JTextField(Double.toString( maxCorrDefault ));
 
 		corrPanel.add( corrCB );
 		corrPanel.add( new JLabel( "min R: " ) );
@@ -250,28 +253,40 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		final JPanel buttons = new JPanel();
 		buttons.setLayout( new BoxLayout( buttons, BoxLayout.LINE_AXIS ) );
 
-		final JButton applyButton = new JButton( "Apply" );
-		final JButton applyAllButton = new JButton( "Apply to All Links" );
-		final JButton closeButton = new JButton( "Close" );
+		final JButton applyButton = new JButton( "Apply Filter" );
+		final JButton applyAndRunButton = new JButton( "Apply & Run Global Optimization" );
+		final JButton cancelButton = new JButton( "Cancel" );
 
-		closeButton.addActionListener( ev -> parent.togglePreviewMode() );
-		applyButton.addActionListener( ev -> {
-			final int sizeFiltered = model.getActiveLinks().size();
-			final int sizeUnfiltered = activeLinks.size();
-			IOFunctions.println( "Removing " + ( sizeUnfiltered - sizeFiltered ) + " of " + sizeUnfiltered + " links." );
-			model.getFilteredResults().applyToWrappedSubset( activeLinks );
+		cancelButton.addActionListener( ev -> 
+		{
+			parent.setSavedFilteringAndGrouping( null );
+			parent.togglePreviewMode();
 		});
 
-		applyAllButton.addActionListener( ev -> {
+		applyButton.addActionListener( ev -> {
 			final int sizeUnfiltered = model.getStitchingResults().getPairwiseResults().size();
 			final int sizeFiltered = model.getFilteredResults().getPairwiseResults().size();
 			IOFunctions.println( "Removing " + ( sizeUnfiltered - sizeFiltered ) + " of " + sizeUnfiltered + " links." );
-			model.getFilteredResults().applyToWrappedAll();
+			final List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > pairs = 
+					(List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > >) parent.getSavedFilteringAndGrouping().getComparisons();
+			model.getFilteredResults().applyToWrappedSubset( (Collection< Pair< Group< ViewId >, Group< ViewId > > >) pairs );
+			parent.setSavedFilteringAndGrouping( null );
+			parent.togglePreviewMode();
+		});
+
+		applyAndRunButton.addActionListener( ev -> {
+			final int sizeUnfiltered = model.getStitchingResults().getPairwiseResults().size();
+			final int sizeFiltered = model.getFilteredResults().getPairwiseResults().size();
+			IOFunctions.println( "Removing " + ( sizeUnfiltered - sizeFiltered ) + " of " + sizeUnfiltered + " links." );
+			final List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > pairs = 
+					(List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > >) parent.getSavedFilteringAndGrouping().getComparisons();
+			model.getFilteredResults().applyToWrappedSubset( (Collection< Pair< Group< ViewId >, Group< ViewId > > >) pairs );
+			parent.togglePreviewMode();
 		});
 
 		buttons.add( applyButton );
-		buttons.add( applyAllButton );
-		buttons.add( closeButton );
+		buttons.add( applyAndRunButton );
+		buttons.add( cancelButton );
 
 		footer.add( buttons );
 
@@ -288,6 +303,9 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		table.setComponentPopupMenu( popupMenu );
 
 		parent.addListener( this );
+
+		// initialize correlation filter
+		model.getFilteredResults().addFilter( new FilteredStitchingResults.CorrelationFilter( minCorrDefault, maxCorrDefault ) );
 	}
 
 	private ListSelectionListener getSelectionListener()
