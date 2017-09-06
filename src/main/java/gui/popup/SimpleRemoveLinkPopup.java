@@ -49,7 +49,7 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 	
 	public SimpleRemoveLinkPopup()
 	{
-		super("Remove Links");
+		super("Filter Links by parameters ...");
 		this.addActionListener( new ActionListener()
 		{
 			

@@ -1,26 +1,27 @@
 package gui.popup;
 
+import java.awt.Checkbox;
+import java.awt.Label;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 import algorithm.SpimDataFilteringAndGrouping;
-import algorithm.TransformTools;
 import algorithm.globalopt.GlobalOptimizationParameters;
-import algorithm.globalopt.GlobalTileOptimization;
+import fiji.util.gui.GenericDialogPlus;
 import gui.StitchingExplorerPanel;
 import gui.StitchingResultsSettable;
-import mpicbg.models.Tile;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
@@ -30,13 +31,15 @@ import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
+import mpicbg.spim.data.sequence.Channel;
+import mpicbg.spim.data.sequence.Illumination;
+import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
-import net.imglib2.Dimensions;
-import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import spim.fiji.plugin.util.GUIHelper;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -59,6 +62,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 
 	private StitchingResults stitchingResults;
 	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	private boolean expertMode;
 
 	@Override
 	public void setStitchingResults(StitchingResults res)
@@ -74,10 +78,132 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 		return this;
 	}
 
-	public OptimizeGloballyPopupExpertBatch()
+	public OptimizeGloballyPopupExpertBatch(boolean expertMode)
 	{
-		super( "Optimize Globally And Apply Shift (Expert/Batch Mode)" );
+		super( "Optimize Globally And Apply Shift " + (expertMode ? "(expert) " : "") + " ..." );
+		this.expertMode = expertMode;
 		this.addActionListener( new MyActionListener() );
+	}
+
+	public static <V extends ViewId> Collection<? extends Collection<V> > askForFixedViews(ArrayList<? extends Subset< V > > subsets)
+	{
+		final ArrayList< Collection<V> > res = new ArrayList<>();
+		final GenericDialogPlus gdp = new GenericDialogPlus( "Select Views to fix" );
+		final boolean multipleSubsets = !(subsets.size() < 2);
+
+		int i = 0;
+		for (final Subset<V> subset : subsets)
+		{
+
+			if (multipleSubsets)
+				gdp.addMessage( "Views to fix in subset " + (++i), GUIHelper.largefont, GUIHelper.neutral );
+
+			final List<Checkbox> cboxes = new ArrayList<>();
+			final List< Group< V > > groups = new ArrayList<>(subset.getGroups());
+			Collections.sort( groups, new Comparator< Group<V> >()
+			{
+				@Override
+				public int compare(Group< V > o1, Group< V > o2)
+				{
+					final ArrayList< ViewId > o1List = new ArrayList<>( o1.getViews() );
+					final ArrayList< ViewId > o2List = new ArrayList<>( o2.getViews() );
+					Collections.sort( o1List );
+					Collections.sort( o2List );
+					Iterator< ViewId > it1 = o1List.iterator();
+					Iterator< ViewId > it2 = o2List.iterator();
+					while ( it1.hasNext() && it2.hasNext() )
+					{
+						int comp = it1.next().compareTo( it2.next() );
+						if ( comp != 0 )
+							return comp;
+					}
+					// list 1 is longer
+					if ( it1.hasNext() )
+						return -1;
+					// list 2 is longer
+					if ( it2.hasNext() )
+						return 1;
+					// lists equal
+					else
+						return 0;
+				}
+			} );
+
+			final Iterator< Group< V > > it = groups.iterator();
+			if (!it.hasNext())
+				continue;
+
+			gdp.addCheckbox( "Fix_Group_" + Group.gvids( it.next() ), true );
+			final Checkbox cbI = (Checkbox) gdp.getCheckboxes().get( gdp.getCheckboxes().size() -1 );
+			cboxes.add( cbI );
+
+			it.forEachRemaining( g -> {
+				gdp.addCheckbox( "Fix_Group_" + Group.gvids( g ), false );
+				final Checkbox cbI2 = (Checkbox) gdp.getCheckboxes().get( gdp.getCheckboxes().size() -1 );
+				cboxes.add( cbI2 );
+			});
+
+			gdp.addMessage( "", GUIHelper.largestatusfont, GUIHelper.warning );
+			final Label warning = (Label) gdp.getMessage();
+
+			for (final Checkbox cb : cboxes)
+			{
+				cb.addItemListener( e -> {
+					boolean allFalse = true;
+					for (final Checkbox cbI3 : cboxes)
+						allFalse &= (!cbI3.getState());
+					warning.setText( allFalse ? "WARNING: you are not fixing any view" + (multipleSubsets ? " in this subset." : ".") : "" );
+				});
+			}
+		}
+
+		GUIHelper.addScrollBars( gdp );
+
+		gdp.showDialog();
+		if (gdp.wasCanceled())
+			return null;
+
+		for (final Subset<V> subset : subsets)
+		{
+			final List< Group< V > > groups = new ArrayList<>(subset.getGroups());
+			Collections.sort( groups, new Comparator< Group<V> >()
+			{
+				@Override
+				public int compare(Group< V > o1, Group< V > o2)
+				{
+					final ArrayList< ViewId > o1List = new ArrayList<>( o1.getViews() );
+					final ArrayList< ViewId > o2List = new ArrayList<>( o2.getViews() );
+					Collections.sort( o1List );
+					Collections.sort( o2List );
+					Iterator< ViewId > it1 = o1List.iterator();
+					Iterator< ViewId > it2 = o2List.iterator();
+					while ( it1.hasNext() && it2.hasNext() )
+					{
+						int comp = it1.next().compareTo( it2.next() );
+						if ( comp != 0 )
+							return comp;
+					}
+					// list 1 is longer
+					if ( it1.hasNext() )
+						return -1;
+					// list 2 is longer
+					if ( it2.hasNext() )
+						return 1;
+					// lists equal
+					else
+						return 0;
+				}
+			} );
+
+			final HashSet< V > resI = new HashSet<>();
+			for (final Group<V> group: groups)
+			{
+				if (gdp.getNextBoolean())
+					resI.addAll( group.getViews() );
+			}
+			res.add( resI );
+		}
+		return res;
 	}
 
 	private class MyActionListener implements ActionListener
@@ -92,7 +218,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 				@Override
 				public void run()
 				{
-					GlobalOptimizationParameters params = GlobalOptimizationParameters.askUserForParameters();
+					GlobalOptimizationParameters params = expertMode ? GlobalOptimizationParameters.askUserForParameters() : new GlobalOptimizationParameters();
 					if ( params == null )
 						return;
 
@@ -104,13 +230,34 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 						filteringAndGrouping = new SpimDataFilteringAndGrouping< AbstractSpimData< ? > >(
 								panel.getSpimData() );
 
-						filteringAndGrouping.askUserForFiltering( panelFG );
-						if ( filteringAndGrouping.getDialogWasCancelled() )
-							return;
+						if (expertMode)
+						{
+							filteringAndGrouping.askUserForFiltering( panelFG );
+							if ( filteringAndGrouping.getDialogWasCancelled() )
+								return;
 
-						filteringAndGrouping.askUserForGrouping( panelFG );
-						if ( filteringAndGrouping.getDialogWasCancelled() )
-							return;
+							filteringAndGrouping.askUserForGrouping( panelFG );
+							if ( filteringAndGrouping.getDialogWasCancelled() )
+								return;
+						}
+						else
+						{
+							// use whatever is selected in panel as filters
+							filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
+
+							// get the grouping from panel and compare Tiles
+							panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
+							filteringAndGrouping.addComparisonAxis( Tile.class );
+
+							// compare by Channel if channels were ungrouped in UI
+							if (!panelFG.getTableModel().getGroupingFactors().contains( Channel.class ))
+								filteringAndGrouping.addComparisonAxis( Channel.class );
+
+							// compare by Illumination if illums were ungrouped in UI
+							if (!panelFG.getTableModel().getGroupingFactors().contains( Illumination.class ))
+								filteringAndGrouping.addComparisonAxis( Illumination.class );
+
+						}
 					}
 					else
 					{
@@ -174,43 +321,47 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 					// setup.sortSubsets();
 					ArrayList< Subset< ViewId > > subsets = setup.getSubsets();
 
+					final Collection< ? extends Collection< ViewId > > fixedViews = askForFixedViews( subsets );
+					if (fixedViews == null)
+						return;
+					final Iterator< ? extends Collection< ViewId > > fixedIterator = fixedViews.iterator();
+
 					for ( Subset< ViewId > subset : subsets )
 					{
 						System.out.println( subset );
 
-						Map< ViewId, AffineGet > initialTransformations = new HashMap<>();
-						for ( ViewId vid : subset.getViews() )
-							initialTransformations.put( vid, filteringAndGrouping.getSpimData().getViewRegistrations()
-									.getViewRegistration( vid ).getModel() );
+//						Map< ViewId, AffineGet > initialTransformations = new HashMap<>();
+//						for ( ViewId vid : subset.getViews() )
+//							initialTransformations.put( vid, filteringAndGrouping.getSpimData().getViewRegistrations()
+//									.getViewRegistration( vid ).getModel() );
 
-						Map< ViewId, Dimensions > dims = new HashMap<>();
-						boolean allHaveSize = true;
-						for ( Set< ViewId > sid : subset.getGroups().stream().map( g -> g.getViews() )
-								.collect( Collectors.toSet() ) )
-						{
-							for ( ViewId id : sid )
-							{
-								if ( allHaveSize )
-								{
-									BasicViewSetup vs = filteringAndGrouping.getSpimData().getSequenceDescription()
-											.getViewDescriptions().get( id ).getViewSetup();
-									if ( !vs.hasSize() )
-									{
-										allHaveSize = false;
-										continue;
-									}
-									dims.put( id, vs.getSize() );
-								}
+//						Map< ViewId, Dimensions > dims = new HashMap<>();
+//						boolean allHaveSize = true;
+//						for ( Set< ViewId > sid : subset.getGroups().stream().map( g -> g.getViews() )
+//								.collect( Collectors.toSet() ) )
+//						{
+//							for ( ViewId id : sid )
+//							{
+//								if ( allHaveSize )
+//								{
+//									BasicViewSetup vs = filteringAndGrouping.getSpimData().getSequenceDescription()
+//											.getViewDescriptions().get( id ).getViewSetup();
+//									if ( !vs.hasSize() )
+//									{
+//										allHaveSize = false;
+//										continue;
+//									}
+//									dims.put( id, vs.getSize() );
+//								}
+//
+//							}
+//
+//						}
+//
+//						if ( !allHaveSize )
+//							dims = null;
 
-							}
-
-						}
-
-						if ( !allHaveSize )
-							dims = null;
-
-						List< Set< ViewId > > fixed = new ArrayList<>();
-						fixed.add( subset.getGroups().iterator().next().getViews() );
+						final Collection< ViewId > fixed = fixedIterator.next();
 
 						Collection< PairwiseStitchingResult< ViewId > > results = stitchingResults.getPairwiseResults()
 								.values();
@@ -229,7 +380,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 											params.relativeThreshold, params.absoluteThreshold ),
 									new MaxErrorLinkRemoval(),
 									new MetaDataWeakLinkFactory( panel.getSpimData().getViewRegistrations() ),
-									new ConvergenceStrategy( Double.MAX_VALUE ), fixed.iterator().next(),
+									new ConvergenceStrategy( Double.MAX_VALUE ), fixed,
 									subset.getGroups() );
 
 							globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
@@ -252,12 +403,12 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 						}
 						else
 						{
-							HashMap< ViewId, Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute(
+							HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute(
 									new TranslationModel3D(),
 									new ImageCorrelationPointMatchCreator( results, params.correlationT ),
 									new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
 											params.relativeThreshold, params.absoluteThreshold ),
-									new MaxErrorLinkRemoval(), fixed.iterator().next(), subset.getGroups() );
+									new MaxErrorLinkRemoval(), fixed, subset.getGroups() );
 
 							globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
 							globalOptResults.forEach( (k, v) -> {

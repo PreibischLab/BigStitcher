@@ -161,36 +161,36 @@ public class OptimizeGloballyPopup extends JMenuItem implements ExplorerWindowSe
 
 					List< PairwiseStitchingResult< ViewId > > results = new ArrayList<>(
 							stitchingResults.getPairwiseResults().values() );
-					final Map< ViewId, AffineGet > translations = new HashMap<>();
-					Map< ViewId, Dimensions > dims = new HashMap<>();
-
-					boolean allHaveSize = true;
-					for ( Set< ViewId > sid : viewIds )
-					{
-						for ( ViewId id : sid )
-						{
-							AffineGet a3d = d.getViewRegistrations().getViewRegistration( id ).getModel();
-
-							translations.put( id, a3d );
-
-							if ( allHaveSize )
-							{
-								BasicViewSetup vs = d.getSequenceDescription().getViewDescriptions().get( id )
-										.getViewSetup();
-								if ( !vs.hasSize() )
-								{
-									allHaveSize = false;
-									continue;
-								}
-								dims.put( id, vs.getSize() );
-							}
-
-						}
-
-					}
-
-					if ( !allHaveSize )
-						dims = null;
+//					final Map< ViewId, AffineGet > translations = new HashMap<>();
+//					Map< ViewId, Dimensions > dims = new HashMap<>();
+//
+//					boolean allHaveSize = true;
+//					for ( Set< ViewId > sid : viewIds )
+//					{
+//						for ( ViewId id : sid )
+//						{
+//							AffineGet a3d = d.getViewRegistrations().getViewRegistration( id ).getModel();
+//
+//							translations.put( id, a3d );
+//
+//							if ( allHaveSize )
+//							{
+//								BasicViewSetup vs = d.getSequenceDescription().getViewDescriptions().get( id )
+//										.getViewSetup();
+//								if ( !vs.hasSize() )
+//								{
+//									allHaveSize = false;
+//									continue;
+//								}
+//								dims.put( id, vs.getSize() );
+//							}
+//
+//						}
+//
+//					}
+//
+//					if ( !allHaveSize )
+//						dims = null;
 
 					ArrayList< Group< ViewId > > groupsIn = new ArrayList< Group< ViewId > >();
 					viewIds.forEach( vids -> groupsIn.add( new Group<>( vids ) ) );

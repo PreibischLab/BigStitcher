@@ -60,6 +60,7 @@ import gui.popup.SelectIlluminationPopup;
 import gui.popup.SimpleRemoveLinkPopup;
 import gui.popup.TogglePreviewPopup;
 import gui.popup.TranslateGroupManuallyPopup;
+import gui.popup.VerifyLinksPopup;
 import input.FractalImgLoader;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -96,6 +97,7 @@ import spim.fiji.spimdata.explorer.popup.DetectInterestPointsPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayFusedImagesPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayRawImagesPopup;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import spim.fiji.spimdata.explorer.popup.FusionPopup;
 import spim.fiji.spimdata.explorer.popup.LabelPopUp;
 import spim.fiji.spimdata.explorer.popup.RemoveTransformationPopup;
 import spim.fiji.spimdata.explorer.popup.ResavePopup;
@@ -278,6 +280,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 			if (doGlobalOpt)
 			{
+				// this should find any one of the two Optimize globally popups
 				Optional< ExplorerWindowSetable > globalOptPopupOpt = popups.stream().filter( p -> OptimizeGloballyPopupExpertBatch.class.isInstance( p ) ).findFirst();
 				OptimizeGloballyPopupExpertBatch globalOptPopup = (OptimizeGloballyPopupExpertBatch) globalOptPopupOpt.get();
 				globalOptPopup.doClick();
@@ -746,7 +749,6 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new LabelPopUp( " Displaying" ) );
 		popups.add( new BDVPopupStitching( linkOverlay ) );
 		popups.add( new DisplayRawImagesPopup() );
-		popups.add( new DisplayFusedImagesPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Preprocessing" ) );
@@ -765,39 +767,46 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		calculatePCPopupExpert.setStitchingResults( stitchingResults );
 		popups.add( calculatePCPopupExpert );
 
-		OptimizeGloballyPopup optimizePopup = new OptimizeGloballyPopup();
-		optimizePopup.setStitchingResults( stitchingResults );
-		popups.add( optimizePopup );
-		
-		OptimizeGloballyPopupExpertBatch optimizePopupExpert = new OptimizeGloballyPopupExpertBatch();
-		optimizePopupExpert.setStitchingResults( stitchingResults );
-		popups.add( optimizePopupExpert );
-
-		SimpleRemoveLinkPopup removeLinkPopup = new SimpleRemoveLinkPopup();
-		removeLinkPopup.setStitchingResults( stitchingResults );
-		popups.add( removeLinkPopup );
-		
-		//DemoLinkOverlayPopup dlPopup = new DemoLinkOverlayPopup(demoLinkOverlay);
-		//popups.add( dlPopup );
-
-		popups.add( new TogglePreviewPopup() );
-		//popups.add( new PairwiseInterestPointRegistrationPopup("Pairwise Registration using Interest Points ...", false, false) );
-		//popups.add( new DetectInterestPointsPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Step-by-step Stitching" ) );
 		CalculatePCPopupExpertBatch calculatePCPopupExpertStepByStep = new CalculatePCPopupExpertBatch("Calculate Pairwise Shifts ...", false);
 		calculatePCPopupExpertStepByStep.setStitchingResults( stitchingResults );
 		popups.add( calculatePCPopupExpertStepByStep );
+
+		VerifyLinksPopup verifyLinks = new VerifyLinksPopup();
+		verifyLinks.setStitchingResults( stitchingResults );
+		popups.add( verifyLinks );
+
+		OptimizeGloballyPopupExpertBatch optimizePopupSimple = new OptimizeGloballyPopupExpertBatch(false);
+		optimizePopupSimple.setStitchingResults( stitchingResults );
+		popups.add( optimizePopupSimple );
+
+		OptimizeGloballyPopupExpertBatch optimizePopupExpert = new OptimizeGloballyPopupExpertBatch(true);
+		optimizePopupExpert.setStitchingResults( stitchingResults );
+		popups.add( optimizePopupExpert );
+
+//		SimpleRemoveLinkPopup removeLinkPopup = new SimpleRemoveLinkPopup();
+//		removeLinkPopup.setStitchingResults( stitchingResults );
+//		popups.add( removeLinkPopup );
+		
+		//DemoLinkOverlayPopup dlPopup = new DemoLinkOverlayPopup(demoLinkOverlay);
+		//popups.add( dlPopup );
+
+//		popups.add( new TogglePreviewPopup() );
+		//popups.add( new PairwiseInterestPointRegistrationPopup("Pairwise Registration using Interest Points ...", false, false) );
+		//popups.add( new DetectInterestPointsPopup() );
 		popups.add( new Separator() );
 		
 		popups.add( new LabelPopUp( "Fusion" ) );
 		popups.add( new BoundingBoxPopup() );
+		popups.add( new DisplayFusedImagesPopup() );
+		popups.add( new FusionPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
 		popups.add( new RemoveTransformationPopup() );
-		popups.add( new ApplyBDVTransformationPopup() );
+//		popups.add( new ApplyBDVTransformationPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Modifications" ) );

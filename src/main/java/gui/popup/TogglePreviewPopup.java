@@ -28,7 +28,7 @@ public class TogglePreviewPopup extends JMenuItem implements ExplorerWindowSetab
 	
 	public TogglePreviewPopup() 
 	{
-		super( "Toggle Preview Mode (on/off)" );
+		super( "Interactive Link Explorer ..." );
 		this.addActionListener( new MyActionListener() );
 	}
 	
