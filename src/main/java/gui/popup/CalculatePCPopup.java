@@ -167,6 +167,9 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 
 					if (wizardMode)
 					{
+						// remember if we used default parameters here -> we will use default parameters in global opt as well.
+						filteringAndGrouping.requestExpertSettingsForGlobalOpt = !simple;
+
 						// ask user if they want to switch to preview mode
 						if (panel instanceof StitchingExplorerPanel)
 						{

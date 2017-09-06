@@ -281,9 +281,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			if (doGlobalOpt)
 			{
 				// this should find any one of the two Optimize globally popups
-				Optional< ExplorerWindowSetable > globalOptPopupOpt = popups.stream().filter( p -> OptimizeGloballyPopupExpertBatch.class.isInstance( p ) ).findFirst();
-				OptimizeGloballyPopupExpertBatch globalOptPopup = (OptimizeGloballyPopupExpertBatch) globalOptPopupOpt.get();
-				globalOptPopup.doClick();
+				Optional< ExplorerWindowSetable > globalOptPopupOpt = popups.stream().filter( p -> OptimizeGloballyPopup.class.isInstance( p ) ).findFirst();
+				OptimizeGloballyPopup globalOptPopup = (OptimizeGloballyPopup) globalOptPopupOpt.get();
+				(savedFilteringAndGrouping.requestExpertSettingsForGlobalOpt ? globalOptPopup.expertOptimize : globalOptPopup.simpleOptimize).doClick(); 
 			}
 			else
 			{
@@ -778,13 +778,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		verifyLinks.setStitchingResults( stitchingResults );
 		popups.add( verifyLinks );
 
-		OptimizeGloballyPopupExpertBatch optimizePopupSimple = new OptimizeGloballyPopupExpertBatch(false);
-		optimizePopupSimple.setStitchingResults( stitchingResults );
-		popups.add( optimizePopupSimple );
+		OptimizeGloballyPopup optimizePopup = new OptimizeGloballyPopup();
+		optimizePopup.setStitchingResults( stitchingResults );
+		popups.add( optimizePopup );
 
-		OptimizeGloballyPopupExpertBatch optimizePopupExpert = new OptimizeGloballyPopupExpertBatch(true);
-		optimizePopupExpert.setStitchingResults( stitchingResults );
-		popups.add( optimizePopupExpert );
+//		OptimizeGloballyPopupExpertBatch optimizePopupExpert = new OptimizeGloballyPopupExpertBatch(true);
+//		optimizePopupExpert.setStitchingResults( stitchingResults );
+//		popups.add( optimizePopupExpert );
 
 //		SimpleRemoveLinkPopup removeLinkPopup = new SimpleRemoveLinkPopup();
 //		removeLinkPopup.setStitchingResults( stitchingResults );

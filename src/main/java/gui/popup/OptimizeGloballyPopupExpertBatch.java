@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,10 +37,12 @@ import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
+import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import spim.fiji.plugin.util.GUIHelper;
+import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -78,9 +81,147 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 		return this;
 	}
 
+	public static boolean processGlobalOptimization(
+			final SpimData2 data,
+			final SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping,
+			final GlobalOptimizationParameters params)
+	{
+		// why can type not be BasicViewDescription?
+		PairwiseSetup< ViewId > setup = new PairwiseSetup< ViewId >(
+				filteringAndGrouping.getFilteredViews().stream().map( x -> (ViewId) x )
+						.collect( Collectors.toList() ),
+				filteringAndGrouping.getGroupedViews( false )
+						.stream().map( x -> new Group< ViewId >( x.getViews().stream()
+								.map( y -> (ViewId) y ).collect( Collectors.toList() ) ) )
+						.collect( Collectors.toSet() ) )
+		{
+
+			@Override
+			protected List< Pair< ViewId, ViewId > > definePairsAbstract()
+			{
+				List< Pair< ViewId, ViewId > > res = new ArrayList<>();
+				for ( int i = 0; i < views.size(); i++ )
+					for ( int j = i + 1; j < views.size(); j++ )
+					{
+						boolean differInApplicationAxis = false;
+						for ( Class< ? extends Entity > cl : filteringAndGrouping.getAxesOfApplication() )
+						{
+							// ugly, but just undoes the casting to
+							// ViewId in constructor
+							BasicViewDescription< ? extends BasicViewSetup > vdA = (BasicViewDescription< ? extends BasicViewSetup >) views
+									.get( i );
+							BasicViewDescription< ? extends BasicViewSetup > vdB = (BasicViewDescription< ? extends BasicViewSetup >) views
+									.get( j );
+
+							if ( cl == TimePoint.class )
+								differInApplicationAxis |= !vdA.getTimePoint().equals( vdB.getTimePoint() );
+							else
+								differInApplicationAxis |= !vdA.getViewSetup().getAttribute( cl )
+										.equals( vdB.getViewSetup().getAttribute( cl ) );
+						}
+						if ( !differInApplicationAxis )
+							res.add( new ValuePair< ViewId, ViewId >( views.get( i ), views.get( j ) ) );
+					}
+
+				return res;
+			}
+
+			@Override
+			public List< ViewId > getDefaultFixedViews()
+			{
+				return new ArrayList<>();
+			}
+		};
+
+		setup.definePairs();
+		setup.detectSubsets();
+		ArrayList< Subset< ViewId > > subsets = setup.getSubsets();
+
+		final Collection< ? extends Collection< ViewId > > fixedViews = askForFixedViews( subsets );
+		if (fixedViews == null)
+			return false;
+		final Iterator< ? extends Collection< ViewId > > fixedIterator = fixedViews.iterator();
+
+		for ( Subset< ViewId > subset : subsets )
+		{
+			System.out.println( subset );
+
+			final Collection< ViewId > fixed = fixedIterator.next();
+
+			Collection< PairwiseStitchingResult< ViewId > > results = data.getStitchingResults().getPairwiseResults()
+					.values();
+			// filter to only process links between selected views
+			results = results.stream()
+					.filter( psr -> subset.getGroups().contains( psr.pair().getA() )
+							&& subset.getGroups().contains( psr.pair().getB() ) )
+					.collect( Collectors.toList() );
+
+			if ( params.doTwoRound )
+			{
+				HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
+						new TranslationModel3D(),
+						new ImageCorrelationPointMatchCreator( results, params.correlationT ),
+						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
+								params.relativeThreshold, params.absoluteThreshold ),
+						new MaxErrorLinkRemoval(),
+						new MetaDataWeakLinkFactory( data.getViewRegistrations() ),
+						new ConvergenceStrategy( Double.MAX_VALUE ), fixed,
+						subset.getGroups() );
+
+				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
+				globalOptResults.forEach( (k, v) -> {
+
+					final ViewRegistration vr = data.getViewRegistrations()
+							.getViewRegistration( k );
+
+					AffineTransform3D viewTransform = new AffineTransform3D();
+					viewTransform.set( v );
+					viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr,
+							viewTransform );
+
+					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform",
+							viewTransform );
+					vr.preconcatenateTransform( vt );
+					vr.updateModel();
+
+				} );
+			}
+			else
+			{
+				HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute(
+						new TranslationModel3D(),
+						new ImageCorrelationPointMatchCreator( results, params.correlationT ),
+						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
+								params.relativeThreshold, params.absoluteThreshold ),
+						new MaxErrorLinkRemoval(), fixed, subset.getGroups() );
+
+				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
+				globalOptResults.forEach( (k, v) -> {
+
+					final ViewRegistration vr = data.getViewRegistrations()
+							.getViewRegistration( k );
+					AffineTransform3D viewTransform = new AffineTransform3D();
+					viewTransform.set( v.getModel().getMatrix( null ) );
+
+					viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr,
+							viewTransform );
+
+					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform",
+							viewTransform );
+					vr.preconcatenateTransform( vt );
+					vr.updateModel();
+
+				} );
+			}
+
+		}
+
+		return true;
+	}
+
 	public OptimizeGloballyPopupExpertBatch(boolean expertMode)
 	{
-		super( "Optimize Globally And Apply Shift " + (expertMode ? "(expert) " : "") + " ..." );
+		super( expertMode ? "Expert Mode" : "Simple Mode" );
 		this.expertMode = expertMode;
 		this.addActionListener( new MyActionListener() );
 	}
@@ -218,222 +359,68 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 				@Override
 				public void run()
 				{
-					GlobalOptimizationParameters params = expertMode ? GlobalOptimizationParameters.askUserForParameters() : new GlobalOptimizationParameters();
-					if ( params == null )
-						return;
-
-					SpimDataFilteringAndGrouping< AbstractSpimData< ? > > filteringAndGrouping;
-					final boolean isSavedFaG = ( ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping() != null );
-					if ( !isSavedFaG )
+					try
 					{
-						FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
-						filteringAndGrouping = new SpimDataFilteringAndGrouping< AbstractSpimData< ? > >(
-								panel.getSpimData() );
-
-						if (expertMode)
+						if (!SpimData2.class.isInstance( panel.getSpimData() ) )
 						{
-							filteringAndGrouping.askUserForFiltering( panelFG );
-							if ( filteringAndGrouping.getDialogWasCancelled() )
-								return;
+							IOFunctions.println(new Date( System.currentTimeMillis() ) + "ERROR: expected SpimData2, but got " + panel.getSpimData().getClass().getSimpleName());
+							return;
+						}
 
-							filteringAndGrouping.askUserForGrouping( panelFG );
-							if ( filteringAndGrouping.getDialogWasCancelled() )
-								return;
+						final GlobalOptimizationParameters params = expertMode ? GlobalOptimizationParameters.askUserForParameters() : new GlobalOptimizationParameters();
+						if ( params == null )
+							return;
+
+						final SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping;
+						final boolean isSavedFaG = ( ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping() != null );
+						if ( !isSavedFaG )
+						{
+							FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
+							filteringAndGrouping = new SpimDataFilteringAndGrouping< SpimData2 >(
+									(SpimData2) panel.getSpimData() );
+
+							if (expertMode)
+							{
+								filteringAndGrouping.askUserForFiltering( panelFG );
+								if ( filteringAndGrouping.getDialogWasCancelled() )
+									return;
+
+								filteringAndGrouping.askUserForGrouping( panelFG );
+								if ( filteringAndGrouping.getDialogWasCancelled() )
+									return;
+							}
+							else
+							{
+								// use whatever is selected in panel as filters
+								filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
+
+								// get the grouping from panel and compare Tiles
+								panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
+								filteringAndGrouping.addComparisonAxis( Tile.class );
+
+								// compare by Channel if channels were ungrouped in UI
+								if (!panelFG.getTableModel().getGroupingFactors().contains( Channel.class ))
+									filteringAndGrouping.addComparisonAxis( Channel.class );
+
+								// compare by Illumination if illums were ungrouped in UI
+								if (!panelFG.getTableModel().getGroupingFactors().contains( Illumination.class ))
+									filteringAndGrouping.addComparisonAxis( Illumination.class );
+
+							}
 						}
 						else
 						{
-							// use whatever is selected in panel as filters
-							filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
-
-							// get the grouping from panel and compare Tiles
-							panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
-							filteringAndGrouping.addComparisonAxis( Tile.class );
-
-							// compare by Channel if channels were ungrouped in UI
-							if (!panelFG.getTableModel().getGroupingFactors().contains( Channel.class ))
-								filteringAndGrouping.addComparisonAxis( Channel.class );
-
-							// compare by Illumination if illums were ungrouped in UI
-							if (!panelFG.getTableModel().getGroupingFactors().contains( Illumination.class ))
-								filteringAndGrouping.addComparisonAxis( Illumination.class );
-
+							// FIXME: there is some generics work to be done,
+							// obviously
+							filteringAndGrouping = (SpimDataFilteringAndGrouping< SpimData2 >) ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping();
 						}
+
+						processGlobalOptimization( (SpimData2) panel.getSpimData(), filteringAndGrouping, params );
 					}
-					else
-					{
-						// FIXME: there is some generics work to be done,
-						// obviously
-						filteringAndGrouping = (SpimDataFilteringAndGrouping< AbstractSpimData< ? > >) (Object) ( (StitchingExplorerPanel< ?, ? >) panel )
-								.getSavedFilteringAndGrouping();
-					}
-
-					// why can type not be BasicViewDescription?
-					PairwiseSetup< ViewId > setup = new PairwiseSetup< ViewId >(
-							filteringAndGrouping.getFilteredViews().stream().map( x -> (ViewId) x )
-									.collect( Collectors.toList() ),
-							filteringAndGrouping.getGroupedViews( false )
-									.stream().map( x -> new Group< ViewId >( x.getViews().stream()
-											.map( y -> (ViewId) y ).collect( Collectors.toList() ) ) )
-									.collect( Collectors.toSet() ) )
-					{
-
-						@Override
-						protected List< Pair< ViewId, ViewId > > definePairsAbstract()
-						{
-							List< Pair< ViewId, ViewId > > res = new ArrayList<>();
-							for ( int i = 0; i < views.size(); i++ )
-								for ( int j = i + 1; j < views.size(); j++ )
-								{
-									boolean differInApplicationAxis = false;
-									for ( Class< ? extends Entity > cl : filteringAndGrouping.getAxesOfApplication() )
-									{
-										// ugly, but just undoes the casting to
-										// ViewId in constructor
-										BasicViewDescription< ? extends BasicViewSetup > vdA = (BasicViewDescription< ? extends BasicViewSetup >) views
-												.get( i );
-										BasicViewDescription< ? extends BasicViewSetup > vdB = (BasicViewDescription< ? extends BasicViewSetup >) views
-												.get( j );
-
-										if ( cl == TimePoint.class )
-											differInApplicationAxis |= !vdA.getTimePoint().equals( vdB.getTimePoint() );
-										else
-											differInApplicationAxis |= !vdA.getViewSetup().getAttribute( cl )
-													.equals( vdB.getViewSetup().getAttribute( cl ) );
-									}
-									if ( !differInApplicationAxis )
-										res.add( new ValuePair< ViewId, ViewId >( views.get( i ), views.get( j ) ) );
-								}
-
-							return res;
-						}
-
-						@Override
-						public List< ViewId > getDefaultFixedViews()
-						{
-							return new ArrayList<>();
-						}
-					};
-
-					setup.definePairs();
-					// setup.removeNonOverlappingPairs();
-					// setup.reorderPairs();
-					setup.detectSubsets();
-					// setup.sortSubsets();
-					ArrayList< Subset< ViewId > > subsets = setup.getSubsets();
-
-					final Collection< ? extends Collection< ViewId > > fixedViews = askForFixedViews( subsets );
-					if (fixedViews == null)
-						return;
-					final Iterator< ? extends Collection< ViewId > > fixedIterator = fixedViews.iterator();
-
-					for ( Subset< ViewId > subset : subsets )
-					{
-						System.out.println( subset );
-
-//						Map< ViewId, AffineGet > initialTransformations = new HashMap<>();
-//						for ( ViewId vid : subset.getViews() )
-//							initialTransformations.put( vid, filteringAndGrouping.getSpimData().getViewRegistrations()
-//									.getViewRegistration( vid ).getModel() );
-
-//						Map< ViewId, Dimensions > dims = new HashMap<>();
-//						boolean allHaveSize = true;
-//						for ( Set< ViewId > sid : subset.getGroups().stream().map( g -> g.getViews() )
-//								.collect( Collectors.toSet() ) )
-//						{
-//							for ( ViewId id : sid )
-//							{
-//								if ( allHaveSize )
-//								{
-//									BasicViewSetup vs = filteringAndGrouping.getSpimData().getSequenceDescription()
-//											.getViewDescriptions().get( id ).getViewSetup();
-//									if ( !vs.hasSize() )
-//									{
-//										allHaveSize = false;
-//										continue;
-//									}
-//									dims.put( id, vs.getSize() );
-//								}
-//
-//							}
-//
-//						}
-//
-//						if ( !allHaveSize )
-//							dims = null;
-
-						final Collection< ViewId > fixed = fixedIterator.next();
-
-						Collection< PairwiseStitchingResult< ViewId > > results = stitchingResults.getPairwiseResults()
-								.values();
-						// filter to only process links between selected views
-						results = results.stream()
-								.filter( psr -> subset.getGroups().contains( psr.pair().getA() )
-										&& subset.getGroups().contains( psr.pair().getB() ) )
-								.collect( Collectors.toList() );
-
-						if ( params.doTwoRound )
-						{
-							HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
-									new TranslationModel3D(),
-									new ImageCorrelationPointMatchCreator( results, params.correlationT ),
-									new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
-											params.relativeThreshold, params.absoluteThreshold ),
-									new MaxErrorLinkRemoval(),
-									new MetaDataWeakLinkFactory( panel.getSpimData().getViewRegistrations() ),
-									new ConvergenceStrategy( Double.MAX_VALUE ), fixed,
-									subset.getGroups() );
-
-							globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
-							globalOptResults.forEach( (k, v) -> {
-
-								final ViewRegistration vr = panel.getSpimData().getViewRegistrations()
-										.getViewRegistration( k );
-
-								AffineTransform3D viewTransform = new AffineTransform3D();
-								viewTransform.set( v );
-								viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr,
-										viewTransform );
-
-								final ViewTransform vt = new ViewTransformAffine( "Stitching Transform",
-										viewTransform );
-								vr.preconcatenateTransform( vt );
-								vr.updateModel();
-
-							} );
-						}
-						else
-						{
-							HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute(
-									new TranslationModel3D(),
-									new ImageCorrelationPointMatchCreator( results, params.correlationT ),
-									new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
-											params.relativeThreshold, params.absoluteThreshold ),
-									new MaxErrorLinkRemoval(), fixed, subset.getGroups() );
-
-							globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
-							globalOptResults.forEach( (k, v) -> {
-
-								final ViewRegistration vr = panel.getSpimData().getViewRegistrations()
-										.getViewRegistration( k );
-								AffineTransform3D viewTransform = new AffineTransform3D();
-								viewTransform.set( v.getModel().getMatrix( null ) );
-
-								viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr,
-										viewTransform );
-
-								final ViewTransform vt = new ViewTransformAffine( "Stitching Transform",
-										viewTransform );
-								vr.preconcatenateTransform( vt );
-								vr.updateModel();
-
-							} );
-						}
-
-					}
-
-					if (isSavedFaG)
+					finally
 					{
 						// remove saved filtering and grouping once we are done here
+						// regardless of whether optimization was successful or not
 						( (StitchingExplorerPanel< ?, ? >) panel ).setSavedFilteringAndGrouping( null );
 					}
 

@@ -37,7 +37,7 @@ import spim.process.interestpointregistration.pairwise.constellation.grouping.Gr
 
 public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 {
-	
+
 	public static List<Class<? extends Entity>> entityClasses = new ArrayList<>();
 	static 
 	{
@@ -47,16 +47,17 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		entityClasses.add( Angle.class );
 		entityClasses.add( Tile.class );
 	}
-	
+
 	Set<Class<? extends Entity>> groupingFactors; // attributes by which views are grouped first
 	Set<Class<? extends Entity>> axesOfApplication; // axes of application -> we want to process within single instances (e.g. each TimePoint separately)
 	Set<Class<? extends Entity>> axesOfComparison; // axes we want to compare
 	Map<Class<? extends Entity>, List<? extends Entity>> filters; // filters for the different attributes
 	AS data;
 	GroupedViewAggregator gva;
-	
+
+	public boolean requestExpertSettingsForGlobalOpt = true;
 	boolean dialogWasCancelled = false;
-	
+
 	public SpimDataFilteringAndGrouping(AS data)
 	{
 		groupingFactors = new HashSet<>();
@@ -66,92 +67,91 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		this.data = data;
 		gva = new GroupedViewAggregator();
 	}
-	
+
 	public AS getSpimData()
 	{
 		return data;
 	}
-	
+
 	public GroupedViewAggregator getGroupedViewAggregator()
 	{
 		return gva;
 	}
-	
+
 	public void addGroupingFactor(Class<? extends Entity> factor ) {
 		groupingFactors.add(factor);
 	}
-		
+
 	public void addFilter(Class<? extends Entity> cl, List<? extends Entity> instances){
 		filters.put(cl, instances);
 	}
-	
+
 	public void addFilters(Collection<? extends BasicViewDescription< ? extends BasicViewSetup >> selected)
 	{
 		for (Class<? extends Entity> cl : entityClasses)
 			filters.put( cl, new ArrayList<>(getInstancesOfAttribute( selected, cl ) ) );
 	}
-	
+
 	public void addApplicationAxis(Class<? extends Entity> axis ) {
 		axesOfApplication.add(axis);
 	}
-	
+
 	public void addComparisonAxis(Class<? extends Entity> axis ) {
 		axesOfComparison.add(axis);
 	}
-	
-	
+
 	public void clearGroupingFactors()
 	{
 		groupingFactors.clear();
 	}
+
 	public void clearFilters()
 	{
 		filters.clear();
 	}
+
 	public void clearApplicationAxes()
 	{
 		axesOfApplication.clear();
 	}
+
 	public void clearComparisonAxes()
 	{
 		axesOfComparison.clear();
 	}
-	
+
 	public Set< Class< ? extends Entity > > getGroupingFactors()
 	{
 		return groupingFactors;
 	}
-
 
 	public Set< Class< ? extends Entity > > getAxesOfApplication()
 	{
 		return axesOfApplication;
 	}
 
-
 	public Set< Class< ? extends Entity > > getAxesOfComparison()
 	{
 		return axesOfComparison;
 	}
 
-
 	public Map< Class< ? extends Entity >, List< ? extends Entity > > getFilters()
 	{
 		return filters;
 	}
-	
+
 	public List<? extends BasicViewDescription< ? > > getFilteredViews()
 	{
 		return SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), filters);
 	}
-	
+
 	public List< Group< BasicViewDescription< ?  > >> getGroupedViews(boolean filtered)
 	{
 		final List<BasicViewDescription< ? > > ungroupedElements =
 				SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), filtered? filters : new HashMap<>());
 		return Group.combineBy( ungroupedElements, groupingFactors);
 	}
-	
+
 	public List<Pair<Group< ? extends BasicViewDescription< ? extends BasicViewSetup > >, Group< ? extends BasicViewDescription< ? extends BasicViewSetup >>>> getComparisons()
 	{
 		final List<Pair<Group< ? extends BasicViewDescription< ? extends BasicViewSetup > >, Group< ? extends BasicViewDescription< ? extends BasicViewSetup >>>> res = new ArrayList<>();
@@ -174,8 +174,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 						&& groupsDifferByAny( groupedElements.get( i ), groupedElements.get( j ), axesOfComparison ))
 					res.add(new ValuePair<>(groupedElements.get( i ), groupedElements.get( j )));
 			}
-	
-		return res;		
+		return res;
 	}
 	
 	private static boolean groupsDifferByAny(Iterable< BasicViewDescription< ?  > > vds1, Iterable< BasicViewDescription< ?  > > vds2, Set<Class<? extends Entity>> entities)
@@ -214,7 +213,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		// make one List out of the nested Collection and getInstancesOfAttribute
 		return getInstancesOfAttribute( vds.stream().reduce( new ArrayList<>(), (x, y) -> {x.addAll(y); return x;} ), cl );
 	}
-	
+
 	public static Set<Entity> getInstancesOfAttribute(Collection<? extends BasicViewDescription< ? extends BasicViewSetup >> vds, Class<? extends Entity> cl)
 	{
 		Set<Entity> res = new HashSet<>();
@@ -223,9 +222,9 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 				res.add( vd.getTimePoint() );
 			else
 				res.add( vd.getViewSetup().getAttribute( cl ) );
-		return res;		
+		return res;
 	}
-		
+
 	/**
 	 * get the instances of class cl that are present in at least one ViewDescription of each of the groups in vds.
 	 * @param vds collection of view description iterables
@@ -263,19 +262,19 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 
 		return new ArrayList<>(res);
 	}
-	
+
 	public boolean getDialogWasCancelled()
 	{
 		return dialogWasCancelled;
 	}
-	
+
 	// convenience method if we do not know selected views
 	public SpimDataFilteringAndGrouping< AS> askUserForFiltering()
 	{
 		// select all
 		return askUserForFiltering( data.getSequenceDescription().getViewDescriptions().values() );
 	}
-	
+
 	// convenience method if have a panel (which can give us selected views)
 	public SpimDataFilteringAndGrouping< AS> askUserForFiltering(FilteredAndGroupedExplorerPanel< AS, ?> panel)
 	{
@@ -293,7 +292,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		return res;
 		
 	}
-	
+
 	public SpimDataFilteringAndGrouping< AS> askUserForFiltering(Collection<? extends BasicViewDescription< ? extends BasicViewSetup > > views)
 	{
 
@@ -328,14 +327,14 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		return this;
 	
 	}
-	
+
 	public SpimDataFilteringAndGrouping< AS> askUserForGrouping()
 	{
 		// use the current filtering as preset
 		// FIXME: ungly cast
 		return askUserForGrouping( SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), getFilters() ), new ArrayList<>() );
 	}
-	
+
 	public SpimDataFilteringAndGrouping< AS> askUserForGrouping( FilteredAndGroupedExplorerPanel< AS, ?> panel)
 	{
 		List< BasicViewDescription< ? extends BasicViewSetup > > views;
@@ -350,8 +349,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		
 		return askUserForGrouping( views,	panel.getTableModel().getGroupingFactors());
 	}
-	
-	
+
 	public SpimDataFilteringAndGrouping< AS> askUserForGrouping( 
 					Collection<? extends BasicViewDescription< ? > > views,
 					Collection<Class<? extends Entity>> groupingFactors)
@@ -394,8 +392,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		
 		return this;
 	}
-	
-	
+
 	/**
 	 * ask user how to aggregate grouped views (for all the entity classes we group by)
 	 * if a default choice for a class is provided, the user will not be asked for that class
@@ -405,10 +402,10 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	public SpimDataFilteringAndGrouping< AS> askUserForGroupingAggregator(final Map<Class<? extends Entity>, ActionType> defaultChoices)
 	{
 		// ask what to do with grouped views
-		GenericDialogPlus gdp3 = new GenericDialogPlus( "Select How to Treat Grouped Views" );		
+		GenericDialogPlus gdp = new GenericDialogPlus( "Select How to Treat Grouped Views" );		
 
 //		FileListDatasetDefinition.addMessageAsJLabel("<html><strong>Select which instances of attributes to use in Grouped Views </strong> <br></html>", gdp3);
-		gdp3.addMessage( "Please specify how to deal with grouped Views.", new Font( Font.SANS_SERIF, Font.BOLD, 14 ), GUIHelper.neutral );
+		gdp.addMessage( "Please specify how to deal with grouped Views.", new Font( Font.SANS_SERIF, Font.BOLD, 14 ), GUIHelper.neutral );
 
 		// filter first
 		final List<BasicViewDescription< ? > > ungroupedElements =
@@ -435,11 +432,11 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 			});
 			
 			String[] selectionArray = selection.toArray( new String[selection.size()] );
-			gdp3.addChoice( cl.getSimpleName() + "s:", selectionArray, selectionArray[0] );
+			gdp.addChoice( cl.getSimpleName() + "s:", selectionArray, selectionArray[0] );
 		}
 
-		gdp3.showDialog();
-		if (gdp3.wasCanceled())
+		gdp.showDialog();
+		if (gdp.wasCanceled())
 		{
 			dialogWasCancelled = true;
 			return this;
@@ -454,7 +451,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 			}
 
 			List< ? extends Entity > instancesInAllGroups = getInstancesInAllGroups( groupedElements, cl );
-			int nextChoiceIndex = gdp3.getNextChoiceIndex();
+			int nextChoiceIndex = gdp.getNextChoiceIndex();
 			if (nextChoiceIndex == 0)
 				getGroupedViewAggregator().addAction( ActionType.AVERAGE, cl, null );
 //			else if (nextChoiceIndex == 1)
@@ -465,7 +462,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		
 		return this;
 	}
-	
+
 	public SpimDataFilteringAndGrouping< AS> askUserForGroupingAggregator()
 	{
 		return askUserForGroupingAggregator( new HashMap<>() );

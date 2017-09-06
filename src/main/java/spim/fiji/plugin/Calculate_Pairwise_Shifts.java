@@ -33,6 +33,7 @@ import spim.fiji.plugin.interestpointregistration.TransformationModelGUI;
 import spim.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters;
 import spim.fiji.plugin.interestpointregistration.parameters.GroupParameters.InterestpointGroupingType;
 import spim.fiji.plugin.queryXML.LoadParseQueryXML;
+import spim.fiji.plugin.resave.ProgressWriterIJ;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.boundingbox.BoundingBox;
 import spim.fiji.spimdata.interestpoints.ViewInterestPointLists;
@@ -120,10 +121,49 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			SpimData2 data,
 			SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping,
 			LucasKanadeParameters params,
-			long[] ds)
+			long[] dsFactors)
 	{
-		// TODO: implement
-		return false;
+		// getpairs to compare
+		List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > pairs = (List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > >) filteringAndGrouping
+				.getComparisons();
+
+		// calculate
+		final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairsLK(
+				(List< Pair< Group< ViewId >, Group< ViewId > > >) pairs,
+				params,
+				filteringAndGrouping.getSpimData().getViewRegistrations(),
+				filteringAndGrouping.getSpimData().getSequenceDescription(),
+				filteringAndGrouping.getGroupedViewAggregator(),
+				dsFactors,
+				new ProgressWriterIJ());
+
+		// remove old results
+		// this is just a cast of pairs to Group<ViewId>
+		final List< ValuePair< Group< ViewId >, Group< ViewId > > > castPairs = pairs.stream().map( p -> {
+			final Group< ViewId > vidGroupA = new Group<>(
+					p.getA().getViews().stream().map( v -> (ViewId) v ).collect( Collectors.toSet() ) );
+			final Group< ViewId > vidGroupB = new Group<>(
+					p.getB().getViews().stream().map( v -> (ViewId) v ).collect( Collectors.toSet() ) );
+			return new ValuePair<>( vidGroupA, vidGroupB );
+		} ).collect( Collectors.toList() );
+
+		for ( ValuePair< Group< ViewId >, Group< ViewId > > pair : castPairs )
+		{
+			// try to remove a -> b and b -> a, just to make sure
+			data.getStitchingResults().getPairwiseResults().remove( pair );
+			data.getStitchingResults().getPairwiseResults().remove( new ValuePair<>( pair.getB(), pair.getA() ) );
+		}
+
+		// update StitchingResults with Results
+		for ( final PairwiseStitchingResult< ViewId > psr : results )
+		{
+			if ( psr == null )
+				continue;
+
+			data.getStitchingResults().setPairwiseResultForPair( psr.pair(), psr );
+		}
+
+		return true;
 	}
 
 
