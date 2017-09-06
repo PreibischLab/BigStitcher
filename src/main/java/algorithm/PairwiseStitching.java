@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import algorithm.globalopt.GlobalOptimizationParameters;
-import algorithm.globalopt.GlobalTileOptimization;
 import algorithm.lucaskanade.AffineWarp;
 import algorithm.lucaskanade.Align;
 import algorithm.lucaskanade.LucasKanadeParameters;
