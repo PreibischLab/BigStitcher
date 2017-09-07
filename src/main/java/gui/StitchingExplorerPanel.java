@@ -266,9 +266,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		}
 		else
 		{
-			boolean doGlobalOpt = false;
-			if (savedFilteringAndGrouping != null)
-				doGlobalOpt = JOptionPane.showConfirmDialog( linkFrame, "Proceed to Global Optimization?", "Optimize Globally?", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION;
+			boolean doGlobalOpt = true;
+//			if (savedFilteringAndGrouping != null)
+//				doGlobalOpt = JOptionPane.showConfirmDialog( linkFrame, "Proceed to Global Optimization?", "Optimize Globally?", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION;
 
 			quitLinkExplorer();
 			linkOverlay.clearActiveLinks();
