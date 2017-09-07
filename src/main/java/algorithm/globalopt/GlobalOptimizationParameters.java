@@ -4,46 +4,59 @@ import ij.gui.GenericDialog;
 
 public class GlobalOptimizationParameters
 {
-	public double correlationT;
+	public enum GlobalOptType
+	{
+		SIMPLE,
+		ITERATIVE,
+		TWO_ROUND
+	}
+
+	private final static String[] methodDescriptions = {
+			"Simple One-Round",
+			"One-Round with iterative dropping of bad links",
+			"Two-Round using Metadata to align unconnected Tiles"
+	};
+
+	public GlobalOptType method;
 	public double relativeThreshold;
 	public double absoluteThreshold;
-	public boolean doTwoRound;
-	public boolean useOnlyOverlappingPairs;
-	
+
 	public GlobalOptimizationParameters()
 	{
-		this(0.4, 2.5, 3.5, true, true);		
+		this( 2.5, 3.5, GlobalOptType.ITERATIVE );
 	}
-	
-	public GlobalOptimizationParameters(double correlationThreshold, double relativeThreshold, double absoluteThreshold, boolean doTwoRound, boolean useOnlyOverlappingPairs)
+
+	public GlobalOptimizationParameters(double relativeThreshold, double absoluteThreshold, GlobalOptType method)
 	{
-		this.correlationT = correlationThreshold;
 		this.relativeThreshold = relativeThreshold;
 		this.absoluteThreshold = absoluteThreshold;
-		this.doTwoRound = doTwoRound;
+		this.method = method;
 	}
-	
+
 	public static GlobalOptimizationParameters askUserForParameters()
 	{
 		// ask user for parameters
-		GenericDialog gd = new GenericDialog("Global optimization options");
-		gd.addNumericField( "cross-correlation threshold", 0.4, 3 );
+		final GenericDialog gd = new GenericDialog("Global optimization options");
+		gd.addChoice( "Global_optimization_strategy", methodDescriptions, methodDescriptions[1] );
 		gd.addNumericField( "relative error threshold", 2.5, 3 );
 		gd.addNumericField( "absolute error threshold", 3.5, 3 );
-		gd.addCheckbox( "do two-round optimization", true );
-		gd.addCheckbox( "weak links only between approximately overlapping views", true );
 		gd.showDialog();
-		
+
 		if (gd.wasCanceled())
 			return null;
-		
-		double ccTh = gd.getNextNumber();
-		double relTh = gd.getNextNumber();
-		double absTh = gd.getNextNumber();
-		boolean twoRound = gd.getNextBoolean();
-		boolean onlyOverlapping = gd.getNextBoolean();
-		
-		
-		return new GlobalOptimizationParameters(ccTh, relTh, absTh, twoRound, onlyOverlapping);
+
+		final double relTh = gd.getNextNumber();
+		final double absTh = gd.getNextNumber();
+		final int methodIdx = gd.getNextChoiceIndex();
+
+		final GlobalOptType method;
+		if (methodIdx == 0)
+			method = GlobalOptType.SIMPLE;
+		else if (methodIdx == 1)
+			method = GlobalOptType.ITERATIVE;
+		else
+			method = GlobalOptType.TWO_ROUND;
+
+		return new GlobalOptimizationParameters(relTh, absTh, method);
 	}
 }

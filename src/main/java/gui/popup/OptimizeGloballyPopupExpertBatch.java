@@ -20,6 +20,7 @@ import javax.swing.JMenuItem;
 
 import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.globalopt.GlobalOptimizationParameters;
+import algorithm.globalopt.GlobalOptimizationParameters.GlobalOptType;
 import fiji.util.gui.GenericDialogPlus;
 import gui.StitchingExplorerPanel;
 import gui.StitchingResultsSettable;
@@ -48,6 +49,7 @@ import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import spim.process.interestpointregistration.global.GlobalOpt;
 import spim.process.interestpointregistration.global.GlobalOptIterative;
 import spim.process.interestpointregistration.global.GlobalOptTwoRound;
 import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
@@ -62,6 +64,9 @@ import spim.process.interestpointregistration.pairwise.constellation.grouping.Gr
 public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 		implements ExplorerWindowSetable, StitchingResultsSettable
 {
+
+	// minimal link quality (e.g. cross correlation)
+	public static final double minLinkQuality = 0.0;
 
 	private StitchingResults stitchingResults;
 	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
@@ -84,7 +89,8 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 	public static boolean processGlobalOptimization(
 			final SpimData2 data,
 			final SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping,
-			final GlobalOptimizationParameters params)
+			final GlobalOptimizationParameters params,
+			final boolean fixFirstTileByDefault)
 	{
 		// why can type not be BasicViewDescription?
 		PairwiseSetup< ViewId > setup = new PairwiseSetup< ViewId >(
@@ -137,9 +143,20 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 		setup.detectSubsets();
 		ArrayList< Subset< ViewId > > subsets = setup.getSubsets();
 
-		final Collection< ? extends Collection< ViewId > > fixedViews = askForFixedViews( subsets );
-		if (fixedViews == null)
-			return false;
+
+		final Collection< ? extends Collection< ViewId > > fixedViews;
+		if (fixFirstTileByDefault)
+		{
+			// get first group of each subset by default
+			fixedViews = subsets.stream().map( subset -> subset.getGroups().iterator().next().getViews() ).collect( Collectors.toList() );
+		}
+		else
+		{
+			fixedViews = askForFixedViews( subsets );
+			if (fixedViews == null)
+				return false;
+		}
+
 		final Iterator< ? extends Collection< ViewId > > fixedIterator = fixedViews.iterator();
 
 		for ( Subset< ViewId > subset : subsets )
@@ -156,11 +173,11 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 							&& subset.getGroups().contains( psr.pair().getB() ) )
 					.collect( Collectors.toList() );
 
-			if ( params.doTwoRound )
+			if ( params.method == GlobalOptType.TWO_ROUND )
 			{
 				HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
 						new TranslationModel3D(),
-						new ImageCorrelationPointMatchCreator( results, params.correlationT ),
+						new ImageCorrelationPointMatchCreator( results, minLinkQuality ),
 						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
 								params.relativeThreshold, params.absoluteThreshold ),
 						new MaxErrorLinkRemoval(),
@@ -186,11 +203,11 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 
 				} );
 			}
-			else
+			else if ( params.method == GlobalOptType.ITERATIVE)
 			{
 				HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute(
 						new TranslationModel3D(),
-						new ImageCorrelationPointMatchCreator( results, params.correlationT ),
+						new ImageCorrelationPointMatchCreator( results, minLinkQuality ),
 						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
 								params.relativeThreshold, params.absoluteThreshold ),
 						new MaxErrorLinkRemoval(), fixed, subset.getGroups() );
@@ -198,16 +215,40 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
 				globalOptResults.forEach( (k, v) -> {
 
-					final ViewRegistration vr = data.getViewRegistrations()
-							.getViewRegistration( k );
+					final ViewRegistration vr = data.getViewRegistrations().getViewRegistration( k );
 					AffineTransform3D viewTransform = new AffineTransform3D();
 					viewTransform.set( v.getModel().getMatrix( null ) );
 
 					viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr,
 							viewTransform );
 
-					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform",
+					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
+					vr.preconcatenateTransform( vt );
+					vr.updateModel();
+
+				} );
+			}
+			else // Simple global opt
+			{
+				final HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOpt.compute( 
+						new TranslationModel3D(),
+						new ImageCorrelationPointMatchCreator( results, minLinkQuality ),
+						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
+								params.relativeThreshold, params.absoluteThreshold ),
+						fixed,
+						subset.getGroups() );
+
+				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
+				globalOptResults.forEach( (k, v) -> {
+
+					final ViewRegistration vr = data.getViewRegistrations().getViewRegistration( k );
+					AffineTransform3D viewTransform = new AffineTransform3D();
+					viewTransform.set( v.getModel().getMatrix( null ) );
+
+					viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr,
 							viewTransform );
+
+					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
 					vr.preconcatenateTransform( vt );
 					vr.updateModel();
 
@@ -415,7 +456,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 							filteringAndGrouping = (SpimDataFilteringAndGrouping< SpimData2 >) ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping();
 						}
 
-						processGlobalOptimization( (SpimData2) panel.getSpimData(), filteringAndGrouping, params );
+						processGlobalOptimization( (SpimData2) panel.getSpimData(), filteringAndGrouping, params, !expertMode);
 					}
 					finally
 					{
