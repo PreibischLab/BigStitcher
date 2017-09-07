@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
+import org.joda.time.DateTime;
+
 import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.globalopt.GlobalOptimizationParameters;
 import algorithm.globalopt.GlobalOptimizationParameters.GlobalOptType;
@@ -159,8 +161,10 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 
 		final Iterator< ? extends Collection< ViewId > > fixedIterator = fixedViews.iterator();
 
+		int subsetIdx = -1;
 		for ( Subset< ViewId > subset : subsets )
 		{
+			System.out.println( "subset " + (++subsetIdx) );
 			System.out.println( subset );
 
 			final Collection< ViewId > fixed = fixedIterator.next();
@@ -172,6 +176,32 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 					.filter( psr -> subset.getGroups().contains( psr.pair().getA() )
 							&& subset.getGroups().contains( psr.pair().getB() ) )
 					.collect( Collectors.toList() );
+			// filter bad hashes here
+			final int numLinksBefore = results.size();
+			results = results.stream().filter( psr -> 
+			{
+				final ViewId firstVidA = psr.pair().getA().getViews().iterator().next();
+				final ViewId firstVidB = psr.pair().getB().getViews().iterator().next();
+				final ViewRegistration vrA = data.getViewRegistrations().getViewRegistration( firstVidA );
+				final ViewRegistration vrB = data.getViewRegistrations().getViewRegistration( firstVidB );
+				final double hash = PairwiseStitchingResult.calculateHash( vrA, vrB );
+				return psr.getHash() == hash;
+			}).collect( Collectors.toList() );
+			final int numLinksAfter = results.size();
+
+			if (numLinksAfter != numLinksBefore)
+			{
+				IOFunctions.println("Removed " + ( numLinksBefore - numLinksAfter ) + " of " + numLinksBefore + 
+						" pairwise results because the underlying view registrations have changed.");
+				IOFunctions.println("Did you try to re-run the global optimization after aligning the dataset?");
+				IOFunctions.println("In that case, you can remove the latest transformation and try again.");
+			}
+
+			if (numLinksAfter < 1)
+			{
+				IOFunctions.println( new Date(System.currentTimeMillis()) + ": no links remaining in subset " + subsetIdx + ", skipping.");
+				continue;
+			}
 
 			if ( params.method == GlobalOptType.TWO_ROUND )
 			{
