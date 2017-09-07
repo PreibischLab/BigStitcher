@@ -231,7 +231,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 							if (choice == JOptionPane.YES_OPTION)
 							{
 								((StitchingExplorerPanel< ?, ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
-								((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode();
+								((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode(false);
 							}
 						}
 					}

@@ -43,7 +43,7 @@ public class TogglePreviewPopup extends JMenuItem implements ExplorerWindowSetab
 				return;
 			}
 
-			((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode();	
+			((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode(false);
 			
 		}
 	}

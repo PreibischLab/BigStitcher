@@ -259,8 +259,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 
 		cancelButton.addActionListener( ev -> 
 		{
-			parent.setSavedFilteringAndGrouping( null );
-			parent.togglePreviewMode();
+			parent.togglePreviewMode(false);
 		});
 
 		applyButton.addActionListener( ev -> {
@@ -270,8 +269,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 			final List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > pairs = 
 					(List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > >) parent.getSavedFilteringAndGrouping().getComparisons();
 			model.getFilteredResults().applyToWrappedSubset( (Collection< Pair< Group< ViewId >, Group< ViewId > > >) pairs );
-			parent.setSavedFilteringAndGrouping( null );
-			parent.togglePreviewMode();
+			parent.togglePreviewMode(false);
 		});
 
 		applyAndRunButton.addActionListener( ev -> {
@@ -281,7 +279,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 			final List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > pairs = 
 					(List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > >) parent.getSavedFilteringAndGrouping().getComparisons();
 			model.getFilteredResults().applyToWrappedSubset( (Collection< Pair< Group< ViewId >, Group< ViewId > > >) pairs );
-			parent.togglePreviewMode();
+			parent.togglePreviewMode(true);
 		});
 
 		buttons.add( applyButton );

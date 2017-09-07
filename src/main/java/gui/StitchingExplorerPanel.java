@@ -233,7 +233,31 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		}
 	}
 
-	public void togglePreviewMode()
+	private void restoreSelection()
+	{
+		if (savedFilteringAndGrouping == null)
+			return;
+
+		final List< Group< BasicViewDescription< ? > > > oldGroups = savedFilteringAndGrouping.getGroupedViews( true );
+		final List< List< BasicViewDescription< ? > > > allGroups = tableModel.getElements();
+
+		for (int i = 0; i<allGroups.size(); i++)
+		{
+			final ArrayList< BasicViewDescription< ? > > uiGroup = new ArrayList<>(allGroups.get( i ));
+			SpimData2.filterMissingViews( getSpimData(), uiGroup );
+			boolean inOldSelection = false;
+			for (final Group< BasicViewDescription< ? > > oldGroup : oldGroups)
+				if (oldGroup.getViews().containsAll( uiGroup ))
+				{
+					inOldSelection = true;
+					break;
+				}
+			if (inOldSelection)
+				table.getSelectionModel().addSelectionInterval( i, i );
+		}
+	}
+
+	public void togglePreviewMode(boolean doGlobalOpt)
 	{
 		previewMode = !previewMode;
 		linkOverlay.isActive = previewMode;
@@ -266,7 +290,6 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		}
 		else
 		{
-			boolean doGlobalOpt = true;
 //			if (savedFilteringAndGrouping != null)
 //				doGlobalOpt = JOptionPane.showConfirmDialog( linkFrame, "Proceed to Global Optimization?", "Optimize Globally?", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION;
 
@@ -286,6 +309,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					colorSources(bdvPopup().bdv.getSetupAssignments().getConverterSetups(), colorOffset );
 				}
 			}
+
+			restoreSelection();
 
 			if (doGlobalOpt)
 			{
@@ -733,7 +758,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			public void windowClosing(WindowEvent evt)
 			{
 				setSavedFilteringAndGrouping( null );
-				togglePreviewMode();
+				togglePreviewMode(false);
 			}
 		} );
 

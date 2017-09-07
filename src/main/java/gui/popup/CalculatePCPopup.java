@@ -177,7 +177,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 							if (choice == JOptionPane.YES_OPTION)
 							{
 								((StitchingExplorerPanel< ?, ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
-								((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode();
+								((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode(false);
 							}
 						}
 					}
