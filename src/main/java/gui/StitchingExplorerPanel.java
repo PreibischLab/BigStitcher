@@ -276,7 +276,16 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
 			table.setRowSelectionInterval( oldFirstSelection, oldFirstSelection );
 			if (bdvPopup().bdvRunning())
+			{
+				// update and re-color BDV
 				updateBDV( bdvPopup().bdv, colorMode, data, firstSelectedVD, selectedRows );
+				if (!colorMode)
+					BDVPopupStitching.colorByChannels( bdvPopup().bdv, data, colorOffset );
+				else
+				{
+					colorSources(bdvPopup().bdv.getSetupAssignments().getConverterSetups(), colorOffset );
+				}
+			}
 
 			if (doGlobalOpt)
 			{
