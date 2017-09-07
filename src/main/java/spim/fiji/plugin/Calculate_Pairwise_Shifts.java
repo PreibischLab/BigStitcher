@@ -324,8 +324,12 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 
 			// TODO: meaningful quality criterion (e.g. inlier ratio ), not just
 			// 1.0
+
+			final double oldTransformHash = PairwiseStitchingResult.calculateHash(
+					data.getViewRegistrations().getViewRegistration( pair.getA().getViews().iterator().next() ),
+					data.getViewRegistrations().getViewRegistration( pair.getA().getViews().iterator().next() ) );
 			data.getStitchingResults().getPairwiseResults().put( pair,
-					new PairwiseStitchingResult<>( pair, bbOverlap, result, 1.0 ) );
+					new PairwiseStitchingResult<>( pair, bbOverlap, result, 1.0, oldTransformHash ) );
 		}
 
 		return true;

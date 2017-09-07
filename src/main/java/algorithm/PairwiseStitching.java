@@ -364,7 +364,7 @@ public class PairwiseStitching
 					Set<C> setB = new HashSet<>();
 					setA.add( indexes.get( j ) );
 					Pair< Group<C>, Group<C> > key = new ValuePair<>(new Group<>(setA), new Group<>(setB));
-					result.add( new PairwiseStitchingResult< C >( key, null, resT.getA() , resT.getB() ) );
+					result.add( new PairwiseStitchingResult< C >( key, null, resT.getA() , resT.getB(), 0.0 ) );
 				}
 				
 			}
@@ -398,7 +398,7 @@ public class PairwiseStitching
 					Set<C> setB = new HashSet<>();
 					setA.add( indexes.get( j ) );
 					Pair< Group<C>, Group<C> > key = new ValuePair<>(new Group<>(setA), new Group<>(setB));
-					result.add( new PairwiseStitchingResult< C >( key, null, resT.getA(), resT.getB() ) );
+					result.add( new PairwiseStitchingResult< C >( key, null, resT.getA(), resT.getB(), 0.0 ) );
 				}
 			}
 		}

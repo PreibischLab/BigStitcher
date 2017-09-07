@@ -478,10 +478,14 @@ public class TransformationTools
 				Group< ViewId > groupB = new Group< ViewId >( result.getA().getB().getViews().stream()
 						.map( x -> (ViewId) x ).collect( Collectors.toList() ) );
 
+				
+				final double oldTransformHash = PairwiseStitchingResult.calculateHash(
+						vrs.getViewRegistration( groupA.getViews().iterator().next() ),
+						vrs.getViewRegistration( groupB.getViews().iterator().next() ) );
 				// TODO: when does that really happen?
 				if ( result.getB() != null )
 					results.add( new PairwiseStitchingResult<>( new ValuePair<>( groupA, groupB ), result.getB().getB(),
-							resT, result.getB().getA().getB() ) );
+							resT, result.getB().getA().getB(), oldTransformHash ) );
 			}
 		}
 		catch ( final Exception e )
@@ -611,7 +615,13 @@ public class TransformationTools
 
 				// TODO: when does that really happen?
 				if ( result.getB() != null)
-					results.add( new PairwiseStitchingResult<>( new ValuePair<>(groupA, groupB), result.getB().getB(),  resT, result.getB().getA().getB() ) );
+				{
+					final double oldTransformHash = PairwiseStitchingResult.calculateHash(
+							vrs.getViewRegistration( groupA.getViews().iterator().next() ),
+							vrs.getViewRegistration( groupB.getViews().iterator().next() ) );
+
+					results.add( new PairwiseStitchingResult<>( new ValuePair<>(groupA, groupB), result.getB().getB(),  resT, result.getB().getA().getB(), oldTransformHash ) );
+				}
 			}
 		}
 		catch ( final Exception e )
