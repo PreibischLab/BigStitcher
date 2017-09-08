@@ -300,20 +300,6 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			result.set( vtB.asAffine3D().getRowPackedCopy() );
 			IOFunctions.println( "resulting transformation: " + Util.printCoordinates( result.getRowPackedCopy() ) );
 
-			// NB: in the global optimization, the final transform of a view
-			// will be VR^-1 * T * VR (T is the optimization result)
-			// the rationale behind this is that we can use "raw (pixel)
-			// coordinate" transforms T (the typical case when stitching)
-			//
-			// since we get results T' in world coordinates here, we calculate
-			// VR * T' * VR^-1 as the result here
-			// after the optimization, we will get VR^-1 * VR * T' * VR^-1 * VR
-			// = T' (i.e. the result will remain in world coordinates)
-			final AffineTransform3D oldVT = data.getViewRegistrations()
-					.getViewRegistration( pair.getB().iterator().next() ).getModel();
-			result.concatenate( oldVT );
-			result.preConcatenate( oldVT.copy().inverse() );
-
 			// get Overlap Bounding Box, which we need for stitching results
 			final List< List< ViewId > > groupListsForOverlap = new ArrayList<>();
 			groupListsForOverlap.add( new ArrayList<>( pair.getA().getViews() ) );

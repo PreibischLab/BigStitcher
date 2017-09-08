@@ -27,6 +27,7 @@ import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.SequenceDescription;
@@ -121,18 +122,9 @@ public class TransformationTools
 
 		// TODO (?): Different translational part of downsample Transformations should be considered via TransformTools.getInitialTransforms
 		// we probalbly do not have to correct for them ?
-		
-		// NB: in the global optimization, the final transform of a view will be VR^-1 * T * VR (T is the optimization result)
-		// the rationale behind this is that we can use "raw (pixel) coordinate" transforms T (the typical case when stitching)
-		//
-		// since we get results T' in world coordinates here, we calculate VR * T' * VR^-1 as the result here
-		// after the optimization, we will get VR^-1 * VR * T' * VR^-1 * VR = T' (i.e. the result will remain in world coordinates)
-		
 		final AffineTransform3D vr = vrs.getViewRegistration(viewIdsB.iterator().next()).getModel();		
 		final AffineTransform resCorrected = new AffineTransform( result.getA().numDimensions() );
 		resCorrected.set( result.getA() );
-		resCorrected.concatenate( vr );
-		resCorrected.preConcatenate( vr.copy().inverse() );
 
 		System.out.println("shift: " + Util.printCoordinates(result.getA().getTranslationCopy()));
 		System.out.print("cross-corr: " + result.getB());
@@ -206,18 +198,10 @@ public class TransformationTools
 
 		// TODO (?): Different translational part of downsample Transformations should be considered via TransformTools.getInitialTransforms
 		// we probalbly do not have to correct for them ?
-		
-		// NB: in the global optimization, the final transform of a view will be VR^-1 * T * VR (T is the optimization result)
-		// the rationale behind this is that we can use "raw (pixel) coordinate" transforms T (the typical case when stitching)
-		//
-		// since we get results T' in world coordinates here, we calculate VR * T' * VR^-1 as the result here
-		// after the optimization, we will get VR^-1 * VR * T' * VR^-1 * VR = T' (i.e. the result will remain in world coordinates)
-		
+
 		final AffineTransform3D vr = vrs.getViewRegistration(viewIdsB.iterator().next()).getModel();		
 		final AffineTransform resCorrected = new AffineTransform( result.getA().numDimensions() );
 		resCorrected.set( result.getA() );
-		resCorrected.concatenate( vr );
-		resCorrected.preConcatenate( vr.copy().inverse() );
 
 		IOFunctions.println("resulting transformation: " + Util.printCoordinates(result.getA().getRowPackedCopy()));
 
@@ -279,10 +263,19 @@ public class TransformationTools
 		// TODO (?): Different translational part of downsample Transformations should be considered via TransformTools.getInitialTransforms
 		// we probalbly do not have to correct for them ?
 
-		System.out.println("shift: " + Util.printCoordinates(result.getA().getTranslationCopy()));
+		// NB: as we will deal in global coordinates, not pixel coordinates in global optimization,
+		// calculate global R' = VT^-1 * R * VT from pixel transformation R 
+		ViewRegistration vrOld = vrs.getViewRegistration(viewIdsB.iterator().next());
+		AffineTransform3D resTransform = new AffineTransform3D();
+		resTransform.set( result.getA().getRowPackedCopy() );
+		resTransform.concatenate( vrOld.getModel().inverse() );
+		resTransform.preConcatenate( vrOld.getModel() );
+
+		System.out.println("shift (pixel coordinates): " + Util.printCoordinates(result.getA().getTranslationCopy()));
+		System.out.println("shift (global coordinates): " + Util.printCoordinates(resTransform.getRowPackedCopy()));
 		System.out.print("cross-corr: " + result.getB());
 
-		return new ValuePair<>( new ValuePair<>( result.getA(), result.getB() ), bbOverlap );
+		return new ValuePair<>( new ValuePair<>( resTransform, result.getB() ), bbOverlap );
 	}
 	
 	public static < T extends RealType< T > > Pair<Pair< AffineGet, Double >, RealInterval> computeStitchingLucasKanade(
@@ -340,9 +333,18 @@ public class TransformationTools
 		// TODO (?): Different translational part of downsample Transformations should be considered via TransformTools.getInitialTransforms
 		// we probalbly do not have to correct for them ?
 
-		IOFunctions.println("resulting transformation: " + Util.printCoordinates(result.getA().getRowPackedCopy()));
+		// NB: as we will deal in global coordinates, not pixel coordinates in global optimization,
+		// calculate global R' = VT^-1 * R * VT from pixel transformation R 
+		ViewRegistration vrOld = vrs.getViewRegistration(viewIdsB.iterator().next());
+		AffineTransform3D resTransform = new AffineTransform3D();
+		resTransform.set( result.getA().getRowPackedCopy() );
+		resTransform.concatenate( vrOld.getModel().inverse() );
+		resTransform.preConcatenate( vrOld.getModel() );
 
-		return new ValuePair<>( new ValuePair<>( result.getA(), result.getB() ), bbOverlap );
+		IOFunctions.println("resulting transformation (pixel coordinates): " + Util.printCoordinates(result.getA().getRowPackedCopy()));
+		IOFunctions.println("resulting transformation (global coordinates): " + Util.printCoordinates(resTransform.getRowPackedCopy()));
+
+		return new ValuePair<>( new ValuePair<>( resTransform, result.getB() ), bbOverlap );
 	}
 
 	/**

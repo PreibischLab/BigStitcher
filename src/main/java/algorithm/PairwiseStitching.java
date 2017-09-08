@@ -260,7 +260,7 @@ public class PairwiseStitching
 		// (this should just happen with overlaps < 1px in some dimension)
 		// ignore this pair in that case
 		// TODO: in pre-transformed views (e.g. both rotated), we might sometimes have unequal overlap due to numerical imprecision?
-		//    -> look into this (probably fixed by commit 40d884dcf49d83376f9c378e501cdb7350712ddb)
+		//    -> look into this (still not fixed!)
 		for (int d = 0; d < interval1.numDimensions(); ++d)
 		{
 			if (interval1.dimension( d ) <= 0 || interval2.dimension( d ) <= 0 || interval1.dimension( d ) != interval2.dimension( d ) )

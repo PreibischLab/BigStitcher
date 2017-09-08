@@ -223,8 +223,6 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 
 					AffineTransform3D viewTransform = new AffineTransform3D();
 					viewTransform.set( v );
-					viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr,
-							viewTransform );
 
 					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform",
 							viewTransform );
@@ -249,9 +247,6 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 					AffineTransform3D viewTransform = new AffineTransform3D();
 					viewTransform.set( v.getModel().getMatrix( null ) );
 
-					viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr,
-							viewTransform );
-
 					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
 					vr.preconcatenateTransform( vt );
 					vr.updateModel();
@@ -274,9 +269,6 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 					final ViewRegistration vr = data.getViewRegistrations().getViewRegistration( k );
 					AffineTransform3D viewTransform = new AffineTransform3D();
 					viewTransform.set( v.getModel().getMatrix( null ) );
-
-					viewTransform = OptimizeGloballyPopup.getAccumulativeTransformForRawDataTransform( vr,
-							viewTransform );
 
 					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
 					vr.preconcatenateTransform( vt );

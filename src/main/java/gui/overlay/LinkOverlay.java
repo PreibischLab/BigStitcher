@@ -233,11 +233,11 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 				final boolean isReference = p.getA().equals( reference );
 				
 				final Dimensions dims = spimData.getSequenceDescription().getViewDescriptions().get( vid ).getViewSetup().getSize();
-				final AffineTransform3D resgistration = spimData.getViewRegistrations().getViewRegistration( vid ).getModel();
+				final AffineTransform3D registration = spimData.getViewRegistrations().getViewRegistration( vid ).getModel();
 				final AffineTransform3D finalTransform = 
-						resgistration.copy()
-						.preConcatenate( isReference ? new AffineTransform3D() : stitchingResults.getPairwiseResults().get( p ).getInverseTransform() )
-						.preConcatenate( viewerTransform );
+						new AffineTransform3D()
+						.preConcatenate( isReference ? new AffineTransform3D() : stitchingResults.getPairwiseResults().get( p ).getInverseTransform() );
+						//.preConcatenate( viewerTransform );
 
 				drawViewOutlines( graphics, dims, finalTransform, p.equals( selectedLink ) ? Color.MAGENTA : Color.GRAY );
 				outlinedViews.add( vid );
@@ -256,9 +256,9 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 				final AffineTransform3D registration = spimData.getViewRegistrations().getViewRegistration( vid )
 						.getModel();
 				final AffineTransform3D finalTransform = 
-						registration.copy()
-						.preConcatenate( isReference ? new AffineTransform3D() : stitchingResults.getPairwiseResults().get( p ).getTransform() )
-						.preConcatenate( viewerTransform );
+						new AffineTransform3D()
+						.preConcatenate( isReference ? new AffineTransform3D() : stitchingResults.getPairwiseResults().get( p ).getTransform() );
+						//.preConcatenate( viewerTransform );
 
 				drawViewOutlines( graphics, dims, finalTransform, p.equals( selectedLink ) ? Color.GREEN : Color.GRAY );
 				outlinedViews.add( vid );

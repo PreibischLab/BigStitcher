@@ -959,8 +959,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							// accumulative transform determined by stitching
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getTransform().getRowPackedCopy() );
-							trans.concatenate( selectedModel.inverse() );
-							trans.preConcatenate( selectedModel );
+//							trans.concatenate( selectedModel.inverse() );
+//							trans.preConcatenate( selectedModel );
 
 							( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( trans );
 						}
@@ -996,8 +996,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getInverseTransform().getRowPackedCopy() );
 							
-							trans.concatenate( selectedModel.inverse() );
-							trans.preConcatenate( selectedModel );
+//							trans.concatenate( selectedModel.inverse() );
+//							trans.preConcatenate( selectedModel );
 
 							if (psr.pair().equals( selectedPair ))
 							{
