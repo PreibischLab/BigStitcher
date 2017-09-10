@@ -422,6 +422,11 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 			selection.add( "Average " + cl.getSimpleName() +"s" );
 //			selection.add(  "pick brightest" );
 			List< ? extends Entity > instancesInAllGroups = getInstancesInAllGroups( groupedElements, cl );
+
+			// we only have one instance of entity, do not ask for aggregation in that case
+			if (instancesInAllGroups.size() < 2)
+				continue;
+
 			instancesInAllGroups.forEach( ( e ) -> 
 			{
 				if (e instanceof NamedEntity)
@@ -450,6 +455,14 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 			}
 
 			List< ? extends Entity > instancesInAllGroups = getInstancesInAllGroups( groupedElements, cl );
+
+			// we have only one instance -> "average" (i.e. just keep the one view)
+			if (instancesInAllGroups.size() < 2)
+			{
+				getGroupedViewAggregator().addAction( ActionType.AVERAGE, cl, null );
+				continue;
+			}
+
 			int nextChoiceIndex = gdp.getNextChoiceIndex();
 			if (nextChoiceIndex == 0)
 				getGroupedViewAggregator().addAction( ActionType.AVERAGE, cl, null );
