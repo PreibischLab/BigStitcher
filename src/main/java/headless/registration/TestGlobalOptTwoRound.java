@@ -68,7 +68,7 @@ public class TestGlobalOptTwoRound
 
 		// the result are shifts relative to the current registration of the dataset!
 		// that's because we find overlapping areas in global coordinates for which we run the Stitching
-		final List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > pairs = (List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > >) filteringAndGrouping.getComparisons();
+		final List< ? extends Pair< ? extends Group< ? extends ViewId >, ? extends Group< ? extends ViewId > > > pairs = filteringAndGrouping.getComparisons();
 		final ArrayList< PairwiseStitchingResult< ViewId > > pairwiseResults = TransformationTools.computePairs(
 				(List<Pair<Group<ViewId>, Group<ViewId>>>) pairs,
 				params, filteringAndGrouping.getSpimData().getViewRegistrations(), 

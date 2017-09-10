@@ -153,9 +153,9 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		return Group.combineBy( ungroupedElements, groupingFactors);
 	}
 
-	public List<Pair<Group< ? extends BasicViewDescription< ? extends BasicViewSetup > >, Group< ? extends BasicViewDescription< ? extends BasicViewSetup >>>> getComparisons()
+	public List<Pair<? extends Group< ? extends BasicViewDescription< ? extends BasicViewSetup > >, ? extends Group< ? extends BasicViewDescription< ? extends BasicViewSetup >>>> getComparisons()
 	{
-		final List<Pair<Group< ? extends BasicViewDescription< ? extends BasicViewSetup > >, Group< ? extends BasicViewDescription< ? extends BasicViewSetup >>>> res = new ArrayList<>();
+		final List<Pair<? extends Group< ? extends BasicViewDescription< ? extends BasicViewSetup > >, ? extends Group< ? extends BasicViewDescription< ? extends BasicViewSetup >>>> res = new ArrayList<>();
 		
 		// filter first
 		final List<BasicViewDescription< ? > > ungroupedElements =

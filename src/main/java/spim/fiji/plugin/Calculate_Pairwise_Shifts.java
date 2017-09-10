@@ -148,7 +148,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			long[] dsFactors)
 	{
 		// getpairs to compare
-		List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > pairs = (List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > >) filteringAndGrouping.getComparisons();
+		List< ? extends Pair< ? extends Group< ? extends ViewId >, ? extends Group< ? extends ViewId > > > pairs =  filteringAndGrouping.getComparisons();
 
 		// calculate
 		final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
@@ -191,7 +191,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			long[] dsFactors)
 	{
 		// getpairs to compare
-		List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > pairs = (List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > >) filteringAndGrouping
+		List< ? extends Pair< ? extends Group< ? extends ViewId >, ? extends Group< ? extends ViewId > > > pairs = filteringAndGrouping
 				.getComparisons();
 
 		// calculate

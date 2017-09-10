@@ -266,8 +266,8 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 			final int sizeUnfiltered = model.getStitchingResults().getPairwiseResults().size();
 			final int sizeFiltered = model.getFilteredResults().getPairwiseResults().size();
 			IOFunctions.println( "Removing " + ( sizeUnfiltered - sizeFiltered ) + " of " + sizeUnfiltered + " links." );
-			final List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > pairs = 
-					(List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > >) parent.getSavedFilteringAndGrouping().getComparisons();
+			final List< ? extends Pair< ? extends Group< ? extends ViewId >, ? extends Group< ? extends ViewId > > > pairs = 
+					parent.getSavedFilteringAndGrouping().getComparisons();
 			model.getFilteredResults().applyToWrappedSubset( (Collection< Pair< Group< ViewId >, Group< ViewId > > >) pairs );
 			parent.togglePreviewMode(false);
 		});
@@ -276,8 +276,8 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 			final int sizeUnfiltered = model.getStitchingResults().getPairwiseResults().size();
 			final int sizeFiltered = model.getFilteredResults().getPairwiseResults().size();
 			IOFunctions.println( "Removing " + ( sizeUnfiltered - sizeFiltered ) + " of " + sizeUnfiltered + " links." );
-			final List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > > pairs = 
-					(List< ? extends Pair< Group< ? extends ViewId >, Group< ? extends ViewId > > >) parent.getSavedFilteringAndGrouping().getComparisons();
+			final List< ? extends Pair< ? extends Group< ? extends ViewId >, ? extends Group< ? extends ViewId > > > pairs = 
+					parent.getSavedFilteringAndGrouping().getComparisons();
 			model.getFilteredResults().applyToWrappedSubset( (Collection< Pair< Group< ViewId >, Group< ViewId > > >) pairs );
 			parent.togglePreviewMode(true);
 		});
