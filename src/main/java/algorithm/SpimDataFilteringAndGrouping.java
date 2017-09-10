@@ -331,7 +331,6 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	public SpimDataFilteringAndGrouping< AS> askUserForGrouping()
 	{
 		// use the current filtering as preset
-		// FIXME: ungly cast
 		return askUserForGrouping( SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), getFilters() ), new ArrayList<>() );
 	}
 
