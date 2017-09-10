@@ -7,11 +7,16 @@ import java.util.List;
 import algorithm.PairwiseStitchingParameters;
 import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.globalopt.TransformationTools;
+import gui.StitchingExplorer;
 import ij.ImageJ;
 import input.FractalSpimDataGenerator;
+import mpicbg.models.AbstractModel;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
+import mpicbg.spim.data.registration.ViewRegistration;
+import mpicbg.spim.data.registration.ViewTransform;
+import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
@@ -20,6 +25,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import spim.fiji.spimdata.SpimData2;
+import spim.fiji.spimdata.XmlIoSpimData2;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.process.interestpointregistration.global.GlobalOpt;
 import spim.process.interestpointregistration.global.GlobalOptIterative;
@@ -109,5 +115,19 @@ public class TestGlobalOptTwoRound
 			System.out.println( Group.pvid( k ) + ": " + Util.printCoordinates( v.getTranslation() ) );
 		});
 
+		for ( final ViewId viewId : computeResults.keySet() )
+		{
+			final AffineTransform3D transform = computeResults.get( viewId );
+			final ViewRegistration vr = spimData.getViewRegistrations().getViewRegistrations().get( viewId );
+
+			final ViewTransform vt = new ViewTransformAffine( "two-round global opt", transform );
+			vr.preconcatenateTransform( vt );
+			vr.updateModel();
+		}
+
+		final StitchingExplorer< SpimData2, XmlIoSpimData2 > explorer =
+				new StitchingExplorer< SpimData2, XmlIoSpimData2 >( spimData, null, null );
+
+		explorer.getFrame().toFront();
 	}
 }
