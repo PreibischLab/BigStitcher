@@ -32,6 +32,7 @@ import spim.process.interestpointregistration.global.pointmatchcreating.PointMat
 import spim.process.interestpointregistration.global.pointmatchcreating.strong.ImageCorrelationPointMatchCreator;
 import spim.process.interestpointregistration.global.pointmatchcreating.weak.MetaDataWeakLinkFactory;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
+import spim.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
 
 public class TestGlobalOptTwoRound
 {
@@ -99,7 +100,7 @@ public class TestGlobalOptTwoRound
 				pmc,
 				cs,
 				new MaxErrorLinkRemoval(),
-				new MetaDataWeakLinkFactory( spimData.getViewRegistrations() ),
+				new MetaDataWeakLinkFactory( spimData.getViewRegistrations().getViewRegistrations(), new SimpleBoundingBoxOverlap<>( spimData ) ),
 				new ConvergenceStrategy( Double.MAX_VALUE ),
 				fixed,
 				Group.toViewIdGroups( views ) );
