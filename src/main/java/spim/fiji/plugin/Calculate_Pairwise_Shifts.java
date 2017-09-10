@@ -48,7 +48,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 {
 
 	private final static String[] methodChoices = {
-			"Phase Correaltion",
+			"Phase Correlation",
 			"Lucas-Kanade",
 			"Interest-Point Registration (with existing Interest Points)",
 			"Interest-Point Registration (with new Interest Points)"};

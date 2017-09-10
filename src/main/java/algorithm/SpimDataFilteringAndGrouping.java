@@ -380,7 +380,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 			boolean isFilterOrSingleton = getFilters().keySet().contains( cl ) || getInstancesOfAttribute(views, cl ).size() <= 1;
 			boolean isComparison = comparisionFactors.contains( cl );
 			int idx = isGrouping ? 1 : isComparison || !isFilterOrSingleton ? 0 : 2;
-			gdp2.addChoice( cl.getSimpleName(), computeChoices, computeChoices[idx] );
+			gdp2.addChoice( "How_to_treat_" + cl.getSimpleName() + "s:", computeChoices, computeChoices[idx] );
 		}
 
 		gdp2.showDialog();
