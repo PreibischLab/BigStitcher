@@ -66,7 +66,10 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			return;
 
 		final SpimData2 data = result.getData();
+		ArrayList< ViewId > selectedViews = SpimData2.getAllViewIdsSorted( result.getData(), result.getViewSetupsToProcess(), result.getTimePointsToProcess() );
+
 		final SpimDataFilteringAndGrouping< SpimData2 > grouping = new SpimDataFilteringAndGrouping<>( data );
+		grouping.addFilters( selectedViews.stream().map( vid -> data.getSequenceDescription().getViewDescription( vid ) ).collect( Collectors.toList() ) );
 		final boolean is2d = StitchingUIHelper.allViews2D( grouping.getFilteredViews() );
 
 		// ask for method and expert grouping/parameters
