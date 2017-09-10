@@ -5,7 +5,7 @@ import ij.gui.GenericDialog;
 
 public class LucasKanadeParameters
 {
-	enum WarpFunctionType{
+	public enum WarpFunctionType{
 		TRANSLATION,
 		RIGID,
 		AFFINE

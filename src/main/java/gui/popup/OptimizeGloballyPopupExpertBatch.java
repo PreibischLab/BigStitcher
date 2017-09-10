@@ -62,6 +62,7 @@ import spim.process.interestpointregistration.global.pointmatchcreating.weak.Met
 import spim.process.interestpointregistration.pairwise.constellation.PairwiseSetup;
 import spim.process.interestpointregistration.pairwise.constellation.Subset;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
+import spim.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
 
 public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 		implements ExplorerWindowSetable, StitchingResultsSettable
@@ -211,7 +212,8 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
 								params.relativeThreshold, params.absoluteThreshold ),
 						new MaxErrorLinkRemoval(),
-						new MetaDataWeakLinkFactory( data.getViewRegistrations() ),
+						new MetaDataWeakLinkFactory( data.getViewRegistrations().getViewRegistrations(),
+								new SimpleBoundingBoxOverlap<>( data.getSequenceDescription(), data.getViewRegistrations() ) ),
 						new ConvergenceStrategy( Double.MAX_VALUE ), fixed,
 						subset.getGroups() );
 

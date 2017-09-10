@@ -13,12 +13,14 @@ import algorithm.PairwiseStitchingParameters;
 import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.globalopt.TransformationTools;
 import algorithm.lucaskanade.LucasKanadeParameters;
+import algorithm.lucaskanade.LucasKanadeParameters.WarpFunctionType;
 import gui.StitchingUIHelper;
 import ij.gui.GenericDialog;
 import ij.plugin.PlugIn;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
+import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
@@ -45,6 +47,16 @@ import spim.process.interestpointregistration.pairwise.constellation.grouping.Gr
 public class Calculate_Pairwise_Shifts implements PlugIn
 {
 
+	private final static String[] methodChoices = {
+			"Phase Correaltion",
+			"Lucas-Kanade",
+			"Interest-Point Registration (with existing Interest Points)",
+			"Interest-Point Registration (with new Interest Points)"};
+
+	private static boolean expertGrouping;
+	private static boolean expertAlgorithmParameters;
+	private static int defaultMethodIdx = 0;
+
 	@Override
 	public void run(String arg)
 	{
@@ -52,21 +64,73 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 		final LoadParseQueryXML result = new LoadParseQueryXML();
 		if ( !result.queryXML( "for pairwise shift calculation", true, true, true, true, true ) )
 			return;
-		
+
 		final SpimData2 data = result.getData();
 		final SpimDataFilteringAndGrouping< SpimData2 > grouping = new SpimDataFilteringAndGrouping<>( data );
-
-		// suggest the default grouping by channels and illuminations
-		final HashSet< Class <? extends Entity> > groupingFactors = new HashSet<>();
-		groupingFactors.add( Illumination.class );
-		groupingFactors.add( Channel.class );
-		grouping.askUserForGrouping(data.getSequenceDescription().getViewDescriptions().values(), groupingFactors);
-		grouping.askUserForGroupingAggregator();
-		
 		final boolean is2d = StitchingUIHelper.allViews2D( grouping.getFilteredViews() );
-		final long[] ds = StitchingUIHelper.askForDownsampling( data, is2d );
-		
-		
+
+		// ask for method and expert grouping/parameters
+		GenericDialog gd = new GenericDialog( "How to calculate pairwise registrations" );
+		gd.addChoice( "method", methodChoices, methodChoices[defaultMethodIdx] );
+		gd.addCheckbox( "show_expert_grouping_options", expertGrouping );
+		gd.addCheckbox( "show_expert_algorithm_parameters", expertAlgorithmParameters );
+
+		gd.showDialog();
+		if(gd.wasCanceled())
+			return;
+
+		defaultMethodIdx = gd.getNextChoiceIndex();
+		expertGrouping = gd.getNextBoolean();
+		expertAlgorithmParameters = gd.getNextBoolean();
+
+		// Defaults for grouping
+		// the default grouping by channels and illuminations
+		final HashSet< Class <? extends Entity> > defaultGroupingFactors = new HashSet<>();
+		defaultGroupingFactors.add( Illumination.class );
+		defaultGroupingFactors.add( Channel.class );
+		// the default comparision by tiles
+		final HashSet< Class <? extends Entity> > defaultComparisonFactors = new HashSet<>();
+		defaultComparisonFactors.add(Tile.class);
+		// the default application along time points and angles
+		final HashSet< Class <? extends Entity> > defaultApplicationFactors = new HashSet<>();
+		defaultApplicationFactors.add( TimePoint.class );
+		defaultApplicationFactors.add( Angle.class );
+
+		if (expertGrouping)
+			grouping.askUserForGrouping(data.getSequenceDescription().getViewDescriptions().values(), defaultGroupingFactors, defaultComparisonFactors);
+		else
+		{
+			grouping.getAxesOfApplication().addAll( defaultApplicationFactors );
+			grouping.getGroupingFactors().addAll( defaultGroupingFactors );
+			grouping.getAxesOfComparison().addAll( defaultComparisonFactors );
+		}
+
+		if (defaultMethodIdx >= 2)
+		{
+			if (!processInterestPoint( data, grouping, defaultMethodIdx == 2 ))
+				return;
+		}
+		else
+		{
+			grouping.askUserForGroupingAggregator();
+			final long[] ds = StitchingUIHelper.askForDownsampling( data, is2d );
+
+			if (defaultMethodIdx == 0) // Phase Correlation
+			{
+				PairwiseStitchingParameters params = expertAlgorithmParameters ? PairwiseStitchingParameters.askUserForParameters() : new PairwiseStitchingParameters();
+				if (!processPhaseCorrelation( data, grouping, params, ds ))
+					return;
+			}
+			else if (defaultMethodIdx == 1) // Lucas-Kanade
+			{
+				LucasKanadeParameters params = expertAlgorithmParameters ? LucasKanadeParameters.askUserForParameters() : new LucasKanadeParameters( WarpFunctionType.TRANSLATION );
+				if (!processLucasKanade( data, grouping, params, ds ))
+					return;
+			}
+		}
+
+		// update XML
+		SpimData2.saveXML( data, result.getXMLFileName(), "" );
 	}
 	
 	public static void main(String[] args)
@@ -168,8 +232,19 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 
 
 	public static boolean processInterestPoint(final SpimData2 data,
-			final SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping)
+			final SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping,
+			boolean existingInterestPoints)
 	{
+
+		// detect new interest points if requested
+		if (!existingInterestPoints)
+		{
+			// by default the registration suggests what is selected in the dialog
+			Interest_Point_Detection.defaultGroupTiles = filteringAndGrouping.getGroupingFactors().contains( Tile.class );
+			Interest_Point_Detection.defaultGroupIllums = filteringAndGrouping.getGroupingFactors().contains( Illumination.class );
+			new Interest_Point_Detection().detectInterestPoints( data, filteringAndGrouping.getFilteredViews() );
+		}
+
 		// by default the registration suggests what is selected in the dialog
 		// (and was passed to filteringAndGrouping)
 		Interest_Point_Registration.defaultGroupTiles = filteringAndGrouping.getGroupingFactors()

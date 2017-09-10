@@ -210,18 +210,8 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 					return;
 				}
 
-				if (!existingInterestPoints)
-				{
-					// by default the registration suggests what is selected in the dialog
-					Interest_Point_Detection.defaultGroupTiles = filteringAndGrouping.getGroupingFactors().contains( Tile.class );
-					Interest_Point_Detection.defaultGroupIllums = filteringAndGrouping.getGroupingFactors().contains( Illumination.class );
 
-					if ( new Interest_Point_Detection().detectInterestPoints( (SpimData2)panel.getSpimData(), filteringAndGrouping.getFilteredViews() ) )
-						panel.updateContent(); // update interestpoint panel if available
-
-				}
-
-				if (Calculate_Pairwise_Shifts.processInterestPoint( data, filteringAndGrouping ))
+				if (Calculate_Pairwise_Shifts.processInterestPoint( data, filteringAndGrouping, existingInterestPoints ))
 					if (wizardMode)
 					{
 						// ask user if they want to switch to preview mode
@@ -238,6 +228,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 
 			}).start();
 
+			panel.updateContent();
 		}
 	}
 

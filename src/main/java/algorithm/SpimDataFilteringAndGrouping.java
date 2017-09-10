@@ -16,6 +16,7 @@ import javax.swing.JLabel;
 
 import algorithm.GroupedViewAggregator.ActionType;
 import fiji.util.gui.GenericDialogPlus;
+import gui.StitchingExplorerPanel;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.base.NamedEntity;
@@ -331,13 +332,13 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	public SpimDataFilteringAndGrouping< AS> askUserForGrouping()
 	{
 		// use the current filtering as preset
-		return askUserForGrouping( SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), getFilters() ), new ArrayList<>() );
+		return askUserForGrouping( SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), getFilters() ), new ArrayList<>(), new HashSet<>() );
 	}
 
 	public SpimDataFilteringAndGrouping< AS> askUserForGrouping( FilteredAndGroupedExplorerPanel< AS, ?> panel)
 	{
 		List< BasicViewDescription< ? extends BasicViewSetup > > views;
-		
+
 		if (panel instanceof GroupedRowWindow)
 		{
 			Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedRowsGroups = ((GroupedRowWindow)panel).selectedRowsGroups();
@@ -345,14 +346,25 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		}
 		else
 			views = panel.selectedRows();
-		
-		return askUserForGrouping( views,	panel.getTableModel().getGroupingFactors());
+
+		final HashSet< Class<? extends Entity> > comparisonsRequested = new HashSet<>();
+		if (StitchingExplorerPanel.class.isInstance( panel ) )
+		{
+			if (!panel.channelsGrouped())
+				comparisonsRequested.add( Channel.class );
+			if (!panel.illumsGrouped())
+				comparisonsRequested.add( Illumination.class );
+			if (!panel.tilesGrouped())
+				comparisonsRequested.add( Tile.class );
+		}
+		return askUserForGrouping( views, panel.getTableModel().getGroupingFactors(), comparisonsRequested);
 	}
 
 	public SpimDataFilteringAndGrouping< AS> askUserForGrouping( 
 					Collection<? extends BasicViewDescription< ? > > views,
-					Collection<Class<? extends Entity>> groupingFactors)
-	{	
+					Collection<Class<? extends Entity>> groupingFactors,
+					Collection<Class<? extends Entity>> comparisionFactors)
+	{
 		GenericDialogPlus gdp2 = new GenericDialogPlus( "Select How to Process Views" );
 		
 		final String msg = ( "<html><strong>Select how to process the different attributes </strong> <br>"
@@ -360,24 +372,24 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 				+ "<strong>GROUP:</strong> combine all instances into one view<br>"
 				+ "<strong>TREAT INDIVIDUALLY:</strong> process instances one after the other, but do not compare or group <br> </html>");
 		FileListDatasetDefinition.addMessageAsJLabel(msg, gdp2);
-		
-		
+
 		String[] computeChoices = new String[] {"compare", "group", "treat individually"};
 		for (Class<? extends Entity> cl : entityClasses)
 		{
 			boolean isGrouping = groupingFactors.contains( cl );
 			boolean isFilterOrSingleton = getFilters().keySet().contains( cl ) || getInstancesOfAttribute(views, cl ).size() <= 1;
-			int idx = isGrouping ? 1 : isFilterOrSingleton ? 2 : 0;
+			boolean isComparison = comparisionFactors.contains( cl );
+			int idx = isGrouping ? 1 : isComparison || !isFilterOrSingleton ? 0 : 2;
 			gdp2.addChoice( cl.getSimpleName(), computeChoices, computeChoices[idx] );
 		}
-		
+
 		gdp2.showDialog();
 		if (gdp2.wasCanceled())
 		{
 			dialogWasCancelled = true;
 			return this;
 		}
-		
+
 		for (Class<? extends Entity> cl : entityClasses)
 		{
 			int selection = gdp2.getNextChoiceIndex();
@@ -388,7 +400,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 			else
 				addApplicationAxis( cl );
 		}
-		
+
 		return this;
 	}
 
@@ -413,6 +425,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		final List< Group< BasicViewDescription< ?  > >> groupedElements = 
 						Group.combineBy( ungroupedElements, getGroupingFactors());
 
+		boolean dialogNecessary = false;
 		for (Class<? extends Entity> cl : getGroupingFactors())
 		{
 			if (defaultChoices != null && defaultChoices.containsKey( cl ))
@@ -426,6 +439,8 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 			// we only have one instance of entity, do not ask for aggregation in that case
 			if (instancesInAllGroups.size() < 2)
 				continue;
+			// we have more than one instance of any entity -> we have to display dialog
+			dialogNecessary = true;
 
 			instancesInAllGroups.forEach( ( e ) -> 
 			{
@@ -439,12 +454,13 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 			gdp.addChoice( cl.getSimpleName() + "s:", selectionArray, selectionArray[0] );
 		}
 
-		gdp.showDialog();
-		if (gdp.wasCanceled())
-		{
-			dialogWasCancelled = true;
-			return this;
-		}
+		if (dialogNecessary)
+			gdp.showDialog();
+			if (gdp.wasCanceled())
+			{
+				dialogWasCancelled = true;
+				return this;
+			}
 
 		for (Class<? extends Entity> cl : getGroupingFactors())
 		{
