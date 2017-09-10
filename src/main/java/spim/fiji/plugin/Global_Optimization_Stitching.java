@@ -23,7 +23,7 @@ public class Global_Optimization_Stitching implements PlugIn
 	public void run(String arg)
 	{
 		final LoadParseQueryXML result = new LoadParseQueryXML();
-		if ( !result.queryXML( "for pairwise shift calculation", true, true, true, true, true ) )
+		if ( !result.queryXML( "for global optimization", true, true, true, true, true ) )
 			return;
 
 		final SpimData2 data = result.getData();

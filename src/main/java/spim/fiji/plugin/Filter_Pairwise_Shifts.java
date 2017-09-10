@@ -13,7 +13,7 @@ public class Filter_Pairwise_Shifts implements PlugIn
 	{
 		// TODO: should we ask for grouping and then apply filter only to subset?
 		final LoadParseQueryXML result = new LoadParseQueryXML();
-		if ( !result.queryXML( "for pairwise shift calculation", false, false, false, false, false ) )
+		if ( !result.queryXML( "for link filtering", false, false, false, false, false ) )
 			return;
 		final SpimData2 data = result.getData();
 
