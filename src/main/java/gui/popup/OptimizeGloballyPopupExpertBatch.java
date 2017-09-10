@@ -212,8 +212,9 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
 								params.relativeThreshold, params.absoluteThreshold ),
 						new MaxErrorLinkRemoval(),
-						new MetaDataWeakLinkFactory( data.getViewRegistrations().getViewRegistrations(),
-								new SimpleBoundingBoxOverlap<>( data.getSequenceDescription(), data.getViewRegistrations() ) ),
+						new MetaDataWeakLinkFactory(
+								data.getViewRegistrations().getViewRegistrations(),
+								new SimpleBoundingBoxOverlap<>( data ) ),
 						new ConvergenceStrategy( Double.MAX_VALUE ), fixed,
 						subset.getGroups() );
 
