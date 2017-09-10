@@ -101,7 +101,7 @@ public class FractalSpimDataGenerator
 		final float correctOverlap = 0.2f;
 		final float wrongOverlap = 0.3f;
 
-		Interval start = new FinalInterval( new long[] {-399,-399,0},  new long[] {0, 0,1});
+		Interval start = new FinalInterval( new long[] {-399,-399,0},  new long[] {0, 0, 0});
 		List<Interval> intervals = FractalSpimDataGenerator.generateTileList( 
 				start, tilesX, tilesY, correctOverlap );
 		
