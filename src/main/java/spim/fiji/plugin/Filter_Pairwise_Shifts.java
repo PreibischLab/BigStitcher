@@ -18,7 +18,7 @@ public class Filter_Pairwise_Shifts implements PlugIn
 		final SpimData2 data = result.getData();
 
 		SimpleRemoveLinkPopup.filterPairwiseShifts( data, false, null );
-		SpimData2.saveXML( data, result.getXMLFileName(), "" );
+		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
 	}
 
 	public static void main(String[] args)

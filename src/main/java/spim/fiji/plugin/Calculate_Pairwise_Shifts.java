@@ -133,7 +133,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 		}
 
 		// update XML
-		SpimData2.saveXML( data, result.getXMLFileName(), "" );
+		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
 	}
 	
 	public static void main(String[] args)
