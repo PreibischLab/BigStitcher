@@ -1,6 +1,7 @@
 package headless.registration;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -81,6 +82,28 @@ public class TestGlobalOptTwoRound
 				filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
 				dsFactors );
 
+		// add the second illumination and group them together with the first
+		final Collection< Group< ViewId > > groupsIn = new ArrayList<>();
+		System.out.println();
+
+		for ( final ViewDescription vs : spimData.getSequenceDescription().getViewDescriptions().values() )
+		{
+			if ( vs.getViewSetup().getIllumination().getId() == 1 )
+			{
+				if ( vs.getViewSetupId() <= 35 || vs.getViewSetupId() == 45 || vs.getViewSetupId() == 47 )
+				{
+					views.add( vs );
+					final Group< ViewId > group = new Group< ViewId >( vs );
+					for ( final ViewDescription vd : views )
+						if ( vd.getViewSetupId() == vs.getViewSetupId() - 1 )
+							group.getViews().add( vd );
+
+					groupsIn.add( group );
+					System.out.println( "Group: " + group );
+				}
+			}
+		}
+
 		final ArrayList< ViewId > fixed = new ArrayList<>();
 		fixed.add( views.get( 0 ) );
 
@@ -109,7 +132,7 @@ public class TestGlobalOptTwoRound
 				new MetaDataWeakLinkFactory( spimData.getViewRegistrations().getViewRegistrations(), new SimpleBoundingBoxOverlap<>( spimData ) ),
 				new ConvergenceStrategy( Double.MAX_VALUE ),
 				fixed,
-				Group.toViewIdGroups( views ) );
+				groupsIn ); //Group.toViewIdGroups( views ) );
 
 		computeResults.forEach( ( k, v) -> {
 			System.out.println( Group.pvid( k ) + ": " + Util.printCoordinates( v.getTranslation() ) );
