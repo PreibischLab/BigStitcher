@@ -2,7 +2,6 @@ package algorithm;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,13 +13,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import algorithm.globalopt.GlobalOptimizationParameters;
-import algorithm.lucaskanade.AffineWarp;
 import algorithm.lucaskanade.Align;
 import algorithm.lucaskanade.LucasKanadeParameters;
 import input.FractalImgLoader;
 import input.FractalSpimDataGenerator;
-import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
@@ -29,9 +25,7 @@ import net.imglib2.RealInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.algorithm.phasecorrelation.PhaseCorrelation2;
 import net.imglib2.algorithm.phasecorrelation.PhaseCorrelationPeak2;
-import net.imglib2.img.ImgFactory;
 import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -227,7 +221,6 @@ public class PairwiseStitching
 		else
 			img2 = Views.dropSingletonDimensions( input2 );
 
-
 		// echo intervals
 		System.out.println( "1: " + Util.printInterval( img1 ) );
 		System.out.println( "1: " + TransformTools.printRealInterval( transformed1 ) );
@@ -263,9 +256,15 @@ public class PairwiseStitching
 		//    -> look into this (still not fixed!)
 		for (int d = 0; d < interval1.numDimensions(); ++d)
 		{
-			if (interval1.dimension( d ) <= 0 || interval2.dimension( d ) <= 0 || interval1.dimension( d ) != interval2.dimension( d ) )
+			if ( interval1.dimension( d ) <= 0 || interval2.dimension( d ) <= 0 )
 			{
-				System.out.println( "Rastered overlap volume is zero or unequal, skipping." );
+				IOFunctions.println( "Rastered overlap between volumes is zero, skipping." );
+				return null;
+			}
+
+			if ( interval1.dimension( d ) != interval2.dimension( d ) )
+			{
+				IOFunctions.println( "Rastered overlap between volumes in dim " + d + " is unequal ("+interval1.dimension( d )+"<>"+interval2.dimension( d )+"), skipping." );
 				return null;
 			}
 		}
