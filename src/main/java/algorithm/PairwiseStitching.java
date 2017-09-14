@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import algorithm.globalopt.GlobalOptimizationParameters;
-import algorithm.globalopt.GlobalTileOptimization;
 import algorithm.lucaskanade.AffineWarp;
 import algorithm.lucaskanade.Align;
 import algorithm.lucaskanade.LucasKanadeParameters;
@@ -23,7 +22,6 @@ import input.FractalImgLoader;
 import input.FractalSpimDataGenerator;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.io.IOFunctions;
-import net.imagej.ops.Ops.Copy.Img;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
@@ -262,7 +260,7 @@ public class PairwiseStitching
 		// (this should just happen with overlaps < 1px in some dimension)
 		// ignore this pair in that case
 		// TODO: in pre-transformed views (e.g. both rotated), we might sometimes have unequal overlap due to numerical imprecision?
-		//    -> look into this
+		//    -> look into this (still not fixed!)
 		for (int d = 0; d < interval1.numDimensions(); ++d)
 		{
 			if (interval1.dimension( d ) <= 0 || interval2.dimension( d ) <= 0 || interval1.dimension( d ) != interval2.dimension( d ) )
@@ -366,7 +364,7 @@ public class PairwiseStitching
 					Set<C> setB = new HashSet<>();
 					setA.add( indexes.get( j ) );
 					Pair< Group<C>, Group<C> > key = new ValuePair<>(new Group<>(setA), new Group<>(setB));
-					result.add( new PairwiseStitchingResult< C >( key, null, resT.getA() , resT.getB() ) );
+					result.add( new PairwiseStitchingResult< C >( key, null, resT.getA() , resT.getB(), 0.0 ) );
 				}
 				
 			}
@@ -400,7 +398,7 @@ public class PairwiseStitching
 					Set<C> setB = new HashSet<>();
 					setA.add( indexes.get( j ) );
 					Pair< Group<C>, Group<C> > key = new ValuePair<>(new Group<>(setA), new Group<>(setB));
-					result.add( new PairwiseStitchingResult< C >( key, null, resT.getA(), resT.getB() ) );
+					result.add( new PairwiseStitchingResult< C >( key, null, resT.getA(), resT.getB(), 0.0 ) );
 				}
 			}
 		}

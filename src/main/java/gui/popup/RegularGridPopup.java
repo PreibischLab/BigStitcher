@@ -37,7 +37,7 @@ public class RegularGridPopup extends JMenuItem implements ExplorerWindowSetable
 
 	public RegularGridPopup() 
 	{
-		super( "Move Tiles to Regular Grid manually" );
+		super( "Move Tiles to Regular Grid ..." );
 		this.addActionListener( new MyActionListener() );
 	}
 
@@ -68,14 +68,14 @@ public class RegularGridPopup extends JMenuItem implements ExplorerWindowSetable
 				IOFunctions.println( "BigDataViewer is not open. Please start it to access this funtionality." );
 				return;
 			}
-			*/		
-			
+			*/
+
 			regularGridPanel = new PreviewRegularGridPanel<>( panel );
-									
+
 			JFrame frame = new JFrame( "Regular Grid Options" );
 			frame.add( regularGridPanel, BorderLayout.CENTER );
 			frame.setSize( regularGridPanel.getPreferredSize() );
-			
+
 			frame.addWindowListener( new WindowAdapter()
 			{
 				@Override
@@ -84,6 +84,7 @@ public class RegularGridPopup extends JMenuItem implements ExplorerWindowSetable
 					regularGridPanel.quit();
 				}
 			} );
+
 			
 			frame.pack();
 			frame.setVisible( true );

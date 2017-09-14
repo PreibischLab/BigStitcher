@@ -4,8 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import algorithm.AveragedRandomAccessible;
+import bdv.BigDataViewer;
 import mpicbg.spim.data.SpimData;
-import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.registration.ViewTransform;
@@ -17,25 +18,17 @@ import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.ImgLoader;
 import mpicbg.spim.data.sequence.MissingViews;
 import mpicbg.spim.data.sequence.SequenceDescription;
-import mpicbg.spim.data.sequence.SetupImgLoader;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.TimePoints;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.data.sequence.ViewSetup;
 import mpicbg.spim.data.sequence.VoxelDimensions;
-import net.imagej.ops.OpService;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
-import net.imglib2.converter.Converter;
-import net.imglib2.converter.Converters;
-import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.realtransform.AbstractTranslation;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealViews;
@@ -44,32 +37,22 @@ import net.imglib2.realtransform.Translation3D;
 import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.type.numeric.complex.ComplexDoubleType;
 import net.imglib2.type.numeric.integer.LongType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
-
-import org.scijava.Context;
-
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.boundingbox.BoundingBoxes;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
 import spim.fiji.spimdata.pointspreadfunctions.PointSpreadFunctions;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
-import algorithm.AveragedRandomAccessible;
-import bdv.BigDataViewer;
 
 
 public class FractalSpimDataGenerator
 {
-
-	private int numDimensions;	
+	private int numDimensions;
 	private AveragedRandomAccessible< LongType > fractalsRA;
-	
-	private OpService ops;
-	
+
 	public FractalSpimDataGenerator(int numD){
 		fractalsRA = new AveragedRandomAccessible<>( numD );
-		ops = new Context(OpService.class).getService( OpService.class );
 		this.numDimensions = numD;		
 	}
 
@@ -118,7 +101,7 @@ public class FractalSpimDataGenerator
 		final float correctOverlap = 0.2f;
 		final float wrongOverlap = 0.3f;
 
-		Interval start = new FinalInterval( new long[] {-399,-399,0},  new long[] {0, 0,1});
+		Interval start = new FinalInterval( new long[] {-399,-399,0},  new long[] {0, 0, 0});
 		List<Interval> intervals = FractalSpimDataGenerator.generateTileList( 
 				start, tilesX, tilesY, correctOverlap );
 		
@@ -232,8 +215,8 @@ public class FractalSpimDataGenerator
 			double[] pos = new double[intervals.get( 0 ).numDimensions()];
 			mins.get( i ).localize( pos );
 			final Tile t = new Tile( i, "Tile " + i, pos );
-			setups.add( new ViewSetup( 2*i, "setup " + i, d0, vd0, t, c0, a0, i0 ) );
-			setups.add( new ViewSetup( 2*i + 1, "setup " + i, d0, vd0, t, c0, a0, i1 ) );
+			setups.add( new ViewSetup( 2*i, "setup " + 2*i, d0, vd0, t, c0, a0, i0 ) );
+			setups.add( new ViewSetup( 2*i + 1, "setup " + (2*i + 1), d0, vd0, t, c0, a0, i1 ) );
 		}
 
 		final ArrayList< TimePoint > t = new ArrayList< TimePoint >();

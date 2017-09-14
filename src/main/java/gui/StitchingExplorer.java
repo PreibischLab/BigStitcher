@@ -22,6 +22,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import bdv.BigDataViewer;
+import spim.fiji.plugin.util.MultiWindowLayoutHelper;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.XmlIoSpimData2;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
@@ -36,7 +37,7 @@ import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
 
 public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > > extends FilteredAndGroupedExplorer< AS, X >
 {
-	
+
 	private AS data;
 	private String xml;
 	private X io;
@@ -75,7 +76,7 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 		
 		updateButtons();
 		
-		panel = new StitchingExplorerPanel< AS, X >( this, data, xml, io );
+		panel = new StitchingExplorerPanel< AS, X >( this, data, xml, io , true);
 
 		frame.add( buttons, BorderLayout.NORTH );
 		frame.add( panel, BorderLayout.CENTER );
@@ -93,6 +94,10 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 
 		frame.pack();
 		frame.setVisible( true );
+
+		// move explorer window and log to initial positions
+		MultiWindowLayoutHelper.moveToScreenFraction( frame, ViewSetupExplorer.xPos, ViewSetupExplorer.yPos );
+		MultiWindowLayoutHelper.moveToScreenFraction( MultiWindowLayoutHelper.getIJLogWindow(), ViewSetupExplorer.xPosLog, ViewSetupExplorer.yPosLog );
 
 		// set the initial focus to the table
 		panel.table.requestFocus();

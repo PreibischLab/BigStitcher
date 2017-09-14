@@ -1,6 +1,8 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -47,6 +50,7 @@ import gui.overlay.LinkOverlay;
 import gui.popup.ApplyBDVTransformationPopup;
 import gui.popup.BDVPopupStitching;
 import gui.popup.CalculatePCPopup;
+import gui.popup.CalculatePCPopup.Method;
 import gui.popup.CalculatePCPopupExpertBatch;
 import gui.popup.OptimizeGloballyPopup;
 import gui.popup.OptimizeGloballyPopupExpertBatch;
@@ -56,6 +60,7 @@ import gui.popup.SelectIlluminationPopup;
 import gui.popup.SimpleRemoveLinkPopup;
 import gui.popup.TogglePreviewPopup;
 import gui.popup.TranslateGroupManuallyPopup;
+import gui.popup.VerifyLinksPopup;
 import input.FractalImgLoader;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -67,6 +72,7 @@ import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
+import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
@@ -74,25 +80,30 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.util.Pair;
+import spim.fiji.plugin.util.MultiWindowLayoutHelper;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.SpimDataTools;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedTableModel;
+import spim.fiji.spimdata.explorer.ISpimDataTableModel;
 import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import spim.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
+import spim.fiji.spimdata.explorer.interestpoint.InterestPointTableModel;
 import spim.fiji.spimdata.explorer.popup.BDVPopup;
 import spim.fiji.spimdata.explorer.popup.BoundingBoxPopup;
 import spim.fiji.spimdata.explorer.popup.DetectInterestPointsPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayFusedImagesPopup;
 import spim.fiji.spimdata.explorer.popup.DisplayRawImagesPopup;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import spim.fiji.spimdata.explorer.popup.FusionPopup;
 import spim.fiji.spimdata.explorer.popup.LabelPopUp;
 import spim.fiji.spimdata.explorer.popup.RemoveTransformationPopup;
 import spim.fiji.spimdata.explorer.popup.ResavePopup;
 import spim.fiji.spimdata.explorer.popup.Separator;
 import spim.fiji.spimdata.explorer.util.ColorStream;
+import spim.fiji.spimdata.imgloaders.filemap2.FileMapImgLoaderLOCI2;
 import spim.fiji.spimdata.interestpoints.InterestPointList;
 import spim.fiji.spimdata.interestpoints.ViewInterestPointLists;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
@@ -103,10 +114,14 @@ import spim.process.interestpointregistration.pairwise.constellation.grouping.Gr
 public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS >>
 		extends FilteredAndGroupedExplorerPanel< AS, X > implements ExplorerWindow< AS, X >
 {
+	public final static double xPosLinkExplorer = 0.6;
+	public final static double yPosLinkExplorer = 0.0;
+
 	// indicates whether we are in link preview mode or not
 	boolean previewMode = false;
 
 	LinkOverlay linkOverlay;
+	RegularGridPopup regularGridPopup; 
 	
 	DemoLinkOverlay demoLinkOverlay;
 
@@ -114,6 +129,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 	LinkExplorerPanel linkExplorer;
 	JFrame linkFrame;
+	JComboBox< ? > angleCB;
 	
 	// save SpimDataFilteringAndGrouping so we can go preview -> global opt
 	SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > savedFilteringAndGrouping;
@@ -125,7 +141,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	protected JCheckBox checkboxGroupIllums;
 
 	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
-			final X io, boolean startBDVifHDF5)
+			final X io, boolean requestStartBDV)
 	{
 		super( explorer, data, xml, io );
 
@@ -142,21 +158,44 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups = initPopups();
 		initComponent();
 
-		if ( startBDVifHDF5 && (Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
-				|| FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) ) )
+		if ( requestStartBDV && 
+				(Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) 
+				|| FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) 
+				|| (( data instanceof SpimData2 ) && ((SpimData2)data).gridMoveRequested )  
+				|| FileMapImgLoaderLOCI2.class.isInstance( data.getSequenceDescription().getImgLoader() ) ) )
 		{
 			if (!bdvPopup().bdvRunning())
 				bdvPopup().bdv = BDVPopupStitching.createBDV( this, linkOverlay );
 		}
 
+		if ( data instanceof SpimData2 )
+			if (((SpimData2)data).gridMoveRequested)
+			{
+				((SpimData2)data).gridMoveRequested = false;
+				for (int i = 0; i<angleCB.getItemCount(); i++)
+				{
+					IOFunctions.println("Defining grid for Angle " + (i+1) + " of " + angleCB.getItemCount());
+					angleCB.setSelectedIndex( i );
+					try { Thread.sleep( 100 ); } catch ( InterruptedException e ){}
+
+					if ( table.getRowCount() > 1 )
+					{
+						table.getSelectionModel().setSelectionInterval( 0, table.getRowCount() - 1 );
+						regularGridPopup.doClick();
+						// wait for regular grid movement to complete before continuing with the next angle
+						try {
+							synchronized ( this )
+							{
+								this.wait();
+							}
+						} catch ( InterruptedException e ) { e.printStackTrace(); }
+					}
+				}
+			}
+
 		savedFilteringAndGrouping = null;
 	}
-	
-	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
-			final X io)
-	{
-		this(explorer, data, xml, io, true);
-	}
+
 
 	@Override
 	public boolean tilesGrouped() { return false; }
@@ -194,7 +233,31 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		}
 	}
 
-	public void togglePreviewMode()
+	private void restoreSelection()
+	{
+		if (savedFilteringAndGrouping == null)
+			return;
+
+		final List< Group< BasicViewDescription< ? > > > oldGroups = savedFilteringAndGrouping.getGroupedViews( true );
+		final List< List< BasicViewDescription< ? > > > allGroups = tableModel.getElements();
+
+		for (int i = 0; i<allGroups.size(); i++)
+		{
+			final ArrayList< BasicViewDescription< ? > > uiGroup = new ArrayList<>(allGroups.get( i ));
+			SpimData2.filterMissingViews( getSpimData(), uiGroup );
+			boolean inOldSelection = false;
+			for (final Group< BasicViewDescription< ? > > oldGroup : oldGroups)
+				if (oldGroup.getViews().containsAll( uiGroup ))
+				{
+					inOldSelection = true;
+					break;
+				}
+			if (inOldSelection)
+				table.getSelectionModel().addSelectionInterval( i, i );
+		}
+	}
+
+	public void togglePreviewMode(boolean doGlobalOpt)
 	{
 		previewMode = !previewMode;
 		linkOverlay.isActive = previewMode;
@@ -202,6 +265,23 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		if ( previewMode )
 		{
 			int oldFirstSelection = table.getSelectionModel().getMinSelectionIndex();
+
+			// remember whole selection
+			if (savedFilteringAndGrouping == null)
+			{
+				savedFilteringAndGrouping = new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( data );
+				savedFilteringAndGrouping.addFilters( getSelectedRows().stream().reduce( new ArrayList<>(), (x,y) -> {x.addAll( y ); return x;}) );
+				for (Class<? extends Entity> groupingFactor : tableModel.getGroupingFactors())
+					savedFilteringAndGrouping.addGroupingFactor( groupingFactor );
+				savedFilteringAndGrouping.addComparisonAxis( Tile.class );
+				if (!channelsGrouped())
+					savedFilteringAndGrouping.addComparisonAxis( Channel.class );
+				if (!illumsGrouped())
+					savedFilteringAndGrouping.addComparisonAxis( Illumination.class );
+				savedFilteringAndGrouping.addApplicationAxis( TimePoint.class );
+				savedFilteringAndGrouping.addApplicationAxis( Angle.class );
+			}
+
 			initLinkExplorer();
 			table.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 			table.setRowSelectionInterval( oldFirstSelection, oldFirstSelection );
@@ -210,9 +290,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		}
 		else
 		{
-			boolean doGlobalOpt = false;
-			if (savedFilteringAndGrouping != null)
-				doGlobalOpt = JOptionPane.showConfirmDialog( linkFrame, "Proceed to Global Optimization?", "Optimize Globally?", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION;
+//			if (savedFilteringAndGrouping != null)
+//				doGlobalOpt = JOptionPane.showConfirmDialog( linkFrame, "Proceed to Global Optimization?", "Optimize Globally?", JOptionPane.YES_NO_OPTION ) == JOptionPane.YES_OPTION;
 
 			quitLinkExplorer();
 			linkOverlay.clearActiveLinks();
@@ -220,13 +299,25 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
 			table.setRowSelectionInterval( oldFirstSelection, oldFirstSelection );
 			if (bdvPopup().bdvRunning())
+			{
+				// update and re-color BDV
 				updateBDV( bdvPopup().bdv, colorMode, data, firstSelectedVD, selectedRows );
+				if (!colorMode)
+					BDVPopupStitching.colorByChannels( bdvPopup().bdv, data, colorOffset );
+				else
+				{
+					colorSources(bdvPopup().bdv.getSetupAssignments().getConverterSetups(), colorOffset );
+				}
+			}
+
+			restoreSelection();
 
 			if (doGlobalOpt)
 			{
-				Optional< ExplorerWindowSetable > globalOptPopupOpt = popups.stream().filter( p -> OptimizeGloballyPopupExpertBatch.class.isInstance( p ) ).findFirst();
-				OptimizeGloballyPopupExpertBatch globalOptPopup = (OptimizeGloballyPopupExpertBatch) globalOptPopupOpt.get();
-				globalOptPopup.doClick();
+				// this should find any one of the two Optimize globally popups
+				Optional< ExplorerWindowSetable > globalOptPopupOpt = popups.stream().filter( p -> OptimizeGloballyPopup.class.isInstance( p ) ).findFirst();
+				OptimizeGloballyPopup globalOptPopup = (OptimizeGloballyPopup) globalOptPopupOpt.get();
+				(savedFilteringAndGrouping.requestExpertSettingsForGlobalOpt ? globalOptPopup.expertOptimize : globalOptPopup.simpleOptimize).doClick(); 
 			}
 			else
 			{
@@ -253,15 +344,115 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		table = new JTable();
 		table.setModel( tableModel );
 		table.setSurrendersFocusOnKeystroke( true );
+
+		final DefaultListSelectionModel selectionModel = new DefaultListSelectionModel()
+		{
+			private List<Integer> invalidIndices;
+
+			private void updateInvalidSelections()
+			{
+				invalidIndices = new ArrayList<>();
+				if (savedFilteringAndGrouping == null)
+					return;
+				final List< Group< BasicViewDescription< ? > > > savedGroups = savedFilteringAndGrouping.getGroupedViews( true );
+				final ISpimDataTableModel< AS > model = (ISpimDataTableModel< AS >) table.getModel();
+				final List< List< BasicViewDescription< ? > > > elements = model.getElements();
+			A:	for (int i = 0; i<elements.size(); i++)
+				{
+					List< BasicViewDescription< ? > > row = elements.get( i );
+					for (Group< BasicViewDescription< ? > > grp : savedGroups)
+						if (grp.getViews().containsAll( row ))
+							continue A;
+					invalidIndices.add( i );
+				}
+			}
+
+			private boolean isValidSelection(int index0, int index1)
+			{
+				if (index0 > index1)
+				{
+					int index0Tmp = index0;
+					index0 = index1;
+					index1 = index0Tmp;
+				}
+				for (Integer invalidIndex : invalidIndices)
+					if( index0 <= invalidIndex && index1 >= invalidIndex)
+						return false;
+				return true;
+			}
+
+			@Override
+			public void setSelectionInterval(int index0, int index1)
+			{
+				updateInvalidSelections();
+				if (isValidSelection( index0, index1 ))
+					super.setSelectionInterval( index0, index1 );
+			}
+
+			@Override
+			public void addSelectionInterval(int index0, int index1)
+			{
+				updateInvalidSelections();
+				if (isValidSelection( index0, index1 ))
+					super.addSelectionInterval( index0, index1 );
+			}
+		};
+
+		table.setSelectionModel( selectionModel );
 		table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
 
-		final DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+		final DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer()
+		{
+			final Color backgroundColor = getBackground();
+
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+					boolean hasFocus, int row, int column)
+			{
+				final Component c = super.getTableCellRendererComponent( table, value, isSelected, hasFocus, row,
+						column );
+				if (!isSelected)
+					c.setBackground( backgroundColor );
+
+				if (savedFilteringAndGrouping == null) { return c; }
+
+				final List< Group< BasicViewDescription< ? > > > savedGroups = savedFilteringAndGrouping.getGroupedViews( true );
+				final ISpimDataTableModel< AS > model = (ISpimDataTableModel< AS >) table.getModel();
+				final List< BasicViewDescription< ? > > views = model.getElements().get( row );
+
+				boolean isSavedSelection = false;
+				for (Group< BasicViewDescription< ? > > grp : savedGroups)
+					if (grp.getViews().containsAll( views ))
+					{
+						isSavedSelection = true;
+						break;
+					}
+
+				c.setForeground( Color.black );
+				if ( isSavedSelection )
+					if (isSelected)
+					{
+						c.setBackground( Color.orange );
+						c.setForeground( Color.white );
+					}
+					else
+						c.setBackground( Color.yellow );
+				else
+					if( isSelected)
+						c.setBackground( Color.pink );
+					else
+						c.setBackground( Color.gray );
+
+				return c;
+			}
+
+		};
+		cellRenderer.setHorizontalAlignment( JLabel.CENTER );
 
 		// center all columns
 		for ( int column = 0; column < tableModel.getColumnCount(); ++column )
 		{
-			table.getColumnModel().getColumn( column ).setCellRenderer( centerRenderer );
+			table.getColumnModel().getColumn( column ).setCellRenderer( cellRenderer );
 		}
 
 		// add listener to which row is selected
@@ -358,7 +549,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					TimePoint.class, (String) timePointCB.getSelectedItem() ) );
 
 		// Angle ComboBox
-		final JComboBox< ? > angleCB = new JComboBox< >( vAngle );
+		angleCB = new JComboBox< >( vAngle );
 		angleCB.addActionListener( new ActionListener()
 		{
 			@Override
@@ -566,13 +757,16 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			@Override
 			public void windowClosing(WindowEvent evt)
 			{
-				togglePreviewMode();
+				setSavedFilteringAndGrouping( null );
+				togglePreviewMode(false);
 			}
 		} );
 
 		linkFrame.pack();
 		linkFrame.setVisible( true );
 		linkFrame.requestFocus();
+
+		MultiWindowLayoutHelper.moveToScreenFraction( linkFrame, xPosLinkExplorer, yPosLinkExplorer );
 	}
 
 	LinkExplorerPanel getLinkExplorer()
@@ -589,50 +783,64 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new LabelPopUp( " Displaying" ) );
 		popups.add( new BDVPopupStitching( linkOverlay ) );
 		popups.add( new DisplayRawImagesPopup() );
-		popups.add( new DisplayFusedImagesPopup() );
 		popups.add( new Separator() );
 
-		popups.add( new LabelPopUp( " Processing" ) );
+		popups.add( new LabelPopUp( " Preprocessing" ) );
+		popups.add( new TranslateGroupManuallyPopup() );
+		regularGridPopup = new RegularGridPopup();
+		popups.add( regularGridPopup );
+		popups.add( new SelectIlluminationPopup() );
+		popups.add( new Separator() );
 
-		CalculatePCPopup calculatePCPopup = new CalculatePCPopup();
+		popups.add( new LabelPopUp( " Stitching Wizard" ) );
+		CalculatePCPopup calculatePCPopup = new CalculatePCPopup("Stitch dataset ...", true, Method.PHASECORRELATION, true);
 		calculatePCPopup.setStitchingResults( stitchingResults );
 		popups.add( calculatePCPopup );
 
-		CalculatePCPopupExpertBatch calculatePCPopupExpert = new CalculatePCPopupExpertBatch();
+		CalculatePCPopupExpertBatch calculatePCPopupExpert = new CalculatePCPopupExpertBatch("Stitch dataset (expert) ...", true);
 		calculatePCPopupExpert.setStitchingResults( stitchingResults );
 		popups.add( calculatePCPopupExpert );
+
+		popups.add( new Separator() );
+
+		popups.add( new LabelPopUp( "Step-by-step Stitching" ) );
+		CalculatePCPopupExpertBatch calculatePCPopupExpertStepByStep = new CalculatePCPopupExpertBatch("Calculate Pairwise Shifts ...", false);
+		calculatePCPopupExpertStepByStep.setStitchingResults( stitchingResults );
+		popups.add( calculatePCPopupExpertStepByStep );
+
+		VerifyLinksPopup verifyLinks = new VerifyLinksPopup();
+		verifyLinks.setStitchingResults( stitchingResults );
+		popups.add( verifyLinks );
 
 		OptimizeGloballyPopup optimizePopup = new OptimizeGloballyPopup();
 		optimizePopup.setStitchingResults( stitchingResults );
 		popups.add( optimizePopup );
-		
-		OptimizeGloballyPopupExpertBatch optimizePopupExpert = new OptimizeGloballyPopupExpertBatch();
-		optimizePopupExpert.setStitchingResults( stitchingResults );
-		popups.add( optimizePopupExpert );
 
-		SimpleRemoveLinkPopup removeLinkPopup = new SimpleRemoveLinkPopup();
-		removeLinkPopup.setStitchingResults( stitchingResults );
-		popups.add( removeLinkPopup );
+//		OptimizeGloballyPopupExpertBatch optimizePopupExpert = new OptimizeGloballyPopupExpertBatch(true);
+//		optimizePopupExpert.setStitchingResults( stitchingResults );
+//		popups.add( optimizePopupExpert );
+
+//		SimpleRemoveLinkPopup removeLinkPopup = new SimpleRemoveLinkPopup();
+//		removeLinkPopup.setStitchingResults( stitchingResults );
+//		popups.add( removeLinkPopup );
 		
 		//DemoLinkOverlayPopup dlPopup = new DemoLinkOverlayPopup(demoLinkOverlay);
 		//popups.add( dlPopup );
 
-		popups.add( new ApplyBDVTransformationPopup() );
-		popups.add( new TogglePreviewPopup() );
-		//popups.add( new BoundingBoxPopup() );
-		popups.add( new PairwiseInterestPointRegistrationPopup() );
-		popups.add( new DetectInterestPointsPopup() );
-
+//		popups.add( new TogglePreviewPopup() );
+		//popups.add( new PairwiseInterestPointRegistrationPopup("Pairwise Registration using Interest Points ...", false, false) );
+		//popups.add( new DetectInterestPointsPopup() );
+		popups.add( new Separator() );
+		
+		popups.add( new LabelPopUp( "Fusion" ) );
+		popups.add( new BoundingBoxPopup() );
+		popups.add( new DisplayFusedImagesPopup() );
+		popups.add( new FusionPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
-		popups.add( new TranslateGroupManuallyPopup() );
-		
-		popups.add( new RegularGridPopup() );
-		popups.add( new BoundingBoxPopup() );
 		popups.add( new RemoveTransformationPopup() );
-		//popups.add( new DisplayOverlapTestPopup() );
-		popups.add( new SelectIlluminationPopup() );
+//		popups.add( new ApplyBDVTransformationPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Modifications" ) );
@@ -652,7 +860,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		// first, re-color sources (we might have set one or two of them to green/magenta)
 		if (!colorMode)
-			BDVPopupStitching.colorByChannels( bdvPopup().bdv, data );
+			BDVPopupStitching.colorByChannels( bdvPopup().bdv, data, colorOffset );
 		else
 			colorSources( bdvPopup().bdv.getSetupAssignments().getConverterSetups(), colorOffset );
 
@@ -684,6 +892,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		// get all pairwise results which involve the views of the selected row
 		Set< ViewId > selectedVids = new HashSet< >( selectedRow );
+		SpimData2.filterMissingViews( data, selectedVids );
 		List< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults
 				.getAllPairwiseResultsForViewId( selectedVids );
 		
@@ -720,9 +929,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 			for ( List< BasicViewDescription< ? > > group : elements )
 			{
-				
+				List< BasicViewDescription< ? > > groupInner = new ArrayList<>(group);
+				SpimData2.filterMissingViews( data, groupInner );
 				// there is a link selected -> other
-				if ( psr.pair().getA().getViews().equals( selectedVids ) && psr.pair().getB().getViews().containsAll( group ) )
+				if ( psr.pair().getA().getViews().equals( selectedVids ) && psr.pair().getB().getViews().containsAll( groupInner ) )
 				{
 					if (psr.pair().equals( selectedPair ))
 					{
@@ -736,7 +946,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 									cs.setColor(new ARGBType(ARGBType.rgba( 255, 0, 255, 255) ) );
 					}
 					
-					for ( final BasicViewDescription< ? > vd : group )
+					for ( final BasicViewDescription< ? > vd : groupInner )
 						if ( vd.getTimePointId() == firstTP.getId() )
 						{
 
@@ -749,8 +959,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							// accumulative transform determined by stitching
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getTransform().getRowPackedCopy() );
-							trans.concatenate( selectedModel.inverse() );
-							trans.preConcatenate( selectedModel );
+//							trans.concatenate( selectedModel.inverse() );
+//							trans.preConcatenate( selectedModel );
 
 							( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( trans );
 						}
@@ -759,7 +969,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				
 
 				// there is a link other -> selected
-				if ( psr.pair().getB().getViews().equals( selectedVids ) && psr.pair().getA().getViews().containsAll( group ) )
+				if ( psr.pair().getB().getViews().equals( selectedVids ) && psr.pair().getA().getViews().containsAll( groupInner ) )
 				{
 					if (psr.pair().equals( selectedPair ))
 					{
@@ -773,7 +983,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 									cs.setColor(new ARGBType(ARGBType.rgba( 255, 0, 255, 255) ) );
 					}
 					
-					for ( final BasicViewDescription< ? > vd : group )
+					for ( final BasicViewDescription< ? > vd : groupInner )
 						if ( vd.getTimePointId() == firstTP.getId() )
 						{
 							// set all views of the other group visible
@@ -786,8 +996,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getInverseTransform().getRowPackedCopy() );
 							
-							trans.concatenate( selectedModel.inverse() );
-							trans.preConcatenate( selectedModel );
+//							trans.concatenate( selectedModel.inverse() );
+//							trans.preConcatenate( selectedModel );
 
 							if (psr.pair().equals( selectedPair ))
 							{
@@ -929,7 +1139,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							updateBDVPreviewMode();
 
 						if (!colorMode)
-							BDVPopupStitching.colorByChannels( p.bdv, data );
+							BDVPopupStitching.colorByChannels( p.bdv, data, colorOffset );
 						else
 						{
 							// cycle between color schemes
@@ -989,6 +1199,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	public void setSavedFilteringAndGrouping(SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > savedFilteringAndGrouping)
 	{
 		this.savedFilteringAndGrouping = savedFilteringAndGrouping;
+		table.repaint();
 	}
 
 }

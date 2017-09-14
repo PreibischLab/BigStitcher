@@ -159,12 +159,12 @@ public class FilteredStitchingResults
 		final Pair<Group<ViewId>, Group<ViewId>> pair12 = new ValuePair<>( new Group<>(new ViewId( 0, 1 )), new Group<> (new ViewId( 0, 2 )) );
 		final AffineTransform3D tr12 = new AffineTransform3D().preConcatenate( new Translation3D( 10.0, 0.0, 0.0 ) );
 		final double r12 = .5;		
-		final PairwiseStitchingResult< ViewId > psr12 = new PairwiseStitchingResult<>( pair12, null, tr12, r12 );
+		final PairwiseStitchingResult< ViewId > psr12 = new PairwiseStitchingResult<>( pair12, null, tr12, r12, 0.0 );
 
 		final Pair<Group<ViewId>, Group<ViewId>> pair13 = new ValuePair<>( new Group<>(new ViewId( 0, 1 )), new Group<> (new ViewId( 0, 3 )) );
 		final AffineTransform3D tr13 = new AffineTransform3D().preConcatenate( new Translation3D( 50.0, 0.0, 0.0 ) );
 		final double r13 = 1.0;		
-		final PairwiseStitchingResult< ViewId > psr13 = new PairwiseStitchingResult<>( pair13, null, tr13, r13 );
+		final PairwiseStitchingResult< ViewId > psr13 = new PairwiseStitchingResult<>( pair13, null, tr13, r13, 0.0 );
 
 		final StitchingResults sr = new StitchingResults();
 		sr.setPairwiseResultForPair( pair12, psr12 );

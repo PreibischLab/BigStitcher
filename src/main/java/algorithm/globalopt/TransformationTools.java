@@ -15,12 +15,11 @@ import java.util.stream.Collectors;
 
 import algorithm.GroupedViewAggregator;
 import algorithm.GroupedViewAggregator.ActionType;
-import algorithm.lucaskanade.LucasKanadeParameters;
-import bdv.BigDataViewer;
-import bdv.export.ProgressWriter;
 import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
 import algorithm.TransformTools;
+import algorithm.lucaskanade.LucasKanadeParameters;
+import bdv.export.ProgressWriter;
 import gui.popup.DisplayOverlapTestPopup;
 import ij.IJ;
 import input.GenerateSpimData;
@@ -47,12 +46,11 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import spim.fiji.spimdata.boundingbox.BoundingBox;
-import spim.fiji.spimdata.interestpoints.InterestPoint;
 import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
 import spim.process.interestpointregistration.global.GlobalOpt;
 import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
-import spim.process.interestpointregistration.global.pointmatchcreating.ImageCorrelationPointMatchCreator;
+import spim.process.interestpointregistration.global.pointmatchcreating.strong.ImageCorrelationPointMatchCreator;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class TransformationTools
@@ -124,18 +122,9 @@ public class TransformationTools
 
 		// TODO (?): Different translational part of downsample Transformations should be considered via TransformTools.getInitialTransforms
 		// we probalbly do not have to correct for them ?
-		
-		// NB: in the global optimization, the final transform of a view will be VR^-1 * T * VR (T is the optimization result)
-		// the rationale behind this is that we can use "raw (pixel) coordinate" transforms T (the typical case when stitching)
-		//
-		// since we get results T' in world coordinates here, we calculate VR * T' * VR^-1 as the result here
-		// after the optimization, we will get VR^-1 * VR * T' * VR^-1 * VR = T' (i.e. the result will remain in world coordinates)
-		
 		final AffineTransform3D vr = vrs.getViewRegistration(viewIdsB.iterator().next()).getModel();		
 		final AffineTransform resCorrected = new AffineTransform( result.getA().numDimensions() );
 		resCorrected.set( result.getA() );
-		resCorrected.concatenate( vr );
-		resCorrected.preConcatenate( vr.copy().inverse() );
 
 		System.out.println("shift: " + Util.printCoordinates(result.getA().getTranslationCopy()));
 		System.out.print("cross-corr: " + result.getB());
@@ -209,18 +198,10 @@ public class TransformationTools
 
 		// TODO (?): Different translational part of downsample Transformations should be considered via TransformTools.getInitialTransforms
 		// we probalbly do not have to correct for them ?
-		
-		// NB: in the global optimization, the final transform of a view will be VR^-1 * T * VR (T is the optimization result)
-		// the rationale behind this is that we can use "raw (pixel) coordinate" transforms T (the typical case when stitching)
-		//
-		// since we get results T' in world coordinates here, we calculate VR * T' * VR^-1 as the result here
-		// after the optimization, we will get VR^-1 * VR * T' * VR^-1 * VR = T' (i.e. the result will remain in world coordinates)
-		
+
 		final AffineTransform3D vr = vrs.getViewRegistration(viewIdsB.iterator().next()).getModel();		
 		final AffineTransform resCorrected = new AffineTransform( result.getA().numDimensions() );
 		resCorrected.set( result.getA() );
-		resCorrected.concatenate( vr );
-		resCorrected.preConcatenate( vr.copy().inverse() );
 
 		IOFunctions.println("resulting transformation: " + Util.printCoordinates(result.getA().getRowPackedCopy()));
 
@@ -266,6 +247,7 @@ public class TransformationTools
 
 		// get translations
 		// TODO: is the 2d check here meaningful?
+		// everything will probably be 3d at this point, since ImgLoaders return 3d images
 		boolean is2d = img1.numDimensions() == 2;
 		Pair< AffineGet, TranslationGet > t1 = TransformTools.getInitialTransforms( vrs.getViewRegistration(viewIdsA.iterator().next()), is2d, dsCorrectionT1 );
 		Pair< AffineGet, TranslationGet > t2 = TransformTools.getInitialTransforms( vrs.getViewRegistration(viewIdsB.iterator().next()), is2d, dsCorrectionT2 );
@@ -281,10 +263,19 @@ public class TransformationTools
 		// TODO (?): Different translational part of downsample Transformations should be considered via TransformTools.getInitialTransforms
 		// we probalbly do not have to correct for them ?
 
-		System.out.println("shift: " + Util.printCoordinates(result.getA().getTranslationCopy()));
+		// NB: as we will deal in global coordinates, not pixel coordinates in global optimization,
+		// calculate global R' = VT^-1 * R * VT from pixel transformation R 
+		ViewRegistration vrOld = vrs.getViewRegistration(viewIdsB.iterator().next());
+		AffineTransform3D resTransform = new AffineTransform3D();
+		resTransform.set( result.getA().getRowPackedCopy() );
+		resTransform.concatenate( vrOld.getModel().inverse() );
+		resTransform.preConcatenate( vrOld.getModel() );
+
+		System.out.println("shift (pixel coordinates): " + Util.printCoordinates(result.getA().getTranslationCopy()));
+		System.out.println("shift (global coordinates): " + Util.printCoordinates(resTransform.getRowPackedCopy()));
 		System.out.print("cross-corr: " + result.getB());
 
-		return new ValuePair<>( new ValuePair<>( result.getA(), result.getB() ), bbOverlap );
+		return new ValuePair<>( new ValuePair<>( resTransform, result.getB() ), bbOverlap );
 	}
 	
 	public static < T extends RealType< T > > Pair<Pair< AffineGet, Double >, RealInterval> computeStitchingLucasKanade(
@@ -342,9 +333,18 @@ public class TransformationTools
 		// TODO (?): Different translational part of downsample Transformations should be considered via TransformTools.getInitialTransforms
 		// we probalbly do not have to correct for them ?
 
-		IOFunctions.println("resulting transformation: " + Util.printCoordinates(result.getA().getRowPackedCopy()));
+		// NB: as we will deal in global coordinates, not pixel coordinates in global optimization,
+		// calculate global R' = VT^-1 * R * VT from pixel transformation R 
+		ViewRegistration vrOld = vrs.getViewRegistration(viewIdsB.iterator().next());
+		AffineTransform3D resTransform = new AffineTransform3D();
+		resTransform.set( result.getA().getRowPackedCopy() );
+		resTransform.concatenate( vrOld.getModel().inverse() );
+		resTransform.preConcatenate( vrOld.getModel() );
 
-		return new ValuePair<>( new ValuePair<>( result.getA(), result.getB() ), bbOverlap );
+		IOFunctions.println("resulting transformation (pixel coordinates): " + Util.printCoordinates(result.getA().getRowPackedCopy()));
+		IOFunctions.println("resulting transformation (global coordinates): " + Util.printCoordinates(resTransform.getRowPackedCopy()));
+
+		return new ValuePair<>( new ValuePair<>( resTransform, result.getB() ), bbOverlap );
 	}
 
 	/**
@@ -480,10 +480,14 @@ public class TransformationTools
 				Group< ViewId > groupB = new Group< ViewId >( result.getA().getB().getViews().stream()
 						.map( x -> (ViewId) x ).collect( Collectors.toList() ) );
 
+				
+				final double oldTransformHash = PairwiseStitchingResult.calculateHash(
+						vrs.getViewRegistration( groupA.getViews().iterator().next() ),
+						vrs.getViewRegistration( groupB.getViews().iterator().next() ) );
 				// TODO: when does that really happen?
 				if ( result.getB() != null )
 					results.add( new PairwiseStitchingResult<>( new ValuePair<>( groupA, groupB ), result.getB().getB(),
-							resT, result.getB().getA().getB() ) );
+							resT, result.getB().getA().getB(), oldTransformHash ) );
 			}
 		}
 		catch ( final Exception e )
@@ -510,7 +514,8 @@ public class TransformationTools
 		// remove non-overlapping comparisons
 		final List< Pair< Group< V >, Group< V > > > removedPairs = filterNonOverlappingPairs( pairs, vrs, sd );
 		removedPairs.forEach( p -> System.out.println( "Skipping non-overlapping pair: " + p.getA() + " -> " + p.getB() ) );
-		
+		IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Removed " + removedPairs.size() + " non-overlapping view-pairs for computing." );
+
 		final int nComparisions = pairs.size();
 		AtomicInteger nCompleted = new AtomicInteger();
 		
@@ -524,8 +529,6 @@ public class TransformationTools
 				public Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > call() throws Exception
 				{
 					Pair<Pair< AffineGet, Double >, RealInterval> result = null;
-					
-					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() );
 
 					final ExecutorService serviceLocal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 4 ) );
 
@@ -567,10 +570,12 @@ public class TransformationTools
 					// show progress in ImageJ progress bar (TODO: should we really do this here or leave it GUI-independent?)
 					int nCompletedI = nCompleted.incrementAndGet();
 					IJ.showProgress( (double) nCompletedI / nComparisions );
-					
+
 					if (result != null)
 						IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": r=" + result.getA().getB() );
-					
+					else
+						IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": No shift found." );
+
 					return new ValuePair<>( p,  result );
 				}
 			});
@@ -612,7 +617,13 @@ public class TransformationTools
 
 				// TODO: when does that really happen?
 				if ( result.getB() != null)
-					results.add( new PairwiseStitchingResult<>( new ValuePair<>(groupA, groupB), result.getB().getB(),  resT, result.getB().getA().getB() ) );
+				{
+					final double oldTransformHash = PairwiseStitchingResult.calculateHash(
+							vrs.getViewRegistration( groupA.getViews().iterator().next() ),
+							vrs.getViewRegistration( groupB.getViews().iterator().next() ) );
+
+					results.add( new PairwiseStitchingResult<>( new ValuePair<>(groupA, groupB), result.getB().getB(),  resT, result.getB().getA().getB(), oldTransformHash ) );
+				}
 			}
 		}
 		catch ( final Exception e )

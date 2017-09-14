@@ -10,19 +10,14 @@ import java.util.Set;
 
 import org.scijava.Context;
 
-
 import ij.ImageJ;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import mpicbg.spim.data.generic.sequence.BasicImgLoader;
-import mpicbg.spim.data.generic.sequence.BasicSetupImgLoader;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
-import mpicbg.spim.data.registration.ViewTransform;
-import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
@@ -37,20 +32,20 @@ import mpicbg.spim.data.sequence.TimePoints;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.data.sequence.ViewSetup;
 import mpicbg.spim.data.sequence.VoxelDimensions;
-import net.imagej.ops.OpService;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
-import net.imglib2.Interval;
-import net.imglib2.Positionable;
-import net.imglib2.RandomAccess;
+import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.RealPositionable;
+import net.imglib2.img.Img;
+import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
+import spim.process.deconvolution.normalization.AdjustInput;
 import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class GroupedViewAggregator
@@ -66,13 +61,11 @@ public class GroupedViewAggregator
 		ActionType actionType;
 		Class<? extends E> entityClass;
 		E instance;
-		private OpService ops;
 		
 		Action(ActionType at, Class<? extends E> entityClass, E instance){
 			this.actionType = at;
 			this.entityClass = entityClass;
 			this.instance = instance;
-			this.ops = new Context(OpService.class).getService( OpService.class );
 		}
 		
 		public <T extends RealType<T>> Map<BasicViewDescription<?>, RandomAccessibleInterval<T>> aggregate(
@@ -128,7 +121,8 @@ public class GroupedViewAggregator
 				if (rais.get( i ) == null)
 					continue;
 				
-				Double mean = ops.stats().mean( Views.iterable( rais.get( i ) )).getRealDouble();
+				IterableInterval< T > iterableImg = Views.iterable( rais.get( i ) );
+				double mean = AdjustInput.sumImg( iterableImg ) / (double)iterableImg.size();
 				if (mean > max)
 				{
 					max = mean;
@@ -244,28 +238,44 @@ public class GroupedViewAggregator
 												AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd,
 												long[] downsampleFactors,
 												final AffineTransform3D dsCorrectionT){
-		
+
 		Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> map = new HashMap<>();
-		
+		boolean dsAdjusted = false;
+
 		for (ViewId vid : gv.getViews())
 		{
-			
 			BasicViewDescription< ? > vd = sd.getViewDescriptions().get( vid );
-			
+
+			final RandomAccessibleInterval< T > rai;
+
 			// if view is not present, add null as the RAIProxy
-			RandomAccessibleInterval< T > rai = vd.isPresent() ?
-					new RAIProxy< T >(sd.getImgLoader(), vid, downsampleFactors, dsCorrectionT) : null; 
-			
-			map.put( vd, rai );		
+			if ( vd.isPresent() )
+			{
+				rai = new RAIProxy< T >( sd.getImgLoader(), vid, downsampleFactors );
+
+				// we only adjust the transformation for downsampling once (could be three channels averaged here)
+				if ( !dsAdjusted )
+				{
+					DownsampleTools.openAndDownsampleAdjustTransformation( sd.getImgLoader(), vid, downsampleFactors, dsCorrectionT );
+					dsAdjusted = true;
+				}
+			}
+			else
+			{
+				rai = null;
+			}
+
+			map.put( vd, rai );
 		}
-		
+
 		for (Action< ? > action : actions)
 		{
 			map = action.aggregate( map );
 		}
-		
+
 		// return the first RAI still present
-		// ideally, there should be only one left
+		// ideally, there should be only one left - more than one means that the actions were not right, e.g.
+		// we have 3 channels and 2 illuminations and the actions only state to average channels
 		return map.values().iterator().next();
 		
 	}
@@ -273,8 +283,7 @@ public class GroupedViewAggregator
 	
 	public static void main(String[] args)
 	{
-		final OpService ops = new Context(OpService.class).getService( OpService.class );
-		
+
 		final ArrayList< ViewSetup > setups = new ArrayList< ViewSetup >();
 		final ArrayList< ViewRegistration > registrations = new ArrayList< ViewRegistration >();
 
@@ -315,9 +324,9 @@ public class GroupedViewAggregator
 					public RandomAccessibleInterval< UnsignedShortType > getImage(int timepointId,
 							ImgLoaderHint... hints)
 					{
-						RandomAccessibleInterval< UnsignedShortType > rai = ops.create().img( d0, new UnsignedShortType() );
-						RandomAccessibleInterval< UnsignedShortType > raiout = ops.create().img( d0, new UnsignedShortType() );
-						raiout = ops.math().add( raiout, Views.iterable( rai ), new UnsignedShortType( setupId ) );
+						Img< UnsignedShortType > raiout = new ArrayImgFactory<UnsignedShortType>().create( d0, new UnsignedShortType() );
+						for (UnsignedShortType t : raiout)
+							t.set( setupId );
 						return raiout;
 						
 					}
@@ -329,9 +338,9 @@ public class GroupedViewAggregator
 					public RandomAccessibleInterval< FloatType > getFloatImage(int timepointId, boolean normalize,
 							ImgLoaderHint... hints)
 					{
-						RandomAccessibleInterval< FloatType > rai = ops.create().img( d0, new FloatType() );
-						RandomAccessibleInterval< FloatType > raiout = ops.create().img( d0, new FloatType() );
-						raiout = ops.math().add( raiout, Views.iterable( rai ), new FloatType( setupId ) );
+						Img< FloatType > raiout = new ArrayImgFactory<FloatType>().create( d0, new FloatType() );
+						for (FloatType t : raiout)
+							t.set( setupId );
 						return raiout;
 					}
 

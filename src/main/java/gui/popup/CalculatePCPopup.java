@@ -6,44 +6,31 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
+import algorithm.GroupedViewAggregator.ActionType;
 import algorithm.PairwiseStitchingParameters;
 import algorithm.SpimDataFilteringAndGrouping;
-import algorithm.GroupedViewAggregator.ActionType;
-import algorithm.globalopt.TransformationTools;
 import algorithm.lucaskanade.LucasKanadeParameters;
-import fiji.util.gui.GenericDialogPlus;
 import gui.StitchingExplorerPanel;
 import gui.StitchingResultsSettable;
-import ij.gui.GenericDialog;
+import gui.StitchingUIHelper;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
-import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import mpicbg.spim.data.sequence.Tile;
-import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
-import net.imglib2.util.Pair;
-import net.imglib2.util.ValuePair;
-import spim.fiji.plugin.resave.ProgressWriterIJ;
+import spim.fiji.plugin.Calculate_Pairwise_Shifts;
+import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
 import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import spim.fiji.spimdata.stitchingresults.StitchingResults;
-import spim.process.interestpointdetection.methods.downsampling.DownsampleTools;
-import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
 {
@@ -51,16 +38,25 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 	 * 
 	 */
 	private static final long serialVersionUID = 8664967345630864576L;
+	
+	public enum Method{
+		PHASECORRELATION,
+		LUCASKANADE
+	}
 
 	private StitchingResults stitchingResults;
 	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	private boolean simple;
+	private boolean wizardMode;
+	private Method method;
+	
 
-	public static final String[] ds = { "1", "2", "4", "8", "16", "32", "64" };
-	public static final String[] methods = {"Phase Correlation", "Iterative Intensity Based (Lucas-Kanade)"};
-
-	public CalculatePCPopup()
+	public CalculatePCPopup(String description, boolean simple, Method method, boolean wizardMode)
 	{
-		super( "Calculate Pairwise Shift" );
+		super( description );
+		this.simple = simple;
+		this.method = method;
+		this.wizardMode = wizardMode;
 		this.addActionListener( new MyActionListener() );
 	}
 
@@ -78,72 +74,6 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 		return this;
 	}
 
-	public static long[] askForDownsampling(AbstractSpimData< ? > data, boolean is2d)
-	{
-		// get first non-missing viewDescription
-		final Optional<? extends BasicViewDescription< ? > > firstPresent = 
-				data.getSequenceDescription().getViewDescriptions().values().stream().filter( v -> v.isPresent() ).findFirst();
-		
-		boolean askForManualDownsampling = true;
-		long[] downSamplingFactors = new long[] {1, 1, 1};
-		
-		// ask for precomputed levels if we have at least one present view and a MultiResolutionImgLoader
-		if (firstPresent.isPresent())
-		{
-			if (MultiResolutionImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ))
-			{
-				// by default, we do not ask for manual ds if we have multiresolution data
-				askForManualDownsampling = false;
-				
-				GenericDialog gd = new GenericDialog( "Use precomputed downsampling" );
-
-				final String[] dsStrings = DownsampleTools.availableDownsamplings( data, firstPresent.get() );
-
-				gd.addChoice( "downsampling (x, y, z)", dsStrings, dsStrings[0] );
-				gd.addCheckbox( "manually select downsampling", false );
-				
-				gd.showDialog();
-
-				if ( gd.wasCanceled() )
-					return null;
-
-				downSamplingFactors = DownsampleTools.parseDownsampleChoice( gd.getNextChoice() );
-
-				askForManualDownsampling = gd.getNextBoolean();
-			}
-		}
-		
-		if (!askForManualDownsampling)
-			return downSamplingFactors;
-		
-		GenericDialogPlus gdp = new GenericDialogPlus( "Manual downsampling" );
-		gdp.addChoice( "downsample x", ds, Long.toString( downSamplingFactors[0] ));
-		gdp.addChoice( "downsample y", ds, Long.toString( downSamplingFactors[1] ) );
-		if ( !is2d )
-		{
-			gdp.addChoice( "downsample z", ds, Long.toString( downSamplingFactors[2] ) );
-		}
-		
-		gdp.showDialog();
-		
-		if (gdp.wasCanceled())
-			return null;
-			
-			downSamplingFactors[0] = Integer.parseInt( gdp.getNextChoice() );
-			downSamplingFactors[1] = Integer.parseInt( gdp.getNextChoice() );
-			if ( !is2d )
-			{
-				downSamplingFactors[2] = Integer.parseInt( gdp.getNextChoice() );
-			}
-		
-		
-		return downSamplingFactors;
-	}
-		
-		
-		
-
-
 	public class MyActionListener implements ActionListener
 	{
 
@@ -156,23 +86,50 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 				@Override
 				public void run()
 				{
-					final FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? > panelFG = (FilteredAndGroupedExplorerPanel< AbstractSpimData< ? >, ? >) panel;
-					final SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( panel.getSpimData() );
 
-					// use whatever is selected in panel as filters
-					filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
+					if (!SpimData2.class.isInstance( panel.getSpimData() ) )
+					{
+						IOFunctions.println(new Date( System.currentTimeMillis() ) + "ERROR: expected SpimData2, but got " + panel.getSpimData().getClass().getSimpleName());
+						return;
+					}
 
-					// get the grouping from panel and compare Tiles
-					panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
-					filteringAndGrouping.addComparisonAxis( Tile.class );
+					@SuppressWarnings("unchecked")
+					FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
+					SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< SpimData2 >( (SpimData2) panel.getSpimData() );
 
-					// compare by Channel if channels were ungrouped in UI
-					if (!panelFG.getTableModel().getGroupingFactors().contains( Channel.class ))
-						filteringAndGrouping.addComparisonAxis( Channel.class );
+					if (simple)
+					{
+						// use whatever is selected in panel as filters
+						filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
+					}
+					else
+					{
+						filteringAndGrouping.askUserForFiltering( panelFG );
+						if (filteringAndGrouping.getDialogWasCancelled())
+							return;
+					}
 
-					// compare by Illumination if illums were ungrouped in UI
-					if (!panelFG.getTableModel().getGroupingFactors().contains( Illumination.class ))
-						filteringAndGrouping.addComparisonAxis( Illumination.class );
+					if (simple)
+					{
+						// get the grouping from panel and compare Tiles
+						panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
+						filteringAndGrouping.addComparisonAxis( Tile.class );
+
+						// compare by Channel if channels were ungrouped in UI
+						if (!panelFG.getTableModel().getGroupingFactors().contains( Channel.class ))
+							filteringAndGrouping.addComparisonAxis( Channel.class );
+
+						// compare by Illumination if illums were ungrouped in UI
+						if (!panelFG.getTableModel().getGroupingFactors().contains( Illumination.class ))
+							filteringAndGrouping.addComparisonAxis( Illumination.class );
+					}
+					else
+					{
+						filteringAndGrouping.addComparisonAxis( Tile.class );
+						filteringAndGrouping.askUserForGrouping( panelFG );
+						if (filteringAndGrouping.getDialogWasCancelled())
+							return;
+					}
 
 					// ask user what to do with grouped views
 					// use AVERAGE as pre-set choice for illuminations
@@ -180,108 +137,52 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					final HashMap< Class<? extends Entity>, ActionType > illumDefaultAggregation = new HashMap<>();
 					illumDefaultAggregation.put( Illumination.class, ActionType.AVERAGE );
 
-					filteringAndGrouping.askUserForGroupingAggregator(illumDefaultAggregation);
+					if (simple)
+						filteringAndGrouping.askUserForGroupingAggregator(illumDefaultAggregation);
+					else
+						filteringAndGrouping.askUserForGroupingAggregator();
+
 					if (filteringAndGrouping.getDialogWasCancelled())
 						return;
 
-					// TODO: do a meaningful is2d check
-					boolean is2d = false;
-
-					final long[] downSamplingFactors = askForDownsampling( panel.getSpimData(), is2d );
-					if (downSamplingFactors == null)
+					boolean allViews2D = StitchingUIHelper.allViews2D( filteringAndGrouping.getFilteredViews() );
+					long[] dsFactors = StitchingUIHelper.askForDownsampling( panel.getSpimData(), allViews2D );
+					if (dsFactors == null)
 						return;
 
-					final GenericDialog gd = new GenericDialog( "Pairwise Alignment Method" );
+					PairwiseStitchingParameters params = null;
+					LucasKanadeParameters LKParams = null;
+					if (method == Method.PHASECORRELATION)
+						params = simple ? new PairwiseStitchingParameters() : PairwiseStitchingParameters.askUserForParameters();
+					if (method == Method.LUCASKANADE)
+						LKParams = LucasKanadeParameters.askUserForParameters();
 
-					gd.addChoice( "alignment_method", methods, methods[0] );
-					gd.addCheckbox( "clear_previous_results", true );
+					if (method == Method.PHASECORRELATION)
+						Calculate_Pairwise_Shifts.processPhaseCorrelation( (SpimData2) panel.getSpimData(), filteringAndGrouping, params, dsFactors );
+					if (method == Method.LUCASKANADE)
+						Calculate_Pairwise_Shifts.processLucasKanade( (SpimData2) panel.getSpimData(), filteringAndGrouping, LKParams, dsFactors );
 
-					gd.showDialog();
-
-					if(gd.wasCanceled())
-						return;
-
-					final boolean resetResults = gd.getNextBoolean();
-					final int methodIdx = gd.getNextChoiceIndex();
-					
-					
-
-					
-
-					final List< Pair< Group< BasicViewDescription< ? extends BasicViewSetup > >, Group< BasicViewDescription< ? extends BasicViewSetup > > > > pairs 
-						= filteringAndGrouping.getComparisons();
-
-					final ArrayList< PairwiseStitchingResult< ViewId > > results;
-
-					if (methodIdx == 0) // do phase correlation
-					{
-						PairwiseStitchingParameters params = PairwiseStitchingParameters.askUserForParameters();
-						if ( params == null )
-							return;
-
-						results = TransformationTools.computePairs(
-								pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
-								filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
-								downSamplingFactors );
-					}
-					else if (methodIdx == 1) // do Lucas-Kanade
-					{
-						LucasKanadeParameters params = LucasKanadeParameters.askUserForParameters();
-						if ( params == null )
-							return;
-
-						results = TransformationTools.computePairsLK(
-								pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
-								filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
-								downSamplingFactors, new ProgressWriterIJ());
-					}
-					else
-					{
-						results = null; // should not happen, just to stop compiler from complaining
-					}
-
-
-					// user wants us to clear previous results
-					// we will clear results for all selected pairs
-					if (resetResults)
-					{
-						// this is just a cast of pairs to Group<ViewId>
-						final List< ValuePair< Group< ViewId >, Group< ViewId > > > castPairs = pairs.stream().map( p -> {
-							final Group< ViewId > vidGroupA = new Group<>( p.getA().getViews().stream().map( v -> (ViewId) v ).collect( Collectors.toSet() ) );
-							final Group< ViewId > vidGroupB = new Group<>( p.getB().getViews().stream().map( v -> (ViewId) v ).collect( Collectors.toSet() ) );
-							return new ValuePair<>( vidGroupA, vidGroupB );
-						}).collect( Collectors.toList() );
-
-						for (ValuePair< Group< ViewId >, Group< ViewId > > pair : castPairs)
-						{
-							// try to remove a -> b and b -> a, just to make sure
-							stitchingResults.getPairwiseResults().remove( pair );
-							stitchingResults.getPairwiseResults().remove( new ValuePair<>( pair.getB(), pair.getA() ) );
-						}
-					}
-
-					// update StitchingResults with Results
-					for ( final PairwiseStitchingResult< ViewId > psr : results )
-					{
-						if (psr == null)
-							continue;
-
-						stitchingResults.setPairwiseResultForPair( psr.pair(), psr );
-					}
 
 					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": DONE." );
 
-					// ask user if they want to switch to preview mode
-					if (panel instanceof StitchingExplorerPanel)
+					if (wizardMode)
 					{
-						final int choice = JOptionPane.showConfirmDialog( (Component) panel, "Pairwise shift calculation done. Switch to preview mode?", "Preview Mode", JOptionPane.YES_NO_OPTION );
-						if (choice == JOptionPane.YES_OPTION)
+						// remember if we used default parameters here -> we will use default parameters in global opt as well.
+						filteringAndGrouping.requestExpertSettingsForGlobalOpt = !simple;
+
+						// ask user if they want to switch to preview mode
+						if (panel instanceof StitchingExplorerPanel)
 						{
-							((StitchingExplorerPanel< ?, ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
-							((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode();
+							final int choice = JOptionPane.showConfirmDialog( (Component) panel, "Pairwise shift calculation done. Switch to preview mode?", "Preview Mode", JOptionPane.YES_NO_OPTION );
+							if (choice == JOptionPane.YES_OPTION)
+							{
+								((StitchingExplorerPanel< ?, ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
+								((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode(false);
+							}
 						}
 					}
 				}
+
 			} ).start();
 
 

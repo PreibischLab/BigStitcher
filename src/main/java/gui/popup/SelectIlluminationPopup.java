@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +24,7 @@ import algorithm.SpimDataFilteringAndGrouping;
 import algorithm.illuminationselection.BrightestViewSelection;
 import algorithm.illuminationselection.IlluminationSelectionPreviewGUI;
 import algorithm.illuminationselection.ViewSelection;
+import bdv.BigDataViewer;
 import fiji.util.gui.GenericDialogPlus;
 import ij.gui.GenericDialog;
 import javassist.bytecode.analysis.Executor;
@@ -39,6 +41,7 @@ import mpicbg.spim.data.sequence.MissingViews;
 import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.ViewId;
+import mpicbg.spim.io.IOFunctions;
 import spim.fiji.spimdata.SpimData2;
 import spim.fiji.spimdata.boundingbox.BoundingBoxes;
 import spim.fiji.spimdata.explorer.ExplorerWindow;
@@ -99,129 +102,32 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 				@Override
 				public void run()
 				{
-					final GenericDialogPlus gdpParams = new GenericDialogPlus( "Illumination Selection" );
-					gdpParams.addCheckbox( "Process only selection", false );
-					gdpParams.addCheckbox( "Show selection results before applying", true );
-					addViewSelectionQuery( gdpParams );
-					
-					gdpParams.showDialog();
-					
-					if (gdpParams.wasCanceled())
-						return;
-					
-					final boolean limitToSelection = gdpParams.getNextBoolean();
-					final boolean previewResults = gdpParams.getNextBoolean();
-					final ViewSelection< ViewId > viewSelection = getViewSelectionResult( gdpParams, panel.getSpimData().getSequenceDescription() );			
-					
-					
-					final SpimDataFilteringAndGrouping< AbstractSpimData< ? > > grouping =
-							new SpimDataFilteringAndGrouping< AbstractSpimData<?> >(panel.getSpimData());
-					grouping.addGroupingFactor( Illumination.class );
-					
-					/*
-					grouping.addApplicationAxis( Angle.class );
-					grouping.addApplicationAxis( TimePoint.class );
-					grouping.addApplicationAxis( Tile.class );
-					grouping.addApplicationAxis( Channel.class );
-					*/
-					
-					if (limitToSelection)
-					{
-						final Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selected = ((GroupedRowWindow)panel).selectedRowsGroups();
-						grouping.addFilters( selected.stream().reduce( new ArrayList<>(), (x, y) -> {x.addAll(y); return x;} ) );
-						/*
-						grouping.addFilter( TimePoint.class, SpimDataFilteringAndGrouping.getInstancesInAllGroups( selected, TimePoint.class ));
-						grouping.addFilter( Tile.class, SpimDataFilteringAndGrouping.getInstancesInAllGroups( selected, Tile.class ));
-						grouping.addFilter( Channel.class, SpimDataFilteringAndGrouping.getInstancesInAllGroups( selected, Channel.class ));
-						*/
-					}
-					
-					// get grouped views and filter out missing views
-					final List< Group< BasicViewDescription< ? > > > groupedViews = grouping.getGroupedViews( true );
-					groupedViews.forEach( g -> SpimData2.filterMissingViews( panel.getSpimData(), g.getViews() ) );
-					
-					// multithreaded best illuination determination
-					List< Callable< ViewId > > tasks = new ArrayList<>();					
-					List< ViewId > bestViews = new ArrayList<>();
-					ExecutorService service = Executors.newFixedThreadPool(Math.max( 2, Runtime.getRuntime().availableProcessors() ));
-					
-					for (final Group<? extends ViewId > group : groupedViews)
-						tasks.add( new Callable< ViewId >()
-						{
-							
-							@Override
-							public ViewId call() throws Exception
-							{
-								return viewSelection.getBestView( group.getViews() );
-							}
-						} );
-						
-					List< Future< ViewId > > futures;
-					try
-					{
-						futures = service.invokeAll( tasks );
-						
-						for (Future< ViewId > f : futures)
-							bestViews.add( f.get() );
-					}
-					catch ( InterruptedException | ExecutionException e )
-					{
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					service.shutdown();					
 
-					final List< List< BasicViewDescription< ? > > > groupedViewsList = groupedViews.stream().map( g -> {
-						final ArrayList<BasicViewDescription< ? >> views = new ArrayList<>(g.getViews());
-						Collections.sort( views );
-						return views;
-					} ).collect(Collectors.toList());
-					
-					
-					if (previewResults)
+					if (!SpimData2.class.isInstance( panel.getSpimData() ) )
 					{
-						
-						List< ViewId > bestViewsFromGUI = new IlluminationSelectionPreviewGUI().previewWithGUI( groupedViewsList, bestViews, panel.bdvPopup().getBDV());
-						
-						if (bestViewsFromGUI == null)
-						{
-							System.out.println( "Illumination selection aborted by user." );
-							return;
-						}
-							
-						else
-							bestViews = bestViewsFromGUI;
-						
+						IOFunctions.println(new Date( System.currentTimeMillis() ) + "ERROR: expected SpimData2, but got " + panel.getSpimData().getClass().getSimpleName());
+						return;
 					}
-					
-					//bestViews.forEach( System.out::println );
-					
-					final Set<ViewId> missingViews = new HashSet<>();
-					
-					for (final Group< ? extends ViewId > group : groupedViews)
-						for (final ViewId vid : group)
-							if (!(bestViews.contains( vid )))
-								missingViews.add( vid );
-					
-					missingViews.forEach( System.out::println );
-					
-					// TODO: are there realistic cases where we will not have a SpimData?
-					if (SpimData.class.isInstance( panel.getSpimData() ))
+
+					final BigDataViewer bdv = panel.bdvPopup().getBDV();
+					final Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selected = ((GroupedRowWindow)panel).selectedRowsGroups();
+
+					SpimData2 filteredSpimData = processIlluminationSelection( 
+							(SpimData) panel.getSpimData(),
+							selected.stream().reduce( new ArrayList<>(), (x,y) -> {x.addAll( y ); return x;}),
+							true,
+							bdv != null,
+							bdv );
+
+					if (filteredSpimData != null)
 					{
-						SpimData data = (SpimData) panel.getSpimData();				
-						SpimData2 dataNew = getCopyWithMissingViews( data, missingViews );				
-						
-						panel.setSpimData( dataNew );
+						panel.setSpimData( filteredSpimData );
 						panel.updateContent();
-						panel.saveXML();
 					}
-					else
-					{
-						System.err.println( "ERROR: Cannot replace data because it is not SpimData." );
-					}
-					
+
+					// TODO: close and re-open BDV
 				}
+
 			}).start();
 			
 			
@@ -229,11 +135,109 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		
 	}
 	
+	public static SpimData2 processIlluminationSelection(
+			SpimData data,
+			Collection< ? extends BasicViewDescription< ? > > selected,
+			boolean showOnlySelectedOption,
+			boolean showPreviewOption,
+			BigDataViewer bdvForPreview
+			)
+	{
+		final GenericDialogPlus gdpParams = new GenericDialogPlus( "Illumination Selection" );
+		if (showOnlySelectedOption)
+			gdpParams.addCheckbox( "Process only selection", false );
+		if (showPreviewOption)
+			gdpParams.addCheckbox( "Show selection results before applying", true );
+		addViewSelectionQuery( gdpParams );
+
+		gdpParams.showDialog();
+
+		if (gdpParams.wasCanceled())
+			return null;
+
+		// in the default case, we only process selection
+		final boolean limitToSelection = showOnlySelectedOption ? gdpParams.getNextBoolean() : true;
+		// in the default case, we do NOT preview
+		final boolean previewResults = showPreviewOption ? gdpParams.getNextBoolean() : false;
+		final ViewSelection< ViewId > viewSelection = getViewSelectionResult( gdpParams, data.getSequenceDescription() );
+
+		final SpimDataFilteringAndGrouping< AbstractSpimData< ? > > grouping =
+				new SpimDataFilteringAndGrouping< AbstractSpimData<?> >(data);
+		grouping.addGroupingFactor( Illumination.class );
+
+
+		if (limitToSelection)
+		{
+			grouping.addFilters( selected );
+		}
+
+		// get grouped views and filter out missing views
+		final List< Group< BasicViewDescription< ? > > > groupedViews = grouping.getGroupedViews( true );
+		groupedViews.forEach( g -> SpimData2.filterMissingViews( data, g.getViews() ) );
+
+		// multithreaded best illuination determination
+		List< Callable< ViewId > > tasks = new ArrayList<>();
+		List< ViewId > bestViews = new ArrayList<>();
+		ExecutorService service = Executors.newFixedThreadPool(Math.max( 2, Runtime.getRuntime().availableProcessors() ));
+
+		for (final Group<? extends ViewId > group : groupedViews)
+			tasks.add( new Callable< ViewId >()
+			{
+				@Override
+				public ViewId call() throws Exception
+				{
+					return viewSelection.getBestView( group.getViews() );
+				}
+			} );
+		List< Future< ViewId > > futures;
+		try
+		{
+			futures = service.invokeAll( tasks );
+			for (Future< ViewId > f : futures)
+				bestViews.add( f.get() );
+		}
+		catch ( InterruptedException | ExecutionException e )
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		service.shutdown();
+
+		final List< List< BasicViewDescription< ? > > > groupedViewsList = groupedViews.stream().map( g -> {
+			final ArrayList<BasicViewDescription< ? >> views = new ArrayList<>(g.getViews());
+			Collections.sort( views );
+			return views;
+		} ).collect(Collectors.toList());
+
+		if (previewResults)
+		{
+			List< ViewId > bestViewsFromGUI = new IlluminationSelectionPreviewGUI().previewWithGUI( groupedViewsList, bestViews, bdvForPreview);
+			if (bestViewsFromGUI == null)
+			{
+				System.out.println( "Illumination selection aborted by user." );
+				return null;
+			}
+			else
+				bestViews = bestViewsFromGUI;
+		}
+
+		final Set<ViewId> missingViews = new HashSet<>();
+		for (final Group< ? extends ViewId > group : groupedViews)
+			for (final ViewId vid : group)
+				if (!(bestViews.contains( vid )))
+					missingViews.add( vid );
+		missingViews.forEach( System.out::println );
+
+		SpimData2 dataNew = getCopyWithMissingViews( data, missingViews );
+		return dataNew;
+
+	}
+
 	public static SpimData2 getCopyWithMissingViews(SpimData data, Collection< ? extends ViewId > missingViews)
 	{
 		return getCopyWithMissingViews( data, missingViews, false );
 	}
-	
+
 	public static SpimData2 getCopyWithMissingViews(SpimData data, Collection< ? extends ViewId > missingViews, boolean ignoreOldMissingViews)
 	{
 		final File basePath = data.getBasePath();
@@ -265,7 +269,6 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		return dataNew;
 	}
 
-	
 	static String getViewDescriptionStringWithoutIllum(BasicViewDescription< ? > vd)
 	{
 		return "TP: " + vd.getTimePointId() + 
@@ -273,9 +276,4 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 				", Angle " + vd.getViewSetup().getAttribute( Angle.class ).getId() +
 				", Channel " + vd.getViewSetup().getAttribute( Channel.class ).getId();
 	}
-	
-	
-	
-	
-		
 }

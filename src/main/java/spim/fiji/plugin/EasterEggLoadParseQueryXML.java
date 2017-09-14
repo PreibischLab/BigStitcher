@@ -21,7 +21,18 @@ public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 	{
 		final String input = xmlfile.toLowerCase().trim();
 
-		if ( input.equals( "fractal" ) )
+		if ( input.equals( "define" ) )
+		{
+			this.message1 = "This will define a new dataset, press OK to continue";
+			this.message2 = "";
+			this.color = GUIHelper.good;
+
+			this.data = null;
+			this.attributes = null;
+
+			return true;
+		}
+		else if ( input.equals( "fractal" ) )
 		{
 			this.data = FractalSpimDataGenerator.createVirtualSpimData();
 			this.attributes = getAttributes( data, comparator );

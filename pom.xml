@@ -10,7 +10,7 @@
 
   <groupId>net.imglib2</groupId>
   <artifactId>imglib2-stitching</artifactId>
-  <version>0.9.0-alpha-10-SNAPSHOT</version>
+  <version>0.9.0-beta-4-SNAPSHOT</version>
   <name>ImgLib2Stitching</name>
 
 	<repositories>
@@ -52,11 +52,6 @@
   	</dependency>
 
   	<dependency>
-  		<groupId>net.imagej</groupId>
-  		<artifactId>imagej-ops</artifactId>
-  		<version>0.38.0</version>
-  	</dependency>
-  	<dependency>
   		<groupId>sc.fiji</groupId>
   		<artifactId>bigdataviewer-vistools</artifactId>
   		<version>1.0.0-beta-5</version>
@@ -71,5 +66,10 @@
   		<artifactId>imglib2</artifactId>
   		<version>4.2.1</version>
   	</dependency>
+ 		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>legacy-imglib1</artifactId>
+			<version>1.1.8</version>
+		</dependency>
   </dependencies>
 </project>
