@@ -1,7 +1,7 @@
 package headless;
 
-import java.util.ArrayList;
-import java.util.Date;
+import java.io.File;
+import java.io.PrintWriter;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 
@@ -9,17 +9,15 @@ import algorithm.PairwiseStitching;
 import algorithm.PairwiseStitchingParameters;
 import ij.ImageJ;
 import mpicbg.spim.io.IOFunctions;
+import mpicbg.spim.io.TextFileAccess;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.algorithm.phasecorrelation.PhaseCorrelationPeak2;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.Translation;
 import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
-import net.imglib2.view.Views;
 import simulation.SimulateTileStitching;
 import spim.process.deconvolution.DeconViews;
 import spim.process.interestpointdetection.methods.downsampling.Downsample;
@@ -28,84 +26,123 @@ public class StitchingPairwise
 {
 	public static void main( String[] args )
 	{
-		new ImageJ();
+		//new ImageJ();
 
 		final double minOverlap = 0.85;
-		final float snr = 8;
 
-		final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, Util.getArrayFromValue( minOverlap, 3 ) );
+		final Thread[] threads = new Thread[ 14 ];
 
-		final PairwiseStitchingParameters params = new PairwiseStitchingParameters( 0.1, 5, true, true );
-		final ExecutorService service = DeconViews.createExecutorService();
-
-		final Random rnd = new Random( 34 );
-
-		for ( int downsample = 8; downsample <= 8; downsample *= 2 )
+		for ( int i = 0; i < 14; ++i )
 		{
-			int[] ds = new int[ 3 ];
-			ds[ 0 ] = downsample;
-			ds[ 1 ] = downsample;
-			ds[ 2 ] = Math.max( 1, downsample / 2 );
-
-			IOFunctions.println( "------------------------------" );
-			IOFunctions.println( "downsample: " + downsample + " ["  + Util.printCoordinates( ds ) + "]" );
-			IOFunctions.println( "------------------------------" );
-
-			double avgDist = 0;
-			double avgX = 0;
-			double avgY = 0;
-			double avgZ = 0;
-			final int numTests = 10;
-
-			for ( int i = 0; i < numTests; ++i )
+			final int snrInt;
+			final boolean subpixel;
+			if ( i >= 7 )
 			{
-				final double[] ov = new double[ 3 ];
-				for ( int d = 0; d < ov.length; ++d )
-					ov[ d ] = minOverlap + (rnd.nextDouble() / 10.0);
-
-				System.out.println( Util.printCoordinates( ov ) );
-				sts.init( ov );
-
-				final double[] correct = sts.getCorrectTranslation();
-				System.out.println( "Known shift (right relative to left): " + Util.printCoordinates( correct ) );
-
-				final Pair< Img< FloatType >, Img< FloatType > > pair = sts.getNextPair( snr );
-
-				final RandomAccessibleInterval< FloatType > img1 = downsample( pair.getA(), ds );
-				final RandomAccessibleInterval< FloatType > img2 = downsample( pair.getB(), ds );
-
-				//SimulateTileStitching.show( img1, "1" );
-				//SimulateTileStitching.show( img2, "2" );
-				//SimpleMultiThreading.threadHaltUnClean();
-
-				final Translation3D t1 = new Translation3D( 0, 0, 0 );
-				final Translation3D t2 = new Translation3D( 0, 0, 0 );
-		
-				final Pair< Translation, Double > r = PairwiseStitching.getShift( img1, img2, t1, t2, params, service );
-	
-				double[] shift = r.getA().getTranslationCopy();
-				
-				for ( int d = 0; d < correct.length; ++d )
-					shift[ d ] *= ds[ d ];
-
-				for ( int d = 0; d < correct.length; ++d )
-					shift[ d ] -= correct[ d ];
-
-				double d = dist( shift );
-
-				IOFunctions.println( shift[ 0 ] + "\t" + shift[ 1 ]  + "\t" + shift[ 2 ] + "\t" + d + "\t" + r.getB() );
-	
-				avgDist += d;
-				avgX += shift[ 0 ];
-				avgY += shift[ 1 ];
-				avgZ += shift[ 2 ];
+				snrInt = Util.pow( 2, i - 7 );
+				subpixel = true;
+			}
+			else
+			{
+				snrInt = Util.pow( 2, i );
+				subpixel = false;
 			}
 
-			IOFunctions.println( "avg : " + avgDist / (double)numTests );
-			IOFunctions.println( "avgX: " + avgX / (double)numTests );
-			IOFunctions.println( "avgY: " + avgY / (double)numTests );
-			IOFunctions.println( "avgZ: " + avgZ / (double)numTests );
+			System.out.println( i + " " + snrInt + " " + subpixel );
+
+			threads[ i ] = new Thread( new Runnable()
+			{
+				public void run()
+				{
+					final float snr = snrInt;
+			
+					final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, Util.getArrayFromValue( minOverlap, 3 ) );
+			
+					final PairwiseStitchingParameters params = new PairwiseStitchingParameters( 0.1, 5, subpixel, subpixel );
+					final ExecutorService service = DeconViews.createExecutorService();
+			
+					final Random rnd = new Random( 34 );
+			
+					for ( int downsample = 8; downsample >= 1; downsample /= 2 )
+					{
+						final PrintWriter out;
+						if ( subpixel )
+							out = TextFileAccess.openFileWrite( new File( "subpixel_snr_" + Math.round( snr ) + "ds" + downsample + ".txt" ) );
+						else
+							out = TextFileAccess.openFileWrite( new File( "nosubpixel_snr_" + Math.round( snr ) + "ds" + downsample + ".txt" ) );
+						
+						int[] ds = new int[ 3 ];
+						ds[ 0 ] = downsample;
+						ds[ 1 ] = downsample;
+						ds[ 2 ] = Math.max( 1, downsample / 2 );
+			
+						IOFunctions.println( "------------------------------" );
+						IOFunctions.println( "subpixel:" + subpixel + ", SNR: " + snr + ", downsample: " + downsample + " ["  + Util.printCoordinates( ds ) + "]" );
+						IOFunctions.println( "------------------------------" );
+			
+						final int numTests = 500;
+			
+						long time;
+			
+						for ( int i = 0; i < numTests; ++i )
+						{
+							time = System.currentTimeMillis();
+			
+							final double[] ov = new double[ 3 ];
+							for ( int d = 0; d < ov.length; ++d )
+								ov[ d ] = minOverlap + (rnd.nextDouble() / 10.0);
+			
+							//System.out.println( Util.printCoordinates( ov ) );
+							sts.init( ov, rnd.nextBoolean() );
+			
+							final double[] correct = sts.getCorrectTranslation();
+							//System.out.println( "Known shift (right relative to left): " + Util.printCoordinates( correct ) );
+			
+							final Pair< Img< FloatType >, Img< FloatType > > pair = sts.getNextPair( snr );
+			
+							final RandomAccessibleInterval< FloatType > img1 = downsample( pair.getA(), ds );
+							final RandomAccessibleInterval< FloatType > img2 = downsample( pair.getB(), ds );
+			
+							//SimulateTileStitching.show( img1, "1" );
+							//SimulateTileStitching.show( img2, "2" );
+							//SimpleMultiThreading.threadHaltUnClean();
+			
+							final Translation3D t1 = new Translation3D( 0, 0, 0 );
+							final Translation3D t2 = new Translation3D( 0, 0, 0 );
+					
+							final Pair< Translation, Double > r = PairwiseStitching.getShift( img1, img2, t1, t2, params, service );
+				
+							double[] shift = r.getA().getTranslationCopy();
+							
+							for ( int d = 0; d < correct.length; ++d )
+								shift[ d ] *= ds[ d ];
+			
+							for ( int d = 0; d < correct.length; ++d )
+								shift[ d ] -= correct[ d ];
+			
+							double d = dist( shift );
+			
+							time = System.currentTimeMillis() - time;
+			
+							IOFunctions.println( time + "ms, " + shift[ 0 ] + " " + shift[ 1 ]  + " " + shift[ 2 ] + " " + d + " " + r.getB() );
+							out.println( shift[ 0 ] + "\t" + shift[ 1 ]  + "\t" + shift[ 2 ] + "\t" + d + "\t" + r.getB() );
+							out.flush();
+						}
+			
+						out.close();
+					}
+				}
+			} );
 		}
+
+		for ( int ithread = 0; ithread < threads.length; ++ithread )
+			threads[ ithread ].start();
+
+		try
+		{
+			for ( int ithread = 0; ithread < threads.length; ++ithread )
+				threads[ ithread ].join();
+		}
+		catch ( InterruptedException ie ) { throw new RuntimeException(ie); }
 	}
 
 	public static RandomAccessibleInterval< FloatType > downsample( RandomAccessibleInterval< FloatType > input, final int[] downsample )
