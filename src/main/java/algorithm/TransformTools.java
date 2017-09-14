@@ -238,8 +238,8 @@ public class TransformTools {
 		
 		for (int i = 0; i< n; i++)
 		{
-			min[i] = Math.round(Math.ceil(overlap.realMin(i)));
-			max[i] = Math.round(Math.floor(overlap.realMax(i)));			
+			min[i] = Math.round((overlap.realMin(i))) + 1;
+			max[i] = Math.round((overlap.realMax(i))) - 1;
 		}
 		
 		return new FinalInterval(min, max);
