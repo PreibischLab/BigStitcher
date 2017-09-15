@@ -6,13 +6,17 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import ij.gui.GenericDialog;
+import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
 import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.Dimensions;
+import net.imglib2.util.Util;
 import spim.fiji.plugin.util.GUIHelper;
+import spim.fiji.spimdata.SpimData2;
+import spim.fiji.spimdata.XmlIoSpimData2;
 import spim.process.interestpointdetection.methods.downsampling.DownsampleTools;
 
 public class StitchingUIHelper
@@ -210,4 +214,12 @@ public class StitchingUIHelper
 		return DownsampleTools.parseDownsampleChoice( dsStrings[closestIdx] );
 	}
 
+	public static void main( String[] args ) throws SpimDataException
+	{
+		String xml = "/Users/spreibi/Documents/Grants and CV/BIMSB/Projects/CLARITY/Big Data Sticher/Dros_converted/dataset.xml";
+
+		XmlIoSpimData2 io = new XmlIoSpimData2( null );
+		final SpimData2 data = io.load( xml );
+		System.out.println(  "chosen ds: " + Util.printCoordinates( askForDownsampling( data, false ) ) );
+	}
 }
