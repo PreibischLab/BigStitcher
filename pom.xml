@@ -10,7 +10,7 @@
 
   <groupId>net.imglib2</groupId>
   <artifactId>imglib2-stitching</artifactId>
-  <version>0.9.0-beta-4-SNAPSHOT</version>
+  <version>0.9.0-beta-4</version>
   <name>ImgLib2Stitching</name>
 
 	<repositories>
