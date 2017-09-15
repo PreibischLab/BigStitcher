@@ -120,23 +120,33 @@ public class StitchingUIHelper
 		if (gd.wasCanceled())
 			return null;
 
-
 		int dsXIdx = gd.getNextChoiceIndex();
 		int dsYIdx = gd.getNextChoiceIndex();
 		long dsZ = is2d ? 1 : Long.parseLong( gd.getNextChoice() );
 
-		
-		
 		long dsX;
 		long dsY;
 		if (!is2d)
 		{
 			if (dsXIdx >= ds.length)
+			{
 				dsXIdx = -1 * (dsXIdx - ds.length);
+				dsX = DownsampleTools.downsampleFactor( dsXIdx, (int) dsZ, voxelDims );
+			}
+			else
+			{
+				dsX = Integer.parseInt( ds[ dsXIdx ] );
+			}
+
 			if (dsYIdx >= ds.length)
+			{
 				dsYIdx = -1 * (dsYIdx - ds.length);
-			dsX = DownsampleTools.downsampleFactor( dsXIdx, (int) dsZ, voxelDims );
-			dsY = DownsampleTools.downsampleFactor( dsYIdx, (int) dsZ, voxelDims );
+				dsY = DownsampleTools.downsampleFactor( dsYIdx, (int) dsZ, voxelDims );
+			}
+			else
+			{
+				dsY = Integer.parseInt( ds[ dsYIdx ] );
+			}
 		}
 		else
 		{
@@ -221,5 +231,6 @@ public class StitchingUIHelper
 		XmlIoSpimData2 io = new XmlIoSpimData2( null );
 		final SpimData2 data = io.load( xml );
 		System.out.println(  "chosen ds: " + Util.printCoordinates( askForDownsampling( data, false ) ) );
+		System.exit( 0 );
 	}
 }
