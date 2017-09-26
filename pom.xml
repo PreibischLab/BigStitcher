@@ -116,6 +116,39 @@
 	<dependencies>
 		<dependency>
 			<groupId>net.preibisch</groupId>
+			<artifactId>multiview-simulation</artifactId>
+			<version>${multiview-simulation.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>mpicbg</groupId>
+			<artifactId>mpicbg</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>gov.nist.math</groupId>
+			<artifactId>jama</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-algorithm</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-realtransform</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>spim_data</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>fiji-lib</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.preibisch</groupId>
 			<artifactId>multiview-reconstruction</artifactId>
 			<version>${multiview-reconstruction.version}</version>
 		</dependency>
@@ -152,9 +185,13 @@
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
 		</dependency>
+
+		<!-- Test scope dependencies -->
 		<dependency>
+			<!-- NB: dependency:analyze erroneously flags this, but it's required -->
 			<groupId>sc.fiji</groupId>
 			<artifactId>legacy-imglib1</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>
