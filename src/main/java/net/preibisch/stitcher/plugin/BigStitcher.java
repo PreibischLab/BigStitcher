@@ -22,27 +22,32 @@
 package net.preibisch.stitcher.plugin;
 
 
+import ij.ImageJ;
+
 import java.awt.Button;
 import java.awt.TextField;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import ij.ImageJ;
-import ij.plugin.PlugIn;
-import mpicbg.spim.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.gui.StitchingExplorer;
 
-public class Stitching_Explorer implements PlugIn
+import org.scijava.command.Command;
+import org.scijava.plugin.Plugin;
+
+import mpicbg.spim.io.IOFunctions;
+
+@Plugin(type = Command.class, menuPath = "Plugins>BigStitcher>BigStitcher")
+public class BigStitcher implements Command
 {
 	boolean newDataset = false;
 
 	@Override
-	public void run( String arg )
+	public void run( )
 	{
 		final LoadParseQueryXML result = new EasterEggLoadParseQueryXML();
 
@@ -64,10 +69,10 @@ public class Stitching_Explorer implements PlugIn
 
 		final SpimData2 data = result.getData();
 		final String xml = result.getXMLFileName();
-		final XmlIoSpimData2 io = result.getIO();;
+		final XmlIoSpimData2 io = result.getIO();
 
 		final StitchingExplorer< SpimData2, XmlIoSpimData2 > explorer =
-				new StitchingExplorer< SpimData2, XmlIoSpimData2 >( data, xml, io );
+				new StitchingExplorer< >( data, xml, io );
 
 		explorer.getFrame().toFront();
 	}
@@ -84,6 +89,6 @@ public class Stitching_Explorer implements PlugIn
 		else
 			GenericLoadParseQueryXML.defaultXMLfilename = "/Users/spreibi/Documents/Grants and CV/BIMSB/Projects/CLARITY/Big Data Sticher/Dros_converted/dataset.xml";
 
-		new Stitching_Explorer().run( null );
+		new BigStitcher().run( );
 	}
 }
