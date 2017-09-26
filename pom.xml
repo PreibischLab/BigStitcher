@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>sc.fiji</groupId>
@@ -8,10 +9,11 @@
 		<relativePath />
 	</parent>
 
-  <groupId>net.imglib2</groupId>
-  <artifactId>imglib2-stitching</artifactId>
-  <version>0.9.0-beta-5-SNAPSHOT</version>
-  <name>ImgLib2Stitching</name>
+	<groupId>net.imglib2</groupId>
+	<artifactId>imglib2-stitching</artifactId>
+	<version>0.9.0-beta-5-SNAPSHOT</version>
+
+	<name>ImgLib2Stitching</name>
 
 	<repositories>
 		<repository>
@@ -20,56 +22,56 @@
 		</repository>
 	</repositories>
 
-  <dependencies>
-  	<dependency>
-  		<groupId>sc.fiji</groupId>
-  		<artifactId>SPIM_Registration</artifactId>
-		<version>6.5.3-SNAPSHOT</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.imglib2</groupId>
-  		<artifactId>imglib2-algorithm-fft</artifactId>
-  		<version>0.1.4</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.imagej</groupId>
-  		<artifactId>ij</artifactId>
-  		<version>1.51n</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.imglib2</groupId>
-  		<artifactId>imglib2-ij</artifactId>
-  		<version>2.0.0-beta-38</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.imglib2</groupId>
-  		<artifactId>imglib2-ui</artifactId>
-  		<version>2.0.0-beta-33</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>junit</groupId>
-  		<artifactId>junit</artifactId>
-  	</dependency>
+	<dependencies>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>SPIM_Registration</artifactId>
+			<version>6.5.3-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-algorithm-fft</artifactId>
+			<version>0.1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>ij</artifactId>
+			<version>1.51n</version>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-ij</artifactId>
+			<version>2.0.0-beta-38</version>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-ui</artifactId>
+			<version>2.0.0-beta-33</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
 
-  	<dependency>
-  		<groupId>sc.fiji</groupId>
-  		<artifactId>bigdataviewer-vistools</artifactId>
-  		<version>1.0.0-beta-5</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>sc.fiji</groupId>
-  		<artifactId>bigdataviewer-core</artifactId>
-  		<version>4.1.0</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.imglib2</groupId>
-  		<artifactId>imglib2</artifactId>
-  		<version>4.2.1</version>
-  	</dependency>
- 		<dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigdataviewer-vistools</artifactId>
+			<version>1.0.0-beta-5</version>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigdataviewer-core</artifactId>
+			<version>4.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2</artifactId>
+			<version>4.2.1</version>
+		</dependency>
+		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>legacy-imglib1</artifactId>
 			<version>1.1.8</version>
 		</dependency>
-  </dependencies>
+	</dependencies>
 </project>
