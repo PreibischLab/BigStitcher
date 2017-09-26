@@ -37,17 +37,17 @@ import net.imglib2.realtransform.Translation;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
-import spim.fiji.spimdata.boundingbox.BoundingBox;
-import spim.fiji.spimdata.explorer.ExplorerWindow;
-import spim.fiji.spimdata.explorer.GroupedRowWindow;
-import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
-import spim.process.fusion.FusionTools;
-import spim.process.fusion.transformed.FusedRandomAccessibleInterval;
-import spim.process.fusion.transformed.TransformView;
-import spim.process.fusion.transformed.TransformVirtual;
-import spim.process.fusion.transformed.TransformWeight;
-import spim.process.interestpointdetection.methods.downsampling.DownsampleTools;
+import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
+import net.preibisch.mvrecon.process.fusion.FusionTools;
+import net.preibisch.mvrecon.process.fusion.transformed.FusedRandomAccessibleInterval;
+import net.preibisch.mvrecon.process.fusion.transformed.TransformView;
+import net.preibisch.mvrecon.process.fusion.transformed.TransformVirtual;
+import net.preibisch.mvrecon.process.fusion.transformed.TransformWeight;
+import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.DownsampleTools;
 
 public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindowSetable {
 

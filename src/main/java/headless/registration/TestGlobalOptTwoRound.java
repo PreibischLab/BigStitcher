@@ -25,21 +25,21 @@ import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
-import spim.fiji.spimdata.SpimData2;
-import spim.fiji.spimdata.XmlIoSpimData2;
-import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
-import spim.process.interestpointregistration.global.GlobalOpt;
-import spim.process.interestpointregistration.global.GlobalOptIterative;
-import spim.process.interestpointregistration.global.GlobalOptTwoRound;
-import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
-import spim.process.interestpointregistration.global.convergence.IterativeConvergenceStrategy;
-import spim.process.interestpointregistration.global.convergence.SimpleIterativeConvergenceStrategy;
-import spim.process.interestpointregistration.global.linkremoval.MaxErrorLinkRemoval;
-import spim.process.interestpointregistration.global.pointmatchcreating.PointMatchCreator;
-import spim.process.interestpointregistration.global.pointmatchcreating.strong.ImageCorrelationPointMatchCreator;
-import spim.process.interestpointregistration.global.pointmatchcreating.weak.MetaDataWeakLinkFactory;
-import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
-import spim.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOpt;
+import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptIterative;
+import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptTwoRound;
+import net.preibisch.mvrecon.process.interestpointregistration.global.convergence.ConvergenceStrategy;
+import net.preibisch.mvrecon.process.interestpointregistration.global.convergence.IterativeConvergenceStrategy;
+import net.preibisch.mvrecon.process.interestpointregistration.global.convergence.SimpleIterativeConvergenceStrategy;
+import net.preibisch.mvrecon.process.interestpointregistration.global.linkremoval.MaxErrorLinkRemoval;
+import net.preibisch.mvrecon.process.interestpointregistration.global.pointmatchcreating.PointMatchCreator;
+import net.preibisch.mvrecon.process.interestpointregistration.global.pointmatchcreating.strong.ImageCorrelationPointMatchCreator;
+import net.preibisch.mvrecon.process.interestpointregistration.global.pointmatchcreating.weak.MetaDataWeakLinkFactory;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
 
 public class TestGlobalOptTwoRound
 {

@@ -19,12 +19,12 @@ import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
-import spim.fiji.spimdata.SpimData2;
-import spim.fiji.spimdata.explorer.ExplorerWindow;
-import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
-import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
-import spim.fiji.spimdata.explorer.popup.ApplyTransformationPopup;
-import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ApplyTransformationPopup;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 
 public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWindowSetable
 {

@@ -2,8 +2,8 @@ package spim.fiji.plugin;
 
 import gui.popup.SimpleRemoveLinkPopup;
 import ij.plugin.PlugIn;
-import spim.fiji.plugin.queryXML.LoadParseQueryXML;
-import spim.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 
 public class Filter_Pairwise_Shifts implements PlugIn
 {

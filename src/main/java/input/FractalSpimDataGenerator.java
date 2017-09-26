@@ -39,11 +39,11 @@ import net.imglib2.type.numeric.complex.ComplexDoubleType;
 import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
-import spim.fiji.spimdata.SpimData2;
-import spim.fiji.spimdata.boundingbox.BoundingBoxes;
-import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
-import spim.fiji.spimdata.pointspreadfunctions.PointSpreadFunctions;
-import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBoxes;
+import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPoints;
+import net.preibisch.mvrecon.fiji.spimdata.pointspreadfunctions.PointSpreadFunctions;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 
 
 public class FractalSpimDataGenerator

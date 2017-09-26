@@ -8,7 +8,7 @@ import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPositionable;
 import net.imglib2.type.numeric.RealType;
-//import spim.process.interestpointdetection.methods.downsampling.DownsampleTools;
+//import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.DownsampleTools;
 
 
 public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterval< T >

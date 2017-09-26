@@ -21,10 +21,10 @@ import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
-import spim.fiji.spimdata.SpimData2;
-import spim.fiji.spimdata.explorer.ExplorerWindow;
-import spim.fiji.spimdata.explorer.ISpimDataTableModel;
-import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ISpimDataTableModel;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > extends AbstractTableModel implements ISpimDataTableModel<AS>, StitchingResultsSettable{
 

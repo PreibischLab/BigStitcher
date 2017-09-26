@@ -11,8 +11,8 @@ import gui.overlay.DemoLinkOverlay;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.io.IOFunctions;
-import spim.fiji.spimdata.explorer.ExplorerWindow;
-import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 
 public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSetable {
 

@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 import input.FractalSpimDataGenerator;
-import simulation.imgloader.SimulatedBeadsImgLoader;
-import simulation.imgloader.SimulatedBeadsImgLoader2;
-import spim.fiji.plugin.queryXML.GenericLoadParseQueryXML;
-import spim.fiji.plugin.queryXML.LoadParseQueryXML;
-import spim.fiji.plugin.util.GUIHelper;
-import spim.fiji.spimdata.SpimData2;
+import net.preibisch.simulation.imgloader.SimulatedBeadsImgLoader;
+import net.preibisch.simulation.imgloader.SimulatedBeadsImgLoader2;
+import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
+import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
+import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 
 public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 {

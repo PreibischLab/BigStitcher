@@ -9,9 +9,9 @@ import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.registration.ViewRegistration;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
-import spim.fiji.spimdata.explorer.ExplorerWindow;
-import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class OptimizeGloballyPopup extends JMenu implements ExplorerWindowSetable, StitchingResultsSettable
 {

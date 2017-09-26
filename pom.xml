@@ -3,17 +3,108 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>sc.fiji</groupId>
-		<artifactId>pom-fiji</artifactId>
-		<version>24.3.0</version>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>17.0.0</version>
 		<relativePath />
 	</parent>
 
-	<groupId>net.imglib2</groupId>
-	<artifactId>imglib2-stitching</artifactId>
-	<version>0.9.0-beta-5-SNAPSHOT</version>
+	<groupId>net.preibisch</groupId>
+	<artifactId>BigStitcher</artifactId>
+	<version>0.1.0-SNAPSHOT</version>
 
-	<name>ImgLib2Stitching</name>
+	<name>Big Stitcher</name>
+	<description>Multiview stitching of large datasets.</description>
+	<url>https://github.com/PreibischLab/BigStitcher</url>
+	<inceptionYear>2016</inceptionYear>
+	<organization>
+		<name>Preibisch Lab</name>
+		<url>http://preibischlab.mdc-berlin.de</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>GNU General Public License v2+</name>
+			<url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>StephanPreibisch</id>
+			<name>Stephan Preibisch</name>
+			<url>http://imagej.net/User:StephanP</url>
+			<roles>
+				<role>founder</role>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>hoerldavid</id>
+			<name>David Hoerl</name>
+			<url>http://imagej.net/User:Davidhoerl</url>
+			<roles>
+				<role>founder</role>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+	</developers>
+	<contributors>
+		<contributor>
+			<name>Tobias Pietzsch</name>
+			<url>http://imagej.net/User:Pietzsch</url>
+			<properties><id>tpietzsch</id></properties>
+		</contributor>
+		<contributor>
+			<name>Curtis Rueden</name>
+			<url>http://imagej.net/User:Rueden</url>
+			<properties><id>ctrueden</id></properties>
+		</contributor>
+	</contributors>
+
+	<mailingLists>
+		<mailingList>
+			<name>ImageJ Forum</name>
+			<archive>http://forum.imagej.net/</archive>
+		</mailingList>
+	</mailingLists>
+
+	<scm>
+		<connection>scm:git:git://github.com/PreibischLab/BigStitcher</connection>
+		<developerConnection>scm:git:git@github.com:PreibischLab/BigStitcher</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/PreibischLab/BigStitcher</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/PreibischLab/BigStitcher/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/PreibischLab/BigStitcher</url>
+	</ciManagement>
+
+	<properties>
+		<package-name>net.preibisch.stitcher</package-name>
+
+		<license.licenseName>gpl_v2</license.licenseName>
+		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
+
+		<imglib2-cache.version>1.0.0-beta-7</imglib2-cache.version>
+		<imglib2-ij.version>2.0.0-beta-38</imglib2-ij.version>
+		<multiview-reconstruction.version>0.1.0</multiview-reconstruction.version>
+		<multiview-simulation.version>0.1.0</multiview-simulation.version>
+	</properties>
 
 	<repositories>
 		<repository>
@@ -24,29 +115,25 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>SPIM_Registration</artifactId>
-			<version>6.5.3-SNAPSHOT</version>
+			<groupId>net.preibisch</groupId>
+			<artifactId>multiview-reconstruction</artifactId>
+			<version>${multiview-reconstruction.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm-fft</artifactId>
-			<version>0.1.4</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>ij</artifactId>
-			<version>1.51n</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-ij</artifactId>
-			<version>2.0.0-beta-38</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-ui</artifactId>
-			<version>2.0.0-beta-33</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -56,22 +143,18 @@
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-vistools</artifactId>
-			<version>1.0.0-beta-5</version>
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-core</artifactId>
-			<version>4.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
-			<version>4.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>legacy-imglib1</artifactId>
-			<version>1.1.8</version>
 		</dependency>
 	</dependencies>
 </project>

@@ -34,12 +34,12 @@ import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Interval;
 import net.imglib2.realtransform.AffineTransform3D;
-import spim.fiji.spimdata.SpimData2;
-import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
-import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
-import spim.fiji.spimdata.explorer.popup.BDVPopup;
-import spim.fiji.spimdata.explorer.popup.BasicBDVPopup;
-import spim.process.boundingbox.BoundingBoxMaximal;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BasicBDVPopup;
+import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximal;
 
 public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData< ? > >
 {

@@ -15,7 +15,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.RealSum;
 import net.imglib2.view.Views;
-import spim.process.deconvolution.normalization.AdjustInput;
+import net.preibisch.mvrecon.process.deconvolution.normalization.AdjustInput;
 
 public class BrightestViewSelection extends BasicViewSelection<ViewId>
 {

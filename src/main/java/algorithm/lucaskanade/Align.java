@@ -42,8 +42,8 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
-import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
-import spim.process.interestpointdetection.methods.downsampling.Downsample;
+import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
+import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
 
 public class Align<T extends RealType< T >>
 {

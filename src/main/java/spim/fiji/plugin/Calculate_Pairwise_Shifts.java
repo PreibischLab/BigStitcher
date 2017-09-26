@@ -31,18 +31,20 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
-import spim.fiji.plugin.interestpointregistration.TransformationModelGUI;
-import spim.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters;
-import spim.fiji.plugin.interestpointregistration.parameters.GroupParameters.InterestpointGroupingType;
-import spim.fiji.plugin.queryXML.LoadParseQueryXML;
-import spim.fiji.plugin.resave.ProgressWriterIJ;
-import spim.fiji.spimdata.SpimData2;
-import spim.fiji.spimdata.boundingbox.BoundingBox;
-import spim.fiji.spimdata.interestpoints.ViewInterestPointLists;
-import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
-import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
-import spim.process.interestpointregistration.pairwise.constellation.PairwiseSetup;
-import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
+import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Detection;
+import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.TransformationModelGUI;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.GroupParameters.InterestpointGroupingType;
+import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
+import net.preibisch.mvrecon.fiji.plugin.resave.ProgressWriterIJ;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
+import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPointLists;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.PairwiseSetup;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class Calculate_Pairwise_Shifts implements PlugIn
 {

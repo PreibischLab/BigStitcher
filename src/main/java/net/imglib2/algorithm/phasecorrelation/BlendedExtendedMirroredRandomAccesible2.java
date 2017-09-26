@@ -21,7 +21,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
-import spim.process.fusion.transformed.weights.BlendingRealRandomAccessible;
+import net.preibisch.mvrecon.process.fusion.transformed.weights.BlendingRealRandomAccessible;
 
 
 public class BlendedExtendedMirroredRandomAccesible2 <T extends RealType<T>>implements RandomAccessible<T> {

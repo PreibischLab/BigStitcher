@@ -45,13 +45,13 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
-import spim.fiji.spimdata.boundingbox.BoundingBox;
-import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
-import spim.process.boundingbox.BoundingBoxMaximalGroupOverlap;
-import spim.process.interestpointregistration.global.GlobalOpt;
-import spim.process.interestpointregistration.global.convergence.ConvergenceStrategy;
-import spim.process.interestpointregistration.global.pointmatchcreating.strong.ImageCorrelationPointMatchCreator;
-import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
+import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
+import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOpt;
+import net.preibisch.mvrecon.process.interestpointregistration.global.convergence.ConvergenceStrategy;
+import net.preibisch.mvrecon.process.interestpointregistration.global.pointmatchcreating.strong.ImageCorrelationPointMatchCreator;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class TransformationTools
 {

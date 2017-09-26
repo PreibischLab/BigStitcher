@@ -31,13 +31,13 @@ import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.type.numeric.ARGBType;
-import spim.fiji.spimdata.explorer.ExplorerWindow;
-import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
-import spim.fiji.spimdata.explorer.GroupedRowWindow;
-import spim.fiji.spimdata.explorer.popup.BDVPopup;
-import spim.fiji.spimdata.explorer.util.ColorStream;
-import spim.fiji.spimdata.imgloaders.AbstractImgLoader;
-import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.util.ColorStream;
+import net.preibisch.mvrecon.fiji.spimdata.imgloaders.AbstractImgLoader;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class BDVPopupStitching extends BDVPopup
 {

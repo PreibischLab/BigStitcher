@@ -26,11 +26,11 @@ import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.io.IOFunctions;
 import spim.fiji.plugin.Calculate_Pairwise_Shifts;
-import spim.fiji.spimdata.SpimData2;
-import spim.fiji.spimdata.explorer.ExplorerWindow;
-import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
-import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
 {

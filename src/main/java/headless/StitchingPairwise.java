@@ -18,9 +18,9 @@ import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
-import simulation.SimulateTileStitching;
-import spim.process.deconvolution.DeconViews;
-import spim.process.interestpointdetection.methods.downsampling.Downsample;
+import net.preibisch.simulation.SimulateTileStitching;
+import net.preibisch.mvrecon.process.deconvolution.DeconViews;
+import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
 
 public class StitchingPairwise
 {

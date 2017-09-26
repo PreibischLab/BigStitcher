@@ -37,8 +37,8 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
-import spim.process.fusion.FusionTools;
-import spim.process.fusion.ImagePortion;
+import net.preibisch.mvrecon.process.fusion.FusionTools;
+import net.preibisch.mvrecon.process.fusion.ImagePortion;
 
 
 

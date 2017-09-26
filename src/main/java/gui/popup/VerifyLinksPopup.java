@@ -6,10 +6,10 @@ import javax.swing.JMenuItem;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import spim.fiji.spimdata.explorer.ExplorerWindow;
-import spim.fiji.spimdata.explorer.StitchingResultsSettable;
-import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.StitchingResultsSettable;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable, StitchingResultsSettable
 {

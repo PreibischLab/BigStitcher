@@ -13,8 +13,8 @@ import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.ViewId;
-import spim.fiji.plugin.queryXML.LoadParseQueryXML;
-import spim.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 
 public class Global_Optimization_Stitching implements PlugIn
 {

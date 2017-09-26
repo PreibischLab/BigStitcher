@@ -12,8 +12,8 @@ import javax.swing.table.AbstractTableModel;
 import algorithm.FilteredStitchingResults;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
-import spim.fiji.spimdata.stitchingresults.StitchingResults;
-import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class LinkExplorerTableModel extends AbstractTableModel implements StitchingResultsSettable
 {

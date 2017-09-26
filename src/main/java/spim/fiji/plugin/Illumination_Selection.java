@@ -6,8 +6,8 @@ import java.util.stream.Collectors;
 import gui.popup.SelectIlluminationPopup;
 import ij.plugin.PlugIn;
 import mpicbg.spim.data.sequence.ViewId;
-import spim.fiji.plugin.queryXML.LoadParseQueryXML;
-import spim.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 
 public class Illumination_Selection implements PlugIn
 {

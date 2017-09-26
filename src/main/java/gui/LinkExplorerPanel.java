@@ -34,11 +34,11 @@ import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.util.Pair;
-import spim.fiji.spimdata.SpimData2;
-import spim.fiji.spimdata.explorer.SelectedViewDescriptionListener;
-import spim.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
-import spim.fiji.spimdata.stitchingresults.StitchingResults;
-import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData<?> >
 {

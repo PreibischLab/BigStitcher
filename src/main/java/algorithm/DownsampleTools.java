@@ -14,7 +14,7 @@ import net.imglib2.img.ImgFactory;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
-import spim.process.interestpointdetection.methods.downsampling.Downsample;
+import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
 
 
 public class DownsampleTools

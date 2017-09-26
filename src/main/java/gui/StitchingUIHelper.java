@@ -14,10 +14,10 @@ import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.Dimensions;
 import net.imglib2.util.Util;
-import spim.fiji.plugin.util.GUIHelper;
-import spim.fiji.spimdata.SpimData2;
-import spim.fiji.spimdata.XmlIoSpimData2;
-import spim.process.interestpointdetection.methods.downsampling.DownsampleTools;
+import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
+import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.DownsampleTools;
 
 public class StitchingUIHelper
 {

@@ -29,12 +29,12 @@ import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
-import spim.fiji.datasetmanager.FileListDatasetDefinition;
-import spim.fiji.plugin.util.GUIHelper;
-import spim.fiji.spimdata.SpimDataTools;
-import spim.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
-import spim.fiji.spimdata.explorer.GroupedRowWindow;
-import spim.process.interestpointregistration.pairwise.constellation.grouping.Group;
+import net.preibisch.mvrecon.fiji.datasetmanager.FileListDatasetDefinition;
+import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
+import net.preibisch.mvrecon.fiji.spimdata.SpimDataTools;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 {

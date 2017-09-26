@@ -11,10 +11,10 @@ import gui.StitchingExplorer;
 import ij.ImageJ;
 import ij.plugin.PlugIn;
 import mpicbg.spim.io.IOFunctions;
-import spim.fiji.plugin.queryXML.GenericLoadParseQueryXML;
-import spim.fiji.plugin.queryXML.LoadParseQueryXML;
-import spim.fiji.spimdata.SpimData2;
-import spim.fiji.spimdata.XmlIoSpimData2;
+import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
+import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 
 public class Stitching_Explorer implements PlugIn
 {

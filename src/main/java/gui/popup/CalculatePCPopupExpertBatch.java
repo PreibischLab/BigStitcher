@@ -7,9 +7,9 @@ import gui.StitchingResultsSettable;
 import gui.popup.CalculatePCPopup.Method;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import spim.fiji.spimdata.explorer.ExplorerWindow;
-import spim.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import spim.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindowSetable, StitchingResultsSettable
 {
