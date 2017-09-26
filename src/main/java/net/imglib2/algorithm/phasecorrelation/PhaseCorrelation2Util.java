@@ -11,8 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import algorithm.PairwiseStitching;
-import algorithm.PairwiseStitchingParameters;
 import net.imglib2.Cursor;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
@@ -39,6 +37,8 @@ import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 import net.preibisch.mvrecon.process.fusion.FusionTools;
 import net.preibisch.mvrecon.process.fusion.ImagePortion;
+import net.preibisch.stitcher.algorithm.PairwiseStitching;
+import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
 
 
 

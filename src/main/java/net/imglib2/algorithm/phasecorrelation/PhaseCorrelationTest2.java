@@ -3,15 +3,15 @@ package net.imglib2.algorithm.phasecorrelation;
 import java.io.File;
 import java.util.concurrent.Executors;
 
-import algorithm.DownsampleTools;
-import algorithm.PairwiseStitching;
-import algorithm.PairwiseStitchingParameters;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.Translation;
 import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
+import net.preibisch.stitcher.algorithm.DownsampleTools;
+import net.preibisch.stitcher.algorithm.PairwiseStitching;
+import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
 
 public class PhaseCorrelationTest2
 {
