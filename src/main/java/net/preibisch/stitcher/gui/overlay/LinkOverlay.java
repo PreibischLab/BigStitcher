@@ -134,8 +134,10 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 
 				for (int d = 0; d < n; d++)
 				{
-					v1Pos[d] = vertex1.get( d ) ? dims.dimension( d ) - 1.0 : 0.0;
-					v2Pos[d] = vertex2.get( d ) ? dims.dimension( d ) - 1.0 : 0.0;
+					// the outline goes from -0.5 to dimension(d) - 0.5 (compared to the actual range of (0, dim(d)-1))
+					// this is because BDV (correctly) draws pixels with center at pixel location 
+					v1Pos[d] = vertex1.get( d ) ? dims.dimension( d ) - 0.5 : -0.5;
+					v2Pos[d] = vertex2.get( d ) ? dims.dimension( d ) - 0.5 : -0.5;
 				}
 
 				transfrom.apply( v1Pos, v1Pos );
@@ -256,9 +258,9 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 				final Dimensions dims = spimData.getSequenceDescription().getViewDescriptions().get( vid ).getViewSetup().getSize();
 				final AffineTransform3D registration = spimData.getViewRegistrations().getViewRegistration( vid ).getModel();
 				final AffineTransform3D finalTransform = 
-						new AffineTransform3D()
-						.preConcatenate( isReference ? new AffineTransform3D() : stitchingResults.getPairwiseResults().get( p ).getInverseTransform() );
-						//.preConcatenate( viewerTransform );
+						registration.copy()
+						.preConcatenate( isReference ? new AffineTransform3D() : stitchingResults.getPairwiseResults().get( p ).getInverseTransform() )
+						.preConcatenate( viewerTransform );
 
 				drawViewOutlines( graphics, dims, finalTransform, p.equals( selectedLink ) ? Color.MAGENTA : Color.GRAY );
 				outlinedViews.add( vid );
@@ -277,9 +279,9 @@ public class LinkOverlay implements OverlayRenderer, TransformListener< AffineTr
 				final AffineTransform3D registration = spimData.getViewRegistrations().getViewRegistration( vid )
 						.getModel();
 				final AffineTransform3D finalTransform = 
-						new AffineTransform3D()
-						.preConcatenate( isReference ? new AffineTransform3D() : stitchingResults.getPairwiseResults().get( p ).getTransform() );
-						//.preConcatenate( viewerTransform );
+						registration.copy()
+						.preConcatenate( isReference ? new AffineTransform3D() : stitchingResults.getPairwiseResults().get( p ).getTransform() )
+						.preConcatenate( viewerTransform );
 
 				drawViewOutlines( graphics, dims, finalTransform, p.equals( selectedLink ) ? Color.GREEN : Color.GRAY );
 				outlinedViews.add( vid );
