@@ -23,6 +23,7 @@ package net.preibisch.stitcher.plugin;
 
 
 import ij.ImageJ;
+import ij.plugin.PlugIn;
 
 import java.awt.Button;
 import java.awt.TextField;
@@ -42,9 +43,15 @@ import org.scijava.plugin.Plugin;
 import mpicbg.spim.io.IOFunctions;
 
 @Plugin(type = Command.class, menuPath = "Plugins>BigStitcher>BigStitcher")
-public class BigStitcher implements Command
+public class BigStitcher implements Command, PlugIn
 {
 	boolean newDataset = false;
+
+	@Override
+	public void run( String arg )
+	{
+		run();
+	}
 
 	@Override
 	public void run( )
