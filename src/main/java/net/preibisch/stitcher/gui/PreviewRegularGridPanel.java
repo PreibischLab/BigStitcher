@@ -435,6 +435,12 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 			int i = 0;
 			for ( List< BasicViewDescription< ? > > lvd : selectedVDs )
 			{
+
+				// we did not generate enough transformations
+				// -> leave the rest of the views as-is
+				if (i>generateRegularGrid.size())
+					break;
+
 				for ( BasicViewDescription< ? > vd : lvd )
 				{
 					
