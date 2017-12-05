@@ -54,7 +54,7 @@ import net.preibisch.stitcher.gui.StitchingResultsSettable;
 import net.preibisch.stitcher.gui.StitchingUIHelper;
 import net.preibisch.stitcher.plugin.Calculate_Pairwise_Shifts;
 
-public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
+public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 {
 	/**
 	 * 
@@ -66,12 +66,10 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 		LUCASKANADE
 	}
 
-	private StitchingResults stitchingResults;
 	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 	private boolean simple;
 	private boolean wizardMode;
 	private Method method;
-	
 
 	public CalculatePCPopup(String description, boolean simple, Method method, boolean wizardMode)
 	{
@@ -80,12 +78,6 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 		this.method = method;
 		this.wizardMode = wizardMode;
 		this.addActionListener( new MyActionListener() );
-	}
-
-	@Override
-	public void setStitchingResults(StitchingResults res)
-	{
-		this.stitchingResults = res;
 	}
 
 	@Override

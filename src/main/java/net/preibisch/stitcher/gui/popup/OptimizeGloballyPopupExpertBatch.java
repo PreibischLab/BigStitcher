@@ -86,21 +86,14 @@ import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 import net.preibisch.stitcher.gui.StitchingResultsSettable;
 
 public class OptimizeGloballyPopupExpertBatch extends JMenuItem
-		implements ExplorerWindowSetable, StitchingResultsSettable
+		implements ExplorerWindowSetable
 {
 
 	// minimal link quality (e.g. cross correlation)
 	public static final double minLinkQuality = 0.0;
 
-	private StitchingResults stitchingResults;
 	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 	private boolean expertMode;
-
-	@Override
-	public void setStitchingResults(StitchingResults res)
-	{
-		this.stitchingResults = res;
-	}
 
 	@Override
 	public JComponent setExplorerWindow(

@@ -32,7 +32,7 @@ import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.stitcher.gui.StitchingResultsSettable;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopup.Method;
 
-public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindowSetable, StitchingResultsSettable
+public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindowSetable
 {
 
 	final CalculatePCPopup phaseCorrSimple;
@@ -61,15 +61,6 @@ public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindow
 		this.add( phaseCorr );
 		this.add( lucasKanade );
 		this.add( interestPoint );
-	}
-
-	@Override
-	public void setStitchingResults(StitchingResults res)
-	{
-		if (!wizardMode)
-			this.phaseCorrSimple.setStitchingResults( res );
-		this.phaseCorr.setStitchingResults( res );
-		this.lucasKanade.setStitchingResults( res );
 	}
 
 	@Override

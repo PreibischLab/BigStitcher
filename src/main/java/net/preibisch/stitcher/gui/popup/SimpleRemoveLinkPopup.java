@@ -51,7 +51,7 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constell
 import net.preibisch.stitcher.algorithm.FilteredStitchingResults;
 import net.preibisch.stitcher.gui.StitchingResultsSettable;
 
-public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSetable, StitchingResultsSettable
+public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSetable
 {
 
 	/**
@@ -59,10 +59,6 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 	 */
 	private static final long serialVersionUID = 1L;
 	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
-	StitchingResults results;
-	
-	@Override
-	public void setStitchingResults(StitchingResults res){this.results = res;}
 
 	@Override
 	public JComponent setExplorerWindow(

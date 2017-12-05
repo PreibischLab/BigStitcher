@@ -34,7 +34,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.stitcher.gui.StitchingResultsSettable;
 
-public class OptimizeGloballyPopup extends JMenu implements ExplorerWindowSetable, StitchingResultsSettable
+public class OptimizeGloballyPopup extends JMenu implements ExplorerWindowSetable
 {
 
 	/**
@@ -44,13 +44,6 @@ public class OptimizeGloballyPopup extends JMenu implements ExplorerWindowSetabl
 
 	public final OptimizeGloballyPopupExpertBatch simpleOptimize;
 	public final OptimizeGloballyPopupExpertBatch expertOptimize;
-
-	@Override
-	public void setStitchingResults(StitchingResults res)
-	{
-		simpleOptimize.setStitchingResults( res );
-		expertOptimize.setStitchingResults( res );
-	}
 
 	@Override
 	public JComponent setExplorerWindow(

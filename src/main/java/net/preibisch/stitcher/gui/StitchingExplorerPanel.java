@@ -814,45 +814,16 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Stitching Wizard" ) );
-		CalculatePCPopup calculatePCPopup = new CalculatePCPopup("Stitch dataset ...", true, Method.PHASECORRELATION, true);
-		calculatePCPopup.setStitchingResults( stitchingResults );
-		popups.add( calculatePCPopup );
-
-		CalculatePCPopupExpertBatch calculatePCPopupExpert = new CalculatePCPopupExpertBatch("Stitch dataset (expert) ...", true);
-		calculatePCPopupExpert.setStitchingResults( stitchingResults );
-		popups.add( calculatePCPopupExpert );
-
+		popups.add( new CalculatePCPopup("Stitch dataset ...", true, Method.PHASECORRELATION, true) );
+		popups.add( new CalculatePCPopupExpertBatch("Stitch dataset (expert) ...", true) );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Step-by-step Stitching" ) );
-		CalculatePCPopupExpertBatch calculatePCPopupExpertStepByStep = new CalculatePCPopupExpertBatch("Calculate Pairwise Shifts ...", false);
-		calculatePCPopupExpertStepByStep.setStitchingResults( stitchingResults );
-		popups.add( calculatePCPopupExpertStepByStep );
-
-		VerifyLinksPopup verifyLinks = new VerifyLinksPopup();
-		verifyLinks.setStitchingResults( stitchingResults );
-		popups.add( verifyLinks );
-
-		OptimizeGloballyPopup optimizePopup = new OptimizeGloballyPopup();
-		optimizePopup.setStitchingResults( stitchingResults );
-		popups.add( optimizePopup );
-
-//		OptimizeGloballyPopupExpertBatch optimizePopupExpert = new OptimizeGloballyPopupExpertBatch(true);
-//		optimizePopupExpert.setStitchingResults( stitchingResults );
-//		popups.add( optimizePopupExpert );
-
-//		SimpleRemoveLinkPopup removeLinkPopup = new SimpleRemoveLinkPopup();
-//		removeLinkPopup.setStitchingResults( stitchingResults );
-//		popups.add( removeLinkPopup );
-		
-		//DemoLinkOverlayPopup dlPopup = new DemoLinkOverlayPopup(demoLinkOverlay);
-		//popups.add( dlPopup );
-
-//		popups.add( new TogglePreviewPopup() );
-		//popups.add( new PairwiseInterestPointRegistrationPopup("Pairwise Registration using Interest Points ...", false, false) );
-		//popups.add( new DetectInterestPointsPopup() );
+		popups.add( new CalculatePCPopupExpertBatch("Calculate Pairwise Shifts ...", false) );
+		popups.add( new VerifyLinksPopup() );
+		popups.add( new OptimizeGloballyPopup() );
 		popups.add( new Separator() );
-		
+
 		popups.add( new LabelPopUp( "Fusion" ) );
 		popups.add( new BoundingBoxPopup() );
 		popups.add( new DisplayFusedImagesPopup() );

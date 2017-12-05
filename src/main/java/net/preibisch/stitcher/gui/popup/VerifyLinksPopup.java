@@ -32,7 +32,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.StitchingResultsSettable;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 
-public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable, StitchingResultsSettable
+public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable
 {
 	private ExplorerWindow< ?, ? > panel;
 	private TogglePreviewPopup interactiveExplorer;
@@ -56,12 +56,6 @@ public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable, St
 		interactiveExplorer.setExplorerWindow( panel );
 		parameterBasedRemoval.setExplorerWindow( panel );
 		return this;
-	}
-
-	@Override
-	public void setStitchingResults(StitchingResults res)
-	{
-		parameterBasedRemoval.setStitchingResults( res );
 	}
 
 }
