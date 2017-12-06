@@ -31,6 +31,7 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
+import javax.swing.ListSelectionModel;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
@@ -60,6 +61,7 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 	
 	public class MyActionListener implements ActionListener
 	{
+		
 		@Override
 		public void actionPerformed( final ActionEvent e )
 		{
@@ -83,7 +85,11 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 			TranslateGroupManuallyPanel tgmp = new TranslateGroupManuallyPanel( (SpimData2) panel.getSpimData(), viewIds, panel.bdvPopup(), theFrame);
 			
 			((FilteredAndGroupedExplorerPanel< AbstractSpimData<?>, ? >) panel).addListener(  tgmp );
-			
+
+			// re-select everything
+			ListSelectionModel lsm = ((FilteredAndGroupedExplorerPanel< ?, ? >) panel).table.getSelectionModel();
+			reSelect( lsm );
+
 			theFrame.add( tgmp );
 			theFrame.pack();
 			theFrame.setVisible( true );
@@ -95,10 +101,23 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 				{
 					System.out.println( "closing" );
 					((FilteredAndGroupedExplorerPanel< ?, ? >) panel).getListeners().remove( tgmp );
+
+					// re-select everything
+					ListSelectionModel lsm = ((FilteredAndGroupedExplorerPanel< ?, ? >) panel).table.getSelectionModel();
+					reSelect( lsm );
 				}
 			});
 		}
 	}
+
+	public static void reSelect(final ListSelectionModel lsm)
+	{
+		final int maxSelectionIndex = lsm.getMaxSelectionIndex();
+		for (int i = 0; i <= maxSelectionIndex; i++)
+			if (lsm.isSelectedIndex( i ))
+				lsm.addSelectionInterval( i, i );
+	}
+	
 	
 	@Override
 	public JComponent setExplorerWindow(

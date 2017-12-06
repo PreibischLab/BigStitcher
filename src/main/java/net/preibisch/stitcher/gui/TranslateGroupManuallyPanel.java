@@ -311,7 +311,7 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 	}
 	
 	/**
-	 * try to unwrap source to get the view setup id of wrapped and transformed spimdata view
+	 * try to unwrap source to get the view setup id of wrapped and transformed SpimData view
 	 * @param source - BigDataViewer source
 	 * @return - view setup id if we can unwrap, null else
 	 */

@@ -114,6 +114,7 @@ import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingRes
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
+import net.preibisch.stitcher.gui.bdv.BDVVisibilityHandlerNeighborhood;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 import net.preibisch.stitcher.gui.overlay.LinkOverlay;
 import net.preibisch.stitcher.gui.popup.ApplyBDVTransformationPopup;
@@ -215,6 +216,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			}
 
 		savedFilteringAndGrouping = null;
+		//colorMode = true;
 	}
 
 
@@ -670,9 +672,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		this.add( footer, BorderLayout.SOUTH );
 
-		table.getSelectionModel().setSelectionInterval( 0, 0 );
-
 		addPopupMenu( table );
+		table.getSelectionModel().setSelectionInterval( 0, 0 );
 	}
 
 	@Override
@@ -713,49 +714,25 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				for ( int i = 0; i < listeners.size(); ++i )
 					listeners.get( i ).selectedViewDescriptions( selectedList );
 
-				/*
-				 * 
-				 * if ( table.getSelectedRowCount() != 1 ) { lastRow = -1;
-				 * 
-				 * for ( int i = 0; i < listeners.size(); ++i ) listeners.get( i
-				 * ).firstSelectedViewDescriptions( null );
-				 * 
-				 * selectedRows.clear();
-				 * 
-				 * firstSelectedVD = null; for ( final int row :
-				 * table.getSelectedRows() ) { if ( firstSelectedVD == null ) //
-				 * TODO: is this okay? only adding first vd of // potentially
-				 * multiple per row firstSelectedVD =
-				 * tableModel.getElements().get( row ).get( 0 );
-				 * 
-				 * selectedRows.add( tableModel.getElements().get( row ) ); }
-				 * 
-				 * } else { final int row = table.getSelectedRow();
-				 * 
-				 * if ( ( row != lastRow ) && row >= 0 && row <
-				 * tableModel.getRowCount() ) { lastRow = row;
-				 * 
-				 * // not using an iterator allows that listeners can close //
-				 * the frame and remove all listeners while they are // called
-				 * final List< BasicViewDescription< ? extends BasicViewSetup >
-				 * > vds = tableModel.getElements() .get( row );
-				 * 
-				 * for ( int i = 0; i < listeners.size(); ++i ) listeners.get( i
-				 * ).firstSelectedViewDescriptions( null );
-				 * 
-				 * selectedRows.clear(); selectedRows.add( vds );
-				 * 
-				 * firstSelectedVD = vds.get( 0 ); } }
-				 */
 
 				if ( b != null && b.bdv != null )
 				{
+					// first, re-color sources
+					if (!colorMode)
+						BDVPopupStitching.colorByChannels(b.bdv, getSpimData(), colorOffset );
+					else
+						StitchingExplorerPanel.colorSources( b.bdv.getSetupAssignments().getConverterSetups(), colorOffset );
+
 					if ( !previewMode )
 						updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows );
 					else
 						updateBDVPreviewMode();
-				}
 
+					// color neighbors if we are in translate mode
+					for ( int i = 0; i < listeners.size(); ++i )
+						if (TranslateGroupManuallyPanel.class.isInstance( listeners.get( i ) ) )
+							new BDVVisibilityHandlerNeighborhood( StitchingExplorerPanel.this , colorOffset).updateBDV();
+				}
 			}
 
 		};
