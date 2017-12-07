@@ -21,31 +21,77 @@
  */
 package net.preibisch.stitcher.gui.popup;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.sequence.ViewId;
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.StitchingResultsSettable;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
+import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 
 public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable
 {
 	private ExplorerWindow< ?, ? > panel;
 	private TogglePreviewPopup interactiveExplorer;
 	private SimpleRemoveLinkPopup parameterBasedRemoval;
+	private JMenu removeAllPopup;
+	private JMenuItem removeAll;
+	private JMenuItem removeAllSelected;
 
 	public VerifyLinksPopup()
 	{
-		super("Verify Pairwise Links");
+		super("Verify/Filter Pairwise Links");
 		this.interactiveExplorer = new TogglePreviewPopup();
 		this.parameterBasedRemoval = new SimpleRemoveLinkPopup();
 
 		this.add( interactiveExplorer );
 		this.add( parameterBasedRemoval );
+		removeAllPopup = new JMenu( "Remove Pairwise Links" );
+		removeAll = new JMenuItem( "Remove All" );
+		removeAllSelected = new JMenuItem( "Remove For Selected Views" );
+
+		removeAllPopup.add( removeAll );
+		removeAllPopup.add( removeAllSelected );
+		this.add( removeAllPopup );
+
+		// remove all pairwise results
+		removeAll.addActionListener( a -> {
+			if (SpimData2.class.isInstance( panel.getSpimData() ))
+				((SpimData2)panel.getSpimData()).getStitchingResults().getPairwiseResults().clear();
+		});
+
+		// remove pairwise results for selected groups
+		removeAllSelected.addActionListener( a -> {
+			if (SpimData2.class.isInstance( panel.getSpimData() ))
+			{
+				StitchingResults sr = ((SpimData2)panel.getSpimData()).getStitchingResults();
+				List< List< ViewId > > selected = ((GroupedRowWindow)panel).selectedRowsViewIdGroups();
+				ArrayList< Pair< Group< ViewId >, Group< ViewId > > > pairs = new ArrayList<>(sr.getPairwiseResults().keySet());
+				for (int i = 0; i<selected.size(); i++)
+				{
+					Group< ViewId > grp = new Group<>(selected.get(i));
+					for (Pair<Group<ViewId>, Group<ViewId>> p : pairs)
+					{
+						if (p.getA().equals( grp ) || p.getB().equals( grp ))
+							sr.removePairwiseResultForPair( p );
+					}
+				}
+			}
+		});
+
 	}
 
 	@Override
