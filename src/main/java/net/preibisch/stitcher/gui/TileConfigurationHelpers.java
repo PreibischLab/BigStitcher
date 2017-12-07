@@ -4,25 +4,42 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import bdv.BigDataViewer;
+import bdv.tools.transformation.TransformedSource;
+import bdv.viewer.state.SourceState;
+import mpicbg.spim.data.generic.AbstractSpimData;
+import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+import mpicbg.spim.data.registration.ViewRegistration;
+import mpicbg.spim.data.registration.ViewTransform;
+import mpicbg.spim.data.registration.ViewTransformAffine;
+import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.ViewId;
-import net.imglib2.realtransform.Translation;
-import net.imglib2.realtransform.TranslationGet;
+import mpicbg.spim.data.sequence.VoxelDimensions;
+import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.Translation3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
-import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.datasetmanager.grid.RegularTranformHelpers;
+
 
 public class TileConfigurationHelpers
 {
 
-	public static Map< Pair< File, Integer >, TranslationGet > parseTileConfigurationOld(final File tcFile)
+	private static int minNumLines = 10;
+
+	public static Map< Pair< File, Integer >, Translation3D > parseTileConfigurationOld(final File tcFile)
 	{
-		final Map< Pair< File, Integer >, TranslationGet > res = new HashMap<>();
+		final Map< Pair< File, Integer >, Translation3D > res = new HashMap<>();
 
 		final File parentDir = tcFile.getParentFile();
 
@@ -133,20 +150,20 @@ public class TileConfigurationHelpers
 
 					List< String > locs = Arrays.asList( loc.split( "," ) );
 
-					if ( locs.size() != dims )
+					if ( locs.size() != dims || dims > 3)
 					{
 						reader.close();
 						return null; // warn here?
 					}
 
-					double[] tr = new double[dims];
+					double[] tr = new double[3];
 					for ( int i = 0; i < dims; i++ )
 					{
 						tr[i] = Double.parseDouble( locs.get( i ).trim() );
 					}
 
 					File imageFile = absolutePath ? new File(imageName) : new File(parentDir.getAbsolutePath(), imageName);
-					res.put( new ValuePair<>( imageFile, seriesNr ), new Translation( tr ) );
+					res.put( new ValuePair<>( imageFile, seriesNr ), new Translation3D( tr ) );
 				}
 
 			}
@@ -161,10 +178,15 @@ public class TileConfigurationHelpers
 		return res;
 	}
 
-	public static Map< ViewId, TranslationGet > parseTileConfiguration(final File tcFile)
+	/**
+	 * read new style tile configuration (lines of the form: vs_id;tp_id;(x_0, x_1,...))
+	 * @param tcFile the tile configuration file
+	 * @return map from viewIds (NB: tpid may be -1, in that case, this should apply to any view with the same setupid (wildcard)), null on errors
+	 */
+	public static Map< ViewId, Translation3D > parseTileConfiguration(final File tcFile)
 	{
 
-		final Map< ViewId, TranslationGet > res = new HashMap<>();
+		final Map< ViewId, Translation3D > res = new HashMap<>();
 
 		try
 		{
@@ -199,7 +221,11 @@ public class TileConfigurationHelpers
 						return null; // warn here?
 					}
 					int vsId = Integer.parseInt( splitLine.get( 0 ).trim() );
-					int tpId = Integer.parseInt( splitLine.get( 1 ).trim() );
+					int tpId = -1;
+					// set tpId to -1 if no timepoint was specified
+					try {
+						tpId = Integer.parseInt( splitLine.get( 1 ).trim() );
+					} catch (NumberFormatException e) {}
 
 					String loc = splitLine.get( 2 ).trim();
 					if ( !loc.startsWith( "(" ) || !loc.endsWith( ")" ) )
@@ -217,19 +243,19 @@ public class TileConfigurationHelpers
 						return null; // warn here?
 					}
 
-					double[] tr = new double[dims];
+					double[] tr = new double[3];
 					for ( int i = 0; i < dims; i++ )
 					{
 						tr[i] = Double.parseDouble( locs.get( i ).trim() );
 					}
 
-					res.put( new ViewId( tpId, vsId ), new Translation( tr ) );
+					res.put( new ViewId( tpId, vsId ), new Translation3D( tr ) );
 				}
 
 			}
 			reader.close();
 		}
-		catch ( IOException | NumberFormatException e )
+		catch ( IOException e )
 		{
 			e.printStackTrace();
 			return null;
@@ -238,10 +264,185 @@ public class TileConfigurationHelpers
 		return res;
 	}
 
+	/*
+	 * expand transformations to the actual views in SpimData.
+	 * NB: input with tpid = -1 will be applied to every present time point
+	 */
+	public static Map<ViewId, Translation3D> getTransformsForData(Map<ViewId, Translation3D> locations, boolean pixelUnits, AbstractSpimData< ? > data )
+	{
+		final Map<ViewId, Translation3D> res = new HashMap<>();
+		final Set< ViewId > vidsWithTransformations = locations.keySet();
+		final Collection< BasicViewDescription< ? > > vds = (Collection< BasicViewDescription< ? > >) data.getSequenceDescription().getViewDescriptions().values();
+
+		for ( BasicViewDescription< ? > vd : vds )
+		{
+			ViewId key;
+			if (vidsWithTransformations.contains( vd ))
+				key = vd;
+			else if (vidsWithTransformations.contains( new ViewId(-1, vd.getViewSetupId()) ))
+				key = new ViewId(-1, vd.getViewSetupId());
+			else
+				continue;
+
+			final ViewRegistration vr = data.getViewRegistrations().getViewRegistration( vd );
+			final AffineTransform3D calib = new AffineTransform3D();
+			calib.set( vr.getTransformList().get( vr.getTransformList().size() - 1 ).asAffine3D().getRowPackedCopy() );
+
+			final VoxelDimensions voxelDims = vd.getViewSetup().getVoxelSize();
+
+			final Translation3D translation3d = locations.get( key );
+			final double[] translationVec = translation3d.getTranslationCopy();
+
+			if (!pixelUnits)
+				for (int d = 0; d<voxelDims.numDimensions(); d++)
+					translationVec[d] /= voxelDims.dimension( d );
+
+			for (int d = 0; d<calib.numDimensions(); d++)
+				translationVec[d] *= calib.get( d, d );
+
+			res.put( new ViewId(vd.getTimePointId(), vd.getViewSetupId()), new Translation3D( translationVec ) );
+		}
+		return res;
+	}
+
+	/*
+	 * apply transformations from Tile configuration to SpimData
+	 */
+	public static void applyToData(Map<ViewId, Translation3D> locations, boolean pixelUnits, boolean keepRotation,
+			AbstractSpimData< ? > data)
+	{
+		if (data == null)
+			return;
+		final Map< ViewId, Translation3D > transformsForData = getTransformsForData( locations, pixelUnits, data );
+		final Collection< BasicViewDescription< ? > > vds = (Collection< BasicViewDescription< ? > >) data.getSequenceDescription().getViewDescriptions().values();
+
+		for ( BasicViewDescription< ? > vd : vds )
+		{
+			if (!vd.isPresent())
+				continue;
+
+			if (!transformsForData.containsKey( vd ))
+				continue;
+
+			final ViewRegistration vr = data.getViewRegistrations().getViewRegistration( vd );
+
+			final ViewTransform vtCalib = vr.getTransformList().get( vr.getTransformList().size() - 1 );
+			final AffineTransform3D calib = new AffineTransform3D();
+			calib.set( vr.getTransformList().get( vr.getTransformList().size() - 1 ).asAffine3D().getRowPackedCopy() );
+	
+			vr.getTransformList().clear();
+			vr.preconcatenateTransform( vtCalib );
+
+			final AffineTransform3D tr = new AffineTransform3D();
+			tr.set( transformsForData.get( vd ).getRowPackedCopy() );
+			ViewTransformAffine vtTC = new ViewTransformAffine( "Translation from Tile Configuration", tr );
+			vr.preconcatenateTransform( vtTC );
+
+			if (keepRotation)
+			{
+				AffineTransform3D rotation = new AffineTransform3D();
+				Pair< Double, Integer > rotAngleAndAxis = RegularTranformHelpers.getRoatationFromMetadata( vd.getViewSetup().getAttribute( Angle.class ) );
+				if (rotAngleAndAxis != null)
+				{
+					rotation.rotate( rotAngleAndAxis.getB(), rotAngleAndAxis.getA() );
+					vr.preconcatenateTransform( new ViewTransformAffine( "Rotation from Metadata", rotation.copy() ));
+				}
+			}
+			vr.updateModel();
+		}
+	}
+
+	/*
+	 * update BDV with parsed TileConfiguration
+	 */
+	public static void updateBDVPreview(Map<ViewId, Translation3D> locations, boolean pixelUnits, boolean keepRotation,
+			AbstractSpimData< ? > data, BigDataViewer bdv)
+	{
+		if (data == null || bdv == null )
+			return;
+
+		final Map< ViewId, Translation3D > transformsForData = getTransformsForData( locations, pixelUnits, data );
+		final Collection< BasicViewDescription< ? > > vds = (Collection< BasicViewDescription< ? > >) data.getSequenceDescription().getViewDescriptions().values();
+		final int currentTPId = data.getSequenceDescription().getTimePoints().getTimePointsOrdered()
+				.get( bdv.getViewer().getState().getCurrentTimepoint() ).getId();
+		for ( BasicViewDescription< ? > vd : vds )
+		{
+			if (vd.getTimePointId() != currentTPId)
+				continue;
+
+			final int sourceIdx = StitchingExplorerPanel.getBDVSourceIndex( vd.getViewSetup(), data );
+			final SourceState< ? > s = bdv.getViewer().getState().getSources().get( sourceIdx );
+
+			final ViewRegistration vr = data.getViewRegistrations().getViewRegistration( vd );
+			final AffineTransform3D inv = vr.getModel().copy().inverse();
+			
+			final AffineTransform3D calib = new AffineTransform3D();
+			calib.set( vr.getTransformList().get( vr.getTransformList().size() - 1 ).asAffine3D().getRowPackedCopy() );
+	
+			AffineTransform3D transform;
+			if (transformsForData.containsKey( vd ))
+			{
+				transform  = inv.copy().preConcatenate( calib ).preConcatenate( transformsForData.get( vd ) );
+			}
+			else
+				continue;
+
+			if (keepRotation)
+			{
+				AffineTransform3D rotation = new AffineTransform3D();
+				Pair< Double, Integer > rotAngleAndAxis = RegularTranformHelpers.getRoatationFromMetadata( vd.getViewSetup().getAttribute( Angle.class ) );
+				if (rotAngleAndAxis != null)
+				{
+					rotation.rotate( rotAngleAndAxis.getB(), rotAngleAndAxis.getA() );
+					transform.preConcatenate( rotation.copy() );
+				}
+			}
+	
+			( (TransformedSource< ? >) s.getSpimSource() ).setFixedTransform( transform );
+		}
+	
+		bdv.getViewer().requestRepaint();
+	}
+
+	/*
+	 * get representation of parsed tc as HTML string
+	 */
+	@Deprecated
+	public static String previewLocations(Map<ViewId, Translation3D> locations, boolean pixelUnits, AbstractSpimData< ? > data)
+	{
+		if (data == null )
+			return "";
+		if (locations == null)
+			return "<html><h2> View Locations </h2><p style=\"color:red\">WARNING: could not read tile configuration.</p></html>";
+
+		final Map< ViewId, Translation3D > transformsForData = getTransformsForData( locations, pixelUnits, data );
+
+		final StringBuilder sb = new StringBuilder();
+		sb.append("<html><h2> View Locations </h2>");
+		transformsForData.forEach( (vid, tr) -> {
+			sb.append( "<br /> ViewSetup " + vid.getViewSetupId() + ", TP " + vid.getTimePointId() + ": " );
+
+			// locations : round to 3 decimal places
+			DecimalFormat df = new DecimalFormat( "#.###" );
+			df.setRoundingMode( RoundingMode.HALF_UP );
+			sb.append( df.format( tr.get( 0, 3 ) ) );
+			sb.append( ", " );
+			sb.append( df.format( tr.get( 1, 3 ) ) );
+			sb.append( ", " );
+			sb.append( df.format( tr.get( 2, 3 ) ) );
+		} );
+
+		// pad the label a little
+		for (int i = 0; i < minNumLines - transformsForData.size(); i++)
+			sb.append( "<br />"  );
+		sb.append( "</html>" );
+		return sb.toString();
+	}
+
 	public static void main(String[] args) throws Exception
 	{
 		System.out.println( "== Old style:" );
-		Map< Pair< File, Integer >, TranslationGet > res = parseTileConfigurationOld(
+		Map< Pair< File, Integer >, Translation3D > res = parseTileConfigurationOld(
 				new File( "/Users/david/Desktop/tileConfigOld.txt" ) );
 
 		if ( res != null )
@@ -251,7 +452,7 @@ public class TileConfigurationHelpers
 			} );
 
 		System.out.println( "== New style:" );
-		Map< ViewId, TranslationGet > res2 = parseTileConfiguration(
+		Map< ViewId, Translation3D > res2 = parseTileConfiguration(
 				new File( "/Users/david/Desktop/tileConfig.txt" ) );
 
 		if ( res2 != null )

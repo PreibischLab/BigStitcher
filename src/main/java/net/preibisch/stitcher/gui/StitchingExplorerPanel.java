@@ -124,6 +124,7 @@ import net.preibisch.stitcher.gui.popup.CalculatePCPopupExpertBatch;
 import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopup;
 import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopupExpertBatch;
 import net.preibisch.stitcher.gui.popup.PairwiseInterestPointRegistrationPopup;
+import net.preibisch.stitcher.gui.popup.ReadTileConfigurationPopup;
 import net.preibisch.stitcher.gui.popup.RegularGridPopup;
 import net.preibisch.stitcher.gui.popup.SelectIlluminationPopup;
 import net.preibisch.stitcher.gui.popup.SimpleRemoveLinkPopup;
@@ -785,6 +786,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		popups.add( new LabelPopUp( " Preprocessing" ) );
 		popups.add( new TranslateGroupManuallyPopup() );
+		popups.add( new ReadTileConfigurationPopup() );
 		regularGridPopup = new RegularGridPopup();
 		popups.add( regularGridPopup );
 		popups.add( new SelectIlluminationPopup() );
