@@ -59,7 +59,7 @@ public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable
 
 		this.add( interactiveExplorer );
 		this.add( parameterBasedRemoval );
-		removeAllPopup = new JMenu( "Remove Pairwise Links" );
+		removeAllPopup = new JMenu( "Remove Links" );
 		removeAll = new JMenuItem( "Remove All" );
 		removeAllSelected = new JMenuItem( "Remove For Selected Views" );
 

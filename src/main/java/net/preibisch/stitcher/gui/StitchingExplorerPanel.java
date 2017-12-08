@@ -128,6 +128,7 @@ import net.preibisch.stitcher.gui.popup.ReadTileConfigurationPopup;
 import net.preibisch.stitcher.gui.popup.RegularGridPopup;
 import net.preibisch.stitcher.gui.popup.SelectIlluminationPopup;
 import net.preibisch.stitcher.gui.popup.SimpleRemoveLinkPopup;
+import net.preibisch.stitcher.gui.popup.SimpleSubMenu;
 import net.preibisch.stitcher.gui.popup.TogglePreviewPopup;
 import net.preibisch.stitcher.gui.popup.TranslateGroupManuallyPopup;
 import net.preibisch.stitcher.gui.popup.VerifyLinksPopup;
@@ -785,10 +786,11 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Preprocessing" ) );
-		popups.add( new TranslateGroupManuallyPopup() );
-		popups.add( new ReadTileConfigurationPopup() );
+		//popups.add( new TranslateGroupManuallyPopup() );
+		//popups.add( new ReadTileConfigurationPopup() );
 		regularGridPopup = new RegularGridPopup();
-		popups.add( regularGridPopup );
+		//popups.add( regularGridPopup );
+		popups.add( new SimpleSubMenu( "Arrange Views", new TranslateGroupManuallyPopup(), new ReadTileConfigurationPopup(), regularGridPopup ) );
 		popups.add( new SelectIlluminationPopup() );
 		popups.add( new Separator() );
 
