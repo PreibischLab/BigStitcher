@@ -23,6 +23,7 @@ package net.preibisch.stitcher.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -60,6 +62,7 @@ import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.FilteredStitchingResults;
 import net.preibisch.stitcher.gui.popup.LinkExplorerRemoveLinkPopup;
+import net.preibisch.stitcher.gui.popup.SimpleHyperlinkPopup;
 
 public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData<?> >
 {
@@ -309,6 +312,12 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 
 		footer.add( buttons );
 
+		// add help link to bottom of footer
+		try{
+			final JLabel helpLabel = SimpleHyperlinkPopup.createHyperlinkLabel( "click here to get help on the BigStitcher wiki", URI.create( "https://imagej.net/BigStitcher_Preview_Pairwise_shift" ) );
+			helpLabel.setBorder( BorderFactory.createEmptyBorder( 2, 10, 5, 10 ) );
+			footer.add( helpLabel );
+		} catch (IllegalArgumentException e){}
 
 		this.setLayout( new BorderLayout() );
 		this.add( new JScrollPane( table ), BorderLayout.CENTER );

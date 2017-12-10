@@ -1,10 +1,15 @@
 package net.preibisch.stitcher.gui.popup;
 
+import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Desktop;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URI;
 
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -32,6 +37,38 @@ public class SimpleHyperlinkPopup extends JMenuItem implements ExplorerWindowSet
 			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
 	{
 		return this;
+	}
+
+	public static JLabel createHyperlinkLabel(String text, URI uri)
+	{
+		final JLabel linkLabel = new JLabel( text );
+		if (Desktop.isDesktopSupported())
+			if (Desktop.getDesktop().isSupported( Desktop.Action.BROWSE ))
+			{
+				linkLabel.addMouseListener( new MouseAdapter()
+				{
+					@Override
+					public void mouseClicked( final MouseEvent e )
+					{
+						try { Desktop.getDesktop().browse( uri ); } catch ( IOException ex ) { ex.printStackTrace(); }
+					}
+
+					@Override
+					public void mouseEntered( final MouseEvent e )
+					{
+						linkLabel.setForeground( Color.BLUE );
+						linkLabel.setCursor( new Cursor( Cursor.HAND_CURSOR ) );
+					}
+
+					@Override
+					public void mouseExited( final MouseEvent e )
+					{
+						linkLabel.setForeground( Color.BLACK );
+						linkLabel.setCursor( new Cursor( Cursor.DEFAULT_CURSOR ) );
+					}
+				} );
+			}
+		return linkLabel;
 	}
 
 }
