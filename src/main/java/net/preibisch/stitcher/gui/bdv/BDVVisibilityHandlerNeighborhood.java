@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import bdv.BigDataViewer;
 import bdv.tools.brightness.ConverterSetup;
 import mpicbg.spim.data.generic.AbstractSpimData;
+import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.type.numeric.ARGBType;
 import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
@@ -84,7 +86,12 @@ public class BDVVisibilityHandlerNeighborhood implements BDVVisibilityHandler
 			final ArrayList< Iterable< ViewId > > comparison = new ArrayList<>();
 			comparison.add( selectedViewIds );
 			comparison.add( new Group< ViewId >( vid ) );
-			BoundingBox bbox = new BoundingBoxMaximalGroupOverlap< ViewId >(comparison, panel.getSpimData()).estimate( "" );
+
+			// TODO: fix generics (this is for Maven javac) 
+			BoundingBox bbox = new BoundingBoxMaximalGroupOverlap< ViewId >(
+					comparison,
+					(AbstractSpimData< ? extends AbstractSequenceDescription< ? extends BasicViewSetup, ?, ? > >)(Object)panel.getSpimData()
+					).estimate( "" );
 
 			// overlap found
 			if (bbox != null)
