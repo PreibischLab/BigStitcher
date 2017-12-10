@@ -33,6 +33,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -102,6 +104,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DisplayRawImagesPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.FusionPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.LabelPopUp;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.MaxProjectPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.RemoveTransformationPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ResavePopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.Separator;
@@ -127,6 +130,7 @@ import net.preibisch.stitcher.gui.popup.PairwiseInterestPointRegistrationPopup;
 import net.preibisch.stitcher.gui.popup.ReadTileConfigurationPopup;
 import net.preibisch.stitcher.gui.popup.RegularGridPopup;
 import net.preibisch.stitcher.gui.popup.SelectIlluminationPopup;
+import net.preibisch.stitcher.gui.popup.SimpleHyperlinkPopup;
 import net.preibisch.stitcher.gui.popup.SimpleRemoveLinkPopup;
 import net.preibisch.stitcher.gui.popup.SimpleSubMenu;
 import net.preibisch.stitcher.gui.popup.TogglePreviewPopup;
@@ -783,6 +787,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new LabelPopUp( " Displaying" ) );
 		popups.add( new BDVPopupStitching( linkOverlay ) );
 		popups.add( new DisplayRawImagesPopup() );
+		popups.add( new MaxProjectPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Preprocessing" ) );
@@ -818,6 +823,16 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		popups.add( new LabelPopUp( " Modifications" ) );
 		popups.add( new ResavePopup() );
+		popups.add( new Separator() );
+
+		// add link to wiki
+		popups.add( new LabelPopUp( "Help" ) );
+		try
+		{
+			popups.add( new SimpleHyperlinkPopup("Browse Wiki...", new URI( "https://imagej.net/BigStitcher#Documentation" )) );
+		}
+		catch ( URISyntaxException e ) { e.printStackTrace(); }
+
 
 		return popups;
 	}
