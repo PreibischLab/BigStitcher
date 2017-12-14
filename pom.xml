@@ -184,7 +184,7 @@
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-core</artifactId>
-			<version>4.3.1-SNAPSHOT</version>
+			<version>4.3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imglib2</groupId>
