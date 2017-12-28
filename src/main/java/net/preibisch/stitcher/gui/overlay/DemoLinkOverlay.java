@@ -36,12 +36,17 @@ import net.imglib2.ui.OverlayRenderer;
 import net.imglib2.ui.TransformListener;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BasicBDVPopup;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
+import net.preibisch.stitcher.gui.popup.BDVPopupStitching;
 
-public class DemoLinkOverlay implements OverlayRenderer, TransformListener< AffineTransform3D >,SelectedViewDescriptionListener< AbstractSpimData<?> >
+public class DemoLinkOverlay implements OverlayRenderer, TransformListener< AffineTransform3D >, SelectedViewDescriptionListener< AbstractSpimData<?> >
 {
 	final private ArrayList< Pair< Group< ViewId >, Group< ViewId > > > lastFilteredResults, lastInconsistentResults;
 	private StitchingResults stitchingResults;
@@ -50,7 +55,7 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 	public boolean isActive;
 	private ArrayList<Pair<Group<ViewId>, Group<ViewId>>> activeLinks; //currently selected in the GUI
 
-	public DemoLinkOverlay( StitchingResults res, AbstractSpimData< ? > spimData)
+	public DemoLinkOverlay( StitchingResults res, AbstractSpimData< ? > spimData )
 	{
 		this.stitchingResults = res;
 		this.spimData = spimData;
@@ -85,7 +90,7 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 		// dont do anything if the overlay was set to inactive or we have no Tile selected (no links to display)
 		if (!isActive || activeLinks.size() == 0)
 			return;
-		
+
 		for ( Pair<Group<ViewId>, Group<ViewId>> p: activeLinks)
 		{
 			// local coordinates of views, without BDV transform 
@@ -110,14 +115,14 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 			AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB().iterator().next() ).getModel();
 			
 			boolean overlaps = SimpleBoundingBoxOverlap.overlaps( SimpleBoundingBoxOverlap.getBoundingBox(	vdA.getViewSetup(), vrA ), SimpleBoundingBoxOverlap.getBoundingBox( vdB.getViewSetup(), vrB ) );
-			
+	
 			if (!overlaps)
 				continue;
 			
 			final AffineTransform3D transform = new AffineTransform3D();
 			transform.preConcatenate( viewerTransform );
 
-			for(int i = 0; i < 3; i++)
+			for( int i = 0; i < 3; i++)
 			{
 				// start from middle of view
 				lPos1[i] += sizeA[i] / 2;
@@ -129,20 +134,25 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 			
 			transform.apply( lPos1, gPos1 );
 			transform.apply( lPos2, gPos2 );
-			
-			if ( stitchingResults.getPairwiseResults().containsKey( p ) )
-			{
+
+			if ( lastFilteredResults.contains( p ) || lastFilteredResults.contains( reversePair( p ) ) )
+				g.setColor( Color.ORANGE );
+			else if ( lastInconsistentResults.contains( p ) || lastInconsistentResults.contains( reversePair( p ) ) )
+				g.setColor( Color.RED );
+			else if ( stitchingResults.getPairwiseResults().containsKey( p ) || stitchingResults.getPairwiseResults().containsKey( reversePair( p ) ) )
 				g.setColor( Color.GREEN );
-				
-			}
 			else
-				continue;
-				//g.setColor( Color.GRAY );
-			
+				g.setColor( Color.GRAY );
+
 			g.drawLine((int) gPos1[0],(int) gPos1[1],(int) gPos2[0],(int) gPos2[1] );
 		}
 	}
-	
+
+	public static < A > Pair< A, A > reversePair( final Pair< A, A > pair )
+	{
+		return new ValuePair< A, A >( pair.getB(), pair.getA() );
+	}
+
 	public void clearActiveLinks()
 	{
 		activeLinks.clear();

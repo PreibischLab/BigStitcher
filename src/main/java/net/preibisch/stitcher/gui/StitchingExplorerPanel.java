@@ -725,21 +725,29 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 				if ( b != null && b.bdv != null )
 				{
-					// first, re-color sources
-					if (!colorMode)
-						BDVPopupStitching.colorByChannels(b.bdv, getSpimData(), colorOffset );
-					else
-						StitchingExplorerPanel.colorSources( b.bdv.getSetupAssignments().getConverterSetups(), colorOffset );
+					if ( !demoLinkOverlay.isActive )
+					{
+						// first, re-color sources
+						if (!colorMode)
+							BDVPopupStitching.colorByChannels(b.bdv, getSpimData(), colorOffset );
+						else
+							StitchingExplorerPanel.colorSources( b.bdv.getSetupAssignments().getConverterSetups(), colorOffset );
 
-					if ( !previewMode )
-						updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows );
-					else
-						updateBDVPreviewMode();
+						if ( !previewMode )
+							updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows );
+						else
+							updateBDVPreviewMode();
 
-					// color neighbors if we are in translate mode
-					for ( int i = 0; i < listeners.size(); ++i )
-						if (TranslateGroupManuallyPanel.class.isInstance( listeners.get( i ) ) )
-							new BDVVisibilityHandlerNeighborhood( StitchingExplorerPanel.this , colorOffset).updateBDV();
+						// color neighbors if we are in translate mode
+						for ( int i = 0; i < listeners.size(); ++i )
+							if (TranslateGroupManuallyPanel.class.isInstance( listeners.get( i ) ) )
+								new BDVVisibilityHandlerNeighborhood( StitchingExplorerPanel.this , colorOffset).updateBDV();
+					}
+					else
+					{
+						b.bdv.getViewer().requestRepaint();
+					}
+
 				}
 			}
 

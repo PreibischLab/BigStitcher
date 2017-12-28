@@ -84,6 +84,7 @@ import net.preibisch.stitcher.algorithm.globalopt.GlobalOptimizationParameters;
 import net.preibisch.stitcher.algorithm.globalopt.GlobalOptimizationParameters.GlobalOptType;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 import net.preibisch.stitcher.gui.StitchingResultsSettable;
+import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 		implements ExplorerWindowSetable
@@ -107,6 +108,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 			final SpimData2 data,
 			final SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping,
 			final GlobalOptimizationParameters params,
+			final Collection< Pair< Group< ViewId >, Group< ViewId > > > removedInconsistentPairs,
 			final boolean fixFirstTileByDefault)
 	{
 		// why can type not be BasicViewDescription?
@@ -226,6 +228,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
 								params.relativeThreshold, params.absoluteThreshold ),
 						new MaxErrorLinkRemoval(),
+						removedInconsistentPairs,
 						new MetaDataWeakLinkFactory(
 								data.getViewRegistrations().getViewRegistrations(),
 								new SimpleBoundingBoxOverlap<>( data ) ),
@@ -255,7 +258,9 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 						new ImageCorrelationPointMatchCreator( results, minLinkQuality ),
 						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
 								params.relativeThreshold, params.absoluteThreshold ),
-						new MaxErrorLinkRemoval(), fixed, subset.getGroups() );
+						new MaxErrorLinkRemoval(),
+						removedInconsistentPairs,
+						fixed, subset.getGroups() );
 
 				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
 				globalOptResults.forEach( (k, v) -> {
@@ -299,12 +304,17 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 		return true;
 	}
 
-	public OptimizeGloballyPopupExpertBatch(boolean expertMode)
+	public OptimizeGloballyPopupExpertBatch( boolean expertMode )
 	{
 		super( expertMode ? "Expert Mode" : "Simple Mode" );
 		this.expertMode = expertMode;
 		this.addActionListener( new MyActionListener() );
 	}
+
+	/*public OptimizeGloballyPopupExpertBatch(boolean expertMode)
+	{
+		this( expertMode, null );
+	}*/
 
 	public static <V extends ViewId> Collection<? extends Collection<V> > askForFixedViews(ArrayList<? extends Subset< V > > subsets)
 	{
@@ -429,7 +439,6 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 
 	private class MyActionListener implements ActionListener
 	{
-
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
@@ -495,7 +504,25 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 							filteringAndGrouping = (SpimDataFilteringAndGrouping< SpimData2 >) ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping();
 						}
 
-						processGlobalOptimization( (SpimData2) panel.getSpimData(), filteringAndGrouping, params, !expertMode);
+						final ArrayList< Pair< Group< ViewId >, Group< ViewId > > > removedInconsistentPairs = new ArrayList<>();
+
+						processGlobalOptimization( (SpimData2) panel.getSpimData(), filteringAndGrouping, params, removedInconsistentPairs, !expertMode );
+
+						final DemoLinkOverlay demoOverlay;
+
+						if ( !StitchingExplorerPanel.class.isInstance( panel ) )
+							demoOverlay = null;
+						else
+							demoOverlay = (( StitchingExplorerPanel<?,?> )panel).getDemoLinkOverlay();
+
+						if ( demoOverlay != null )
+						{
+							synchronized ( demoOverlay )
+							{
+								demoOverlay.getInconsistentResults().clear();
+								demoOverlay.getInconsistentResults().addAll( removedInconsistentPairs );
+							}
+						}
 					}
 					finally
 					{

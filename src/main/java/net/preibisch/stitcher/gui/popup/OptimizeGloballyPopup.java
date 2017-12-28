@@ -32,7 +32,9 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 import net.preibisch.stitcher.gui.StitchingResultsSettable;
+import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class OptimizeGloballyPopup extends JMenu implements ExplorerWindowSetable
 {
@@ -44,11 +46,14 @@ public class OptimizeGloballyPopup extends JMenu implements ExplorerWindowSetabl
 
 	public final OptimizeGloballyPopupExpertBatch simpleOptimize;
 	public final OptimizeGloballyPopupExpertBatch expertOptimize;
+	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 
 	@Override
 	public JComponent setExplorerWindow(
 			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
 	{
+		this.panel = panel;
+
 		simpleOptimize.setExplorerWindow( panel );
 		expertOptimize.setExplorerWindow( panel );
 		return this;
@@ -57,6 +62,7 @@ public class OptimizeGloballyPopup extends JMenu implements ExplorerWindowSetabl
 	public OptimizeGloballyPopup()
 	{
 		super( "Optimize Globally And Apply Shift" );
+
 		this.simpleOptimize = new OptimizeGloballyPopupExpertBatch( false );
 		this.expertOptimize = new OptimizeGloballyPopupExpertBatch( true );
 

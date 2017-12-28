@@ -151,6 +151,7 @@ public class TestGlobalOptTwoRound
 				pmc,
 				cs,
 				new MaxErrorLinkRemoval(),
+				null,
 				new MetaDataWeakLinkFactory( spimData.getViewRegistrations().getViewRegistrations(), new SimpleBoundingBoxOverlap<>( spimData ) ),
 				new ConvergenceStrategy( Double.MAX_VALUE ),
 				fixed,

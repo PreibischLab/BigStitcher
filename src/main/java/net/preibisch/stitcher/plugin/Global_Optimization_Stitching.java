@@ -69,7 +69,7 @@ public class Global_Optimization_Stitching implements PlugIn
 
 		GlobalOptimizationParameters params = GlobalOptimizationParameters.askUserForParameters();
 
-		if (!OptimizeGloballyPopupExpertBatch.processGlobalOptimization( data, grouping, params, false ))
+		if (!OptimizeGloballyPopupExpertBatch.processGlobalOptimization( data, grouping, params, null, false ))
 			return;
 
 		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
