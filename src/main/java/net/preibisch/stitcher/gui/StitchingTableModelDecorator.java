@@ -57,7 +57,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 	
 	StitchingResults res;
 	
-	static final List< String > columnNames = Arrays.asList( new String [] {"Location", "Avg. r", "# of links", "Errors (mean/min/max)"} );
+	static final List< String > columnNames = Arrays.asList( new String [] { "Location", "Avg. r", "# of links" } );
 	
 	public StitchingTableModelDecorator(ISpimDataTableModel<AS> decorated) {
 		this.decorated = decorated;
@@ -171,47 +171,6 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 			final Set< ViewId > vid = new HashSet<>( decorated.getElements().get( rowIndex ) );
 			SpimData2.filterMissingViews( decorated.getPanel().getSpimData(), vid );
 			return ( res.getAllPairwiseResultsForViewId( vid ).size() );
-		}
-
-		// get errors
-		else if ( columnIndex - decorated.getColumnCount() == 3 )
-		{
-			final Set< ViewId > vid = new HashSet<>( decorated.getElements().get( rowIndex ) );
-			SpimData2.filterMissingViews( decorated.getPanel().getSpimData(), vid );
-			final ArrayList< Double > errors = res.getErrors( vid );
-			DecimalFormat df = new DecimalFormat( "#.###" );
-			df.setRoundingMode( RoundingMode.HALF_UP );
-
-			if ( errors.size() < 1 )
-			{
-				return "-";
-			}
-
-			Double max = new Double( 0 );
-			Double min = Double.MAX_VALUE;
-			Double mean = new Double( 0 );
-			for ( Double d : errors )
-			{
-				if ( d > max )
-				{
-					max = d;
-				}
-				if ( d < min )
-				{
-					min = d;
-				}
-				mean += d;
-			}
-			mean /= errors.size();
-
-			StringBuilder sb = new StringBuilder();
-			sb.append( df.format( mean ) );
-			sb.append( ", " );
-			sb.append( df.format( min ) );
-			sb.append( ", " );
-			sb.append( df.format( max ) );
-
-			return sb.toString();
 		}
 
 		// should never be reached
