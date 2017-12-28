@@ -124,6 +124,7 @@ import net.preibisch.stitcher.gui.popup.ApplyBDVTransformationPopup;
 import net.preibisch.stitcher.gui.popup.BDVPopupStitching;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopup;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopupExpertBatch;
+import net.preibisch.stitcher.gui.popup.DemoLinkOverlayPopup;
 import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopup;
 import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopupExpertBatch;
 import net.preibisch.stitcher.gui.popup.PairwiseInterestPointRegistrationPopup;
@@ -225,6 +226,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		//colorMode = true;
 	}
 
+	public DemoLinkOverlay getDemoLinkOverlay() { return demoLinkOverlay; }
 
 	@Override
 	public boolean tilesGrouped() { return false; }
@@ -788,6 +790,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new BDVPopupStitching( linkOverlay ) );
 		popups.add( new DisplayRawImagesPopup() );
 		popups.add( new MaxProjectPopup() );
+		popups.add( new DemoLinkOverlayPopup( demoLinkOverlay ) );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Preprocessing" ) );

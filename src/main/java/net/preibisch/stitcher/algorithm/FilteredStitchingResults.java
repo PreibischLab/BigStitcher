@@ -39,6 +39,8 @@ import net.imglib2.util.ValuePair;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
+import net.preibisch.stitcher.gui.StitchingExplorerPanel;
+import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class FilteredStitchingResults 
 {
@@ -105,12 +107,19 @@ public class FilteredStitchingResults
 	}
 
 	private Map< Pair< Group< ViewId >, Group< ViewId > >, PairwiseStitchingResult< ViewId > > filteredPairwiseResults;
+	private DemoLinkOverlay demoOverlay; // can be null
 	private StitchingResults wrapped;
 	private List<Filter> filters;
 
-	public FilteredStitchingResults(StitchingResults wrapped)
+	public FilteredStitchingResults(StitchingResults wrapped )
+	{
+		this( wrapped, null );
+	}
+
+	public FilteredStitchingResults(StitchingResults wrapped, DemoLinkOverlay demoOverlay )
 	{
 		this.wrapped = wrapped;
+		this.demoOverlay = demoOverlay;
 		filteredPairwiseResults = new HashMap<>();
 		filters = new ArrayList<>();
 		updateFilteredResults();
@@ -152,13 +161,20 @@ public class FilteredStitchingResults
 		final Map< Pair< Group< ViewId >, Group< ViewId > >, PairwiseStitchingResult< ViewId > > filteredTmp = new HashMap<>();
 		filteredTmp.putAll( wrapped.getPairwiseResults() );
 
+		if ( demoOverlay != null )
+			demoOverlay.getFilteredResults().clear();
+
 		wrapped.getPairwiseResults().forEach( (k, v) -> 
 		{
 			if (!targets.contains( k ))
 				return;
 			for (Filter filter : filters)
 				if (!filter.conforms(v))
-					filteredTmp.remove( k );;
+				{
+					filteredTmp.remove( k );
+					if ( demoOverlay != null )
+						demoOverlay.getFilteredResults().add( k );
+				}
 		});
 
 		wrapped.getPairwiseResults().clear();

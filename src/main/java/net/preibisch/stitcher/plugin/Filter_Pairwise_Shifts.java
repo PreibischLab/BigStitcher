@@ -28,7 +28,6 @@ import net.preibisch.stitcher.gui.popup.SimpleRemoveLinkPopup;
 
 public class Filter_Pairwise_Shifts implements PlugIn
 {
-
 	@Override
 	public void run(String arg)
 	{
@@ -38,7 +37,7 @@ public class Filter_Pairwise_Shifts implements PlugIn
 			return;
 		final SpimData2 data = result.getData();
 
-		SimpleRemoveLinkPopup.filterPairwiseShifts( data, false, null );
+		SimpleRemoveLinkPopup.filterPairwiseShifts( data, false, null, null );
 		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
 	}
 
@@ -46,5 +45,4 @@ public class Filter_Pairwise_Shifts implements PlugIn
 	{
 		new Filter_Pairwise_Shifts().run("");
 	}
-
 }

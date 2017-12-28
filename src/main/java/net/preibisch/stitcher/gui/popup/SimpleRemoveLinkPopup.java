@@ -23,8 +23,6 @@ package net.preibisch.stitcher.gui.popup;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -32,7 +30,6 @@ import java.util.Set;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -45,11 +42,10 @@ import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
-import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.FilteredStitchingResults;
-import net.preibisch.stitcher.gui.StitchingResultsSettable;
+import net.preibisch.stitcher.gui.StitchingExplorerPanel;
+import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSetable
 {
@@ -71,7 +67,8 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 	public static boolean filterPairwiseShifts(
 			SpimData2 data,
 			boolean considerSelection,
-			List< List<ViewId> > selectedViewGroups
+			List< List<ViewId> > selectedViewGroups,
+			final DemoLinkOverlay demoOverlay
 			)
 	{
 		final GenericDialog gd = new GenericDialog("Filter Pairwise Registrations");
@@ -120,7 +117,7 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 				}
 		}
 
-		FilteredStitchingResults fsr = new FilteredStitchingResults(data.getStitchingResults());
+		FilteredStitchingResults fsr = new FilteredStitchingResults(data.getStitchingResults(), demoOverlay );
 
 		if (doCorrelationFilter)
 			fsr.addFilter(new FilteredStitchingResults.CorrelationFilter(minR, maxR));
@@ -153,10 +150,17 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 					return;
 				}
 
+				final DemoLinkOverlay demoOverlay;
+
+				if (! StitchingExplorerPanel.class.isInstance( panel ) )
+					demoOverlay = null;
+				else
+					demoOverlay = (( StitchingExplorerPanel<?,?> )panel).getDemoLinkOverlay();
+
 				SpimData2 data = (SpimData2) panel.getSpimData();
 				List< List< ViewId > > selected = ((GroupedRowWindow)panel).selectedRowsViewIdGroups();
 				selected.forEach( g -> SpimData2.filterMissingViews( data, g ) );
-				filterPairwiseShifts(data, true, selected);
+				filterPairwiseShifts(data, true, selected, demoOverlay );
 			}
 		} );
 	}

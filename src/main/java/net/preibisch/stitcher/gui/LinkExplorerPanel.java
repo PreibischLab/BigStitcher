@@ -122,7 +122,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		activeLinks = new ArrayList<>();
 		selectedPair = null;
 
-		model = new LinkExplorerTableModel();
+		model = new LinkExplorerTableModel( parent.getDemoLinkOverlay() );
 		model.setStitchingResults( results );
 
 		table = new JTable();

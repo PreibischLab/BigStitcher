@@ -35,6 +35,7 @@ import net.imglib2.util.Pair;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.FilteredStitchingResults;
+import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class LinkExplorerTableModel extends AbstractTableModel implements StitchingResultsSettable
 {
@@ -63,11 +64,14 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	
 	private StitchingResults results;
 	private FilteredStitchingResults filteredResults;
+	private DemoLinkOverlay demoLinkOverlay;
 	
 	public StitchingResults getStitchingResults() { return results; }
 	
-	public LinkExplorerTableModel()
+	public LinkExplorerTableModel( final DemoLinkOverlay demoOverlay )
 	{
+		this.demoLinkOverlay = demoOverlay;
+
 		activeLinksBeforeFilter = new ArrayList<>();
 		activeLinksAfterFilter = new ArrayList<>();
 	}
@@ -145,7 +149,7 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	public void setStitchingResults(StitchingResults res)
 	{
 		this.results = res;
-		this.filteredResults = new FilteredStitchingResults( results );
+		this.filteredResults = new FilteredStitchingResults( results, demoLinkOverlay );
 	}
 
 	@Override
