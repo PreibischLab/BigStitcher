@@ -95,6 +95,8 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 		return false;
 	}
 
+
+	
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex)
 	{
@@ -135,20 +137,29 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 			if ( !allTransformsIdentical )
 				return "multiple locations (" + nPresent + " of " + n + " views present)";
 
+
+
+			AffineTransform3D tr = vr.getModel(); // getTransformList().get(vr.getTransformList().size()- 1);
+			final boolean onlyScaleAndTranslation = TransformTools.isOnlyScaleAndTranslation( tr );
+
+			// apply transform to origin -> location of view origin
+			final double[] loc = new double[3];
+			tr.apply( loc, loc );
+
 			final StringBuilder res = new StringBuilder();
 
-			AffineTransform3D tr = vr.getModel(); // getTransformList().get(vr.getTransformList().size()
-													// - 1);
+			if (!onlyScaleAndTranslation)
+				res.append( "Affine & " );
 
 			// round to 3 decimal places
 			DecimalFormat df = new DecimalFormat( "#.###" );
 			df.setRoundingMode( RoundingMode.HALF_UP );
 
-			res.append( df.format( tr.get( 0, 3 ) ) );
+			res.append( df.format( loc[0] ) );
 			res.append( ", " );
-			res.append( df.format( tr.get( 1, 3 ) ) );
+			res.append( df.format( loc[1] ) );
 			res.append( ", " );
-			res.append( df.format( tr.get( 2, 3 ) ) );
+			res.append( df.format( loc[2] ) );
 			return res.toString();
 		}
 

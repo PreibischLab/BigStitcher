@@ -42,7 +42,19 @@ import net.imglib2.util.ValuePair;
 
 public class TransformTools {
 	
-	
+
+	// check if tr is zero except for diagonal and translation
+	public static boolean isOnlyScaleAndTranslation(AffineGet tr)
+	{
+		final int n = tr.numDimensions();
+		for (int i = 0; i < n; i++)
+			for (int j = 0; j < n; j++)
+				if (i != j && tr.get( i, j ) > Double.MIN_VALUE)
+					return false;
+		return true;
+	}
+
+
 	public static Pair<AffineGet, AffineGet> decomposeIntoAffineAndTranslation(AffineGet tr)
 	{
 		AffineTransform3D t = new AffineTransform3D();
