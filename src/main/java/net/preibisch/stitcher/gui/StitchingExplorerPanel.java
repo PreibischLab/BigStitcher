@@ -61,6 +61,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 import bdv.BigDataViewer;
 import bdv.img.hdf5.Hdf5ImageLoader;
+import bdv.tools.HelpDialog;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.transformation.TransformedSource;
 import bdv.viewer.DisplayMode;
@@ -507,6 +508,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		addColorMode(); // 'c' or 'C'
 		addDemoLink(); // 'l' or 'L'
+		addHelp(); // F1
 
 		table.setPreferredScrollableViewportSize( new Dimension( 750, 300 ) );
 		table.getColumnModel().getColumn( 0 ).setPreferredWidth( 20 );
@@ -1105,6 +1107,25 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			IOFunctions.println( "Failed to save XML '" + xml + "': " + e );
 			e.printStackTrace();
 		}
+	}
+
+	protected void addHelp()
+	{
+		table.addKeyListener( new KeyListener()
+		{
+			@Override
+			public void keyTyped( KeyEvent e ) {}
+
+			@Override
+			public void keyReleased( KeyEvent e ) {}
+
+			@Override
+			public void keyPressed( KeyEvent e )
+			{
+				if ( e.getKeyCode() == 112 )
+					new HelpDialog( linkFrame, this.getClass().getResource( "/BigStitcher/Help.html" ) ).setVisible( true );;
+			}
+		} );
 	}
 
 	protected void addDemoLink()
