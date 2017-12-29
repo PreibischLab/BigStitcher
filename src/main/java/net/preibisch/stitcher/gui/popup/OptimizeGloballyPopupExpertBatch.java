@@ -225,7 +225,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 				HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
 						new TranslationModel3D(),
 						new ImageCorrelationPointMatchCreator( results, minLinkQuality ),
-						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
+						new SimpleIterativeConvergenceStrategy( Double.MAX_VALUE,
 								params.relativeThreshold, params.absoluteThreshold ),
 						new MaxErrorLinkRemoval(),
 						removedInconsistentPairs,
@@ -256,7 +256,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 				HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute(
 						new TranslationModel3D(),
 						new ImageCorrelationPointMatchCreator( results, minLinkQuality ),
-						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
+						new SimpleIterativeConvergenceStrategy( Double.MAX_VALUE,
 								params.relativeThreshold, params.absoluteThreshold ),
 						new MaxErrorLinkRemoval(),
 						removedInconsistentPairs,
@@ -280,7 +280,7 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 				final HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOpt.compute( 
 						new TranslationModel3D(),
 						new ImageCorrelationPointMatchCreator( results, minLinkQuality ),
-						new SimpleIterativeConvergenceStrategy( params.absoluteThreshold,
+						new SimpleIterativeConvergenceStrategy( Double.MAX_VALUE,
 								params.relativeThreshold, params.absoluteThreshold ),
 						fixed,
 						subset.getGroups() );

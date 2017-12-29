@@ -21,8 +21,11 @@
  */
 package net.preibisch.stitcher.gui.overlay;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Stroke;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,24 +39,23 @@ import net.imglib2.ui.OverlayRenderer;
 import net.imglib2.ui.TransformListener;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BasicBDVPopup;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
-import net.preibisch.stitcher.gui.popup.BDVPopupStitching;
 
 public class DemoLinkOverlay implements OverlayRenderer, TransformListener< AffineTransform3D >, SelectedViewDescriptionListener< AbstractSpimData<?> >
 {
 	final private ArrayList< Pair< Group< ViewId >, Group< ViewId > > > lastFilteredResults, lastInconsistentResults;
 	private StitchingResults stitchingResults;
-	private AbstractSpimData< ? > spimData;	
-	private AffineTransform3D viewerTransform;	
+	private AbstractSpimData< ? > spimData;
+	private AffineTransform3D viewerTransform;
 	public boolean isActive;
 	private ArrayList<Pair<Group<ViewId>, Group<ViewId>>> activeLinks; //currently selected in the GUI
+
+	final Stroke dashed = new BasicStroke( 1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{9}, 0 );
+	final Stroke thin = new BasicStroke( 1 );
+	final Stroke thick = new BasicStroke( 1.5f );
 
 	public DemoLinkOverlay( StitchingResults res, AbstractSpimData< ? > spimData )
 	{
@@ -135,14 +137,31 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 			transform.apply( lPos1, gPos1 );
 			transform.apply( lPos2, gPos2 );
 
+			Graphics2D g2d = null;
+
+			if ( Graphics2D.class.isInstance( g ) )
+				g2d = (Graphics2D) g;
+
 			if ( lastFilteredResults.contains( p ) || lastFilteredResults.contains( reversePair( p ) ) )
+			{
 				g.setColor( Color.ORANGE );
+				if ( g2d != null ) g2d.setStroke( dashed );
+			}
 			else if ( lastInconsistentResults.contains( p ) || lastInconsistentResults.contains( reversePair( p ) ) )
+			{
 				g.setColor( Color.RED );
+				if ( g2d != null ) g2d.setStroke( dashed );
+			}
 			else if ( stitchingResults.getPairwiseResults().containsKey( p ) || stitchingResults.getPairwiseResults().containsKey( reversePair( p ) ) )
+			{
 				g.setColor( Color.GREEN );
+				if ( g2d != null ) g2d.setStroke( thick );
+			}
 			else
+			{
 				g.setColor( Color.GRAY );
+				if ( g2d != null ) g2d.setStroke( dashed );
+			}
 
 			g.drawLine((int) gPos1[0],(int) gPos1[1],(int) gPos2[0],(int) gPos2[1] );
 		}

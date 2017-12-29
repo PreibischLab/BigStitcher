@@ -23,6 +23,8 @@ package net.preibisch.stitcher.gui.popup;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
 import javax.swing.JComponent;
@@ -38,16 +40,21 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPa
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
-public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSetable {
+public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSetable, KeyListener
+{
+	private static final long serialVersionUID = 1L;
 
 	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 	DemoLinkOverlay overlay;
 	boolean active = false;
+	MyActionListener actionListener;
 
 	public DemoLinkOverlayPopup(DemoLinkOverlay overlay)
 	{
 		super( "Toggle Demo Link Overlay" );
-		this.addActionListener( new MyActionListener() );
+		
+		this.actionListener = new MyActionListener();
+		this.addActionListener( this.actionListener );
 		this.overlay = overlay;
 	}
 
@@ -58,8 +65,7 @@ public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSet
 		this.panel = panel;
 		return this;
 	}
-	
-	
+
 	public class MyActionListener implements ActionListener
 	{
 		final ArrayList< ARGBType > oldColors = new ArrayList<>();
@@ -101,10 +107,31 @@ public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSet
 				for ( int i = 0; i < bdv.getSetupAssignments().getConverterSetups().size(); ++i )
 					oldColors.add( bdv.getSetupAssignments().getConverterSetups().get( i ).getColor() );
 
-				FilteredAndGroupedExplorerPanel.sameColorSources( bdv.getSetupAssignments().getConverterSetups(), 128, 128, 192, 255 );
+				colorSources( bdv );
 			}
 
 			bdv.getViewer().requestRepaint();
 		}
 	}
+
+	public void colorSources( final BigDataViewer bdv )
+	{
+		if ( bdv != null )
+			FilteredAndGroupedExplorerPanel.sameColorSources( bdv.getSetupAssignments().getConverterSetups(), 128, 128, 192, 255 );
+	}
+
+	@Override
+	public void keyPressed( KeyEvent e )
+	{
+		if ( e.getKeyChar() == 'l' || e.getKeyChar() == 'L' )
+		{
+			this.actionListener.actionPerformed( new ActionEvent( panel, 0, "key pressed" ) );
+		}
+	}
+
+	@Override
+	public void keyTyped( KeyEvent e ) {}
+
+	@Override
+	public void keyReleased( KeyEvent e ) {}
 }
