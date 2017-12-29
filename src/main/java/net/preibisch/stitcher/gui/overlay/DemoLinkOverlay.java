@@ -36,15 +36,10 @@ import net.imglib2.ui.OverlayRenderer;
 import net.imglib2.ui.TransformListener;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BasicBDVPopup;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
-import net.preibisch.stitcher.gui.popup.BDVPopupStitching;
 
 public class DemoLinkOverlay implements OverlayRenderer, TransformListener< AffineTransform3D >, SelectedViewDescriptionListener< AbstractSpimData<?> >
 {

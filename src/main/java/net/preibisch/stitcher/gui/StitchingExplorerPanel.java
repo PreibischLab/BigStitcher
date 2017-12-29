@@ -51,7 +51,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -95,10 +94,8 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedTableModel
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ISpimDataTableModel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.interestpoint.InterestPointTableModel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BoundingBoxPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DetectInterestPointsPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DisplayFusedImagesPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DisplayRawImagesPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -120,24 +117,19 @@ import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.gui.bdv.BDVVisibilityHandlerNeighborhood;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 import net.preibisch.stitcher.gui.overlay.LinkOverlay;
-import net.preibisch.stitcher.gui.popup.ApplyBDVTransformationPopup;
 import net.preibisch.stitcher.gui.popup.BDVPopupStitching;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopup;
+import net.preibisch.stitcher.gui.popup.CalculatePCPopup.Method;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopupExpertBatch;
 import net.preibisch.stitcher.gui.popup.DemoLinkOverlayPopup;
 import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopup;
-import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopupExpertBatch;
-import net.preibisch.stitcher.gui.popup.PairwiseInterestPointRegistrationPopup;
 import net.preibisch.stitcher.gui.popup.ReadTileConfigurationPopup;
 import net.preibisch.stitcher.gui.popup.RegularGridPopup;
 import net.preibisch.stitcher.gui.popup.SelectIlluminationPopup;
 import net.preibisch.stitcher.gui.popup.SimpleHyperlinkPopup;
-import net.preibisch.stitcher.gui.popup.SimpleRemoveLinkPopup;
 import net.preibisch.stitcher.gui.popup.SimpleSubMenu;
-import net.preibisch.stitcher.gui.popup.TogglePreviewPopup;
 import net.preibisch.stitcher.gui.popup.TranslateGroupManuallyPopup;
 import net.preibisch.stitcher.gui.popup.VerifyLinksPopup;
-import net.preibisch.stitcher.gui.popup.CalculatePCPopup.Method;
 import net.preibisch.stitcher.input.FractalImgLoader;
 
 public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS >>
@@ -153,6 +145,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	RegularGridPopup regularGridPopup; 
 	
 	DemoLinkOverlay demoLinkOverlay;
+	DemoLinkOverlayPopup demoLinkOverlayPopup;
 
 	StitchingResults stitchingResults;
 
@@ -179,10 +172,11 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		else
 			this.stitchingResults = new StitchingResults();
 
-		linkOverlay = new LinkOverlay( stitchingResults, data );
-		demoLinkOverlay = new DemoLinkOverlay( stitchingResults, data );
-		
-		addListener( (SelectedViewDescriptionListener< AS >) demoLinkOverlay );
+		this.linkOverlay = new LinkOverlay( stitchingResults, data );
+		this.demoLinkOverlay = new DemoLinkOverlay( stitchingResults, data );
+		this.demoLinkOverlayPopup = new DemoLinkOverlayPopup( this.demoLinkOverlay );
+
+		addListener( (SelectedViewDescriptionListener) demoLinkOverlay );
 
 		popups = initPopups();
 		initComponent();
@@ -227,6 +221,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	}
 
 	public DemoLinkOverlay getDemoLinkOverlay() { return demoLinkOverlay; }
+	public DemoLinkOverlayPopup getDemoLinkOverlayPopup() { return demoLinkOverlayPopup; }
 
 	@Override
 	public boolean tilesGrouped() { return false; }
@@ -510,7 +505,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		if ( isMac )
 			addAppleA();
 
-		addColorMode();
+		addColorMode(); // 'c' or 'C'
+		addDemoLink(); // 'l' or 'L'
 
 		table.setPreferredScrollableViewportSize( new Dimension( 750, 300 ) );
 		table.getColumnModel().getColumn( 0 ).setPreferredWidth( 20 );
@@ -722,32 +718,27 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				for ( int i = 0; i < listeners.size(); ++i )
 					listeners.get( i ).selectedViewDescriptions( selectedList );
 
-
 				if ( b != null && b.bdv != null )
 				{
-					if ( !demoLinkOverlay.isActive )
-					{
-						// first, re-color sources
-						if (!colorMode)
-							BDVPopupStitching.colorByChannels(b.bdv, getSpimData(), colorOffset );
-						else
-							StitchingExplorerPanel.colorSources( b.bdv.getSetupAssignments().getConverterSetups(), colorOffset );
-
-						if ( !previewMode )
-							updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows );
-						else
-							updateBDVPreviewMode();
-
-						// color neighbors if we are in translate mode
-						for ( int i = 0; i < listeners.size(); ++i )
-							if (TranslateGroupManuallyPanel.class.isInstance( listeners.get( i ) ) )
-								new BDVVisibilityHandlerNeighborhood( StitchingExplorerPanel.this , colorOffset).updateBDV();
-					}
+					// first, re-color sources
+					if (!colorMode)
+						BDVPopupStitching.colorByChannels(b.bdv, getSpimData(), colorOffset );
 					else
-					{
-						b.bdv.getViewer().requestRepaint();
-					}
+						StitchingExplorerPanel.colorSources( b.bdv.getSetupAssignments().getConverterSetups(), colorOffset );
 
+					if ( !previewMode )
+						updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows );
+					else
+						updateBDVPreviewMode();
+
+					// color neighbors if we are in translate mode
+					for ( int i = 0; i < listeners.size(); ++i )
+						if (TranslateGroupManuallyPanel.class.isInstance( listeners.get( i ) ) )
+							new BDVVisibilityHandlerNeighborhood( StitchingExplorerPanel.this , colorOffset).updateBDV();
+
+					// TODO: Separate visibility and coloring
+					if ( demoLinkOverlay.isActive )
+						demoLinkOverlayPopup.colorSources( b.bdv );
 				}
 			}
 
@@ -798,7 +789,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new BDVPopupStitching( linkOverlay ) );
 		popups.add( new DisplayRawImagesPopup() );
 		popups.add( new MaxProjectPopup() );
-		popups.add( new DemoLinkOverlayPopup( demoLinkOverlay ) );
+		//popups.add( demoLinkOverlayPopup );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Preprocessing" ) );
@@ -1114,6 +1105,12 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			IOFunctions.println( "Failed to save XML '" + xml + "': " + e );
 			e.printStackTrace();
 		}
+	}
+
+	protected void addDemoLink()
+	{
+		table.addKeyListener( this.demoLinkOverlayPopup );
+		this.demoLinkOverlayPopup.setExplorerWindow( this );
 	}
 
 	protected void addColorMode()
