@@ -43,6 +43,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListe
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
+import net.preibisch.stitcher.algorithm.globalopt.TransformationTools;
 
 public class DemoLinkOverlay implements OverlayRenderer, TransformListener< AffineTransform3D >, SelectedViewDescriptionListener< AbstractSpimData<?> >
 {
@@ -142,17 +143,17 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 			if ( Graphics2D.class.isInstance( g ) )
 				g2d = (Graphics2D) g;
 
-			if ( lastFilteredResults.contains( p ) || lastFilteredResults.contains( reversePair( p ) ) )
+			if ( lastFilteredResults.contains( p ) || lastFilteredResults.contains( TransformationTools.reversePair( p ) ) )
 			{
 				g.setColor( Color.ORANGE );
 				if ( g2d != null ) g2d.setStroke( dashed );
 			}
-			else if ( lastInconsistentResults.contains( p ) || lastInconsistentResults.contains( reversePair( p ) ) )
+			else if ( lastInconsistentResults.contains( p ) || lastInconsistentResults.contains( TransformationTools.reversePair( p ) ) )
 			{
 				g.setColor( Color.RED );
 				if ( g2d != null ) g2d.setStroke( dashed );
 			}
-			else if ( stitchingResults.getPairwiseResults().containsKey( p ) || stitchingResults.getPairwiseResults().containsKey( reversePair( p ) ) )
+			else if ( stitchingResults.getPairwiseResults().containsKey( p ) || stitchingResults.getPairwiseResults().containsKey( TransformationTools.reversePair( p ) ) )
 			{
 				g.setColor( Color.GREEN );
 				if ( g2d != null ) g2d.setStroke( thick );
@@ -165,11 +166,6 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 
 			g.drawLine((int) gPos1[0],(int) gPos1[1],(int) gPos2[0],(int) gPos2[1] );
 		}
-	}
-
-	public static < A > Pair< A, A > reversePair( final Pair< A, A > pair )
-	{
-		return new ValuePair< A, A >( pair.getB(), pair.getA() );
 	}
 
 	public void clearActiveLinks()

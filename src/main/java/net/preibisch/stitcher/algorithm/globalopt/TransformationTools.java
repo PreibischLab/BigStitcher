@@ -78,7 +78,11 @@ import net.preibisch.stitcher.input.GenerateSpimData;
 
 public class TransformationTools
 {
-	
+	public static < A > Pair< A, A > reversePair( final Pair< A, A > pair )
+	{
+		return new ValuePair< A, A >( pair.getB(), pair.getA() );
+	}
+
 	public static < T extends RealType< T > > Pair<Pair< AffineGet, Double >, RealInterval> computeStitchingNonEqualTransformations(
 			final Group<? extends ViewId> viewIdsA,
 			final Group<? extends ViewId> viewIdsB,
