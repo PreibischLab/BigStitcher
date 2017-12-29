@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -50,11 +51,13 @@ import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
+import net.imglib2.Dimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.Scale3D;
 import net.imglib2.realtransform.Translation;
 import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.type.numeric.RealType;
@@ -64,6 +67,7 @@ import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximal;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOpt;
 import net.preibisch.mvrecon.process.interestpointregistration.global.convergence.ConvergenceStrategy;
@@ -83,21 +87,49 @@ public class TransformationTools
 	public static void reCenterViews(final BigDataViewer viewer, final Collection<BasicViewDescription< ? >> selectedViews, final ViewRegistrations viewRegistrations)
 	{
 		AffineTransform3D currentViewerTransform = viewer.getViewer().getDisplay().getTransformEventHandler().getTransform().copy();
-		final int cX = viewer.getViewer().getWidth() / 2;
-		final int cY = viewer.getViewer().getHeight() / 2;
-		double[] com = getCenterOfMass( selectedViews, viewRegistrations );
+		final int cX = viewer.getViewer().getWidth() / 2; // size of the display area of the frame
+		final int cY = viewer.getViewer().getHeight() / 2; // size of the display area of the frame
+
+		IOFunctions.println( viewer.getViewer().getWidth() + " " + viewer.getViewer().getHeight() );
+
+		final HashMap< BasicViewDescription< ? >, Dimensions > dimensions = new HashMap<>();
+		final HashMap< BasicViewDescription< ? >, AffineTransform3D > registrations = new HashMap<>();
+
+		for ( final BasicViewDescription< ? > view : selectedViews )
+		{
+			viewRegistrations.getViewRegistration( view ).updateModel();
+			registrations.put( view, viewRegistrations.getViewRegistration( view ).getModel() );
+			dimensions.put( view, view.getViewSetup().getSize() );
+		}
+
+		final BoundingBox bb = new BoundingBoxMaximal( selectedViews, dimensions, registrations ).estimate( "max" );
+		final double[] com = new double[] {
+				( bb.max( 0 ) - bb.min( 0 ) )/2 + bb.min( 0 ),
+				( bb.max( 1 ) - bb.min( 1 ) )/2 + bb.min( 1 ),
+				( bb.max( 2 ) - bb.min( 2 ) )/2 + bb.min( 2 ) };
+
+		final RealInterval bounds = currentViewerTransform.estimateBounds( bb );
+		IOFunctions.println( TransformTools.printRealInterval( bounds ));
+
+		double currentScale = Math.max( 
+				( bounds.realMax( 0 ) - bounds.realMin( 0 ) ) / viewer.getViewer().getWidth(),
+				( bounds.realMax( 1 ) - bounds.realMin( 1 ) ) / viewer.getViewer().getHeight() );
+
+		final Scale3D scale = new Scale3D( 1.0/currentScale, 1.0/currentScale, 1.0/currentScale );
 
 		// ignore old translation
 		currentViewerTransform.set( 0, 0, 3 );
 		currentViewerTransform.set( 0, 1, 3 );
 		currentViewerTransform.set( 0, 2, 3 );
 
+		currentViewerTransform.preConcatenate( scale );
+
 		// to screen units
 		currentViewerTransform.apply( com, com );
 
 		// reset translational part
-		currentViewerTransform.set( - com[0] + cX , 0, 3 );
-		currentViewerTransform.set( - com[1] + cY , 1, 3 );
+		currentViewerTransform.set( -com[0] + cX , 0, 3 );
+		currentViewerTransform.set( -com[1] + cY , 1, 3 );
 
 		// check if all selected views are 2d
 		boolean allViews2D = true;
@@ -112,43 +144,9 @@ public class TransformationTools
 		if (allViews2D)
 			currentViewerTransform.set( 0, 2, 3 );
 		else
-			currentViewerTransform.set( - com[2], 2, 3 );
+			currentViewerTransform.set( -com[2], 2, 3 );
 
 		viewer.getViewer().setCurrentViewerTransform( currentViewerTransform );
-	}
-
-
-	public static double[] getCenterOfMass(final Collection<BasicViewDescription< ? >> selectedViews, final ViewRegistrations viewRegistrations) 
-	{
-		double[] center = new double[3];
-		final int nVertices = selectedViews.size() * 8;
-		long[] dims = new long[3];
-
-		for (final BasicViewDescription< ? > vd : selectedViews)
-		{
-			final AffineTransform3D vrTr = viewRegistrations.getViewRegistration( vd ).getModel();
-			vd.getViewSetup().getSize().dimensions( dims );
-			final double[][] vertices = new double[][] {
-					new double[] {0, 0, 0},
-					new double[] {0, 0, dims[2]},
-					new double[] {0, dims[1], 0},
-					new double[] {0, dims[1], dims[2]},
-					new double[] {dims[0], 0, 0},
-					new double[] {dims[0], 0, dims[2]},
-					new double[] {dims[0], dims[1], 0},
-					new double[] {dims[0], dims[1], dims[2]}
-			};
-
-			for (double[] v : vertices)
-			{
-				vrTr.apply( v, v );
-				center[0] += v[0] / nVertices;
-				center[1] += v[1] / nVertices;
-				center[2] += v[2] / nVertices;
-			}
-		}
-
-		return center;
 	}
 
 	public static < A > Pair< A, A > reversePair( final Pair< A, A > pair )
