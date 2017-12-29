@@ -36,6 +36,7 @@ import java.awt.event.WindowEvent;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -74,6 +75,7 @@ import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
+import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
@@ -85,6 +87,7 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.util.Pair;
+import net.imglib2.util.Util;
 import net.preibisch.mvrecon.fiji.plugin.util.MultiWindowLayoutHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.SpimDataTools;
@@ -507,10 +510,12 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			};
 		} );
 
+		// add keyboard shortcuts
 		if ( isMac )
 			addAppleA();
-
 		addColorMode();
+		addReCenterShortcut();
+		
 
 		table.setPreferredScrollableViewportSize( new Dimension( 750, 300 ) );
 		table.getColumnModel().getColumn( 0 ).setPreferredWidth( 20 );
@@ -682,6 +687,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		addPopupMenu( table );
 		table.getSelectionModel().setSelectionInterval( 0, 0 );
+
 	}
 
 	@Override
@@ -1116,6 +1122,35 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		}
 	}
 
+	protected void addReCenterShortcut()
+	{
+		table.addKeyListener( new KeyListener()
+		{
+			@Override
+			public void keyPressed(final KeyEvent arg0)
+			{
+				if ( arg0.getKeyChar() == 'r' || arg0.getKeyChar() == 'R' )
+				{
+					final BDVPopup p = bdvPopup();
+					if ( p != null && p.bdv != null && p.bdv.getViewerFrame().isVisible() )
+					{
+						reCenterViews( p.bdv,
+								selectedRows.stream().collect( 
+										HashSet< BasicViewDescription< ? > >::new,
+										(a, b) -> a.addAll( b ), (a, b) -> a.addAll( b ) ),
+										data.getViewRegistrations() );
+					}
+				}
+			}
+
+			@Override
+			public void keyReleased(final KeyEvent arg0){}
+			@Override
+			public void keyTyped(final KeyEvent arg0){}
+		} );
+	}
+
+
 	protected void addColorMode()
 	{
 		table.addKeyListener( new KeyListener()
@@ -1201,4 +1236,75 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		table.repaint();
 	}
 
+	public static void reCenterViews(final BigDataViewer viewer, final Collection<BasicViewDescription< ? >> selectedViews, final ViewRegistrations viewRegistrations)
+	{
+
+		AffineTransform3D currentViewerTransform = viewer.getViewer().getDisplay().getTransformEventHandler().getTransform().copy();
+		final int cX = viewer.getViewer().getWidth() / 2;
+		final int cY = viewer.getViewer().getHeight() / 2;
+		double[] com = getCenterOfMass( selectedViews, viewRegistrations );
+
+		// ignore old translation
+		currentViewerTransform.set( 0, 0, 3 );
+		currentViewerTransform.set( 0, 1, 3 );
+		currentViewerTransform.set( 0, 2, 3 );
+
+		// to screen units
+		currentViewerTransform.apply( com, com );
+
+		// reset translational part
+		currentViewerTransform.set( - com[0] + cX , 0, 3 );
+		currentViewerTransform.set( - com[1] + cY , 1, 3 );
+
+		// check if all selected views are 2d
+		boolean allViews2D = true;
+		for (final BasicViewDescription< ? > vd : selectedViews)
+			if (vd.isPresent() && vd.getViewSetup().hasSize() && vd.getViewSetup().getSize().dimension( 2 ) != 1)
+			{
+				allViews2D = false;
+				break;
+			}
+
+		// do not move in z if we have 2d data
+		if (allViews2D)
+			currentViewerTransform.set( 0, 2, 3 );
+		else
+			currentViewerTransform.set( - com[2], 2, 3 );
+
+		viewer.getViewer().setCurrentViewerTransform( currentViewerTransform );
+	}
+
+
+	public static double[] getCenterOfMass(final Collection<BasicViewDescription< ? >> selectedViews, final ViewRegistrations viewRegistrations) 
+	{
+		double[] center = new double[3];
+		final int nVertices = selectedViews.size() * 8;
+		long[] dims = new long[3];
+
+		for (final BasicViewDescription< ? > vd : selectedViews)
+		{
+			final AffineTransform3D vrTr = viewRegistrations.getViewRegistration( vd ).getModel();
+			vd.getViewSetup().getSize().dimensions( dims );
+			final double[][] vertices = new double[][] {
+					new double[] {0, 0, 0},
+					new double[] {0, 0, dims[2]},
+					new double[] {0, dims[1], 0},
+					new double[] {0, dims[1], dims[2]},
+					new double[] {dims[0], 0, 0},
+					new double[] {dims[0], 0, dims[2]},
+					new double[] {dims[0], dims[1], 0},
+					new double[] {dims[0], dims[1], dims[2]}
+			};
+
+			for (double[] v : vertices)
+			{
+				vrTr.apply( v, v );
+				center[0] += v[0] / nVertices;
+				center[1] += v[1] / nVertices;
+				center[2] += v[2] / nVertices;
+			}
+		}
+
+		return center;
+	}
 }
