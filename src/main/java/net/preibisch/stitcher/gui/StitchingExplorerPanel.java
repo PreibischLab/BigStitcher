@@ -118,6 +118,7 @@ import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingRes
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
+import net.preibisch.stitcher.algorithm.globalopt.TransformationTools;
 import net.preibisch.stitcher.gui.bdv.BDVVisibilityHandlerNeighborhood;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 import net.preibisch.stitcher.gui.overlay.LinkOverlay;
@@ -1114,7 +1115,6 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		}
 	}
 
-
 	protected void addReCenterShortcut()
 	{
 		table.addKeyListener( new KeyListener()
@@ -1127,7 +1127,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					final BDVPopup p = bdvPopup();
 					if ( p != null && p.bdv != null && p.bdv.getViewerFrame().isVisible() )
 					{
-						reCenterViews( p.bdv,
+						TransformationTools.reCenterViews( p.bdv,
 								selectedRows.stream().collect( 
 										HashSet< BasicViewDescription< ? > >::new,
 										(a, b) -> a.addAll( b ), (a, b) -> a.addAll( b ) ),
@@ -1250,77 +1250,5 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	{
 		this.savedFilteringAndGrouping = savedFilteringAndGrouping;
 		table.repaint();
-	}
-
-	public static void reCenterViews(final BigDataViewer viewer, final Collection<BasicViewDescription< ? >> selectedViews, final ViewRegistrations viewRegistrations)
-	{
-
-		AffineTransform3D currentViewerTransform = viewer.getViewer().getDisplay().getTransformEventHandler().getTransform().copy();
-		final int cX = viewer.getViewer().getWidth() / 2;
-		final int cY = viewer.getViewer().getHeight() / 2;
-		double[] com = getCenterOfMass( selectedViews, viewRegistrations );
-
-		// ignore old translation
-		currentViewerTransform.set( 0, 0, 3 );
-		currentViewerTransform.set( 0, 1, 3 );
-		currentViewerTransform.set( 0, 2, 3 );
-
-		// to screen units
-		currentViewerTransform.apply( com, com );
-
-		// reset translational part
-		currentViewerTransform.set( - com[0] + cX , 0, 3 );
-		currentViewerTransform.set( - com[1] + cY , 1, 3 );
-
-		// check if all selected views are 2d
-		boolean allViews2D = true;
-		for (final BasicViewDescription< ? > vd : selectedViews)
-			if (vd.isPresent() && vd.getViewSetup().hasSize() && vd.getViewSetup().getSize().dimension( 2 ) != 1)
-			{
-				allViews2D = false;
-				break;
-			}
-
-		// do not move in z if we have 2d data
-		if (allViews2D)
-			currentViewerTransform.set( 0, 2, 3 );
-		else
-			currentViewerTransform.set( - com[2], 2, 3 );
-
-		viewer.getViewer().setCurrentViewerTransform( currentViewerTransform );
-	}
-
-
-	public static double[] getCenterOfMass(final Collection<BasicViewDescription< ? >> selectedViews, final ViewRegistrations viewRegistrations) 
-	{
-		double[] center = new double[3];
-		final int nVertices = selectedViews.size() * 8;
-		long[] dims = new long[3];
-
-		for (final BasicViewDescription< ? > vd : selectedViews)
-		{
-			final AffineTransform3D vrTr = viewRegistrations.getViewRegistration( vd ).getModel();
-			vd.getViewSetup().getSize().dimensions( dims );
-			final double[][] vertices = new double[][] {
-					new double[] {0, 0, 0},
-					new double[] {0, 0, dims[2]},
-					new double[] {0, dims[1], 0},
-					new double[] {0, dims[1], dims[2]},
-					new double[] {dims[0], 0, 0},
-					new double[] {dims[0], 0, dims[2]},
-					new double[] {dims[0], dims[1], 0},
-					new double[] {dims[0], dims[1], dims[2]}
-			};
-
-			for (double[] v : vertices)
-			{
-				vrTr.apply( v, v );
-				center[0] += v[0] / nVertices;
-				center[1] += v[1] / nVertices;
-				center[2] += v[2] / nVertices;
-			}
-		}
-
-		return center;
 	}
 }
