@@ -54,7 +54,7 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 	public boolean isActive;
 	private ArrayList<Pair<Group<ViewId>, Group<ViewId>>> activeLinks; //currently selected in the GUI
 
-	final Stroke dashed = new BasicStroke( 1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{9}, 0 );
+	final Stroke dashed = new BasicStroke( 1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{4}, 0 );
 	final Stroke thin = new BasicStroke( 1 );
 	final Stroke thick = new BasicStroke( 1.5f );
 

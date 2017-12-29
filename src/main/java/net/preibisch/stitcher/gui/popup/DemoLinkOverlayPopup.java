@@ -117,7 +117,7 @@ public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSet
 	public void colorSources( final BigDataViewer bdv )
 	{
 		if ( bdv != null )
-			FilteredAndGroupedExplorerPanel.sameColorSources( bdv.getSetupAssignments().getConverterSetups(), 128, 128, 192, 255 );
+			FilteredAndGroupedExplorerPanel.sameColorSources( bdv.getSetupAssignments().getConverterSetups(), 64, 64, 96, 255 );
 	}
 
 	@Override
