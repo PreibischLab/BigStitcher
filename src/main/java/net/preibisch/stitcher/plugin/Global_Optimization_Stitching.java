@@ -31,15 +31,16 @@ import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.ViewId;
+import net.imglib2.util.Pair;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
+import net.preibisch.stitcher.algorithm.globalopt.GlobalOptStitcher;
 import net.preibisch.stitcher.algorithm.globalopt.GlobalOptimizationParameters;
-import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopupExpertBatch;
 
 public class Global_Optimization_Stitching implements PlugIn
 {
-
 	@Override
 	public void run(String arg)
 	{
@@ -69,8 +70,12 @@ public class Global_Optimization_Stitching implements PlugIn
 
 		GlobalOptimizationParameters params = GlobalOptimizationParameters.askUserForParameters();
 
-		if (!OptimizeGloballyPopupExpertBatch.processGlobalOptimization( data, grouping, params, null, false ))
+		final ArrayList< Pair< Group< ViewId >, Group< ViewId > > > removedInconsistentPairs = new ArrayList<>();
+
+		if (!GlobalOptStitcher.processGlobalOptimization( data, grouping, params, removedInconsistentPairs, false ))
 			return;
+
+		GlobalOptStitcher.removeInconsistentLinks( removedInconsistentPairs, data.getStitchingResults().getPairwiseResults() );
 
 		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
 
