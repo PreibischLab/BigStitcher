@@ -40,8 +40,7 @@ import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling
 
 public class DownsampleTools
 {
-	
-	public static final int[] ds = { 1, 2, 4, 8 };
+	public static final int[] ds = { 1, 2, 4, 8, 16, 32, 64, 128 };
 
 	public static < T extends RealType<T> > void openAndDownsampleAdjustTransformation(
 			final BasicImgLoader imgLoader,
