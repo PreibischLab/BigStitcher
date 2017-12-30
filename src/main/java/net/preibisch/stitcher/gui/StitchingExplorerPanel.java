@@ -816,7 +816,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		popups.add( new LabelPopUp( "Step-by-step Stitching" ) );
 		popups.add( new CalculatePCPopupExpertBatch("Calculate Pairwise Shifts ...", false) );
-		popups.add( new VerifyLinksPopup() );
+		popups.add( new VerifyLinksPopup( demoLinkOverlay ) );
 		popups.add( new OptimizeGloballyPopup() );
 		popups.add( new Separator() );
 

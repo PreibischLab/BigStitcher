@@ -41,6 +41,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
+import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable
 {
@@ -51,7 +52,7 @@ public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable
 	private JMenuItem removeAll;
 	private JMenuItem removeAllSelected;
 
-	public VerifyLinksPopup()
+	public VerifyLinksPopup( final DemoLinkOverlay overlap )
 	{
 		super("Verify/Filter Pairwise Links");
 		this.interactiveExplorer = new TogglePreviewPopup();
@@ -71,6 +72,14 @@ public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable
 		removeAll.addActionListener( a -> {
 			if (SpimData2.class.isInstance( panel.getSpimData() ))
 				((SpimData2)panel.getSpimData()).getStitchingResults().getPairwiseResults().clear();
+
+			if ( overlap != null )
+			{
+				overlap.getFilteredResults().clear();
+				overlap.getInconsistentResults().clear();
+
+				panel.bdvPopup().updateBDV();
+			}
 		});
 
 		// remove pairwise results for selected groups
@@ -84,9 +93,28 @@ public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable
 				{
 					Group< ViewId > grp = new Group<>(selected.get(i));
 					for (Pair<Group<ViewId>, Group<ViewId>> p : pairs)
-					{
 						if (p.getA().equals( grp ) || p.getB().equals( grp ))
 							sr.removePairwiseResultForPair( p );
+
+					if ( overlap != null )
+					{
+						for ( int j = overlap.getFilteredResults().size() - 1; j >= 0; --j )
+						{
+							final Pair<Group<ViewId>, Group<ViewId>> p = overlap.getFilteredResults().get( j );
+
+							if (p.getA().equals( grp ) || p.getB().equals( grp ))
+								overlap.getFilteredResults().remove( j );
+						}
+
+						for ( int j = overlap.getInconsistentResults().size() - 1; j >= 0; --j )
+						{
+							final Pair<Group<ViewId>, Group<ViewId>> p = overlap.getInconsistentResults().get( j );
+
+							if (p.getA().equals( grp ) || p.getB().equals( grp ))
+								overlap.getInconsistentResults().remove( j );
+						}
+
+						panel.bdvPopup().updateBDV();
 					}
 				}
 			}
