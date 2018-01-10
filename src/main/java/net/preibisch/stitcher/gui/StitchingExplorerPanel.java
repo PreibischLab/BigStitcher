@@ -56,6 +56,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -98,6 +99,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedTableModel
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ISpimDataTableModel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BoundingBoxPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DisplayFusedImagesPopup;
@@ -548,7 +550,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		buttons.add( save, BorderLayout.EAST );
 
 		final JPanel header = new JPanel( new BorderLayout() );
-		header.add( new JLabel( "XML: " + xml ), BorderLayout.WEST );
+		header.add( ViewSetupExplorerPanel.getXMLLabel( xml ), BorderLayout.WEST );
 
 		header.add( buttons, BorderLayout.EAST );
 		this.add( header, BorderLayout.NORTH );

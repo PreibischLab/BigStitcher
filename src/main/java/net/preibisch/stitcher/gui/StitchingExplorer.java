@@ -26,6 +26,8 @@ import ij.ImageJ;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Rectangle;
+import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -38,8 +40,11 @@ import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
 
 import bdv.BigDataViewer;
 import net.preibisch.mvrecon.fiji.plugin.util.MultiWindowLayoutHelper;
@@ -75,32 +80,38 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 	
 	public StitchingExplorer( final AS data, final String xml, final X io )
 	{
-		
 		this.data = data;
 		this.xml = xml;
 		this.io = io;
 		currentMode = Mode.STITCHING;
-		
-		
+
 		frame = new JFrame( "Stitching Explorer" );
-		
-		JPanel buttons = new JPanel( );
-		buttons.setLayout( new BoxLayout( buttons, BoxLayout.LINE_AXIS ) );
-		
+
+		JPanel buttons = new JPanel( new BorderLayout() );
+		//buttons.setLayout( new BoxLayout( buttons, BoxLayout.LINE_AXIS ) );
+
 		this.bStitching = new JButton( "Stitching" );
-		buttons.add( bStitching );
+		buttons.add( bStitching, BorderLayout.WEST );
 		bStitching.addActionListener( (e) -> switchMode(Mode.STITCHING));
-		
-		
+
 		this.bMV = new JButton( "Multiview" );
-		buttons.add( bMV );
+		buttons.add( bMV, BorderLayout.EAST );
 		bMV.addActionListener( (e) -> switchMode(Mode.MULTIVIEW));
-		
+
 		updateButtons();
-		
+
+		final JPanel header = new JPanel( new BorderLayout() );
+		final JLabel l = new JLabel( "Press F1 for help" );
+		l.setForeground( Color.DARK_GRAY );
+		l.setBorder( new EmptyBorder( 0, 0, 0, 10 ) );
+		l.setFont( l.getFont().deriveFont( Font.ITALIC ) );
+		header.add( l, BorderLayout.EAST );
+
+		header.add( buttons, BorderLayout.WEST );
+
 		panel = new StitchingExplorerPanel< AS, X >( this, data, xml, io , true);
 
-		frame.add( buttons, BorderLayout.NORTH );
+		frame.add( header, BorderLayout.NORTH );
 		frame.add( panel, BorderLayout.CENTER );
 		frame.setSize( panel.getPreferredSize() );
 
@@ -129,16 +140,16 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 	{
 		if ( currentMode == Mode.STITCHING )
 		{
-			bStitching.setForeground( Color.BLACK );
+			bStitching.setForeground( Color.RED );
 			bStitching.setFont( bStitching.getFont().deriveFont( Font.BOLD ) );
-			bMV.setForeground( Color.GRAY );
+			bMV.setForeground( Color.BLACK );
 			bMV.setFont( bMV.getFont().deriveFont( Font.PLAIN ) );
 		}
 		else
 		{
-			bMV.setForeground( Color.BLACK );
+			bMV.setForeground( Color.RED );
 			bMV.setFont( bMV.getFont().deriveFont( Font.BOLD ) );
-			bStitching.setForeground( Color.GRAY );
+			bStitching.setForeground( Color.BLACK );
 			bStitching.setFont( bStitching.getFont().deriveFont( Font.PLAIN ) );
 		}
 	}
