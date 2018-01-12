@@ -44,7 +44,7 @@ public class GlobalOptimizationParameters
 
 	public GlobalOptimizationParameters()
 	{
-		this( 2.5, 3.5, GlobalOptType.ITERATIVE );
+		this( 2.5, 3.5, GlobalOptType.TWO_ROUND );
 	}
 
 	public GlobalOptimizationParameters(double relativeThreshold, double absoluteThreshold, GlobalOptType method)
