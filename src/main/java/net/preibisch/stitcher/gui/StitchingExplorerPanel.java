@@ -127,6 +127,7 @@ import net.preibisch.stitcher.gui.overlay.LinkOverlay;
 import net.preibisch.stitcher.gui.popup.BDVPopupStitching;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopup;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopup.Method;
+import net.preibisch.stitcher.gui.popup.icp.RefineWithICPPopup;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopupExpertBatch;
 import net.preibisch.stitcher.gui.popup.DemoLinkOverlayPopup;
 import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopup;
@@ -820,6 +821,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new CalculatePCPopupExpertBatch("Calculate Pairwise Shifts ...", false) );
 		popups.add( new VerifyLinksPopup( demoLinkOverlay ) );
 		popups.add( new OptimizeGloballyPopup() );
+		popups.add( new Separator() );
+
+		popups.add( new LabelPopUp( "Registration Refinement (optional)" ) );
+		popups.add( new RefineWithICPPopup( "Refine with ICP" ) );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Fusion" ) );
