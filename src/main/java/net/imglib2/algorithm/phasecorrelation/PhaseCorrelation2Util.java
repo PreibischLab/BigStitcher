@@ -792,9 +792,11 @@ public class PhaseCorrelation2Util {
 		// all pixels had the same color....
 		if (sum11 == 0 || sum22 == 0)
 		{
-			if ( sum11 == sum22 && m1 == m2 )
+			// having the same means and same sums means the overlapping area was simply identically the same color
+			// this is most likely an artifact and we return 0
+			/* if ( sum11 == sum22 && m1 == m2 )
 				return 1;
-			else
+			else */
 				return 0;
 		}
 
