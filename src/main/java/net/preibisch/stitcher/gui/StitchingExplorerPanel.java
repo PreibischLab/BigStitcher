@@ -120,6 +120,7 @@ import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingRes
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
+import net.preibisch.stitcher.algorithm.globalopt.ExecuteGlobalOpt;
 import net.preibisch.stitcher.algorithm.globalopt.TransformationTools;
 import net.preibisch.stitcher.gui.bdv.BDVVisibilityHandlerNeighborhood;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
@@ -347,18 +348,14 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 			if (doGlobalOpt)
 			{
-				// this should find any one of the two Optimize globally popups
-				Optional< ExplorerWindowSetable > globalOptPopupOpt = popups.stream().filter( p -> OptimizeGloballyPopup.class.isInstance( p ) ).findFirst();
-				OptimizeGloballyPopup globalOptPopup = (OptimizeGloballyPopup) globalOptPopupOpt.get();
-				(savedFilteringAndGrouping.requestExpertSettingsForGlobalOpt ? globalOptPopup.expertOptimize : globalOptPopup.simpleOptimize).doClick(); 
+				// run non-mulithreaded because it would result in a weird display error where only the visible tiles are listed and everything else is white
+				new ExecuteGlobalOpt( this, savedFilteringAndGrouping.requestExpertSettingsForGlobalOpt ).run();
 			}
-			else
-			{
-				// discard the temp. SpimDataFilteringAndGrouping
-				// if we discard it right now, but want to do global opt (which runs asynchronously)
-				// it would not work. therefore, the global optimization will take care of this
-				savedFilteringAndGrouping = null;
-			}
+
+			// discard the temp. SpimDataFilteringAndGrouping
+			// if we discard it right now, but want to do global opt (which runs asynchronously)
+			// it would not work. therefore, the global optimization will take care of this
+			savedFilteringAndGrouping = null;
 		}
 	}
 
