@@ -273,8 +273,9 @@ public class PairwiseStitching
 		// check whether we have 0-sized (or negative sized) or unequal raster overlapIntervals
 		// (this should just happen with overlaps < 1px in some dimension)
 		// ignore this pair in that case
+		// FIXED for downsampling=2 caused by up/down-rounding (see TransformTools.getLocalRasterOverlap)
 		// TODO: in pre-transformed views (e.g. both rotated), we might sometimes have unequal overlap due to numerical imprecision?
-		//    -> look into this (still not fixed!)
+		//    -> look into this (still not fixed!) >> should be fixed now
 		for (int d = 0; d < interval1.numDimensions(); ++d)
 		{
 			if ( interval1.dimension( d ) <= 0 || interval2.dimension( d ) <= 0 )
