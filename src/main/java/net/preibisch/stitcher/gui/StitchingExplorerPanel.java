@@ -329,9 +329,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 			quitLinkExplorer();
 			linkOverlay.clearActiveLinks();
-			int oldFirstSelection = table.getSelectionModel().getMinSelectionIndex();
+
 			table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
-			table.setRowSelectionInterval( oldFirstSelection, oldFirstSelection );
+			restoreSelection();
+
 			if (bdvPopup().bdvRunning())
 			{
 				// update and re-color BDV
@@ -343,8 +344,6 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					colorSources(bdvPopup().bdv.getSetupAssignments().getConverterSetups(), colorOffset );
 				}
 			}
-
-			restoreSelection();
 
 			if (doGlobalOpt)
 			{
