@@ -271,8 +271,13 @@ public class TransformTools {
 		
 		for (int i = 0; i< n; i++)
 		{
-			min[i] = Math.round((overlap.realMin(i))) + 1;
-			max[i] = Math.round((overlap.realMax(i))) - 1;
+			// round down errors when it is exactly 0.5, if we do not do this we end up with two intervals
+			// of different size, e.g.:
+			// if the first interval starts at 139.5 going to 199, the second one at 0.0 going to 59.5
+			// then the rastered 1st would go from round(139.5)=140 + 1 = 141 -to- round(199)=199 - 1 = 198, dim=58
+			// and  the rastered 2nd would go from round(0.0)=0 + 1     =   1 -to- round(59.5)=60 - 1 = 59,  dim=59
+			min[i] = Math.round((overlap.realMin(i) - 0.0001 )) + 1;
+			max[i] = Math.round((overlap.realMax(i) + 0.0001 )) - 1;
 		}
 		
 		return new FinalInterval(min, max);

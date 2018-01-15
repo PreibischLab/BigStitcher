@@ -64,6 +64,7 @@ import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBoxes;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPoints;
 import net.preibisch.mvrecon.fiji.spimdata.pointspreadfunctions.PointSpreadFunctions;
@@ -146,12 +147,17 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 						panel.updateContent();
 					}
 
-					// TODO: close and re-open BDV
+					// TODO: close and re-open BDV >> Should be solved
+					final BDVPopup popup = panel.bdvPopup();
+
+					if ( popup.bdvRunning() )
+					{
+						popup.closeBDV();
+						popup.doClick();
+					}
 				}
 
 			}).start();
-			
-			
 		}
 		
 	}

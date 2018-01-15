@@ -25,6 +25,8 @@ import ij.gui.GenericDialog;
 
 public class GlobalOptimizationParameters
 {
+	public static int defaultGlobalOpt = 2;
+
 	public enum GlobalOptType
 	{
 		SIMPLE,
@@ -58,7 +60,7 @@ public class GlobalOptimizationParameters
 	{
 		// ask user for parameters
 		final GenericDialog gd = new GenericDialog("Global optimization options");
-		gd.addChoice( "Global_optimization_strategy", methodDescriptions, methodDescriptions[1] );
+		gd.addChoice( "Global_optimization_strategy", methodDescriptions, methodDescriptions[ defaultGlobalOpt ] );
 		gd.addNumericField( "relative error threshold", 2.5, 3 );
 		gd.addNumericField( "absolute error threshold", 3.5, 3 );
 		gd.showDialog();
@@ -68,7 +70,7 @@ public class GlobalOptimizationParameters
 
 		final double relTh = gd.getNextNumber();
 		final double absTh = gd.getNextNumber();
-		final int methodIdx = gd.getNextChoiceIndex();
+		final int methodIdx = defaultGlobalOpt = gd.getNextChoiceIndex();
 
 		final GlobalOptType method;
 		if (methodIdx == 0)
