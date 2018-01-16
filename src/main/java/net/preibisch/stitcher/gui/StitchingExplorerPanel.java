@@ -704,14 +704,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				for ( final int row : table.getSelectedRows() )
 				{
 					if (!foundFirstView)
-					for (int i = 0; i < tableModel.getElements().get( row ).size(); i++)
-						if ( firstSelectedVD == null || !firstSelectedVD.isPresent())
-						{
-							foundFirstView = true;
-							firstSelectedVD = tableModel.getElements().get( row ).get( i );
-							break;
-						}
-							
+						for (int i = 0; i < tableModel.getElements().get( row ).size(); i++)
+							if ( tableModel.getElements().get( row ).get( i ).isPresent())
+							{
+								foundFirstView = true;
+								firstSelectedVD = tableModel.getElements().get( row ).get( i );
+								break;
+							}
 
 					// FIXME: some generics fixes necessary to avoid this ugly cast (which is necessary for maven to compile)
 					selectedRows.add( (List<BasicViewDescription< ? extends BasicViewSetup >>) (Object) tableModel.getElements().get( row ) );
