@@ -154,7 +154,10 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 
 				if ( expert )
 				{
-					
+					// by default the registration suggests what is selected in the dialog
+					Interest_Point_Detection.defaultGroupTiles = groupTiles;
+					Interest_Point_Detection.defaultGroupIllums = groupIllums;
+					new Interest_Point_Detection().detectInterestPoints( data, filteringAndGrouping.getFilteredViews() );
 				}
 				else
 				{
