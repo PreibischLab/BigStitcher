@@ -252,4 +252,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 		return decorated.getFilters();
 	}
 
+	@Override
+	public void updateElements() { decorated.updateElements(); }
+
 }
