@@ -21,40 +21,147 @@
  */
 package net.preibisch.stitcher.gui.popup.icp;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+
 import javax.swing.JComponent;
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.sequence.Channel;
+import mpicbg.spim.data.sequence.Illumination;
+import mpicbg.spim.data.sequence.Tile;
+import mpicbg.spim.io.IOFunctions;
+import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Detection;
+import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
+import net.preibisch.stitcher.gui.StitchingUIHelper;
 
 public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 {
 	private static final long serialVersionUID = 1L;
 
-	private SimpleICPPopup simple;
-	private AdvancedICPPopup advanced;
+	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 
 	public RefineWithICPPopup( String description )
 	{
 		super( description );
 
-		this.simple = new SimpleICPPopup( "Wizard ..." );
-		this.advanced = new AdvancedICPPopup( "Expert ..." );
+		final JMenuItem simpleICP = new JMenuItem( "Wizard ..." );
+		final JMenuItem advancedICP = new JMenuItem( "Expert ..." );
 
-		this.add( simple );
-		this.add( advanced );
+		simpleICP.addActionListener( new ICPListener( false ) );
+		advancedICP.addActionListener( new ICPListener( true ) );
+
+		this.add( simpleICP );
+		this.add( advancedICP );
 	}
 
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
 	{
-		simple.setExplorerWindow( panel );
-		advanced.setExplorerWindow( panel );
+		this.panel = panel;
 
 		return this;
 	}
 
+	public class ICPListener implements ActionListener
+	{
+		final boolean expert;
+
+		public ICPListener( final boolean expert ) { this.expert = expert; }
+
+		@Override
+		public void actionPerformed( ActionEvent e )
+		{
+			if ( panel == null )
+			{
+				IOFunctions.println( "Panel not set for " + this.getClass().getSimpleName() );
+				return;
+			}
+
+			if ( !SpimData2.class.isInstance( panel.getSpimData() ) )
+			{
+				IOFunctions.println( "Only supported for SpimData2 objects: " + this.getClass().getSimpleName() );
+				return;
+			}
+
+			if (!GroupedRowWindow.class.isInstance( panel ))
+			{
+				IOFunctions.println( "Only supported for GroupedRowWindow panels: " + this.getClass().getSimpleName() );
+				return;
+			}
+
+			new Thread( () ->
+			{
+				// get selected groups, filter missing views, get all present and selected vids
+				final SpimData2 data = (SpimData2) panel.getSpimData();
+				@SuppressWarnings("unchecked")
+				FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
+				SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< SpimData2 >( (SpimData2) panel.getSpimData() );
+
+				if (!expert)
+				{
+					// use whatever is selected in panel as filters
+					filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
+				}
+				else
+				{
+					filteringAndGrouping.askUserForFiltering( panelFG );
+					if (filteringAndGrouping.getDialogWasCancelled())
+						return;
+				}
+	
+				if (!expert)
+				{
+					// get the grouping from panel and compare Tiles
+					panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
+					filteringAndGrouping.addComparisonAxis( Tile.class );
+	
+					// compare by Channel if channels were ungrouped in UI
+					if (!panelFG.getTableModel().getGroupingFactors().contains( Channel.class ))
+						filteringAndGrouping.addComparisonAxis( Channel.class );
+	
+					// compare by Illumination if illums were ungrouped in UI
+					if (!panelFG.getTableModel().getGroupingFactors().contains( Illumination.class ))
+						filteringAndGrouping.addComparisonAxis( Illumination.class );
+				}
+				else
+				{
+					filteringAndGrouping.addComparisonAxis( Tile.class );
+					filteringAndGrouping.askUserForGrouping( panelFG );
+					if (filteringAndGrouping.getDialogWasCancelled())
+						return;
+				}
+
+				if ( StitchingUIHelper.allViews2D( filteringAndGrouping.getFilteredViews() ) )
+				{
+					IOFunctions.println( "ICP refinement is currenty not supported for 2D: " + this.getClass().getSimpleName() );
+					return;
+				}
+
+				boolean groupTiles = filteringAndGrouping.getGroupingFactors().contains( Tile.class ); // always false?
+				boolean groupIllums = filteringAndGrouping.getGroupingFactors().contains( Illumination.class );
+				boolean groupChannels = filteringAndGrouping.getGroupingFactors().contains( Channel.class );
+
+				if ( expert )
+				{
+					
+				}
+				else
+				{
+					
+				}
+			}).start();
+		}
+		
+	}
 }
