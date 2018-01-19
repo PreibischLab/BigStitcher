@@ -28,6 +28,7 @@ import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
@@ -96,6 +97,9 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 
 		for ( Pair<Group<ViewId>, Group<ViewId>> p: activeLinks)
 		{
+			p.getA().filterMissingViews( spimData.getSequenceDescription().getMissingViews().getMissingViews() );
+			p.getB().filterMissingViews( spimData.getSequenceDescription().getMissingViews().getMissingViews() );
+
 			// local coordinates of views, without BDV transform 
 			final double[] lPos1 = new double[ 3 ];
 			final double[] lPos2 = new double[ 3 ];
@@ -118,10 +122,10 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 			AffineTransform3D vt2 = spimData.getViewRegistrations().getViewRegistration( p.getB().iterator().next() ).getModel();
 			
 			boolean overlaps = SimpleBoundingBoxOverlap.overlaps( SimpleBoundingBoxOverlap.getBoundingBox(	vdA.getViewSetup(), vrA ), SimpleBoundingBoxOverlap.getBoundingBox( vdB.getViewSetup(), vrB ) );
-	
+
 			if (!overlaps)
 				continue;
-			
+
 			final AffineTransform3D transform = new AffineTransform3D();
 			transform.preConcatenate( viewerTransform );
 
