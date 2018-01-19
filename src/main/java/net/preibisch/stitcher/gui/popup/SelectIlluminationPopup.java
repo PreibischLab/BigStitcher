@@ -27,6 +27,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -203,6 +204,21 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		// get grouped views and filter out missing views
 		final List< Group< BasicViewDescription< ? > > > groupedViews = grouping.getGroupedViews( true );
 		groupedViews.forEach( g -> SpimData2.filterMissingViews( data, g.getViews() ) );
+
+		// sort by the first viewid
+		Collections.sort( groupedViews, new Comparator< Group< BasicViewDescription< ? > > >()
+		{
+			@Override
+			public int compare(
+					Group< BasicViewDescription< ? > > o1,
+					Group< BasicViewDescription< ? > > o2 )
+			{
+				if ( o1 == null || o2 == null || o1.size() == 0 || o2.size() == 0 )
+					return 	0;
+				else
+					return Group.getViewsSorted( o1.getViews() ).get( 0 ).compareTo( Group.getViewsSorted( o2.getViews() ).get( 0 ) );
+			}
+		} );
 
 		// multithreaded best illuination determination
 		List< Callable< ViewId > > tasks = new ArrayList<>();

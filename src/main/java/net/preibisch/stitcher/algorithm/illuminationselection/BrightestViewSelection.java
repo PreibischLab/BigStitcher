@@ -21,8 +21,8 @@
  */
 package net.preibisch.stitcher.algorithm.illuminationselection;
 
-import java.sql.Date;
 import java.util.Collection;
+import java.util.Date;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
@@ -68,12 +68,13 @@ public class BrightestViewSelection extends BasicViewSelection<ViewId>
 			{
 				MultiResolutionSetupImgLoader< ? > setupImgLoader = mrImgLoader.getSetupImgLoader( view.getViewSetupId() );
 
-				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Evaluating view " + Group.pvid( view ) + " at resolution " + Util.printCoordinates( setupImgLoader.getMipmapResolutions()[ setupImgLoader.getMipmapResolutions().length - 1 ] ) );
-
 				RandomAccessibleInterval< T > image = (RandomAccessibleInterval< T >) setupImgLoader.getImage( view.getTimePointId(), setupImgLoader.getMipmapResolutions().length - 1 );
 
 				IterableInterval< T > iterableImg = Views.iterable( image );
 				double mean = AdjustInput.sumImg( iterableImg ) / (double)iterableImg.size();
+
+				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Evaluated view " + Group.pvid( view ) + 
+						" at resolution " + Util.printCoordinates( setupImgLoader.getMipmapResolutions()[ setupImgLoader.getMipmapResolutions().length - 1 ] ) + ": " + mean );
 
 				if (currentBest == null)
 				{
@@ -91,12 +92,12 @@ public class BrightestViewSelection extends BasicViewSelection<ViewId>
 		{
 			for (ViewId view : views)
 			{
-				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Evaluating view " + Group.pvid( view ) + " at full resolution (no multiresolution pyramid available)." );
-
 				RandomAccessibleInterval< T > image = (RandomAccessibleInterval< T >) imgLoader.getSetupImgLoader( view.getViewSetupId() ).getImage( view.getTimePointId() );
 
 				IterableInterval< T > iterableImg = Views.iterable( image );
 				double mean = AdjustInput.sumImg( iterableImg ) / (double)iterableImg.size();
+
+				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Evaluated view " + Group.pvid( view ) + " at full resolution: " + mean );
 
 				if (currentBest == null)
 				{
