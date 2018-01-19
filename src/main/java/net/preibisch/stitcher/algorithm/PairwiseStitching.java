@@ -194,9 +194,7 @@ public class PairwiseStitching
 			subpixelT.set( subpixelOffset[d], d, nFull );
 		resFull.preConcatenate( subpixelT );
 
-		// TODO: more meaningful "quality measure" than binary didConverge
-		// TODO: return null if no convergence
-		return new ValuePair<>( resFull, lkAlign.didConverge() ? 1.0 : 0.0 );
+		return new ValuePair<>( resFull, lkAlign.didConverge() ? lkAlign.getCurrentCorrelation(  Views.zeroMin( Views.interval( img2, interval2 ) ) ) : 0.0 );
 	}
 	/**
 	 * The absolute shift of input2 relative to after PCM input1 (without t1 and

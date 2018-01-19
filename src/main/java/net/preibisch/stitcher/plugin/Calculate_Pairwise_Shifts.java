@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import ij.gui.GenericDialog;
@@ -58,6 +59,7 @@ import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPointLists;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.PairwiseResult;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.PairwiseSetup;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
@@ -346,8 +348,10 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 
 			// simple PairwiseSetup with just two groups (fully connected to
 			// each other)
-			final PairwiseSetup< ViewId > setup = new PairwiseSetup< ViewId >( new ArrayList<>( vids ),
-					new HashSet<>( Arrays.asList( pair.getA(), pair.getB() ) ) )
+			Set<Group<ViewId>> groups = new HashSet<>();
+			groups.add( pair.getA() );
+			groups.add( pair.getB() );
+			final PairwiseSetup< ViewId > setup = new PairwiseSetup< ViewId >( new ArrayList<>( vids ), groups )
 			{
 
 				@Override
@@ -387,15 +391,30 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 				ipMap.put( vid, iplOld );
 			}
 
+			final Interest_Point_Registration reg = new Interest_Point_Registration();
 			// run the registration for this pair, skip saving results if it did not work
-			if ( !new Interest_Point_Registration().processRegistration( setup, brp.pwr,
-					InterestpointGroupingType.DO_NOT_GROUP, 0.0, pair.getA().getViews(), null, null, registrationMap,
-					ipMap, brp.labelMap, false ) )
+			if ( !reg.processRegistration( setup, brp.pwr,
+					InterestpointGroupingType.ADD_ALL, 0.0, pair.getA().getViews(), null, null, registrationMap,
+					ipMap, brp.labelMap, true ) )
 				continue;
 
 			// get newest Transformation of groupB (the accumulative transform
 			// determined by registration)
 			final ViewTransform vtB = registrationMap.get( pair.getB().iterator().next() ).getTransformList().get( 0 );
+
+			List< Pair< Pair< ViewId, ViewId >, ? extends PairwiseResult< ? > > > stats = reg.getStatistics();
+
+			// TODO: is this correct?
+			// since the grouped IP are split up again in the statistics, can we just sum inliers & candidates
+			// to get the total cands/inliers. or are we counting some twice?
+			double candidates = 0;
+			double inliers = 0;
+			for (final Pair< Pair< ViewId, ViewId >, ? extends PairwiseResult< ? > > stat : stats)
+			{
+				candidates += stat.getB().getCandidates().size();
+				inliers += stat.getB().getInliers().size();
+			}
+
 
 			final AffineTransform3D result = new AffineTransform3D();
 			result.set( vtB.asAffine3D().getRowPackedCopy() );
@@ -409,14 +428,11 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 					groupListsForOverlap, data.getSequenceDescription(), data.getViewRegistrations() );
 			BoundingBox bbOverlap = bbDet.estimate( "Max Overlap" );
 
-			// TODO: meaningful quality criterion (e.g. inlier ratio ), not just
-			// 1.0
-
 			final double oldTransformHash = PairwiseStitchingResult.calculateHash(
 					data.getViewRegistrations().getViewRegistration( pair.getA().getViews().iterator().next() ),
 					data.getViewRegistrations().getViewRegistration( pair.getA().getViews().iterator().next() ) );
 			data.getStitchingResults().getPairwiseResults().put( pair,
-					new PairwiseStitchingResult<>( pair, bbOverlap, result, 1.0, oldTransformHash ) );
+					new PairwiseStitchingResult<>( pair, bbOverlap, result, inliers/candidates, oldTransformHash ) );
 		}
 
 		return true;

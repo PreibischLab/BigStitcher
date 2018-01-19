@@ -42,6 +42,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.algorithm.phasecorrelation.ImgLib2Util;
+import net.imglib2.algorithm.phasecorrelation.PhaseCorrelation2Util;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgFactory;
 import net.imglib2.img.array.ArrayImgFactory;
@@ -229,6 +230,13 @@ public class Align<T extends RealType< T >>
 					H[i][j] += deriv[i] * deriv[j];
 		}
 		return new Matrix( H ).inverse().getArray();
+	}
+
+	public double getCurrentCorrelation(final RandomAccessibleInterval< T > image)
+	{
+		final RealRandomAccessible< T > interpolated = Views.interpolate( Views.extendBorder( image ), new NLinearInterpolatorFactory< T >() );
+		final RandomAccessible< T > warped = RealViews.affine( interpolated, currentTransform );
+		return PhaseCorrelation2Util.getCorrelation( Views.interval( warped, template ), template );
 	}
 
 	/*
