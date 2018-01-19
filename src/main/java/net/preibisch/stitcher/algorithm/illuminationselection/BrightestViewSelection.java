@@ -21,9 +21,8 @@
  */
 package net.preibisch.stitcher.algorithm.illuminationselection;
 
+import java.sql.Date;
 import java.util.Collection;
-
-import org.scijava.Context;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
@@ -31,12 +30,15 @@ import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import mpicbg.spim.data.sequence.MultiResolutionSetupImgLoader;
 import mpicbg.spim.data.sequence.ViewId;
+import mpicbg.spim.io.IOFunctions;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.RealSum;
+import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 import net.preibisch.mvrecon.process.deconvolution.normalization.AdjustInput;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class BrightestViewSelection extends BasicViewSelection<ViewId>
 {
@@ -64,8 +66,9 @@ public class BrightestViewSelection extends BasicViewSelection<ViewId>
 			
 			for (ViewId view : views)
 			{
-
 				MultiResolutionSetupImgLoader< ? > setupImgLoader = mrImgLoader.getSetupImgLoader( view.getViewSetupId() );
+
+				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Evaluating view " + Group.pvid( view ) + " at resolution " + Util.printCoordinates( setupImgLoader.getMipmapResolutions()[ setupImgLoader.getMipmapResolutions().length - 1 ] ) );
 
 				RandomAccessibleInterval< T > image = (RandomAccessibleInterval< T >) setupImgLoader.getImage( view.getTimePointId(), setupImgLoader.getMipmapResolutions().length - 1 );
 
@@ -88,6 +91,8 @@ public class BrightestViewSelection extends BasicViewSelection<ViewId>
 		{
 			for (ViewId view : views)
 			{
+				IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Evaluating view " + Group.pvid( view ) + " at full resolution (no multiresolution pyramid available)." );
+
 				RandomAccessibleInterval< T > image = (RandomAccessibleInterval< T >) imgLoader.getSetupImgLoader( view.getViewSetupId() ).getImage( view.getTimePointId() );
 
 				IterableInterval< T > iterableImg = Views.iterable( image );
