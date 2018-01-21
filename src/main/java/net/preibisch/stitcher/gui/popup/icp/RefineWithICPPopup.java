@@ -52,10 +52,7 @@ import mpicbg.spim.io.IOFunctions;
 import net.imglib2.util.Pair;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Detection;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
-import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.TransformationModelGUI;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.AdvancedRegistrationParameters;
-import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.GroupParameters;
-import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.GroupParameters.InterestpointGroupingType;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
@@ -80,14 +77,10 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constell
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.GroupedInterestPoint;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.InterestPointGrouping;
-import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.InterestPointGroupingAll;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.InterestPointGroupingMinDistance;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
-import net.preibisch.mvrecon.process.interestpointregistration.pairwise.methods.geometrichashing.GeometricHashingPairwise;
-import net.preibisch.mvrecon.process.interestpointregistration.pairwise.methods.geometrichashing.GeometricHashingParameters;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.methods.icp.IterativeClosestPointPairwise;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.methods.icp.IterativeClosestPointParameters;
-import net.preibisch.mvrecon.process.interestpointregistration.pairwise.methods.ransac.RANSACParameters;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.gui.StitchingUIHelper;
 
@@ -101,7 +94,8 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 	{
 		super( description );
 
-		final JMenuItem simpleICP = new JMenuItem( "Wizard ..." );
+		final JMenuItem simpleICP = new JMenuItem( "Simple (Re-align tiles)" );
+		final JMenuItem simpleICPchannels = new JMenuItem( "Simple (chromatic abberation)" );
 		final JMenuItem advancedICP = new JMenuItem( "Expert ..." );
 
 		simpleICP.addActionListener( new ICPListener( false ) );
@@ -123,7 +117,10 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 	{
 		final boolean expert;
 
-		public ICPListener( final boolean expert ) { this.expert = expert; }
+		public ICPListener( final boolean expert )
+		{
+			this.expert = expert;
+		}
 
 		@Override
 		public void actionPerformed( ActionEvent e )
@@ -222,25 +219,43 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 					// DoG
 					//
 					final String label = "forICP";
-					final DoGParameters dog = new DoGParameters();
+					boolean presentForAll = true;
 
-					dog.imgloader = data.getSequenceDescription().getImgLoader();
-					dog.toProcess = new ArrayList< ViewDescription >();
-					dog.toProcess.addAll( data.getSequenceDescription().getViewDescriptions().values() );
+					for ( final ViewId viewId : viewIds )
+					{
+						if ( data.getViewInterestPoints().getViewInterestPointLists( viewId ).getInterestPointList( label ) == null )
+						{
+							presentForAll = false;
+							break;
+						}
+					}
 
-					dog.downsampleXY = 4;
-					dog.downsampleZ = 2;
-					dog.sigma = 1.4;
-
-					dog.limitDetections = true;
-					dog.maxDetections = 10000;
-					dog.maxDetectionsTypeIndex = 0; // brightest
-
-					dog.showProgress( 0, 1 );
-
-					final HashMap< ViewId, List< InterestPoint > > points = DoG.findInterestPoints( dog );
-
-					InterestPointTools.addInterestPoints( data, label, points, "DoG, sigma=1.4, downsampleXY=4, downsampleZ=2" );
+					if ( !presentForAll )
+					{
+						final DoGParameters dog = new DoGParameters();
+	
+						dog.imgloader = data.getSequenceDescription().getImgLoader();
+						dog.toProcess = new ArrayList< ViewDescription >();
+						dog.toProcess.addAll( data.getSequenceDescription().getViewDescriptions().values() );
+	
+						dog.downsampleXY = 4;
+						dog.downsampleZ = 2;
+						dog.sigma = 1.4;
+	
+						dog.limitDetections = true;
+						dog.maxDetections = 10000;
+						dog.maxDetectionsTypeIndex = 0; // brightest
+	
+						dog.showProgress( 0, 1 );
+	
+						final HashMap< ViewId, List< InterestPoint > > points = DoG.findInterestPoints( dog );
+	
+						InterestPointTools.addInterestPoints( data, label, points, "DoG, sigma=1.4, downsampleXY=4, downsampleZ=2" );
+					}
+					else
+					{
+						IOFunctions.println( "Interestpoint '" + label + "' already defined for all views, using those." );
+					}
 
 					//
 					// ICP
