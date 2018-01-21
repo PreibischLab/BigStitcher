@@ -202,13 +202,13 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 				res.add( new ValuePair< Group<ViewId>, Group<ViewId> >( groupA, groupB ) );
 			}
 		setActiveLinks( res );
-		
 	}
 
 
 	@Override
 	public void updateContent(AbstractSpimData< ? > data)
 	{
+		this.spimData = data;
 	}
 
 
