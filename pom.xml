@@ -194,7 +194,6 @@
 			<!-- NB: dependency:analyze erroneously flags this, but it's required -->
 			<groupId>sc.fiji</groupId>
 			<artifactId>legacy-imglib1</artifactId>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>
