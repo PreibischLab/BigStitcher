@@ -170,7 +170,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	public List< Group< BasicViewDescription< ?  > >> getGroupedViews(boolean filtered)
 	{
 		final List<BasicViewDescription< ? > > ungroupedElements =
-				SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), filtered? filters : new HashMap<>());
+				SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), filtered? filters : new HashMap<>(), false );
 		return Group.combineBy( ungroupedElements, groupingFactors);
 	}
 

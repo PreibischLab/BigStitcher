@@ -347,15 +347,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			}
 
 			if (doGlobalOpt)
-			{
-				// run non-mulithreaded because it would result in a weird display error where only the visible tiles are listed and everything else is white
-				new ExecuteGlobalOpt( this, savedFilteringAndGrouping.requestExpertSettingsForGlobalOpt ).run();
-			}
+				new Thread( new ExecuteGlobalOpt( this, savedFilteringAndGrouping.requestExpertSettingsForGlobalOpt ) ).start();
 
 			// discard the temp. SpimDataFilteringAndGrouping
 			// if we discard it right now, but want to do global opt (which runs asynchronously)
 			// it would not work. therefore, the global optimization will take care of this
 			savedFilteringAndGrouping = null;
+			updateContent();
 		}
 	}
 
@@ -705,14 +703,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				for ( final int row : table.getSelectedRows() )
 				{
 					if (!foundFirstView)
-					for (int i = 0; i < tableModel.getElements().get( row ).size(); i++)
-						if ( firstSelectedVD == null || !firstSelectedVD.isPresent())
-						{
-							foundFirstView = true;
-							firstSelectedVD = tableModel.getElements().get( row ).get( i );
-							break;
-						}
-							
+						for (int i = 0; i < tableModel.getElements().get( row ).size(); i++)
+							if ( tableModel.getElements().get( row ).get( i ).isPresent())
+							{
+								foundFirstView = true;
+								firstSelectedVD = tableModel.getElements().get( row ).get( i );
+								break;
+							}
 
 					// FIXME: some generics fixes necessary to avoid this ugly cast (which is necessary for maven to compile)
 					selectedRows.add( (List<BasicViewDescription< ? extends BasicViewSetup >>) (Object) tableModel.getElements().get( row ) );

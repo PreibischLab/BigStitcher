@@ -57,11 +57,11 @@ public class FourNeighborhoodExtrema
 		ArrayList<T> res = new ArrayList<T>();
 		int[] idxs = new int[lists.size()];
 		boolean[] hasMore = new boolean[lists.size()];
-		boolean allDone = false;
+		boolean allDone = true;
 		
 		for (int i = 0; i < lists.size(); i++){
 			hasMore[i] = lists.get(i).size() > 0;
-			allDone |= !hasMore[i];
+			allDone &= !hasMore[i];
 		}
 		
 		while(!allDone && res.size() < maxN ){

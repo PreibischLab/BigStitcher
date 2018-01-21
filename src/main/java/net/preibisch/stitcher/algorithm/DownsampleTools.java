@@ -36,6 +36,7 @@ import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.RealType;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 
 public class DownsampleTools
@@ -140,7 +141,8 @@ public class DownsampleTools
 
 			IOFunctions.println(
 					"(" + new Date(System.currentTimeMillis()) + "): " +
-					"Using precomputed Multiresolution Images [" + fx + "x" + fy + "x" + fz + "], " +
+					"View " + Group.pvid( vd ) + ", " +
+					"using precomputed Multiresolution Images [" + fx + "x" + fy + "x" + fz + "], " +
 					"Remaining downsampling [" + dsx + "x" + dsy + "x" + dsz + "]" );
 
 			input = (RandomAccessibleInterval< T >) mrImgLoader.getSetupImgLoader( vd.getViewSetupId() ).getFloatImage( vd.getTimePointId(), bestLevel, false, LOAD_COMPLETELY );

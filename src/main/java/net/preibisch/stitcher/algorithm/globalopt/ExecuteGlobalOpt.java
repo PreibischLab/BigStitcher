@@ -121,6 +121,7 @@ public class ExecuteGlobalOpt implements Runnable
 			( (StitchingExplorerPanel< ?, ? >) panel ).setSavedFilteringAndGrouping( null );
 		}
 
+		panel.updateContent();
 		panel.bdvPopup().updateBDV();
 	}
 }

@@ -27,6 +27,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +37,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
@@ -43,8 +45,8 @@ import javax.swing.JMenuItem;
 
 import bdv.BigDataViewer;
 import fiji.util.gui.GenericDialogPlus;
+import ij.IJ;
 import ij.gui.GenericDialog;
-import javassist.bytecode.analysis.Executor;
 import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
@@ -77,7 +79,8 @@ import net.preibisch.stitcher.algorithm.illuminationselection.ViewSelection;
 
 public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindowSetable
 {
-	
+	public static boolean defaultOnlySelection = false;
+	public static boolean defaultVerify = true;
 
 	private FilteredAndGroupedExplorerPanel< ?, ? > panel;
 	
@@ -172,9 +175,9 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 	{
 		final GenericDialogPlus gdpParams = new GenericDialogPlus( "Illumination Selection" );
 		if (showOnlySelectedOption)
-			gdpParams.addCheckbox( "Process only selection", false );
+			gdpParams.addCheckbox( "Process only selection", defaultOnlySelection );
 		if (showPreviewOption)
-			gdpParams.addCheckbox( "Show selection results before applying", true );
+			gdpParams.addCheckbox( "Show selection results before applying", defaultVerify );
 		addViewSelectionQuery( gdpParams );
 
 		gdpParams.showDialog();
@@ -183,9 +186,9 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 			return null;
 
 		// in the default case, we only process selection
-		final boolean limitToSelection = showOnlySelectedOption ? gdpParams.getNextBoolean() : true;
+		final boolean limitToSelection = showOnlySelectedOption ? defaultOnlySelection = gdpParams.getNextBoolean() : true;
 		// in the default case, we do NOT preview
-		final boolean previewResults = showPreviewOption ? gdpParams.getNextBoolean() : false;
+		final boolean previewResults = showPreviewOption ? defaultVerify = gdpParams.getNextBoolean() : false;
 		final ViewSelection< ViewId > viewSelection = getViewSelectionResult( gdpParams, data.getSequenceDescription() );
 
 		final SpimDataFilteringAndGrouping< AbstractSpimData< ? > > grouping =
@@ -202,10 +205,30 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		final List< Group< BasicViewDescription< ? > > > groupedViews = grouping.getGroupedViews( true );
 		groupedViews.forEach( g -> SpimData2.filterMissingViews( data, g.getViews() ) );
 
+		// sort by the first viewid
+		Collections.sort( groupedViews, new Comparator< Group< BasicViewDescription< ? > > >()
+		{
+			@Override
+			public int compare(
+					Group< BasicViewDescription< ? > > o1,
+					Group< BasicViewDescription< ? > > o2 )
+			{
+				if ( o1 == null || o2 == null || o1.size() == 0 || o2.size() == 0 )
+					return 	0;
+				else
+					return Group.getViewsSorted( o1.getViews() ).get( 0 ).compareTo( Group.getViewsSorted( o2.getViews() ).get( 0 ) );
+			}
+		} );
+
 		// multithreaded best illuination determination
 		List< Callable< ViewId > > tasks = new ArrayList<>();
 		List< ViewId > bestViews = new ArrayList<>();
 		ExecutorService service = Executors.newFixedThreadPool(Math.max( 2, Runtime.getRuntime().availableProcessors() ));
+
+		final AtomicInteger progress = new AtomicInteger( 0 );
+		final int numTasks = groupedViews.size();
+
+		IJ.showProgress( 0.0 );
 
 		for (final Group<? extends ViewId > group : groupedViews)
 			tasks.add( new Callable< ViewId >()
@@ -213,7 +236,11 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 				@Override
 				public ViewId call() throws Exception
 				{
-					return viewSelection.getBestView( group.getViews() );
+					final ViewId best = viewSelection.getBestView( group.getViews() );
+
+					IJ.showProgress( (double)progress.incrementAndGet() / numTasks );
+
+					return best;
 				}
 			} );
 		List< Future< ViewId > > futures;
@@ -229,6 +256,8 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 			e.printStackTrace();
 		}
 		service.shutdown();
+
+		IJ.showProgress( 1.0 );
 
 		final List< List< BasicViewDescription< ? > > > groupedViewsList = groupedViews.stream().map( g -> {
 			final ArrayList<BasicViewDescription< ? >> views = new ArrayList<>(g.getViews());
