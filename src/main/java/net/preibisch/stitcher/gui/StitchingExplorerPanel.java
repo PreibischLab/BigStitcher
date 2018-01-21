@@ -346,15 +346,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			}
 
 			if (doGlobalOpt)
-			{
-				// run non-mulithreaded because it would result in a weird display error where only the visible tiles are listed and everything else is white
-				new ExecuteGlobalOpt( this, savedFilteringAndGrouping.requestExpertSettingsForGlobalOpt ).run();
-			}
+				new Thread( new ExecuteGlobalOpt( this, savedFilteringAndGrouping.requestExpertSettingsForGlobalOpt ) ).start();
 
 			// discard the temp. SpimDataFilteringAndGrouping
 			// if we discard it right now, but want to do global opt (which runs asynchronously)
 			// it would not work. therefore, the global optimization will take care of this
 			savedFilteringAndGrouping = null;
+			updateContent();
 		}
 	}
 
