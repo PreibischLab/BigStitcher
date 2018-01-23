@@ -58,6 +58,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.Separator;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.CorrespondingInterestPoints;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.InterestPoint;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.InterestPointList;
@@ -88,21 +89,29 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 {
 	private static final long serialVersionUID = 1L;
 
+	public static enum ICPType{ TileRefine, ChromaticAbberation, Expert }
+
 	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 
 	public RefineWithICPPopup( String description )
 	{
 		super( description );
 
-		final JMenuItem simpleICP = new JMenuItem( "Simple (Re-align tiles)" );
+		final JMenuItem simpleICPtiles = new JMenuItem( "Simple (tile registration)" );
 		final JMenuItem simpleICPchannels = new JMenuItem( "Simple (chromatic abberation)" );
 		final JMenuItem advancedICP = new JMenuItem( "Expert ..." );
 
-		simpleICP.addActionListener( new ICPListener( false ) );
-		advancedICP.addActionListener( new ICPListener( true ) );
+		simpleICPtiles.addActionListener( new ICPListener( ICPType.TileRefine ) );
+		simpleICPchannels.addActionListener( new ICPListener( ICPType.ChromaticAbberation ) );
+		advancedICP.addActionListener( new ICPListener( ICPType.Expert ) );
 
-		this.add( simpleICP );
+		this.add( simpleICPtiles );
+		this.add( simpleICPchannels );
 		this.add( advancedICP );
+
+		this.add( new Separator() );
+
+		
 	}
 
 	@Override
@@ -115,11 +124,11 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 
 	public class ICPListener implements ActionListener
 	{
-		final boolean expert;
+		final ICPType icpType;
 
-		public ICPListener( final boolean expert )
+		public ICPListener( final ICPType icpType )
 		{
-			this.expert = expert;
+			this.icpType = icpType;
 		}
 
 		@Override
@@ -151,19 +160,26 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 				FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
 				SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< SpimData2 >( (SpimData2) panel.getSpimData() );
 
-				if (!expert)
-				{
-					// use whatever is selected in panel as filters
-					filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
-				}
-				else
+				if ( icpType == ICPType.Expert )
 				{
 					filteringAndGrouping.askUserForFiltering( panelFG );
 					if (filteringAndGrouping.getDialogWasCancelled())
 						return;
 				}
+				else
+				{
+					// use whatever is selected in panel as filters
+					filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
+				}
 	
-				if (!expert)
+				if ( icpType == ICPType.Expert )
+				{
+					filteringAndGrouping.addComparisonAxis( Tile.class );
+					filteringAndGrouping.askUserForGrouping( panelFG );
+					if (filteringAndGrouping.getDialogWasCancelled())
+						return;
+				}
+				else
 				{
 					// get the grouping from panel and compare Tiles
 					panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
@@ -177,13 +193,6 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 					if (!panelFG.getTableModel().getGroupingFactors().contains( Illumination.class ))
 						filteringAndGrouping.addComparisonAxis( Illumination.class );
 				}
-				else
-				{
-					filteringAndGrouping.addComparisonAxis( Tile.class );
-					filteringAndGrouping.askUserForGrouping( panelFG );
-					if (filteringAndGrouping.getDialogWasCancelled())
-						return;
-				}
 
 				if ( StitchingUIHelper.allViews2D( filteringAndGrouping.getFilteredViews() ) )
 				{
@@ -191,12 +200,14 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 					return;
 				}
 
-				boolean groupTiles = filteringAndGrouping.getGroupingFactors().contains( Tile.class ); // always false?
-				boolean groupIllums = filteringAndGrouping.getGroupingFactors().contains( Illumination.class );
-				boolean groupChannels = filteringAndGrouping.getGroupingFactors().contains( Channel.class );
+				final boolean groupTiles, groupIllums, groupChannels;
 
-				if ( expert )
+				if ( icpType == ICPType.Expert )
 				{
+					groupTiles = filteringAndGrouping.getGroupingFactors().contains( Tile.class ); // always false?
+					groupIllums = filteringAndGrouping.getGroupingFactors().contains( Illumination.class );
+					groupChannels = filteringAndGrouping.getGroupingFactors().contains( Channel.class );
+
 					// by default the registration suggests what is selected in the dialog
 					Interest_Point_Detection.defaultGroupTiles = false;
 					Interest_Point_Detection.defaultGroupIllums = false;
@@ -236,11 +247,14 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 	
 						dog.imgloader = data.getSequenceDescription().getImgLoader();
 						dog.toProcess = new ArrayList< ViewDescription >();
-						dog.toProcess.addAll( data.getSequenceDescription().getViewDescriptions().values() );
+
+						for ( final ViewId viewId : viewIds )
+							dog.toProcess.add( data.getSequenceDescription().getViewDescription( viewId ) );
 	
 						dog.downsampleXY = 4;
 						dog.downsampleZ = 2;
 						dog.sigma = 1.4;
+						dog.threshold = 0.005;
 	
 						dog.limitDetections = true;
 						dog.maxDetections = 10000;
@@ -279,6 +293,19 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 								data.getViewInterestPoints().getViewInterestPoints(),
 								labelMap );
 
+					if ( icpType == ICPType.TileRefine )
+					{
+						groupTiles = false;
+						groupChannels = true;
+						groupIllums = true;
+					}
+					else
+					{
+						groupTiles = true;
+						groupChannels = false;
+						groupIllums = true;
+					}
+
 					// identify groups/subsets
 					final Set< Group< ViewId > > groups = AdvancedRegistrationParameters.getGroups( data, viewIds, groupTiles, groupIllums, groupChannels, false );
 
@@ -314,7 +341,6 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 
 							TransformationTools.storeTransformation( vr, viewId, tile, null, "Automatic ICP Refinement" );
 						}
-
 					}
 				}
 
