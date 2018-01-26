@@ -504,7 +504,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 					fixedViews.add( fixedView );
 					IOFunctions.println( "Removed " + subset.fixViews( fixedViews ).size() + " views due to fixing view tpId=" + fixedView.getTimePointId() + " setupId=" + fixedView.getViewSetupId() );
 
-					HashMap< ViewId, mpicbg.models.Tile< ? extends AbstractModel< ? > > > models;
+					HashMap< ViewId, mpicbg.models.Tile > models;
 
 					if ( Interest_Point_Registration.hasGroups( subsets ) )
 						models = groupedSubset( data, subset, interestpoints, labelMap, icpp, fixedViews );
@@ -517,7 +517,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 					// pre-concatenate models to spimdata2 viewregistrations (from SpimData(2))
 					for ( final ViewId viewId : subset.getViews() )
 					{
-						final mpicbg.models.Tile< ? extends AbstractModel< ? > > tile = models.get( viewId );
+						final mpicbg.models.Tile tile = models.get( viewId );
 						final ViewRegistration vr = data.getViewRegistrations().getViewRegistrations().get( viewId );
 
 						TransformationTools.storeTransformation( vr, viewId, tile, null, transformationDescription );
@@ -531,7 +531,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 		
 	}
 
-	public static final HashMap< ViewId, mpicbg.models.Tile< ? extends AbstractModel< ? > > > pairSubset(
+	public static final HashMap< ViewId, mpicbg.models.Tile > pairSubset(
 			final SpimData2 spimData,
 			final Subset< ViewId > subset,
 			final Map< ViewId, List< InterestPoint > > interestpoints,
@@ -575,7 +575,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 		final PointMatchCreator pmc = new InterestPointMatchCreator( result );
 
 		// run global optimization
-		return GlobalOpt.compute( (Model)icpp.getModel().copy(), pmc, cs, fixedViews, subset.getGroups() );
+		return (HashMap< ViewId, mpicbg.models.Tile >)GlobalOpt.compute( (Model)icpp.getModel().copy(), pmc, cs, fixedViews, subset.getGroups() );
 	}
 
 	public static boolean presentForAll( final String label, final Collection< ? extends ViewId > viewIds, final SpimData2 data )
@@ -603,7 +603,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 		return presentLabels;
 	}
 
-	public static HashMap< ViewId, mpicbg.models.Tile< ? extends AbstractModel< ? > > > groupedSubset(
+	public static HashMap< ViewId, mpicbg.models.Tile > groupedSubset(
 			final SpimData2 spimData,
 			final Subset< ViewId > subset,
 			final Map< ViewId, List< InterestPoint > > interestpoints,
@@ -662,7 +662,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 		final ConvergenceStrategy cs = new ConvergenceStrategy( 10.0 );
 		final PointMatchCreator pmc = new InterestPointMatchCreator( resultG );
 
-		return GlobalOpt.compute( (Model)icpp.getModel().copy(), pmc, cs, fixedViews, groups );
+		return (HashMap< ViewId, mpicbg.models.Tile >)GlobalOpt.compute( (Model)icpp.getModel().copy(), pmc, cs, fixedViews, groups );
 	}
 
 	public static double[] minmax( final SpimData2 spimData, final Collection< ? extends ViewId > viewIdsToProcess )
