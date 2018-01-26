@@ -111,6 +111,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.MaxProjectPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.RemoveTransformationPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ResavePopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.Separator;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.SimpleHyperlinkPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.util.ColorStream;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.filemap2.FileMapImgLoaderLOCI2;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.InterestPointList;
@@ -132,9 +133,9 @@ import net.preibisch.stitcher.gui.popup.CalculatePCPopupExpertBatch;
 import net.preibisch.stitcher.gui.popup.DemoLinkOverlayPopup;
 import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopup;
 import net.preibisch.stitcher.gui.popup.ReadTileConfigurationPopup;
+import net.preibisch.stitcher.gui.popup.RefineWithICPPopup;
 import net.preibisch.stitcher.gui.popup.RegularGridPopup;
 import net.preibisch.stitcher.gui.popup.SelectIlluminationPopup;
-import net.preibisch.stitcher.gui.popup.SimpleHyperlinkPopup;
 import net.preibisch.stitcher.gui.popup.SimpleSubMenu;
 import net.preibisch.stitcher.gui.popup.TranslateGroupManuallyPopup;
 import net.preibisch.stitcher.gui.popup.VerifyLinksPopup;
@@ -815,6 +816,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new OptimizeGloballyPopup() );
 		popups.add( new Separator() );
 
+		popups.add( new LabelPopUp( "Registration Refinement (optional)" ) );
+		popups.add( new RefineWithICPPopup( "Refine with ICP" ) );
+		popups.add( new Separator() );
+
 		popups.add( new LabelPopUp( "Fusion" ) );
 		popups.add( new BoundingBoxPopup() );
 		popups.add( new DisplayFusedImagesPopup() );
@@ -1110,51 +1115,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		}
 	}
 
-	protected void addReCenterShortcut()
-	{
-		table.addKeyListener( new KeyListener()
-		{
-			@Override
-			public void keyPressed(final KeyEvent arg0)
-			{
-				if ( arg0.getKeyChar() == 'r' || arg0.getKeyChar() == 'R' )
-				{
-					final BDVPopup p = bdvPopup();
-					if ( p != null && p.bdv != null && p.bdv.getViewerFrame().isVisible() )
-					{
-						TransformationTools.reCenterViews( p.bdv,
-								selectedRows.stream().collect( 
-										HashSet< BasicViewDescription< ? > >::new,
-										(a, b) -> a.addAll( b ), (a, b) -> a.addAll( b ) ),
-										data.getViewRegistrations() );
-					}
-				}
-			}
-
-			@Override
-			public void keyReleased(final KeyEvent arg0){}
-			@Override
-			public void keyTyped(final KeyEvent arg0){}
-		} );
-	}
-
-	protected void addHelp()
-	{
-		table.addKeyListener( new KeyListener()
-			{
-				public void keyTyped( KeyEvent e ) {}
-	
-				@Override
-				public void keyReleased( KeyEvent e ) {}
-	
-				@Override
-				public void keyPressed( KeyEvent e )
-				{
-					if ( e.getKeyCode() == 112 )
-						new HelpDialog( linkFrame, this.getClass().getResource( "/BigStitcher/Help.html" ) ).setVisible( true );;
-				}
-			} );
-	}
+	protected String getHelpHtml() { return "/BigStitcher/Help.html"; }
 
 	protected void addDemoLink()
 	{
@@ -1203,35 +1164,6 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			@Override
 			public void keyTyped(final KeyEvent arg0)
 			{
-			}
-		} );
-	}
-
-	protected void addAppleA()
-	{
-		table.addKeyListener( new KeyListener()
-		{
-			boolean appleKeyDown = false;
-
-			@Override
-			public void keyTyped(KeyEvent arg0)
-			{
-				if ( appleKeyDown && arg0.getKeyChar() == 'a' )
-					table.selectAll();
-			}
-
-			@Override
-			public void keyReleased(KeyEvent arg0)
-			{
-				if ( arg0.getKeyCode() == 157 )
-					appleKeyDown = false;
-			}
-
-			@Override
-			public void keyPressed(KeyEvent arg0)
-			{
-				if ( arg0.getKeyCode() == 157 )
-					appleKeyDown = true;
 			}
 		} );
 	}

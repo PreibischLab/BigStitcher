@@ -57,12 +57,12 @@ import mpicbg.spim.io.IOFunctions;
 import net.imglib2.util.Pair;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.SimpleHyperlinkPopup;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.FilteredStitchingResults;
 import net.preibisch.stitcher.gui.popup.LinkExplorerRemoveLinkPopup;
-import net.preibisch.stitcher.gui.popup.SimpleHyperlinkPopup;
 
 public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData<?> >
 {

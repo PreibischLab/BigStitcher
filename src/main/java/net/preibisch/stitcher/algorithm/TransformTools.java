@@ -119,28 +119,6 @@ public class TransformTools {
 		return mapBack;
 		
 	}
-	
-	public static String printRealInterval( final RealInterval interval )
-	{
-		String out = "(Interval empty)";
-
-		if ( interval == null || interval.numDimensions() == 0 )
-			return out;
-
-		out = "[" + interval.realMin( 0 );
-
-		for ( int i = 1; i < interval.numDimensions(); i++ )
-			out += ", " + interval.realMin( i );
-
-		out += "] -> [" + interval.realMax( 0 );
-
-		for ( int i = 1; i < interval.numDimensions(); i++ )
-			out += ", " + interval.realMax( i );
-
-		out += "]";
-
-		return out;
-	}
 
 	public static AffineTransform3D createTranslation( final double tx, final double ty, final double tz )
 	{
