@@ -209,6 +209,9 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 		currentMode = mode;
 
 		updateButtons();
+
+		// set the focus to the table, otherwise key-bindings do not work right away
+		panel.table.requestFocus();
 	}
 	
 	public void quit()

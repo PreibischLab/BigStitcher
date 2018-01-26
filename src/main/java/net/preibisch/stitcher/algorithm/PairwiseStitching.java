@@ -57,6 +57,7 @@ import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import net.preibisch.mvrecon.process.interestpointregistration.TransformationTools;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.lucaskanade.Align;
 import net.preibisch.stitcher.algorithm.lucaskanade.LucasKanadeParameters;
@@ -99,12 +100,12 @@ public class PairwiseStitching
 			img2 = Views.dropSingletonDimensions( input2 );
 
 		System.out.println( "1: " + Util.printInterval( img1 ) );
-		System.out.println( "1: " + TransformTools.printRealInterval( transformed1 ) );
+		System.out.println( "1: " + TransformationTools.printRealInterval( transformed1 ) );
 		System.out.println( "2: " + Util.printInterval( img2 ) );
-		System.out.println( "2: " + TransformTools.printRealInterval( transformed2 ) );
+		System.out.println( "2: " + TransformationTools.printRealInterval( transformed2 ) );
 
 		final RealInterval overlap = TransformTools.getOverlap( transformed1, transformed2 );
-		System.out.println( "O: " + TransformTools.printRealInterval( overlap ) );
+		System.out.println( "O: " + TransformationTools.printRealInterval( overlap ) );
 
 		// not overlapping
 		if ( overlap == null )
@@ -116,9 +117,9 @@ public class PairwiseStitching
 		final Interval interval1 = TransformTools.getLocalRasterOverlap( localOverlap1 );
 		final Interval interval2 = TransformTools.getLocalRasterOverlap( localOverlap2 );
 
-		System.out.println( "1: " + TransformTools.printRealInterval( localOverlap1 ) );
+		System.out.println( "1: " + TransformationTools.printRealInterval( localOverlap1 ) );
 		System.out.println( "1: " + Util.printInterval( interval1 ) );
-		System.out.println( "2: " + TransformTools.printRealInterval( localOverlap2 ) );
+		System.out.println( "2: " + TransformationTools.printRealInterval( localOverlap2 ) );
 		System.out.println( "2: " + Util.printInterval( interval2 ) );
 
 		// check whether we have 0-sized (or negative sized) or unequal raster
@@ -242,13 +243,13 @@ public class PairwiseStitching
 
 		// echo intervals
 		System.out.println( "1: " + Util.printInterval( img1 ) );
-		System.out.println( "1: " + TransformTools.printRealInterval( transformed1 ) );
+		System.out.println( "1: " + TransformationTools.printRealInterval( transformed1 ) );
 		System.out.println( "2: " + Util.printInterval( img2 ) );
-		System.out.println( "2: " + TransformTools.printRealInterval( transformed2 ) );
+		System.out.println( "2: " + TransformationTools.printRealInterval( transformed2 ) );
 
 		// get overlap interval
 		final RealInterval overlap = TransformTools.getOverlap( transformed1, transformed2 );
-		System.out.println( "O: " + TransformTools.printRealInterval( overlap ) );
+		System.out.println( "O: " + TransformationTools.printRealInterval( overlap ) );
 
 		// not overlapping -> we wont be able to determine a shift
 		if ( overlap == null )
@@ -263,9 +264,9 @@ public class PairwiseStitching
 		final Interval interval2 = TransformTools.getLocalRasterOverlap( localOverlap2 );
 
 		// echo intervals
-		System.out.println( "1: " + TransformTools.printRealInterval( localOverlap1 ) );
+		System.out.println( "1: " + TransformationTools.printRealInterval( localOverlap1 ) );
 		System.out.println( "1: " + Util.printInterval( interval1 ) );
-		System.out.println( "2: " + TransformTools.printRealInterval( localOverlap2 ) );
+		System.out.println( "2: " + TransformationTools.printRealInterval( localOverlap2 ) );
 		System.out.println( "2: " + Util.printInterval( interval2 ) );
 
 		// check whether we have 0-sized (or negative sized) or unequal raster overlapIntervals
