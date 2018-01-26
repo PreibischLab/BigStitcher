@@ -19,7 +19,7 @@
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
  */
-package net.preibisch.stitcher.gui.popup.icp;
+package net.preibisch.stitcher.gui.popup;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
