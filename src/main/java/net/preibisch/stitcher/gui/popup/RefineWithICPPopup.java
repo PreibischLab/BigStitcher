@@ -48,11 +48,13 @@ import mpicbg.models.RigidModel3D;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.ImgLoader;
 import mpicbg.spim.data.sequence.Tile;
+import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
@@ -101,7 +103,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 {
 	private static final long serialVersionUID = 1L;
 
-	public static enum ICPType{ TileRefine, ChromaticAbberation, Expert }
+	public static enum ICPType{ TileRefine, ChromaticAbberation, All, Expert }
 
 	public static String[] downsampling = new String[]{ "Downsampling 2/2/1", "Downsampling 4/4/2", "Downsampling 8/8/4", "Downsampling 16/16/8" };
 	public static int defaultDownsampling = 1;
@@ -113,6 +115,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 	public static int defaultDistance = 1;
 
 	public static int defaultLabelDialog = 0;
+	public static int defaultChannelChoice = 0;
 	public static double defaultICPError = 5;
 	public static int defaultModel = 2;
 	public static boolean defaultRegularize = true;
@@ -125,10 +128,12 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 
 		final JMenuItem simpleICPtiles = new JMenuItem( "Simple (tile registration)" );
 		final JMenuItem simpleICPchannels = new JMenuItem( "Simple (chromatic abberation)" );
+		final JMenuItem simpleICPall = new JMenuItem( "Simple (all together)" );
 		final JMenuItem advancedICP = new JMenuItem( "Expert ..." );
 
 		simpleICPtiles.addActionListener( new ICPListener( ICPType.TileRefine ) );
 		simpleICPchannels.addActionListener( new ICPListener( ICPType.ChromaticAbberation ) );
+		simpleICPall.addActionListener( new ICPListener( ICPType.All ) );
 		advancedICP.addActionListener( new ICPListener( ICPType.Expert ) );
 
 		this.add( simpleICPtiles );
@@ -303,6 +308,14 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 				// get all parameters
 				//
 				final boolean groupTiles, groupIllums, groupChannels;
+
+				// some channels that should not be grouped
+				final ArrayList< Integer > doNotGroupChannels = new ArrayList<>();
+				// some illuminations that should not be grouped
+				//final ArrayList< Integer > doNotGroupIllums = new ArrayList<>();
+				// some tiles that should not be grouped
+				//final ArrayList< Integer > doNotGroupTiles = new ArrayList<>();
+
 				final String label, transformationDescription;
 				final double maxError;
 				final AbstractModel< ? > transformationModel;
@@ -333,8 +346,17 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 					gd.addChoice( "Transformation model", TransformationModelGUI.modelChoice, TransformationModelGUI.modelChoice[ defaultModel ] );
 					gd.addCheckbox( "Regularize_model", defaultRegularize );
 
+					final ArrayList< Channel > channels = SpimData2.getAllChannelsSorted( data, viewIds );
+					final String[] channelChoice = new String[ 2 + channels.size() ];
+					channelChoice[ 0 ] = "Do not group";
+					channelChoice[ 1 ] = "Group all";
+					for ( int i = 0; i < channels.size(); ++i )
+						channelChoice[ i + 2 ] = "Only channel " + channels.get( i ).getName();
+					if ( defaultChannelChoice >= channelChoice.length )
+						defaultChannelChoice = 0;
+
+					gd.addChoice( "Group_channels", channelChoice, channelChoice[ defaultChannelChoice ] );
 					gd.addCheckbox( "Group_tiles", filteringAndGrouping.getGroupingFactors().contains( Tile.class ) );
-					gd.addCheckbox( "Group_channels", filteringAndGrouping.getGroupingFactors().contains( Channel.class ) );
 					gd.addCheckbox( "Group_illuminations", filteringAndGrouping.getGroupingFactors().contains( Illumination.class ) );
 
 					gd.showDialog();
@@ -351,8 +373,26 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 
 					transformationModel = model.getModel();
 
+					final int channelGroup = gd.getNextChoiceIndex();
+					if ( channelGroup > 0 )
+					{
+						groupChannels = true;
+						if ( channelGroup >= 2 )
+						{
+							for ( int i = 0; i < channels.size(); ++i )
+							{
+								if ( channelGroup - 2 != i )
+									doNotGroupChannels.add( channels.get( i ).getId() );
+								else
+									IOFunctions.println( "Only grouping tiles & illuminations for channel: " + channels.get( i ).getName() );
+							}
+						}
+					}
+					else
+					{
+						groupChannels = false;
+					}
 					groupTiles = gd.getNextBoolean();
-					groupChannels = gd.getNextBoolean();
 					groupIllums = gd.getNextBoolean();
 
 					transformationDescription = "Expert ICP Refinement";
@@ -361,17 +401,41 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 				{
 					if ( icpType == ICPType.TileRefine )
 					{
+						// if we refine tiles only, we just group everything else together
 						groupTiles = false;
 						groupChannels = true;
 						groupIllums = true;
 						transformationDescription = "Tile ICP Refinement";
 					}
-					else // chromatic aberration
+					else if ( icpType == ICPType.ChromaticAbberation )// chromatic aberration
 					{
+						// if we do chromatic abberation correction, we should group the tiles,
+						// but only those of one of the channels so the other channels' tiles can
+						// float all freely around
 						groupTiles = true;
 						groupChannels = false;
 						groupIllums = true;
 						transformationDescription = "Chromatic Aberration Correction (ICP)";
+
+						final ArrayList< Channel > channels = SpimData2.getAllChannelsSorted( data, viewIds );
+						if ( channels.size() <= 1 )
+						{
+							IOFunctions.println( "Only one channel selected, cannot do a chromatic aberration correction." );
+							return;
+						}
+
+						IOFunctions.println( "Only grouping tiles & illuminations for channel: " + channels.get( 0 ).getName() );
+
+						for ( int i = 1; i < channels.size(); ++i )
+							doNotGroupChannels.add( channels.get( i ).getId() );
+					}
+					else //all
+					{
+						// if we refine tiles only, we just group everything else together
+						groupTiles = false;
+						groupChannels = false;
+						groupIllums = false;
+						transformationDescription = "ICP Refinement (over all)";
 					}
 
 					label = "forICP_" + defaultDownsampling + "_" + defaultThreshold;
@@ -485,7 +549,23 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 							labelMap );
 
 				// identify groups/subsets
-				final Set< Group< ViewId > > groups = AdvancedRegistrationParameters.getGroups( data, viewIds, groupTiles, groupIllums, groupChannels, false );
+				Set< Group< ViewId > > groups = AdvancedRegistrationParameters.getGroups( data, viewIds, groupTiles, groupIllums, groupChannels, false );
+
+				if ( doNotGroupChannels.size() > 0 )
+				{
+					IOFunctions.println( "Groups before: ");
+
+					for ( final Group< ViewId > group : groups )
+						IOFunctions.println( group );
+
+					for ( final int channelId : doNotGroupChannels )
+						groups = splitGroupsForChannelOverTile( data, groups, channelId );
+
+					IOFunctions.println( "Groups after splitting: ");
+
+					for ( final Group< ViewId > group : groups )
+						IOFunctions.println( group );
+				}
 
 				final PairwiseSetup< ViewId > setup = new AllToAll<>( viewIds, groups );
 				IOFunctions.println( "Defined pairs, removed " + setup.definePairs().size() + " redundant view pairs." );
@@ -529,6 +609,49 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 			}).start();
 		}
 		
+	}
+
+	/**
+	 * TODO: this is just a hack, we need to change the original splitorcombine method in Group to support not only classes, but classed + ids
+	 * 
+	 * @param spimData
+	 * @param groups
+	 * @param splitChannel
+	 */
+	private static HashSet< Group< ViewId > > splitGroupsForChannelOverTile( final SpimData2 spimData, final Set< Group< ViewId > > groups, final int splitChannel )
+	{
+		final HashSet< Group< ViewId > > newGroups = new HashSet<>();
+
+		final Group< ViewId > remainingGroup = new Group<>();
+		final HashMap< Tile, Group< ViewId > > result = new HashMap<>();
+
+		for ( final Group< ViewId > group : groups )
+		{
+			for ( final ViewId viewId : group.getViews() )
+			{
+				final ViewDescription vd = spimData.getSequenceDescription().getViewDescription( viewId );
+
+				if ( splitChannel == vd.getViewSetup().getChannel().getId() )
+				{
+					// group the still grouped ones (e.g. illuminations)
+					if ( result.containsKey( vd.getViewSetup().getTile() ) )
+						result.get( vd.getViewSetup().getTile() ).getViews().add( viewId );
+					else
+						result.put( vd.getViewSetup().getTile(), new Group<>( viewId ) );
+				}
+				else
+				{
+					remainingGroup.getViews().add( viewId );
+				}
+			}
+		}
+
+		if ( remainingGroup.size() > 0 )
+			newGroups.add( remainingGroup );
+
+		newGroups.addAll( result.values() );
+
+		return newGroups;
 	}
 
 	public static final HashMap< ViewId, mpicbg.models.Tile > pairSubset(
