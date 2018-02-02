@@ -817,7 +817,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Registration Refinement (optional)" ) );
-		popups.add( new RefineWithICPPopup( "Refine with ICP" ) );
+		popups.add( new RefineWithICPPopup( "Refine with ICP", demoLinkOverlay ) );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Fusion" ) );

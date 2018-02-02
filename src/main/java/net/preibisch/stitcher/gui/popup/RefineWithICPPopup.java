@@ -57,6 +57,7 @@ import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Detection;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.TransformationModelGUI;
@@ -72,6 +73,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.Separator;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.CorrespondingInterestPoints;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.InterestPoint;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.InterestPointList;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseLinkImpl;
 import net.preibisch.mvrecon.process.fusion.FusionTools;
 import net.preibisch.mvrecon.process.interestpointdetection.InterestPointTools;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.dog.DoG;
@@ -96,6 +98,7 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.methods.
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.methods.icp.IterativeClosestPointParameters;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.gui.StitchingUIHelper;
+import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 {
@@ -118,11 +121,14 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 	public static int defaultModel = 2;
 	public static boolean defaultRegularize = true;
 
+	DemoLinkOverlay overlay;
 	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 
-	public RefineWithICPPopup( String description )
+	public RefineWithICPPopup( String description, final DemoLinkOverlay overlay )
 	{
 		super( description );
+
+		this.overlay = overlay;
 
 		final JMenuItem simpleICPtiles = new JMenuItem( "Simple (tile registration)" );
 		final JMenuItem simpleICPchannels = new JMenuItem( "Simple (chromatic abberation)" );
@@ -175,7 +181,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 		{
 			final JMenuItem item = new JMenuItem( thresold[ i ] );
 
-			if ( i == defaultDownsampling )
+			if ( i == defaultThreshold )
 				item.setForeground( Color.RED );
 			else
 				item.setForeground( Color.GRAY );
@@ -215,7 +221,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 		{
 			final JMenuItem item = new JMenuItem( distance[ i ] );
 
-			if ( i == defaultDownsampling )
+			if ( i == defaultDistance )
 				item.setForeground( Color.RED );
 			else
 				item.setForeground( Color.GRAY );
@@ -578,6 +584,12 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 				final ArrayList< Subset< ViewId > > subsets = setup.getSubsets();
 				IOFunctions.println( "Identified " + subsets.size() + " subsets " );
 
+				if ( overlay != null )
+				{
+					overlay.getFilteredResults().clear();
+					overlay.getInconsistentResults().clear();
+				}
+
 				for ( final Subset< ViewId > subset : subsets )
 				{
 					// fix view(s)
@@ -589,9 +601,9 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 					HashMap< ViewId, mpicbg.models.Tile > models;
 
 					if ( Interest_Point_Registration.hasGroups( subsets ) )
-						models = groupedSubset( data, subset, interestpoints, labelMap, icpp, fixedViews );
+						models = groupedSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, overlay );
 					else
-						models = pairSubset( data, subset, interestpoints, labelMap, icpp, fixedViews );
+						models = pairSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, overlay );
 
 					if ( models == null )
 						continue;
@@ -662,7 +674,8 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 			final Map< ViewId, List< InterestPoint > > interestpoints,
 			final Map< ViewId, String > labelMap,
 			final IterativeClosestPointParameters icpp,
-			final List< ViewId > fixedViews )
+			final List< ViewId > fixedViews,
+			final DemoLinkOverlay overlay )
 	{
 		final List< Pair< ViewId, ViewId > > pairs = subset.getPairs();
 
@@ -676,14 +689,29 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 			System.out.println( Group.pvid( pair.getA() ) + " <=> " + Group.pvid( pair.getB() ) );
 
 		// compute all pairwise matchings
-		final List< Pair< Pair< ViewId, ViewId >, PairwiseResult< InterestPoint > > > result =
+		final List< Pair< Pair< ViewId, ViewId >, PairwiseResult< InterestPoint > > > resultsPairs =
 				MatcherPairwiseTools.computePairs( pairs, interestpoints, new IterativeClosestPointPairwise< InterestPoint >( icpp ) );
+
+		if ( overlay != null )
+		{
+			final HashSet< Pair< Group< ViewId >, Group< ViewId > > > results = new HashSet<>();
+
+			for ( final Pair< Pair< ViewId, ViewId >, PairwiseResult< InterestPoint > > result : resultsPairs  )
+			{
+				if ( result.getB().getInliers().size() > 0 )
+				{
+					results.add( new ValuePair< Group<ViewId>, Group<ViewId> >( new Group< ViewId >( result.getA().getA() ), new Group< ViewId >( result.getA().getB() ) ) );
+				}
+			}
+
+			overlay.setPairwiseLinkInterface( new PairwiseLinkImpl( results ) );
+		}
 
 		// clear correspondences
 		MatcherPairwiseTools.clearCorrespondences( subset.getViews(), spimData.getViewInterestPoints().getViewInterestPoints(), labelMap );
 
 		// add the corresponding detections and output result
-		for ( final Pair< Pair< ViewId, ViewId >, PairwiseResult< InterestPoint > > p : result )
+		for ( final Pair< Pair< ViewId, ViewId >, PairwiseResult< InterestPoint > > p : resultsPairs )
 		{
 			final ViewId vA = p.getA().getA();
 			final ViewId vB = p.getA().getB();
@@ -697,7 +725,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 		}
 
 		final ConvergenceStrategy cs = new ConvergenceStrategy( icpp.getMaxDistance() );
-		final PointMatchCreator pmc = new InterestPointMatchCreator( result );
+		final PointMatchCreator pmc = new InterestPointMatchCreator( resultsPairs );
 
 		// run global optimization
 		return (HashMap< ViewId, mpicbg.models.Tile >)GlobalOpt.compute( (Model)icpp.getModel().copy(), pmc, cs, fixedViews, subset.getGroups() );
@@ -734,7 +762,8 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 			final Map< ViewId, List< InterestPoint > > interestpoints,
 			final Map< ViewId, String > labelMap,
 			final IterativeClosestPointParameters icpp,
-			final List< ViewId > fixedViews )
+			final List< ViewId > fixedViews,
+			final DemoLinkOverlay overlay )
 	{
 		final List< Pair< Group< ViewId >, Group< ViewId > > > groupedPairs = subset.getGroupedPairs();
 		final Map< Group< ViewId >, List< GroupedInterestPoint< ViewId > > > groupedInterestpoints = new HashMap<>();
@@ -773,15 +802,26 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 			System.out.println();
 		}
 
-		final List< Pair< Pair< Group< ViewId >, Group< ViewId > >, PairwiseResult< GroupedInterestPoint< ViewId > > > > resultGroup =
+		final List< Pair< Pair< Group< ViewId >, Group< ViewId > >, PairwiseResult< GroupedInterestPoint< ViewId > > > > resultsGroups =
 				MatcherPairwiseTools.computePairs( groupedPairs, groupedInterestpoints, new IterativeClosestPointPairwise< GroupedInterestPoint< ViewId > >( icpp ) );
+
+		if ( overlay != null )
+		{
+			final HashSet< Pair< Group< ViewId >, Group< ViewId > > > results = new HashSet<>();
+
+			for ( final Pair< Pair< Group< ViewId >, Group< ViewId > >, PairwiseResult< GroupedInterestPoint< ViewId > > > result : resultsGroups  )
+				if ( result.getB().getInliers().size() > 0 )
+					results.add( result.getA() );
+
+			overlay.setPairwiseLinkInterface( new PairwiseLinkImpl( results ) );
+		}
 
 		// clear correspondences and get a map linking ViewIds to the correspondence lists
 		final Map< ViewId, List< CorrespondingInterestPoints > > cMap = MatcherPairwiseTools.clearCorrespondences( subset.getViews(), spimData.getViewInterestPoints().getViewInterestPoints(), labelMap );
 
 		// add the corresponding detections and output result
 		final List< Pair< Pair< ViewId, ViewId >, PairwiseResult< GroupedInterestPoint< ViewId > > > > resultG =
-				MatcherPairwiseTools.addCorrespondencesFromGroups( resultGroup, spimData.getViewInterestPoints().getViewInterestPoints(), labelMap, cMap );
+				MatcherPairwiseTools.addCorrespondencesFromGroups( resultsGroups, spimData.getViewInterestPoints().getViewInterestPoints(), labelMap, cMap );
 
 		// run global optimization
 		final ConvergenceStrategy cs = new ConvergenceStrategy( 10.0 );

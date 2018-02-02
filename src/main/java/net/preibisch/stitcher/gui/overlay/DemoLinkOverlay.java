@@ -27,21 +27,22 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.sequence.ViewId;
+import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.ui.OverlayRenderer;
 import net.imglib2.ui.TransformListener;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
-import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseLinkInterface;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
 import net.preibisch.stitcher.algorithm.globalopt.TransformationTools;
@@ -49,7 +50,7 @@ import net.preibisch.stitcher.algorithm.globalopt.TransformationTools;
 public class DemoLinkOverlay implements OverlayRenderer, TransformListener< AffineTransform3D >, SelectedViewDescriptionListener< AbstractSpimData<?> >
 {
 	final private ArrayList< Pair< Group< ViewId >, Group< ViewId > > > lastFilteredResults, lastInconsistentResults;
-	private StitchingResults stitchingResults;
+	private PairwiseLinkInterface results;
 	private AbstractSpimData< ? > spimData;
 	private AffineTransform3D viewerTransform;
 	public boolean isActive;
@@ -59,15 +60,20 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 	final Stroke thin = new BasicStroke( 1 );
 	final Stroke thick = new BasicStroke( 1.5f );
 
-	public DemoLinkOverlay( StitchingResults res, AbstractSpimData< ? > spimData )
+	public DemoLinkOverlay( PairwiseLinkInterface results, AbstractSpimData< ? > spimData )
 	{
-		this.stitchingResults = res;
+		this.results = results;
 		this.spimData = spimData;
 		this.lastFilteredResults = new ArrayList<>();
 		this.lastInconsistentResults = new ArrayList<>();
 		viewerTransform = new AffineTransform3D();
 		isActive = false;
 		activeLinks = new ArrayList<>();
+	}
+
+	public void setPairwiseLinkInterface( final PairwiseLinkInterface pli )
+	{
+		this.results = pli;
 	}
 
 	// called by FilteredStitchingResults
@@ -97,8 +103,11 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 
 		for ( Pair<Group<ViewId>, Group<ViewId>> p: activeLinks)
 		{
-			p.getA().filterMissingViews( spimData.getSequenceDescription().getMissingViews().getMissingViews() );
-			p.getB().filterMissingViews( spimData.getSequenceDescription().getMissingViews().getMissingViews() );
+			if ( spimData.getSequenceDescription().getMissingViews() != null )
+			{
+				p.getA().filterMissingViews( spimData.getSequenceDescription().getMissingViews().getMissingViews() );
+				p.getB().filterMissingViews( spimData.getSequenceDescription().getMissingViews().getMissingViews() );
+			}
 
 			// local coordinates of views, without BDV transform 
 			final double[] lPos1 = new double[ 3 ];
@@ -146,7 +155,7 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 
 			if ( Graphics2D.class.isInstance( g ) )
 				g2d = (Graphics2D) g;
-
+			/*
 			if ( lastFilteredResults.contains( p ) || lastFilteredResults.contains( TransformationTools.reversePair( p ) ) )
 			{
 				g.setColor( Color.ORANGE );
@@ -157,7 +166,29 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 				g.setColor( Color.RED );
 				if ( g2d != null ) g2d.setStroke( dashed );
 			}
-			else if ( stitchingResults.getPairwiseResults().containsKey( p ) || stitchingResults.getPairwiseResults().containsKey( TransformationTools.reversePair( p ) ) )
+			else if ( results.getPairwiseLinks().contains( p ) || results.getPairwiseLinks().contains( TransformationTools.reversePair( p ) ) )
+			{
+				g.setColor( Color.GREEN );
+				if ( g2d != null ) g2d.setStroke( thick );
+			}
+			else
+			{
+				g.setColor( Color.GRAY );
+				if ( g2d != null ) g2d.setStroke( dashed );
+			}
+			*/
+
+			if ( overlapsWith( p, lastFilteredResults ) )
+			{
+				g.setColor( Color.ORANGE );
+				if ( g2d != null ) g2d.setStroke( dashed );
+			}
+			else if ( overlapsWith( p, lastInconsistentResults ) )
+			{
+				g.setColor( Color.RED );
+				if ( g2d != null ) g2d.setStroke( dashed );
+			}
+			else if ( overlapsWith( p, results.getPairwiseLinks() ) )
 			{
 				g.setColor( Color.GREEN );
 				if ( g2d != null ) g2d.setStroke( thick );
@@ -170,6 +201,48 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 
 			g.drawLine((int) gPos1[0],(int) gPos1[1],(int) gPos2[0],(int) gPos2[1] );
 		}
+	}
+
+	public static boolean overlapsWith( final Pair<Group<ViewId>, Group<ViewId>> p1, final Collection< Pair<Group<ViewId>, Group<ViewId>>> pairList )
+	{
+		for ( final Pair<Group<ViewId>, Group<ViewId>> p2 : pairList )
+			if ( overlapsWith( p1, p2 ) )
+				return true;
+
+		return false;
+	}
+
+	public static boolean overlapsWith( final Pair<Group<ViewId>, Group<ViewId>> p1, final Pair<Group<ViewId>, Group<ViewId>> p2 )
+	{
+		boolean overlap1 = false;
+		boolean overlap2 = false;
+
+		for ( final ViewId v1A : p1.getA().getViews() )
+			if ( p2.getA().contains( v1A ) )
+				overlap1 = true;
+
+		for ( final ViewId v1B : p1.getB().getViews() )
+			if ( p2.getB().contains( v1B ) )
+				overlap2 = true;
+
+		if ( overlap1 && overlap2 )
+			return true;
+
+		overlap1 = false;
+		overlap2 = false;
+
+		for ( final ViewId v1A : p1.getA().getViews() )
+			if ( p2.getB().contains( v1A ) )
+				overlap2 = true;
+
+		for ( final ViewId v1B : p1.getB().getViews() )
+			if ( p2.getA().contains( v1B ) )
+				overlap1 = true;
+
+		if ( overlap1 && overlap2 )
+			return true;
+		else
+			return false;
 	}
 
 	public void clearActiveLinks()
