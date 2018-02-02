@@ -48,13 +48,11 @@ import mpicbg.models.RigidModel3D;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.ImgLoader;
 import mpicbg.spim.data.sequence.Tile;
-import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
@@ -106,7 +104,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 	public static enum ICPType{ TileRefine, ChromaticAbberation, All, Expert }
 
 	public static String[] downsampling = new String[]{ "Downsampling 2/2/1", "Downsampling 4/4/2", "Downsampling 8/8/4", "Downsampling 16/16/8" };
-	public static int defaultDownsampling = 1;
+	public static int defaultDownsampling = 2;
 
 	public static String[] thresold = new String[]{ "Low Threshold (many points)", "Average Threshold", "High Threshold (few points)" };
 	public static int defaultThreshold = 1;
@@ -458,6 +456,13 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 							dog.toProcess = new ArrayList< ViewDescription >();
 							dog.toProcess.addAll( group.getViews() );
 
+							if ( defaultThreshold == 0 )
+								dog.threshold = 0.001;
+							else if ( defaultThreshold == 1 )
+								dog.threshold = 0.0075;
+							else //if ( defaultThreshold == 2 )
+								dog.threshold = 0.015;
+
 							switch ( defaultDownsampling )
 							{
 								case 0:
@@ -482,18 +487,14 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 									break;
 							}
 
-							dog.sigma = 1.4;
-
-							if ( defaultThreshold == 0 )
-								dog.threshold = 0.00075;
-							else if ( defaultThreshold == 1 )
-								dog.threshold = 0.005;
-							else //if ( defaultThreshold == 2 )
-								dog.threshold = 0.01;
+							dog.sigma = 1.6;
 
 							dog.limitDetections = true;
 							dog.maxDetections = 10000;
 							dog.maxDetectionsTypeIndex = 0; // brightest
+
+							IOFunctions.println( "DoG Threshold = " + dog.threshold );
+							IOFunctions.println( "DoG Sigma = " + dog.sigma );
 
 							dog.showProgress( 0, 1 );
 
