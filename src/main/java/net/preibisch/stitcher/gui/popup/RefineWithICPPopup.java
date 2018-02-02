@@ -138,6 +138,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 
 		this.add( simpleICPtiles );
 		this.add( simpleICPchannels );
+		this.add( simpleICPall );
 		this.add( advancedICP );
 
 		this.add( new Separator() );
