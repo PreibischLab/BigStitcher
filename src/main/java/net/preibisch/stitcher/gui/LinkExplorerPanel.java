@@ -216,18 +216,19 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 
 		final SimpleDocumentListener absShiftCallback = new SimpleDocumentListener( ev -> {
 
-			double[] maxShift = new double[3];
-			Arrays.fill( maxShift, Double.MAX_VALUE );
+			// negative means at least that shift, positive means less than this shift is allowed
+			double[] minMaxShift = new double[3];
+			Arrays.fill( minMaxShift, Double.MAX_VALUE );
 
-			try { maxShift[0] = Double.parseDouble( shiftXTextField.getText() ); }
+			try { minMaxShift[0] = Double.parseDouble( shiftXTextField.getText() ); }
 			catch (Exception e1) {}
-			try { maxShift[1] = Double.parseDouble( shiftYTextField.getText() ); }
+			try { minMaxShift[1] = Double.parseDouble( shiftYTextField.getText() ); }
 			catch (Exception e1) {}
-			try { maxShift[2] = Double.parseDouble( shiftZTextField.getText() ); }
+			try { minMaxShift[2] = Double.parseDouble( shiftZTextField.getText() ); }
 			catch (Exception e1) {}
 
 			if (absoluteShiftCB.isSelected())
-				model.getFilteredResults().addFilter( new FilteredStitchingResults.AbsoluteShiftFilter( maxShift ) );
+				model.getFilteredResults().addFilter( new FilteredStitchingResults.AbsoluteShiftFilter( minMaxShift ) );
 
 			model.fireTableDataChanged();
 			parent.updateBDVPreviewMode();

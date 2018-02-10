@@ -68,10 +68,10 @@ public class FilteredStitchingResults
 
 	public static class AbsoluteShiftFilter implements Filter
 	{
-		private final double[] maxShift;
-		public AbsoluteShiftFilter(double[] maxShift)
+		private final double[] minMaxShift;
+		public AbsoluteShiftFilter(double[] minMaxShift)
 		{
-			this.maxShift = maxShift;
+			this.minMaxShift = minMaxShift;
 		}
 
 		@Override
@@ -79,9 +79,15 @@ public class FilteredStitchingResults
 		{
 			double[] v = new double[result.getTransform().numDimensions()];
 			result.getTransform().apply( v, v );
+
+			// negative means at least that shift, positive means less than this shift is allowed
 			for (int d = 0; d < v.length; d++)
-				if (Math.abs( v[d] ) > maxShift[d])
+			{
+				if ( minMaxShift[d] >= 0 && Math.abs( v[d] ) > minMaxShift[d] )
 					return false;
+				if ( minMaxShift[d] < 0 && Math.abs( v[d] ) < -minMaxShift[d] )
+					return false;
+			}
 			return true;
 		}
 	}
