@@ -123,6 +123,7 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constell
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.globalopt.ExecuteGlobalOpt;
 import net.preibisch.stitcher.algorithm.globalopt.TransformationTools;
+import net.preibisch.stitcher.gui.bdv.BDVFlyThrough;
 import net.preibisch.stitcher.gui.bdv.BDVVisibilityHandlerNeighborhood;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 import net.preibisch.stitcher.gui.overlay.LinkOverlay;
@@ -511,6 +512,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		addColorMode(); // 'c' or 'C'
 		addDemoLink(); // 'l' or 'L'
 		addHelp(); // F1
+
+		addScreenshot(); // 's' or 'S'
 
 		table.setPreferredScrollableViewportSize( new Dimension( 750, 300 ) );
 		table.getColumnModel().getColumn( 0 ).setPreferredWidth( 20 );
@@ -1121,6 +1124,37 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	{
 		table.addKeyListener( this.demoLinkOverlayPopup );
 		this.demoLinkOverlayPopup.setExplorerWindow( this );
+	}
+
+	protected void addScreenshot()
+	{
+		table.addKeyListener( new KeyListener()
+		{
+			@Override
+			public void keyPressed(final KeyEvent arg0)
+			{
+				if ( arg0.getKeyChar() == 's' || arg0.getKeyChar() == 'S' )
+					new Thread( new Runnable()
+					{
+						@Override
+						public void run()
+						{ BDVFlyThrough.record( bdvPopup().bdv, true ); }
+					} ).start();
+					
+
+				if ( arg0.getKeyChar() == 'a' )
+					BDVFlyThrough.addCurrentViewerTransform( bdvPopup().bdv );
+
+				if ( arg0.getKeyChar() == 'x' )
+					BDVFlyThrough.clearAllViewerTransform();
+			}
+
+			@Override
+			public void keyReleased(final KeyEvent arg0) {}
+
+			@Override
+			public void keyTyped(final KeyEvent arg0){}
+		} );
 	}
 
 	protected void addColorMode()
