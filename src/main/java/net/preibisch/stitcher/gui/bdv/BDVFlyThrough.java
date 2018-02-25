@@ -11,6 +11,7 @@ import javax.imageio.ImageIO;
 import bdv.BigDataViewer;
 import bdv.cache.CacheControl;
 import bdv.viewer.ViewerPanel;
+import bdv.viewer.overlay.MultiBoxOverlayRenderer;
 import bdv.viewer.overlay.ScaleBarOverlayRenderer;
 import bdv.viewer.render.MultiResolutionRenderer;
 import bdv.viewer.state.ViewerState;
@@ -38,7 +39,7 @@ public class BDVFlyThrough
 		IOFunctions.println( "Cleared all transforms." );
 	}
 
-	public static void record( final BigDataViewer bdv, final boolean showScaleBar )
+	public static void record( final BigDataViewer bdv, final boolean showScaleBar, final boolean showBoxes )
 	{
 		IOFunctions.println( "Recording images for " + viewerTransforms.size() + " transforms, interpolated with " + interpolateSteps + " steps in between ..." );
 
@@ -60,6 +61,7 @@ public class BDVFlyThrough
 		renderState.setViewerTransform( affine );
 
 		final ScaleBarOverlayRenderer scalebar = showScaleBar ? new ScaleBarOverlayRenderer() : null;
+		final MultiBoxOverlayRenderer boxRender = showBoxes ? new MultiBoxOverlayRenderer( width, height ) : null;
 
 		final MyRenderTarget target = new MyRenderTarget( width, height );
 		final MultiResolutionRenderer renderer = new MultiResolutionRenderer(
@@ -85,6 +87,14 @@ public class BDVFlyThrough
 				g2.setClip( 0, 0, width, height );
 				scalebar.setViewerState( renderState );
 				scalebar.paint( g2 );
+			}
+
+			if ( boxRender != null )
+			{
+				final Graphics2D g2 = target.bi.createGraphics();
+				g2.setClip( 0, 0, width, height );
+				boxRender.setViewerState( renderState );
+				boxRender.paint( g2 );
 			}
 
 			try

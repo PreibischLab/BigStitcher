@@ -1138,7 +1138,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					{
 						@Override
 						public void run()
-						{ BDVFlyThrough.record( bdvPopup().bdv, true ); }
+						{ BDVFlyThrough.record( bdvPopup().bdv, true, true ); }
 					} ).start();
 					
 
