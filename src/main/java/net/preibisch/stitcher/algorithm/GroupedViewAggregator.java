@@ -94,6 +94,20 @@ public class GroupedViewAggregator
 		{
 			Set<Class<? extends Entity>> groupingSet = new HashSet<>();
 			groupingSet.add( entityClass );
+			
+
+			// TOOD: BUG, combineby is not enough
+			// TODO: this doesn't work if we have two channels that we want to average that come from different illuminations, then it puts it into two different groups
+			// TODO: this works, if we have two channels that come from the same illumination
+
+			// this solves it, but is a hack
+			if ( actionType == ActionType.AVERAGE && Channel.class.equals( entityClass ) )
+			{
+				System.out.println( "adding illuminations." );
+				groupingSet.add( Illumination.class );
+			}
+			
+			// TODO: this also fails if we pick a specific channel, it does not average over illuminations first, don't know why
 			List< Group< BasicViewDescription< ? > > > grouped = 
 					Group.combineBy( new ArrayList<>(input.keySet()), groupingSet );
 			
@@ -118,8 +132,9 @@ public class GroupedViewAggregator
 					resG = average(gl, rais);
 				
 				BasicViewDescription< ? > fistVD = gl.get( 0 );
-				
-				res.put( fistVD, resG );				
+
+				if ( resG != null )
+					res.put( fistVD, resG );				
 			}
 						
 			return res;
@@ -300,7 +315,6 @@ public class GroupedViewAggregator
 		return map.values().iterator().next();
 		
 	}
-	
 	
 	public static void main(String[] args)
 	{
