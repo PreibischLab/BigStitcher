@@ -107,11 +107,23 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 						return;
 					}
 
+					PairwiseStitchingParameters params = null;
+					LucasKanadeParameters LKParams = null;
+					if (method == Method.PHASECORRELATION)
+						params = simple ? new PairwiseStitchingParameters() : PairwiseStitchingParameters.askUserForParameters();
+					if (method == Method.LUCASKANADE)
+						LKParams = LucasKanadeParameters.askUserForParameters();
+
+					if (params == null && LKParams == null)
+						return;
+
+					final boolean expertGrouping = method == Method.PHASECORRELATION ? params.showExpertGrouping : LKParams.showExpertGrouping;
+
 					@SuppressWarnings("unchecked")
 					FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
 					SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< SpimData2 >( (SpimData2) panel.getSpimData() );
 
-					if (simple)
+					if (simple || !expertGrouping)
 					{
 						// use whatever is selected in panel as filters
 						filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
@@ -123,7 +135,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 							return;
 					}
 
-					if (simple)
+					if (simple || !expertGrouping)
 					{
 						// get the grouping from panel and compare Tiles
 						panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));
@@ -163,13 +175,6 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					long[] dsFactors = StitchingUIHelper.askForDownsampling( panel.getSpimData(), allViews2D );
 					if (dsFactors == null)
 						return;
-
-					PairwiseStitchingParameters params = null;
-					LucasKanadeParameters LKParams = null;
-					if (method == Method.PHASECORRELATION)
-						params = simple ? new PairwiseStitchingParameters() : PairwiseStitchingParameters.askUserForParameters();
-					if (method == Method.LUCASKANADE)
-						LKParams = LucasKanadeParameters.askUserForParameters();
 
 					if (method == Method.PHASECORRELATION)
 						Calculate_Pairwise_Shifts.processPhaseCorrelation( (SpimData2) panel.getSpimData(), filteringAndGrouping, params, dsFactors );

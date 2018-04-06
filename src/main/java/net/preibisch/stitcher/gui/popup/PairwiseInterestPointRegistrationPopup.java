@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -89,26 +90,28 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 
 	private JMenuItem withDetection;
 	private JMenuItem withoutDetection;
+	private JCheckBoxMenuItem expertGrouping;
 
 	private boolean wizardMode;
-	private boolean expertGrouping;
 
-	public PairwiseInterestPointRegistrationPopup(String description, boolean wizardMode, boolean expertGrouping)
+	public PairwiseInterestPointRegistrationPopup(String description, boolean wizardMode )
 	{
 		super( description );
 		this.addActionListener( new MyActionListener(false) );
 
 		this.wizardMode = wizardMode;
-		this.expertGrouping = expertGrouping;
 
 		withDetection = new JMenuItem( "With new Interest Points" );
 		withoutDetection = new JMenuItem( "With existing Interest Points" );
+		expertGrouping = new JCheckBoxMenuItem( "Show expert grouping Options", false );
 
 		withDetection.addActionListener( new MyActionListener( false ) );
 		withoutDetection.addActionListener( new MyActionListener( true ) );
 
 		this.add( withDetection );
 		this.add( withoutDetection );
+		this.addSeparator();
+		this.add( expertGrouping );
 
 		this.addMenuListener( new MenuListener()
 		{
@@ -190,7 +193,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 				FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
 				SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< SpimData2 >( (SpimData2) panel.getSpimData() );
 
-				if (!expertGrouping)
+				if (!expertGrouping.isSelected())
 				{
 					// use whatever is selected in panel as filters
 					filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );
@@ -202,7 +205,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 						return;
 				}
 
-				if (!expertGrouping)
+				if (!expertGrouping.isSelected())
 				{
 					// get the grouping from panel and compare Tiles
 					panelFG.getTableModel().getGroupingFactors().forEach( g -> filteringAndGrouping.addGroupingFactor( g ));

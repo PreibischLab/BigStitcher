@@ -54,7 +54,7 @@ public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindow
 			
 		phaseCorr = new CalculatePCPopup( wizardMode ? "Phase Correlation" : "Phase Correlation (expert)", false, Method.PHASECORRELATION, wizardMode );
 		lucasKanade = new CalculatePCPopup( "Lucas-Kanade", false, Method.LUCASKANADE, wizardMode );
-		interestPoint = new PairwiseInterestPointRegistrationPopup( "Interest point based", wizardMode, true );
+		interestPoint = new PairwiseInterestPointRegistrationPopup( "Interest point based", wizardMode );
 
 		if(!wizardMode)
 			this.add(phaseCorrSimple);

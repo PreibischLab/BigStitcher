@@ -41,12 +41,14 @@ public class LucasKanadeParameters
 	public final int maxNumIterations;
 	public final WarpFunctionType modelType;
 	public final double minParameterChange;
+	public final boolean showExpertGrouping;
 
-	public LucasKanadeParameters(WarpFunctionType modelType, int maxNumIterations, double minParameterChange)
+	public LucasKanadeParameters(WarpFunctionType modelType, int maxNumIterations, double minParameterChange, boolean showExpertGrouping)
 	{
 		this.modelType = modelType;
 		this.maxNumIterations = maxNumIterations;
 		this.minParameterChange = minParameterChange;
+		this.showExpertGrouping = showExpertGrouping;
 	}
 
 	/**
@@ -55,7 +57,7 @@ public class LucasKanadeParameters
 	 */
 	public LucasKanadeParameters(WarpFunctionType modelType)
 	{
-		this( modelType, 100, 0.01 );
+		this( modelType, 100, 0.01, false);
 	}
 
 	/**
@@ -80,6 +82,7 @@ public class LucasKanadeParameters
 		gd.addNumericField( "minimum_parameter_change_for_convergence", 0.01, 2, 10, "" );
 		if (askForModelType)
 			gd.addChoice( "transformation_type", modelChoices, modelChoices[0] );
+		gd.addCheckbox( "show_expert_grouping_options", false );
 	}
 
 	public static LucasKanadeParameters getParametersFromGD(final GenericDialog gd, boolean askForModelType)
@@ -99,7 +102,9 @@ public class LucasKanadeParameters
 		else
 			modelType = defaultModelType;
 
-		return new LucasKanadeParameters(modelType, nIterations, minParameterChance);
+		boolean expertGrouping = gd.getNextBoolean();
+
+		return new LucasKanadeParameters(modelType, nIterations, minParameterChance, expertGrouping);
 	}
 
 	/**

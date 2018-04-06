@@ -91,7 +91,7 @@ public class TestGlobalOptTwoRound
 		filteringAndGrouping.addComparisonAxis( Tile.class );
 		filteringAndGrouping.addFilters( views );
 
-		final PairwiseStitchingParameters params = new PairwiseStitchingParameters( 0.1, 5, true, false );
+		final PairwiseStitchingParameters params = new PairwiseStitchingParameters( 0.1, 5, true, false, false );
 
 		final long[] dsFactors = new long[]{ 4, 4, 1 };
 

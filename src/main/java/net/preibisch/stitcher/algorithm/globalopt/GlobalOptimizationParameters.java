@@ -26,6 +26,7 @@ import ij.gui.GenericDialog;
 public class GlobalOptimizationParameters
 {
 	public static int defaultGlobalOpt = 2;
+	public static boolean defaultExpertGrouping = false;
 
 	public enum GlobalOptType
 	{
@@ -43,26 +44,30 @@ public class GlobalOptimizationParameters
 	public GlobalOptType method;
 	public double relativeThreshold;
 	public double absoluteThreshold;
+	public boolean showExpertGrouping;
 
 	public GlobalOptimizationParameters()
 	{
-		this( 2.5, 3.5, GlobalOptType.TWO_ROUND );
+		this( 2.5, 3.5, GlobalOptType.TWO_ROUND, false );
 	}
 
-	public GlobalOptimizationParameters(double relativeThreshold, double absoluteThreshold, GlobalOptType method)
+	public GlobalOptimizationParameters(double relativeThreshold, double absoluteThreshold, GlobalOptType method, boolean showExpertGrouping)
 	{
 		this.relativeThreshold = relativeThreshold;
 		this.absoluteThreshold = absoluteThreshold;
 		this.method = method;
+		this.showExpertGrouping = showExpertGrouping;
 	}
 
-	public static GlobalOptimizationParameters askUserForParameters()
+	public static GlobalOptimizationParameters askUserForParameters(boolean askForGrouping)
 	{
 		// ask user for parameters
 		final GenericDialog gd = new GenericDialog("Global optimization options");
 		gd.addChoice( "Global_optimization_strategy", methodDescriptions, methodDescriptions[ defaultGlobalOpt ] );
 		gd.addNumericField( "relative error threshold", 2.5, 3 );
 		gd.addNumericField( "absolute error threshold", 3.5, 3 );
+		if (askForGrouping )
+			gd.addCheckbox( "show_expert_grouping_options", defaultExpertGrouping );
 		gd.showDialog();
 
 		if (gd.wasCanceled())
@@ -71,6 +76,7 @@ public class GlobalOptimizationParameters
 		final double relTh = gd.getNextNumber();
 		final double absTh = gd.getNextNumber();
 		final int methodIdx = defaultGlobalOpt = gd.getNextChoiceIndex();
+		final boolean expertGrouping = askForGrouping ? gd.getNextBoolean() : false;
 
 		final GlobalOptType method;
 		if (methodIdx == 0)
@@ -80,6 +86,6 @@ public class GlobalOptimizationParameters
 		else
 			method = GlobalOptType.TWO_ROUND;
 
-		return new GlobalOptimizationParameters(relTh, absTh, method);
+		return new GlobalOptimizationParameters(relTh, absTh, method, expertGrouping);
 	}
 }

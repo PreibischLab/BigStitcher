@@ -23,6 +23,7 @@ public class ExecuteGlobalOpt implements Runnable
 {
 	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 	private boolean expertMode;
+	private SpimDataFilteringAndGrouping<? extends AbstractSpimData<?> > savedFiltering;
 
 	public ExecuteGlobalOpt(
 			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel, 
@@ -30,6 +31,16 @@ public class ExecuteGlobalOpt implements Runnable
 	{
 		this.panel = panel;
 		this.expertMode = expertMode;
+		this.savedFiltering = null;
+	}
+	
+	public ExecuteGlobalOpt(
+			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel,
+			final SpimDataFilteringAndGrouping<? extends AbstractSpimData<?> > savedFiltering)
+	{
+		this.panel = panel;
+		this.expertMode = savedFiltering.requestExpertSettingsForGlobalOpt;
+		this.savedFiltering = savedFiltering;
 	}
 
 	@Override
@@ -43,19 +54,19 @@ public class ExecuteGlobalOpt implements Runnable
 				return;
 			}
 
-			final GlobalOptimizationParameters params = expertMode ? GlobalOptimizationParameters.askUserForParameters() : new GlobalOptimizationParameters();
+			final boolean isSavedFaG = savedFiltering != null;
+			final GlobalOptimizationParameters params = expertMode ? GlobalOptimizationParameters.askUserForParameters(!isSavedFaG) : new GlobalOptimizationParameters();
 			if ( params == null )
 				return;
 
 			final SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping;
-			final boolean isSavedFaG = ( ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping() != null );
 			if ( !isSavedFaG )
 			{
 				FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
 				filteringAndGrouping = new SpimDataFilteringAndGrouping< SpimData2 >(
 						(SpimData2) panel.getSpimData() );
 
-				if (expertMode)
+				if (expertMode && params.showExpertGrouping)
 				{
 					filteringAndGrouping.askUserForFiltering( panelFG );
 					if ( filteringAndGrouping.getDialogWasCancelled() )
@@ -88,7 +99,7 @@ public class ExecuteGlobalOpt implements Runnable
 			{
 				// FIXME: there is some generics work to be done,
 				// obviously
-				filteringAndGrouping = (SpimDataFilteringAndGrouping< SpimData2 >) ( (StitchingExplorerPanel< ?, ? >) panel ).getSavedFilteringAndGrouping();
+				filteringAndGrouping = (SpimDataFilteringAndGrouping< SpimData2 >) savedFiltering;
 			}
 
 			final ArrayList< Pair< Group< ViewId >, Group< ViewId > > > removedInconsistentPairs = new ArrayList<>();

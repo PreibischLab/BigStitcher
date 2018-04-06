@@ -63,12 +63,13 @@ public class Global_Optimization_Stitching implements PlugIn
 		final HashSet< Class< ? extends Entity > > defaultComparisonFactors = new HashSet<>();
 		defaultComparisonFactors.add( Tile.class );
 
-		grouping.askUserForGrouping( 
-				selectedViews.stream().map( vid -> data.getSequenceDescription().getViewDescription( vid ) ).collect( Collectors.toList() ),
-				defaultGroupingFactors,
-				defaultComparisonFactors );
+		GlobalOptimizationParameters params = GlobalOptimizationParameters.askUserForParameters(true);
 
-		GlobalOptimizationParameters params = GlobalOptimizationParameters.askUserForParameters();
+		if (params.showExpertGrouping)
+			grouping.askUserForGrouping( 
+					selectedViews.stream().map( vid -> data.getSequenceDescription().getViewDescription( vid ) ).collect( Collectors.toList() ),
+					defaultGroupingFactors,
+					defaultComparisonFactors );
 
 		final ArrayList< Pair< Group< ViewId >, Group< ViewId > > > removedInconsistentPairs = new ArrayList<>();
 

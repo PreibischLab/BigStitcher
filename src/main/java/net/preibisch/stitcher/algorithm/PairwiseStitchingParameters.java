@@ -29,18 +29,20 @@ public class PairwiseStitchingParameters
 	public int peaksToCheck;
 	public boolean doSubpixel;
 	public boolean interpolateCrossCorrelation;
+	public boolean showExpertGrouping;
 
 	public PairwiseStitchingParameters()
 	{
-		this(0, 5, true, false);
+		this(0, 5, true, false, false);
 	}
 
-	public PairwiseStitchingParameters(double minOverlap, int peaksToCheck, boolean doSubpixel, boolean interpolateCrossCorrelation)
+	public PairwiseStitchingParameters(double minOverlap, int peaksToCheck, boolean doSubpixel, boolean interpolateCrossCorrelation, boolean showExpertGrouping)
 	{
 		this.minOverlap = minOverlap;
 		this.peaksToCheck = peaksToCheck;
 		this.doSubpixel = doSubpixel;
 		this.interpolateCrossCorrelation = interpolateCrossCorrelation;
+		this.showExpertGrouping = showExpertGrouping;
 	}
 
 	public static void addQueriesToGD(final GenericDialog gd)
@@ -49,6 +51,7 @@ public class PairwiseStitchingParameters
 		gd.addNumericField( "minimal overlap (percent of current overlap)", 0, 0 );
 		gd.addCheckbox( "subpixel accuracy", true );
 		gd.addCheckbox( "interpolate_subpixel_cross_correlation_(warning: slow!)", false );
+		gd.addCheckbox( "show_expert_grouping_options", false );
 	}
 
 	public static PairwiseStitchingParameters getParametersFromGD(final GenericDialog gd)
@@ -60,8 +63,9 @@ public class PairwiseStitchingParameters
 		double minOverlap =  Math.min( Math.max( gd.getNextNumber()/100 , 0), 1);
 		boolean doSubpixel = gd.getNextBoolean();
 		boolean interpolateSubpixel = gd.getNextBoolean();
+		boolean showExpertGrouping = gd.getNextBoolean();
 
-		return new PairwiseStitchingParameters(minOverlap, peaksToCheck, doSubpixel, interpolateSubpixel);
+		return new PairwiseStitchingParameters(minOverlap, peaksToCheck, doSubpixel, interpolateSubpixel, showExpertGrouping);
 	}
 
 	public static PairwiseStitchingParameters askUserForParameters()

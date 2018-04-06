@@ -348,7 +348,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			}
 
 			if (doGlobalOpt)
-				new Thread( new ExecuteGlobalOpt( this, savedFilteringAndGrouping.requestExpertSettingsForGlobalOpt ) ).start();
+				new Thread( new ExecuteGlobalOpt( this, savedFilteringAndGrouping ) ).start();
 
 			// discard the temp. SpimDataFilteringAndGrouping
 			// if we discard it right now, but want to do global opt (which runs asynchronously)
