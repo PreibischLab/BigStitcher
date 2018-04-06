@@ -23,6 +23,8 @@ package net.preibisch.stitcher.algorithm;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -70,180 +72,265 @@ import net.preibisch.mvrecon.process.deconvolution.normalization.AdjustInput;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
 public class GroupedViewAggregator
-{	
-	private List<Action<? extends Entity>> actions;
-	
+{
+	private final List<Action> actions;
+
 	public GroupedViewAggregator()
 	{
 		this.actions = new ArrayList<>();
 	}
-		
-	public class Action <E extends Entity>{
+
+	public class Action {
 		ActionType actionType;
-		Class<? extends E> entityClass;
-		E instance;
-		
-		Action(ActionType at, Class<? extends E> entityClass, E instance){
+		final List<Class<? extends Entity>> entityClasses;
+		final List<Entity> instances;
+
+		Action(ActionType at, Class<? extends Entity> entityClass, Entity instance){
 			this.actionType = at;
-			this.entityClass = entityClass;
-			this.instance = instance;
+			this.entityClasses = new ArrayList<>();
+			entityClasses.add( entityClass );
+			this.instances = new ArrayList<>();
+			instances.add( instance );
 		}
-		
+
 		public <T extends RealType<T>> Map<BasicViewDescription<?>, RandomAccessibleInterval<T>> aggregate(
 				Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> input)
 		{
-			Set<Class<? extends Entity>> groupingSet = new HashSet<>();
-			groupingSet.add( entityClass );
-			
+			Map<BasicViewDescription<?>, RandomAccessibleInterval<T>> res = new HashMap<>();
 
-			// TOOD: BUG, combineby is not enough
-			// TODO: this doesn't work if we have two channels that we want to average that come from different illuminations, then it puts it into two different groups
-			// TODO: this works, if we have two channels that come from the same illumination
+			if (actionType == ActionType.PICK_SPECIFIC)
+				res = pickSpecific(input);
+			else if (actionType == ActionType.PICK_BRIGHTEST)
+				res = pickBrightest(input);
+			else //if (actionType == ActionType.AVERAGE)
+				res = average(input);
 
-			// this solves it, but is a hack
-			if ( actionType == ActionType.AVERAGE && Channel.class.equals( entityClass ) )
-			{
-				System.out.println( "adding illuminations." );
-				groupingSet.add( Illumination.class );
-			}
-			
-			// TODO: this also fails if we pick a specific channel, it does not average over illuminations first, don't know why
-			List< Group< BasicViewDescription< ? > > > grouped = 
-					Group.combineBy( new ArrayList<>(input.keySet()), groupingSet );
-			
-			
-			Map<BasicViewDescription<?>, RandomAccessibleInterval<T>> res = new HashMap<>();			
-			
-			for (Group< BasicViewDescription< ? > > g : grouped)
-			{
-				List<RandomAccessibleInterval<T>> rais = new ArrayList<>();
-				for (BasicViewDescription< ? > vd : g)
-					rais.add(input.get( vd ));
-				
-				RandomAccessibleInterval< T > resG;
-				
-				List< BasicViewDescription< ? > > gl = new ArrayList<>(g.getViews());
-				
-				if (actionType == ActionType.PICK_BRIGHTEST)
-					resG = pickBrightest(gl, rais);
-				else if (actionType == ActionType.PICK_SPECIFIC)
-					resG = pickSpecific(gl, rais);
-				else //if (actionType == ActionType.AVERAGE)
-					resG = average(gl, rais);
-				
-				BasicViewDescription< ? > fistVD = gl.get( 0 );
-
-				if ( resG != null )
-					res.put( fistVD, resG );				
-			}
-						
 			return res;
 		}
-		
-		
-		public <T extends RealType<T>> RandomAccessibleInterval< T > pickBrightest(List<BasicViewDescription< ? >> vds,
-														   List<RandomAccessibleInterval< T >> rais)
+
+		public <T extends RealType<T>> Map<BasicViewDescription<?>, RandomAccessibleInterval<T>> pickBrightest(Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> input)
 		{
-			
-			if (rais.size() == 1)
-				return rais.get( 0 );
-			
-			Double max = -Double.MAX_VALUE;
-			int maxIdx = -1;
-						
-			for (int i = 0; i < rais.size(); i++){
-				
-				// a view is missing, do not take it into account
-				if (rais.get( i ) == null)
-					continue;
-				
-				IterableInterval< T > iterableImg = Views.iterable( rais.get( i ) );
-				double mean = AdjustInput.sumImg( iterableImg ) / (double)iterableImg.size();
-				if (mean > max)
-				{
-					max = mean;
-					maxIdx = i;
-				}
-			}
-			
-			// all views were missing
-			if (maxIdx < 0)
-				return null;
-			else
-				return rais.get( maxIdx );			
-		}
-		
-		
-		public <T extends RealType<T>> RandomAccessibleInterval< T > pickSpecific(List<BasicViewDescription< ? >> vds,
-				   List<RandomAccessibleInterval< T >> rais)
-		{
-			for (int i = 0; i< vds.size(); i++)
+
+			final HashMap< BasicViewDescription<?>, RandomAccessibleInterval<T>> res = new HashMap<>();
+
+			// combine by all classes for which we take the same action
+			// e.g. pick brightest by channels & illums -> combine by those
+			final Set<Class<? extends Entity>> groupingSet = new HashSet<>();
+			groupingSet.addAll( entityClasses );
+			final List< Group< BasicViewDescription< ? > > > grouped = 
+						Group.combineBy( new ArrayList<>(input.keySet()), groupingSet );
+
+			for (Group< BasicViewDescription< ? > > g : grouped)
 			{
-				if (entityClass == TimePoint.class)
+				final List<BasicViewDescription< ? >> vds = new ArrayList<>();
+				final List<RandomAccessibleInterval<T>> rais = new ArrayList<>();
+				for (BasicViewDescription< ? > vd : g)
 				{
-					if (vds.get( i ).getTimePoint() == instance)
-						if (vds.get( i ).isPresent())
-							return rais.get( i );
-					
+					vds.add( vd );
+					rais.add(input.get( vd ));
+				}
+
+				// quick check if we have only one present image 
+				// -> no need to look at the images in that case
+				int nonNullCount = 0;
+				int nonNullIndex = -1;
+				for (int i = 0; i < rais.size(); i++){
+					if (rais.get( i ) != null)
+						nonNullCount += 1;
+						nonNullIndex = i;
+				}
+				if (nonNullCount == 1)
+				{
+					res.put( vds.get( nonNullIndex ), rais.get( nonNullIndex ) );
 					continue;
 				}
-				
-				if (vds.get( i ).getViewSetup().getAttribute( entityClass ).equals( instance ))
-					if (vds.get( i ).isPresent())
-						return rais.get( i );
+
+				Double max = -Double.MAX_VALUE;
+				int maxIdx = -1;
+				for (int i = 0; i < rais.size(); i++){
+
+					// a view is missing, do not take it into account
+					if (rais.get( i ) == null)
+						continue;
+
+					IterableInterval< T > iterableImg = Views.iterable( rais.get( i ) );
+					double mean = AdjustInput.sumImg( iterableImg ) / (double)iterableImg.size();
+					if (mean > max)
+					{
+						max = mean;
+						maxIdx = i;
+					}
+				}
+
+				// at least one view (actually two, since we handle that special case above) is present
+				if (maxIdx >= 0)
+				{
+					res.put( vds.get( maxIdx ), rais.get( maxIdx ) );
+				}
 			}
-			
-			// this should only be reached if the requested view is not present
-			return null;
+			return res;
 		}
-		
-		
-		public <T extends RealType<T>> RandomAccessibleInterval< T > average(List<BasicViewDescription< ? >> vds,
-				   List<RandomAccessibleInterval< T >> rais)
+
+		public <T extends RealType<T>> Map<BasicViewDescription<?>, RandomAccessibleInterval<T>> pickSpecific(Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> input)
 		{
-			AveragedRandomAccessible< T > avg = null;
-			
-			if (rais.size() == 1)
-				return rais.get( 0 );
-			
-			int nPresent = 0;
-			int firstNonNull = -1;
-			
-			for (int i = 0; i< rais.size(); i++)
+			final HashMap< BasicViewDescription<?>, RandomAccessibleInterval<T>> res = new HashMap<>();
+
+			// combine by all classes for which we take the same action
+			// e.g. pick specific channels & illums combination -> combine by those
+			final Set<Class<? extends Entity>> groupingSet = new HashSet<>();
+			groupingSet.addAll( entityClasses );
+			final List< Group< BasicViewDescription< ? > > > grouped = 
+						Group.combineBy( new ArrayList<>(input.keySet()), groupingSet );
+
+			for (Group< BasicViewDescription< ? > > g : grouped)
 			{
-				if (rais.get( i ) == null)
-					continue;
-				
-				if (avg == null)
+				final List<BasicViewDescription< ? >> vds = new ArrayList<>();
+				final List<RandomAccessibleInterval<T>> rais = new ArrayList<>();
+				for (BasicViewDescription< ? > vd : g)
 				{
-					avg = new AveragedRandomAccessible<>( rais.get( i ).numDimensions() );
-					firstNonNull = i;
+					vds.add( vd );
+					rais.add(input.get( vd ));
 				}
-					
-				RandomAccessibleInterval< T > zerod = Views.zeroMin( rais.get( i ));
-				avg.addRAble( Views.extendZero( zerod ) );
-				nPresent++;
+				for (int i = 0; i< vds.size(); i++)
+				{
+					// check if all entities match and the view is present
+					boolean mismatch = false;
+					for (int j = 0; j<entityClasses.size(); j++)
+					{
+						final Class<? extends Entity> entityClass = entityClasses.get( j );
+						if (entityClass == TimePoint.class)
+						{
+							if (!vds.get( i ).getTimePoint().equals( instances.get( j )) || !(vds.get( i ).isPresent()))
+							{
+								mismatch = true;
+								break;
+							}
+						}
+						else if (!vds.get( i ).getViewSetup().getAttribute( entityClass ).equals( instances.get( j ) ) || !(vds.get( i ).isPresent()))
+						{
+							mismatch = true;
+							break;
+						}
+					}
+					if (!mismatch)
+						res.put( vds.get( i ), rais.get( i ) );
+				}
 			}
-			
-			if (nPresent < 1)
-				return null;
-			
-			RandomAccessibleInterval< T > zerod = Views.zeroMin( rais.get( firstNonNull ));
-			return Views.interval( avg, zerod );
+
+			return res;
 		}
-		
-	}
+
+		public <T extends RealType<T>> Map<BasicViewDescription<?>, RandomAccessibleInterval<T>> average(Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> input)
+		{
+
+			// only one view left -> nothing to average
+			if (input.size() == 1)
+				return input;
+
+			final HashMap< BasicViewDescription<?>, RandomAccessibleInterval<T>> res = new HashMap<>();
+
+			// combine by all classes for which we take the same action
+			// e.g. pick brightest by channels & illums -> combine by those
+			final Set<Class<? extends Entity>> groupingSet = new HashSet<>();
+			groupingSet.addAll( entityClasses );
+			final List< Group< BasicViewDescription< ? > > > grouped = 
+									Group.combineBy( new ArrayList<>(input.keySet()), groupingSet );
+
+			for (Group< BasicViewDescription< ? > > g : grouped)
+			{
+				final List<BasicViewDescription< ? >> vds = new ArrayList<>();
+				final List<RandomAccessibleInterval<T>> rais = new ArrayList<>();
+				for (BasicViewDescription< ? > vd : g)
+				{
+					vds.add( vd );
+					rais.add(input.get( vd ));
+				}
+
+				// quick check if we have only one present image 
+				// -> no need to look at the images in that case
+				int nonNullCount = 0;
+				int nonNullIndex = -1;
+				for (int i = 0; i < rais.size(); i++){
+					if (rais.get( i ) != null)
+						nonNullCount += 1;
+						nonNullIndex = i;
+				}
+				if (nonNullCount == 1)
+				{
+					res.put( vds.get( nonNullIndex ), rais.get( nonNullIndex ) );
+					continue;
+				}
+
+				AveragedRandomAccessible< T > avg = null;
+				int nPresent = 0;
+				int firstNonNull = -1;
 	
+				for (int i = 0; i< rais.size(); i++)
+				{
+					if (rais.get( i ) == null)
+						continue;
+	
+					if (avg == null)
+					{
+						avg = new AveragedRandomAccessible<>( rais.get( i ).numDimensions() );
+						firstNonNull = i;
+					}
+	
+					RandomAccessibleInterval< T > zerod = Views.zeroMin( rais.get( i ));
+					avg.addRAble( Views.extendZero( zerod ) );
+					nPresent++;
+				}
+	
+				if (nPresent > 0)
+				{
+					RandomAccessibleInterval< T > zerod = Views.zeroMin( rais.get( firstNonNull ));
+					res.put( vds.get( 0 ), Views.interval( avg, zerod ) );
+				}
+			}
+			return res;
+		}
+
+	}
+
 	public enum ActionType {
-		PICK_BRIGHTEST, AVERAGE, PICK_SPECIFIC
+		PICK_SPECIFIC, PICK_BRIGHTEST, AVERAGE
 	}
-	
-	public <E extends Entity> void addAction(ActionType at, Class<? extends E> entityClass, E instance)
+
+	public void addAction(ActionType at, Class<? extends Entity> entityClass, Entity instance)
 	{
-		Action<E> newAc = new Action<E>( at, entityClass, instance );
-		actions.add(newAc);
-	}
+		// check if we already have an Action of the same type
+		Action existingAction = null;
+		for (final Action ac : actions)
+			if ( ac.actionType.equals( at ) )
+			{
+				existingAction = ac;
+				break;
+			}
+
+		// No -> create new action
+		if (existingAction == null)
+		{
+			final Action newAc = new Action( at, entityClass, instance );
+			actions.add(newAc);
 	
+			// sort to enforce pick specific -> pick brightest -> average order
+			Collections.sort(actions, new Comparator<Action>()
+			{
+				@Override
+				public int compare(Action o1, Action o2)
+				{
+					return o1.actionType.compareTo( o2.actionType );
+				}
+			});
+		}
+		// Yes -> add entity (class) to existing Action
+		else
+		{
+			existingAction.entityClasses.add( entityClass );
+			existingAction.instances.add( instance );
+		}
+	}
+
 	public <T extends RealType<T>> RandomAccessibleInterval< T > aggregate(
 			List<RandomAccessibleInterval< T >> rais,
 			List<? extends ViewId> vids,
@@ -251,25 +338,25 @@ public class GroupedViewAggregator
 			)
 	{
 		Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> map = new HashMap<>();
-		
+
 		for (int i = 0; i < vids.size(); i++)
 		{
 			ViewId vid = vids.get( i );
 			BasicViewDescription< ? > vd = sd.getViewDescriptions().get( vid );
 			map.put( vd, rais.get( i ) );
 		}
-		
-		for (Action< ? > action : actions)
+
+		for (final Action action : actions)
 		{
 			map = action.aggregate( map );
 		}
-		
+
 		// return the first RAI still present
 		// ideally, there should be only one left
 		return map.values().iterator().next();
 		
 	}
-	
+
 	public <T extends RealType<T>> RandomAccessibleInterval< T > aggregate(Group<? extends ViewId> gv, 
 												AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd,
 												long[] downsampleFactors,
@@ -304,9 +391,12 @@ public class GroupedViewAggregator
 			map.put( vd, rai );
 		}
 
-		for (Action< ? > action : actions)
+		for (Action action : actions)
 		{
 			map = action.aggregate( map );
+			// we filtered out all the views
+			if (map.size() < 1)
+				return null;
 		}
 
 		// return the first RAI still present
@@ -395,14 +485,14 @@ public class GroupedViewAggregator
 		}
 
 		final SequenceDescription sd = new SequenceDescription( timepoints, setups, imgLoader, missingViews );
-		final SpimData data = new SpimData( new File( "" ), sd, new ViewRegistrations( registrations ) );
+		//final SpimData data = new SpimData( new File( "" ), sd, new ViewRegistrations( registrations ) );
 		
 		
 		final GroupedViewAggregator gva = new GroupedViewAggregator();
 		//gva.addAction( ActionType.PICK_SPECIFIC, Illumination.class, new Illumination( 0 ) );
 		//gva.addAction( ActionType.PICK_SPECIFIC, Illumination.class, new Illumination( 1 ) );
-		gva.addAction( ActionType.PICK_SPECIFIC, Channel.class, c0 );
-		gva.addAction( ActionType.PICK_SPECIFIC, Illumination.class, i0 );
+		gva.addAction( ActionType.AVERAGE, Illumination.class, null );
+		gva.addAction( ActionType.PICK_BRIGHTEST, Channel.class, null );
 		
 		List<ViewId> setupsVID = new ArrayList<>();
 		setupsVID.add( new ViewId(0,0) );
@@ -410,13 +500,12 @@ public class GroupedViewAggregator
 		setupsVID.add( new ViewId(0,2) );
 		setupsVID.add( new ViewId(0,3) );
 		Group<ViewId> gv = new Group<>( setupsVID );
-		
-		
-		
-		gva.aggregate( gv, sd, new long[] {1,1,1} , new AffineTransform3D());
-		
-		ImageJFunctions.show( (RandomAccessibleInterval< FloatType >)gva.aggregate( gv, sd , new long[] {1,1,1}, new AffineTransform3D()));
-		
+
+		RandomAccessibleInterval< FloatType > res = (RandomAccessibleInterval< FloatType >) gva.aggregate( gv, sd, new long[] {1,1,1} , new AffineTransform3D());
+		System.out.println( Views.iterable( res ).firstElement().getClass() );
+		if (res != null)
+			ImageJFunctions.show( res );
+
 		new ImageJ();
 		
 	}
