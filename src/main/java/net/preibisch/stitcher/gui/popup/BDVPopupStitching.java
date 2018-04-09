@@ -53,6 +53,7 @@ import net.imglib2.type.numeric.ARGBType;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.bdv.ScrollableBrightnessDialog;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.util.ColorStream;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.AbstractImgLoader;
@@ -313,8 +314,10 @@ public class BDVPopupStitching extends BDVPopup
 		groupingFactors.add( Channel.class );
 		groupingFactors.add( Illumination.class );		
 		groupSourcesByFactors( bdv, panel.getSpimData(), groupingFactors );
-			
+
 		FilteredAndGroupedExplorerPanel.updateBDV( bdv, panel.colorMode(), panel.getSpimData(), panel.firstSelectedVD(), ((GroupedRowWindow)panel).selectedRowsGroups());
+
+		ScrollableBrightnessDialog.setAsBrightnessDialog( bdv );
 
 		bdv.getViewer().addTransformListener( lo );
 		bdv.getViewer().getDisplay().addOverlayRenderer( lo );
