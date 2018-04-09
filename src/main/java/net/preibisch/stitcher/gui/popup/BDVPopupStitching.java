@@ -240,6 +240,7 @@ public class BDVPopupStitching extends BDVPopup
 		if (vdGroups.size() == 1)
 		{
 			FilteredAndGroupedExplorerPanel.whiteSources(bdv.getSetupAssignments().getConverterSetups());
+			ScrollableBrightnessDialog.updateBrightnessPanels( bdv );
 			return;
 		}
 
@@ -263,6 +264,8 @@ public class BDVPopupStitching extends BDVPopup
 			for (ConverterSetup cs : csg)
 				cs.setColor( color );
 		}
+
+		ScrollableBrightnessDialog.updateBrightnessPanels( bdv );
 	}
 
 	public static BigDataViewer createBDV( final ExplorerWindow< ? , ? > panel , LinkOverlay lo)

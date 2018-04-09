@@ -100,6 +100,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.ISpimDataTableModel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerPanel;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.bdv.ScrollableBrightnessDialog;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BoundingBoxPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DisplayFusedImagesPopup;
@@ -1036,6 +1037,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			active[0] = true;
 			setVisibleSources( bdv.getViewer().getVisibilityAndGrouping(), active );
 			bdv.getViewer().getVisibilityAndGrouping().setDisplayMode( DisplayMode.FUSED );
+			ScrollableBrightnessDialog.updateBrightnessPanels( bdv );
 		}
 	}
 
@@ -1185,6 +1187,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							// cycle between color schemes
 							colorOffset = (colorOffset + 1) % 5;
 							colorSources( p.bdv.getSetupAssignments().getConverterSetups(), colorOffset );
+							ScrollableBrightnessDialog.updateBrightnessPanels( p.bdv );
 						}
 					}
 				}
