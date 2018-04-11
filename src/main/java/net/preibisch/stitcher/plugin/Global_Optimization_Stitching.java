@@ -27,9 +27,11 @@ import java.util.stream.Collectors;
 
 import ij.plugin.PlugIn;
 import mpicbg.spim.data.generic.base.Entity;
+import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
+import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
@@ -70,6 +72,15 @@ public class Global_Optimization_Stitching implements PlugIn
 					selectedViews.stream().map( vid -> data.getSequenceDescription().getViewDescription( vid ) ).collect( Collectors.toList() ),
 					defaultGroupingFactors,
 					defaultComparisonFactors );
+		else
+		{
+			// set defaults
+			grouping.addComparisonAxis( Tile.class );
+			grouping.addGroupingFactor( Channel.class );
+			grouping.addGroupingFactor( Illumination.class );
+			grouping.addApplicationAxis( TimePoint.class );
+			grouping.addApplicationAxis( Angle.class );
+		}
 
 		final ArrayList< Pair< Group< ViewId >, Group< ViewId > > > removedInconsistentPairs = new ArrayList<>();
 
