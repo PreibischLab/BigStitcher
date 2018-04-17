@@ -35,6 +35,7 @@ import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.Dimensions;
 import net.imglib2.util.Util;
+import net.preibisch.mvrecon.fiji.plugin.resave.PluginHelper;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
@@ -114,19 +115,35 @@ public class StitchingUIHelper
 		}
 
 		gd.addChoice( "Downsample_in_X", dsChoicesXY, Long.toString( dsPreset[0] ));
-		final Choice xChoice = (Choice) gd.getChoices().get( gd.getChoices().size()-1 );
 		gd.addChoice( "Downsample_in_Y", dsChoicesXY, Long.toString( dsPreset[1] ) );
-		final Choice yChoice = (Choice) gd.getChoices().get( gd.getChoices().size()-1 );
+
+		final Choice xChoice;
+		final Choice yChoice;
 		final Choice zChoice;
+
+		if (!PluginHelper.isHeadless())
+		{
+			xChoice = (Choice) gd.getChoices().get( gd.getChoices().size()-1 );
+			yChoice = (Choice) gd.getChoices().get( gd.getChoices().size()-1 );
+		}
+		else
+		{
+			xChoice = yChoice = null;
+		}
+
 		if ( !is2d )
 		{
 			gd.addChoice( "Downsample_in_Z", ds, Long.toString( dsPreset[2] ) );
-			zChoice = (Choice) gd.getChoices().get( gd.getChoices().size()-1 );
+			if (!PluginHelper.isHeadless())
+				zChoice = (Choice) gd.getChoices().get( gd.getChoices().size()-1 );
+			else
+				zChoice = null;
 		}
 		else
 			zChoice = null;
 
-		if (isHDF5)
+
+		if (isHDF5 && !PluginHelper.isHeadless())
 		{
 			xChoice.addItemListener( e -> choiceCallback( xChoice, yChoice, zChoice, dsStrings ));
 			yChoice.addItemListener( e -> choiceCallback( xChoice, yChoice, zChoice, dsStrings ));

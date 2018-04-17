@@ -28,6 +28,7 @@ import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import net.preibisch.mvrecon.fiji.plugin.resave.PluginHelper;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
@@ -298,26 +299,35 @@ public class GlobalOptStitcher
 				continue;
 
 			gdp.addCheckbox( "Fix_Group_" + Group.gvids( it.next() ), true );
-			final Checkbox cbI = (Checkbox) gdp.getCheckboxes().get( gdp.getCheckboxes().size() -1 );
-			cboxes.add( cbI );
+			if (!PluginHelper.isHeadless())
+			{
+				final Checkbox cbI = (Checkbox) gdp.getCheckboxes().get( gdp.getCheckboxes().size() -1 );
+				cboxes.add( cbI );
+			}
 
 			it.forEachRemaining( g -> {
 				gdp.addCheckbox( "Fix_Group_" + Group.gvids( g ), false );
-				final Checkbox cbI2 = (Checkbox) gdp.getCheckboxes().get( gdp.getCheckboxes().size() -1 );
-				cboxes.add( cbI2 );
+				if (!PluginHelper.isHeadless())
+				{
+					final Checkbox cbI2 = (Checkbox) gdp.getCheckboxes().get( gdp.getCheckboxes().size() -1 );
+					cboxes.add( cbI2 );
+				}
 			});
 
-			gdp.addMessage( "", GUIHelper.largestatusfont, GUIHelper.warning );
-			final Label warning = (Label) gdp.getMessage();
-
-			for (final Checkbox cb : cboxes)
+			if (!PluginHelper.isHeadless())
 			{
-				cb.addItemListener( e -> {
-					boolean allFalse = true;
-					for (final Checkbox cbI3 : cboxes)
-						allFalse &= (!cbI3.getState());
-					warning.setText( allFalse ? "WARNING: you are not fixing any view" + (multipleSubsets ? " in this subset." : ".") : "" );
-				});
+				gdp.addMessage( "", GUIHelper.largestatusfont, GUIHelper.warning );
+				final Label warning = (Label) gdp.getMessage();
+
+				for (final Checkbox cb : cboxes)
+				{
+					cb.addItemListener( e -> {
+						boolean allFalse = true;
+						for (final Checkbox cbI3 : cboxes)
+							allFalse &= (!cbI3.getState());
+						warning.setText( allFalse ? "WARNING: you are not fixing any view" + (multipleSubsets ? " in this subset." : ".") : "" );
+					});
+				}
 			}
 		}
 
