@@ -55,7 +55,7 @@ public class ExecuteGlobalOpt implements Runnable
 			}
 
 			final boolean isSavedFaG = savedFiltering != null;
-			final GlobalOptimizationParameters params = expertMode ? GlobalOptimizationParameters.askUserForParameters(!isSavedFaG) : new GlobalOptimizationParameters();
+			final GlobalOptimizationParameters params = expertMode ? GlobalOptimizationParameters.askUserForParameters(!isSavedFaG) : GlobalOptimizationParameters.askUserForSimpleParameters();
 			if ( params == null )
 				return;
 
