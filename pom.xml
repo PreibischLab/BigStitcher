@@ -101,7 +101,7 @@
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
 
 		<multiview-reconstruction.version>0.2.0-SNAPSHOT</multiview-reconstruction.version>
-		<multiview-simulation.version>0.1.0</multiview-simulation.version>
+		<multiview-simulation.version>0.2.0-SNAPSHOT</multiview-simulation.version>
 
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
