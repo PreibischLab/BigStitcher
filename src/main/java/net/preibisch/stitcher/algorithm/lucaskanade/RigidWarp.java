@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 
 import Jama.Matrix;
-
 import ij.ImageJ;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
@@ -47,8 +46,8 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
-import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
 import net.preibisch.stitcher.algorithm.TransformTools;
 
@@ -88,7 +87,7 @@ public class RigidWarp implements WarpFunction
 
 	public static void main(String[] args)
 	{
-		final ExecutorService taskExecutor = DeconViews.createExecutorService();
+		final ExecutorService taskExecutor = Threads.createFixedExecutorService();
 
 		RandomAccessibleInterval< FloatType > a = ImgLib2Util.openAs32Bit( new File( "73.tif.zip" ) );
 		RandomAccessibleInterval< FloatType > b = ImgLib2Util.openAs32Bit( new File( "74.tif.zip" ) );
@@ -146,7 +145,7 @@ public class RigidWarp implements WarpFunction
 		Align< FloatType > lk = new Align<>( simple2x1, new ArrayImgFactory<>(), warp );
 		//System.out.println( Util.printCoordinates( lk.align( Views.zeroMin( Views.interval( b, interval2 ) ), 100, 0.01 ).getRowPackedCopy() ) );
 		//final AffineTransform transform = lk.align( Views.zeroMin( rotated ), 100, 0.01 );
-		final AffineTransform transform = lk.align( simple2x2, 100, 0.1 );
+		final AffineTransform transform = lk.align( simple2x2, 100, 0.1, taskExecutor );
 
 		// transformation matrix
 		System.out.println( Util.printCoordinates( transform.getRowPackedCopy() ) );

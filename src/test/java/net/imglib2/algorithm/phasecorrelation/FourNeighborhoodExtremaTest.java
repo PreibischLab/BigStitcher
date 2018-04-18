@@ -39,6 +39,7 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
+import net.preibisch.mvrecon.Threads;
 
 import org.junit.Test;
 
@@ -132,7 +133,7 @@ public class FourNeighborhoodExtremaTest
 		});
 		
 		int nMax = 5;
-		ArrayList< Pair< Localizable, Double > > found = FourNeighborhoodExtrema.findMaxMT(Views.extendPeriodic(img), img, nMax, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		ArrayList< Pair< Localizable, Double > > found = FourNeighborhoodExtrema.findMaxMT(Views.extendPeriodic(img), img, nMax, Threads.createFixedExecutorService() );
 		assertEquals(nMax, found.size());
 		
 		
@@ -187,7 +188,7 @@ public class FourNeighborhoodExtremaTest
 		
 		int nMax = 4;
 		
-		ArrayList< Pair< Localizable, Double > > found = FourNeighborhoodExtrema.findMaxMT(Views.extendPeriodic(img), img, nMax, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		ArrayList< Pair< Localizable, Double > > found = FourNeighborhoodExtrema.findMaxMT(Views.extendPeriodic(img), img, nMax, Threads.createFixedExecutorService());
 		
 		
 		assertEquals(nMax, found.size());
@@ -252,7 +253,7 @@ public class FourNeighborhoodExtremaTest
 		
 		int nMax = 4;
 		
-		ArrayList< Pair< Localizable, Double > > found = FourNeighborhoodExtrema.findMaxMT(Views.extendMirrorSingle(img), img, nMax, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		ArrayList< Pair< Localizable, Double > > found = FourNeighborhoodExtrema.findMaxMT(Views.extendMirrorSingle(img), img, nMax, Threads.createFixedExecutorService());
 		
 		
 		assertEquals(nMax, found.size());
@@ -315,7 +316,7 @@ public class FourNeighborhoodExtremaTest
 		
 		int nMax = 4;
 		
-		ArrayList< Pair< Localizable, Double > > found = FourNeighborhoodExtrema.findMaxMT(Views.extendPeriodic(img), img, nMax, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		ArrayList< Pair< Localizable, Double > > found = FourNeighborhoodExtrema.findMaxMT(Views.extendPeriodic(img), img, nMax, Threads.createFixedExecutorService());
 		
 		
 		assertEquals(nMax, found.size());

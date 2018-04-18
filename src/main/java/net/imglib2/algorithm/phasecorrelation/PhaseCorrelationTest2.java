@@ -31,6 +31,7 @@ import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.stitcher.algorithm.DownsampleTools;
 import net.preibisch.stitcher.algorithm.PairwiseStitching;
@@ -40,7 +41,7 @@ public class PhaseCorrelationTest2
 {
 	public static void main(String[] args)
 	{
-		final ExecutorService taskExecutor = DeconViews.createExecutorService();
+		final ExecutorService taskExecutor = Threads.createFixedExecutorService();
 
 		RandomAccessibleInterval<  FloatType > image1 = ImgLib2Util.openAs32Bit( new File( "73.tif.zip" ) );
 		RandomAccessibleInterval<  FloatType > image2 = ImgLib2Util.openAs32Bit( new File( "73m5-10-13.tif.zip" ) );
@@ -74,7 +75,7 @@ public class PhaseCorrelationTest2
 									new Translation3D(),
 									translation2, 
 									params,
-									Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() ) );
+									taskExecutor );
 		
 		System.out.println( Util.printCoordinates( shift.getA().getTranslationCopy() ));
 		System.out.print( shift.getB() );

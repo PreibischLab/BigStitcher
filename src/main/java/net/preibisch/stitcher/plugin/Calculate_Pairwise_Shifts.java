@@ -23,7 +23,6 @@ package net.preibisch.stitcher.plugin;
 
 import java.awt.Font;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,6 +47,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Detection;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.TransformationModelGUI;
@@ -60,7 +60,6 @@ import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPointLists;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
-import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.PairwiseResult;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.PairwiseSetup;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
@@ -135,7 +134,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			grouping.getAxesOfComparison().addAll( defaultComparisonFactors );
 		}
 
-		final ExecutorService taskExecutor = DeconViews.createExecutorService();
+		final ExecutorService taskExecutor = Threads.createFixedExecutorService();
 
 		if (defaultMethodIdx >= 2)
 		{

@@ -45,6 +45,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
+import net.preibisch.mvrecon.Threads;
 
 public class PhaseCorrelation2 {
 	
@@ -273,7 +274,7 @@ public class PhaseCorrelation2 {
 		Img<FloatType> img1 = ImgLib2Util.openAs32Bit(new File("src/main/resources/img1singleplane.tif"));
 		Img<FloatType> img2 = ImgLib2Util.openAs32Bit(new File("src/main/resources/img2singleplane.tif"));
 		
-		ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		ExecutorService service = Threads.createFixedExecutorService();
 		
 		RandomAccessibleInterval<FloatType> pcm = calculatePCM(img1, img2, new ArrayImgFactory<FloatType>(), new FloatType(),
 				new ArrayImgFactory<ComplexFloatType>(), new ComplexFloatType(), service );

@@ -56,6 +56,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import net.preibisch.mvrecon.process.interestpointregistration.TransformationTools;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
@@ -141,7 +142,7 @@ public class PairwiseStitching
 				new ArrayImgFactory< FloatType >(), params.getWarpFunctionInstance( img1.numDimensions() ) );
 
 		AffineTransform res = lkAlign.align( Views.zeroMin( Views.interval( img2, interval2 ) ), params.maxNumIterations,
-				params.minParameterChange );
+				params.minParameterChange, service );
 
 		if (lkAlign.didConverge())
 			IOFunctions.println("(" + new Date( System.currentTimeMillis() ) + ") determined transformation:" +  Util.printCoordinates( res.getRowPackedCopy() ) );
@@ -477,7 +478,7 @@ public class PairwiseStitching
 
 		List< PairwiseStitchingResult< Integer > > pairwiseShifts = getPairwiseShifts( rais, tr,
 				new PairwiseStitchingParameters(),
-				Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() ) );
+				Threads.createFixedExecutorService() );
 
 		
 		Map< Integer, AffineGet > collect = tr.entrySet().stream().collect( Collectors.toMap( e -> 

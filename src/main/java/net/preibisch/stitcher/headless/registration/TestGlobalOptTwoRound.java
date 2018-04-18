@@ -27,27 +27,21 @@ import java.util.HashMap;
 import java.util.List;
 
 import ij.ImageJ;
-
-import mpicbg.models.AbstractModel;
 import mpicbg.models.TranslationModel3D;
-import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
-import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import net.preibisch.mvrecon.process.deconvolution.DeconViews;
-import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOpt;
-import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptIterative;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptTwoRound;
 import net.preibisch.mvrecon.process.interestpointregistration.global.convergence.ConvergenceStrategy;
 import net.preibisch.mvrecon.process.interestpointregistration.global.convergence.IterativeConvergenceStrategy;
@@ -104,7 +98,7 @@ public class TestGlobalOptTwoRound
 				params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
 				filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
 				dsFactors,
-				DeconViews.createExecutorService() );
+				Threads.createFixedExecutorService() );
 
 		// add the second illumination and group them together with the first
 		final Collection< Group< ViewId > > groupsIn = new ArrayList<>();

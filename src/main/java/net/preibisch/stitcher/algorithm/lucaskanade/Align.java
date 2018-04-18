@@ -32,7 +32,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import Jama.Matrix;
-
 import ij.ImageJ;
 import net.imglib2.Cursor;
 import net.imglib2.Interval;
@@ -64,8 +63,8 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
-import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
 import net.preibisch.stitcher.algorithm.TransformTools;
 
@@ -243,11 +242,12 @@ public class Align<T extends RealType< T >>
 	/*
 	 * Computed and return the affine transform that aligns image to template.
 	 */
-	public AffineTransform align(final RandomAccessibleInterval< T > image, final int maxIterations,
-			final double minParameterChange)
+	public AffineTransform align(
+			final RandomAccessibleInterval< T > image, final int maxIterations,
+			final double minParameterChange,
+			final ExecutorService service )
 	{
 		lastAlignConverged = false;
-		ExecutorService service = Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() * 2);
 
 		currentTransform.set( new AffineTransform( n ) );
 		int i = 0;
@@ -447,7 +447,7 @@ public class Align<T extends RealType< T >>
 
 	public static void main(String[] args)
 	{
-		final ExecutorService taskExecutor = DeconViews.createExecutorService();
+		final ExecutorService taskExecutor = Threads.createFixedExecutorService();
 
 		Img< FloatType > a = ImgLib2Util.openAs32Bit( new File( "73.tif.zip" ) );
 		Img< FloatType > b = ImgLib2Util.openAs32Bit( new File( "74.tif.zip" ) );
@@ -499,7 +499,7 @@ public class Align<T extends RealType< T >>
 		Align< FloatType > lk = new Align<>( simple2x1, new ArrayImgFactory<>(), warp );
 		//System.out.println( Util.printCoordinates( lk.align( Views.zeroMin( Views.interval( b, interval2 ) ), 100, 0.01 ).getRowPackedCopy() ) );
 		//final AffineTransform transform = lk.align( Views.zeroMin( rotated ), 100, 0.01 );
-		final AffineTransform transform = lk.align( simple2x2, 100, 0.01 );
+		final AffineTransform transform = lk.align( simple2x2, 100, 0.01, taskExecutor );
 
 		final AffineTransform scale = new AffineTransform( 3 );
 		scale.set( 2, 0, 0 );

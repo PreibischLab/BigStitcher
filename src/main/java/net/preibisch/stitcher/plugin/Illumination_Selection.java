@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import ij.plugin.PlugIn;
 import mpicbg.spim.data.sequence.ViewId;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.process.deconvolution.DeconViews;
@@ -45,7 +46,7 @@ public class Illumination_Selection implements PlugIn
 		final SpimData2 data = result.getData();
 		ArrayList< ViewId > selectedViews = SpimData2.getAllViewIdsSorted( result.getData(), result.getViewSetupsToProcess(), result.getTimePointsToProcess() );
 
-		final ExecutorService taskExecutor = DeconViews.createExecutorService();
+		final ExecutorService taskExecutor = Threads.createFixedExecutorService();
 
 		SpimData2 filteredSpimData = SelectIlluminationPopup.processIlluminationSelection( 
 				data, 

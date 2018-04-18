@@ -56,6 +56,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.process.fusion.FusionTools;
 import net.preibisch.mvrecon.process.fusion.ImagePortion;
 import net.preibisch.stitcher.algorithm.PairwiseStitching;
@@ -872,7 +873,7 @@ public class PhaseCorrelation2Util {
 			public void run()
 			{
 				PairwiseStitching.getShift( a, b, new Translation3D(), new Translation3D(),
-						new PairwiseStitchingParameters(), Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() ) );
+						new PairwiseStitchingParameters(), Threads.createFixedExecutorService() );
 			}
 		} );
 
