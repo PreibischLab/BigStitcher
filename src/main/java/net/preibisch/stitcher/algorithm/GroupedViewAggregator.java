@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import org.scijava.Context;
 
@@ -68,6 +69,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
+import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.mvrecon.process.deconvolution.normalization.AdjustInput;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
@@ -360,8 +362,9 @@ public class GroupedViewAggregator
 	public <T extends RealType<T>> RandomAccessibleInterval< T > aggregate(Group<? extends ViewId> gv, 
 												AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd,
 												long[] downsampleFactors,
-												final AffineTransform3D dsCorrectionT){
-
+												final AffineTransform3D dsCorrectionT,
+												final ExecutorService taskExecutor )
+	{
 		Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> map = new HashMap<>();
 		boolean dsAdjusted = false;
 
@@ -374,7 +377,7 @@ public class GroupedViewAggregator
 			// if view is not present, add null as the RAIProxy
 			if ( vd.isPresent() )
 			{
-				rai = new RAIProxy< T >( sd.getImgLoader(), vid, downsampleFactors );
+				rai = new RAIProxy< T >( sd.getImgLoader(), vid, downsampleFactors, taskExecutor );
 
 				// we only adjust the transformation for downsampling once (could be three channels averaged here)
 				if ( !dsAdjusted )
@@ -408,6 +411,7 @@ public class GroupedViewAggregator
 	
 	public static void main(String[] args)
 	{
+		final ExecutorService taskExecutor = DeconViews.createExecutorService();
 
 		final ArrayList< ViewSetup > setups = new ArrayList< ViewSetup >();
 		final ArrayList< ViewRegistration > registrations = new ArrayList< ViewRegistration >();
@@ -501,7 +505,7 @@ public class GroupedViewAggregator
 		setupsVID.add( new ViewId(0,3) );
 		Group<ViewId> gv = new Group<>( setupsVID );
 
-		RandomAccessibleInterval< FloatType > res = (RandomAccessibleInterval< FloatType >) gva.aggregate( gv, sd, new long[] {1,1,1} , new AffineTransform3D());
+		RandomAccessibleInterval< FloatType > res = (RandomAccessibleInterval< FloatType >) gva.aggregate( gv, sd, new long[] {1,1,1} , new AffineTransform3D(), taskExecutor);
 		System.out.println( Views.iterable( res ).firstElement().getClass() );
 		if (res != null)
 			ImageJFunctions.show( res );

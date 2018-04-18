@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import ij.gui.GenericDialog;
@@ -59,6 +60,7 @@ import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPointLists;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
+import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.PairwiseResult;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.PairwiseSetup;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
@@ -133,9 +135,11 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			grouping.getAxesOfComparison().addAll( defaultComparisonFactors );
 		}
 
+		final ExecutorService taskExecutor = DeconViews.createExecutorService();
+
 		if (defaultMethodIdx >= 2)
 		{
-			if (!processInterestPoint( data, grouping, defaultMethodIdx == 2 ))
+			if (!processInterestPoint( data, grouping, defaultMethodIdx == 2, taskExecutor ))
 				return;
 		}
 		else
@@ -146,13 +150,13 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			if (defaultMethodIdx == 0) // Phase Correlation
 			{
 				PairwiseStitchingParameters params = expertAlgorithmParameters ? PairwiseStitchingParameters.askUserForParameters() : new PairwiseStitchingParameters();
-				if (!processPhaseCorrelation( data, grouping, params, ds ))
+				if (!processPhaseCorrelation( data, grouping, params, ds, taskExecutor ))
 					return;
 			}
 			else if (defaultMethodIdx == 1) // Lucas-Kanade
 			{
 				LucasKanadeParameters params = expertAlgorithmParameters ? LucasKanadeParameters.askUserForParameters() : new LucasKanadeParameters( WarpFunctionType.TRANSLATION );
-				if (!processLucasKanade( data, grouping, params, ds ))
+				if (!processLucasKanade( data, grouping, params, ds, taskExecutor ))
 					return;
 			}
 		}
@@ -170,7 +174,8 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			SpimData2 data,
 			SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping,
 			PairwiseStitchingParameters params,
-			long[] dsFactors)
+			long[] dsFactors,
+			final ExecutorService taskExecutor )
 	{
 		// getpairs to compare
 		List< ? extends Pair< ? extends Group< ? extends ViewId >, ? extends Group< ? extends ViewId > > > pairs =  filteringAndGrouping.getComparisons();
@@ -179,7 +184,8 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 		final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
 				(List< Pair< Group< ViewId >, Group< ViewId > > >) pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
 				filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
-				dsFactors );
+				dsFactors,
+				taskExecutor );
 
 		// remove old results
 
@@ -213,7 +219,8 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			SpimData2 data,
 			SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping,
 			LucasKanadeParameters params,
-			long[] dsFactors)
+			long[] dsFactors,
+			final ExecutorService taskExecutor )
 	{
 		// getpairs to compare
 		List< ? extends Pair< ? extends Group< ? extends ViewId >, ? extends Group< ? extends ViewId > > > pairs = filteringAndGrouping
@@ -227,7 +234,8 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 				filteringAndGrouping.getSpimData().getSequenceDescription(),
 				filteringAndGrouping.getGroupedViewAggregator(),
 				dsFactors,
-				new ProgressWriterIJ());
+				new ProgressWriterIJ(),
+				taskExecutor );
 
 		// remove old results
 		// this is just a cast of pairs to Group<ViewId>
@@ -261,7 +269,8 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 
 	public static boolean processInterestPoint(final SpimData2 data,
 			final SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping,
-			boolean existingInterestPoints)
+			boolean existingInterestPoints,
+			final ExecutorService taskExecutor )
 	{
 
 		// detect new interest points if requested
@@ -270,7 +279,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			// by default the registration suggests what is selected in the dialog
 			Interest_Point_Detection.defaultGroupTiles = filteringAndGrouping.getGroupingFactors().contains( Tile.class );
 			Interest_Point_Detection.defaultGroupIllums = filteringAndGrouping.getGroupingFactors().contains( Illumination.class );
-			new Interest_Point_Detection().detectInterestPoints( data, filteringAndGrouping.getFilteredViews() );
+			new Interest_Point_Detection().detectInterestPoints( data, filteringAndGrouping.getFilteredViews(), taskExecutor );
 		}
 
 		// by default the registration suggests what is selected in the dialog
@@ -395,7 +404,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			// run the registration for this pair, skip saving results if it did not work
 			if ( !reg.processRegistration( setup, brp.pwr,
 					InterestpointGroupingType.ADD_ALL, 0.0, pair.getA().getViews(), null, null, registrationMap,
-					ipMap, brp.labelMap, true ) )
+					ipMap, brp.labelMap, true, taskExecutor ) )
 				continue;
 
 			// get newest Transformation of groupB (the accumulative transform

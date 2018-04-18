@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -64,10 +65,13 @@ public class ResavePopup extends JMenu implements ExplorerWindowSetable
 	FilteredAndGroupedExplorerPanel< ?, ? > panel;
 
 	protected static String[] types = new String[]{ "As TIFF ...", "As compressed TIFF ...", "As HDF5 ...", "As compressed HDF5 ..." };
+	final ExecutorService taskExecutor;
 
-	public ResavePopup()
+	public ResavePopup( final ExecutorService taskExecutor )
 	{
 		super( "Resave Dataset" );
+
+		this.taskExecutor = taskExecutor;
 
 		final JMenuItem tiff = new JMenuItem( types[ 0 ] );
 		final JMenuItem zippedTiff = new JMenuItem( types[ 1 ] );
@@ -161,7 +165,7 @@ public class ResavePopup extends JMenu implements ExplorerWindowSetable
 						params.xmlFile = panel.xml();
 
 						// write the TIFF's
-						Resave_TIFF.writeTIFF( data, viewIds, new File( params.xmlFile ).getParent(), params.compress, progressWriter );
+						Resave_TIFF.writeTIFF( data, viewIds, new File( params.xmlFile ).getParent(), params.compress, progressWriter, taskExecutor );
 	
 						// write the XML
 						final Pair< SpimData2, List< String > > result = Resave_TIFF.createXMLObject( data, viewIds, params );

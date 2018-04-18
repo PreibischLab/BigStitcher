@@ -36,12 +36,11 @@ import java.awt.event.WindowEvent;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
@@ -56,14 +55,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import bdv.BigDataViewer;
 import bdv.img.hdf5.Hdf5ImageLoader;
-import bdv.tools.HelpDialog;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.transformation.TransformedSource;
 import bdv.viewer.DisplayMode;
@@ -76,7 +73,6 @@ import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
@@ -88,7 +84,6 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.util.Pair;
-import net.imglib2.util.Util;
 import net.preibisch.mvrecon.fiji.plugin.util.MultiWindowLayoutHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.SpimDataTools;
@@ -123,7 +118,6 @@ import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.globalopt.ExecuteGlobalOpt;
-import net.preibisch.stitcher.algorithm.globalopt.TransformationTools;
 import net.preibisch.stitcher.gui.bdv.BDVFlyThrough;
 import net.preibisch.stitcher.gui.bdv.BDVVisibilityHandlerNeighborhood;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
@@ -189,7 +183,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		addListener( (SelectedViewDescriptionListener) demoLinkOverlay );
 
-		popups = initPopups();
+		// called in super()
+		// popups = initPopups();
+
 		initComponent();
 
 		if ( requestStartBDV && 
@@ -789,13 +785,13 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		return linkExplorer;
 	}
 
-	public ArrayList< ExplorerWindowSetable > initPopups()
+	public ArrayList< ExplorerWindowSetable > initPopups( final ExecutorService taskExecutor )
 	{
 		final ArrayList< ExplorerWindowSetable > popups = new ArrayList< ExplorerWindowSetable >();
 
 		popups.add( new LabelPopUp( " Displaying" ) );
 		popups.add( new BDVPopupStitching( linkOverlay ) );
-		popups.add( new DisplayRawImagesPopup() );
+		popups.add( new DisplayRawImagesPopup( taskExecutor ) );
 		popups.add( new MaxProjectPopup() );
 		//popups.add( demoLinkOverlayPopup );
 		popups.add( new Separator() );
@@ -806,28 +802,28 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		regularGridPopup = new RegularGridPopup();
 		//popups.add( regularGridPopup );
 		popups.add( new SimpleSubMenu( "Arrange Views", new TranslateGroupManuallyPopup(), new ReadTileConfigurationPopup(), regularGridPopup ) );
-		popups.add( new SelectIlluminationPopup() );
+		popups.add( new SelectIlluminationPopup( taskExecutor ) );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Stitching Wizard" ) );
-		popups.add( new CalculatePCPopup("Stitch dataset ...", true, Method.PHASECORRELATION, true) );
-		popups.add( new CalculatePCPopupExpertBatch("Stitch dataset (expert) ...", true) );
+		popups.add( new CalculatePCPopup("Stitch dataset ...", true, Method.PHASECORRELATION, true, taskExecutor ) );
+		popups.add( new CalculatePCPopupExpertBatch("Stitch dataset (expert) ...", true, taskExecutor ) );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Step-by-step Stitching" ) );
-		popups.add( new CalculatePCPopupExpertBatch("Calculate Pairwise Shifts ...", false) );
+		popups.add( new CalculatePCPopupExpertBatch("Calculate Pairwise Shifts ...", false, taskExecutor ) );
 		popups.add( new VerifyLinksPopup( demoLinkOverlay ) );
 		popups.add( new OptimizeGloballyPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Registration Refinement (optional)" ) );
-		popups.add( new RefineWithICPPopup( "Refine with ICP", demoLinkOverlay ) );
+		popups.add( new RefineWithICPPopup( "Refine with ICP", demoLinkOverlay, taskExecutor ) );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Fusion" ) );
 		popups.add( new BoundingBoxPopup() );
-		popups.add( new DisplayFusedImagesPopup() );
-		popups.add( new FusionPopup() );
+		popups.add( new DisplayFusedImagesPopup( taskExecutor ) );
+		popups.add( new FusionPopup( taskExecutor ) );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
@@ -836,7 +832,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Modifications" ) );
-		popups.add( new ResavePopup() );
+		popups.add( new ResavePopup( taskExecutor ) );
 		popups.add( new Separator() );
 
 		// add link to wiki

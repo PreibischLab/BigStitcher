@@ -22,6 +22,7 @@
 package net.imglib2.algorithm.phasecorrelation;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import net.imglib2.RandomAccessibleInterval;
@@ -30,6 +31,7 @@ import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
+import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.stitcher.algorithm.DownsampleTools;
 import net.preibisch.stitcher.algorithm.PairwiseStitching;
 import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
@@ -38,12 +40,14 @@ public class PhaseCorrelationTest2
 {
 	public static void main(String[] args)
 	{
+		final ExecutorService taskExecutor = DeconViews.createExecutorService();
+
 		RandomAccessibleInterval<  FloatType > image1 = ImgLib2Util.openAs32Bit( new File( "73.tif.zip" ) );
 		RandomAccessibleInterval<  FloatType > image2 = ImgLib2Util.openAs32Bit( new File( "73m5-10-13.tif.zip" ) );
 		//RandomAccessibleInterval<  FloatType > image2 = ImgLib2Util.openAs32Bit( new File( "73m5,75-10,25-12,6.tif.zip" ) );
 		
-		image1 = DownsampleTools.downsample( image1, new long[] {4,4,2} );
-		image2 = DownsampleTools.downsample( image2, new long[] {4,4,2} );
+		image1 = DownsampleTools.downsample( image1, new long[] {4,4,2}, taskExecutor );
+		image2 = DownsampleTools.downsample( image2, new long[] {4,4,2}, taskExecutor );
 		
 		//Img<  FloatType > image1 = ImgLib2Util.openAs32Bit( new File( "boats.tif" ) );
 		//Img<  FloatType > image2 = ImgLib2Util.openAs32Bit( new File( "boatsm10,5-m20,5.tif" ) );

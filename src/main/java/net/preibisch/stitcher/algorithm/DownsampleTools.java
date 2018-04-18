@@ -24,6 +24,7 @@ package net.preibisch.stitcher.algorithm;
 import static mpicbg.spim.data.generic.sequence.ImgLoaderHints.LOAD_COMPLETELY;
 
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
 
 import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
@@ -97,7 +98,8 @@ public class DownsampleTools
 	public static < T extends RealType<T> > RandomAccessibleInterval< T > openAndDownsample(
 			final BasicImgLoader imgLoader,
 			final ViewId vd,
-			long[] downsampleFactors )
+			long[] downsampleFactors,
+			final ExecutorService taskExecutor )
 	{
 		
 		System.out.println(
@@ -152,12 +154,13 @@ public class DownsampleTools
 			input =  (RandomAccessibleInterval< T >) imgLoader.getSetupImgLoader( vd.getViewSetupId() ).getImage( vd.getTimePointId(), LOAD_COMPLETELY );
 		}
 
-		return downsample( input, new long[]{ dsx, dsy, dsz } );
+		return downsample( input, new long[]{ dsx, dsy, dsz }, taskExecutor );
 	}
 	
 	public static < T extends RealType<T> > RandomAccessibleInterval< T > downsample(
 			RandomAccessibleInterval< T > input,
-			final long[] downsampleFactors )
+			final long[] downsampleFactors,
+			final ExecutorService taskExecutor )
 	{
 		boolean is2d = input.numDimensions() == 2;
 		
@@ -176,13 +179,13 @@ public class DownsampleTools
 			f = new ArrayImgFactory();
 		
 		for ( ;dsx > 1; dsx /= 2 )
-			input = Downsample.simple2x( input, f, new boolean[]{ true, false, false } );
+			input = Downsample.simple2x( input, f, new boolean[]{ true, false, false }, taskExecutor );
 
 		for ( ;dsy > 1; dsy /= 2 )
-			input = Downsample.simple2x( input, f, new boolean[]{ false, true, false } );
+			input = Downsample.simple2x( input, f, new boolean[]{ false, true, false }, taskExecutor );
 
 		for ( ;dsz > 1; dsz /= 2 )
-			input = Downsample.simple2x( input, f, new boolean[]{ false, false, true } );
+			input = Downsample.simple2x( input, f, new boolean[]{ false, false, true }, taskExecutor );
 
 		return input;
 	}

@@ -30,6 +30,7 @@ import ij.ImageJ;
 import mpicbg.spim.io.IOFunctions;
 import mpicbg.spim.io.TextFileAccess;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.algorithm.fft2.FFTConvolution;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.realtransform.Translation;
@@ -40,6 +41,7 @@ import net.imglib2.util.Util;
 import net.preibisch.simulation.SimulateTileStitching;
 import net.preibisch.stitcher.algorithm.PairwiseStitching;
 import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
 
@@ -47,28 +49,30 @@ public class StitchingPairwise
 {
 	public static void main( String[] args )
 	{
-		//new ImageJ();
+		new ImageJ();
 
 		final double minOverlap = 0.85;
 
-		final Thread[] threads = new Thread[ 14 ];
+		final Thread[] threads = new Thread[ 8 ];
 
-		for ( int i = 0; i < 14; ++i )
+		for ( int i = 0; i < 4; ++i )
 		{
 			final int snrInt;
-			final boolean subpixel;
-			if ( i >= 7 )
+			final boolean subpixel = true;
+			final int downsample;
+
+			if ( i >= 4 )
 			{
-				snrInt = Util.pow( 2, i - 7 );
-				subpixel = true;
+				snrInt = 64;
+				downsample =  Util.pow( 2, i - 4 );
 			}
 			else
 			{
-				snrInt = Util.pow( 2, i );
-				subpixel = false;
+				snrInt = 32;
+				downsample =  Util.pow( 2, i );
 			}
 
-			System.out.println( i + " " + snrInt + " " + subpixel );
+			System.out.println( i + " " + snrInt + " " + downsample + " " + subpixel );
 
 			threads[ i ] = new Thread( new Runnable()
 			{
@@ -79,11 +83,11 @@ public class StitchingPairwise
 					final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, Util.getArrayFromValue( minOverlap, 3 ) );
 			
 					final PairwiseStitchingParameters params = new PairwiseStitchingParameters( 0.1, 5, subpixel, subpixel, false );
-					final ExecutorService service = DeconViews.createExecutorService();
+					final ExecutorService service = FFTConvolution.createExecutorService( 4 );
 			
 					final Random rnd = new Random( 34 );
 			
-					for ( int downsample = 8; downsample >= 1; downsample /= 2 )
+					//for ( int downsample = 8; downsample >= 1; downsample /= 2 )
 					{
 						final PrintWriter out;
 						if ( subpixel )
@@ -120,8 +124,8 @@ public class StitchingPairwise
 			
 							final Pair< Img< FloatType >, Img< FloatType > > pair = sts.getNextPair( snr );
 			
-							final RandomAccessibleInterval< FloatType > img1 = downsample( pair.getA(), ds );
-							final RandomAccessibleInterval< FloatType > img2 = downsample( pair.getB(), ds );
+							final RandomAccessibleInterval< FloatType > img1 = downsample( pair.getA(), ds, service );
+							final RandomAccessibleInterval< FloatType > img2 = downsample( pair.getB(), ds, service );
 			
 							//SimulateTileStitching.show( img1, "1" );
 							//SimulateTileStitching.show( img2, "2" );
@@ -156,17 +160,19 @@ public class StitchingPairwise
 		}
 
 		for ( int ithread = 0; ithread < threads.length; ++ithread )
-			threads[ ithread ].start();
+			if ( threads[ ithread ] != null )
+				threads[ ithread ].start();
 
 		try
 		{
 			for ( int ithread = 0; ithread < threads.length; ++ithread )
-				threads[ ithread ].join();
+				if ( threads[ ithread ] != null )
+					threads[ ithread ].join();
 		}
 		catch ( InterruptedException ie ) { throw new RuntimeException(ie); }
 	}
 
-	public static RandomAccessibleInterval< FloatType > downsample( RandomAccessibleInterval< FloatType > input, final int[] downsample )
+	public static RandomAccessibleInterval< FloatType > downsample( RandomAccessibleInterval< FloatType > input, final int[] downsample, final ExecutorService taskExecutor )
 	{
 		int dsx = downsample[ 0 ];
 		int dsy = downsample[ 1 ];
@@ -176,20 +182,20 @@ public class StitchingPairwise
 		{
 			if ( dsy > 1 )
 			{
-				input = Downsample.simple2x( input, new ArrayImgFactory<>(), new boolean[]{ false, true, false } );
+				input = Downsample.simple2x( input, new ArrayImgFactory<>(), new boolean[]{ false, true, false }, taskExecutor );
 				dsy /= 2;
 			}
 
 			if ( dsx > 1 )
 			{
-				input = Downsample.simple2x( input, new ArrayImgFactory<>(), new boolean[]{ true, false, false } );
+				input = Downsample.simple2x( input, new ArrayImgFactory<>(), new boolean[]{ true, false, false }, taskExecutor );
 				dsx /= 2;
 			}
 
 
 			if ( dsz > 1 )
 			{
-				input = Downsample.simple2x( input, new ArrayImgFactory<>(), new boolean[]{ false, false, true } );
+				input = Downsample.simple2x( input, new ArrayImgFactory<>(), new boolean[]{ false, false, true }, taskExecutor );
 				dsz /= 2;
 			}
 		}

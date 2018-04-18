@@ -27,6 +27,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -39,18 +40,15 @@ import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.io.IOFunctions;
-
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
+import net.preibisch.stitcher.algorithm.GroupedViewAggregator.ActionType;
 import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
-import net.preibisch.stitcher.algorithm.GroupedViewAggregator.ActionType;
 import net.preibisch.stitcher.algorithm.lucaskanade.LucasKanadeParameters;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
-import net.preibisch.stitcher.gui.StitchingResultsSettable;
 import net.preibisch.stitcher.gui.StitchingUIHelper;
 import net.preibisch.stitcher.plugin.Calculate_Pairwise_Shifts;
 
@@ -70,13 +68,15 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 	private boolean simple;
 	private boolean wizardMode;
 	private Method method;
+	private final ExecutorService taskExecutor;
 
-	public CalculatePCPopup(String description, boolean simple, Method method, boolean wizardMode)
+	public CalculatePCPopup(String description, boolean simple, Method method, boolean wizardMode, final ExecutorService taskExecutor )
 	{
 		super( description );
 		this.simple = simple;
 		this.method = method;
 		this.wizardMode = wizardMode;
+		this.taskExecutor = taskExecutor;
 		this.addActionListener( new MyActionListener() );
 	}
 
@@ -177,9 +177,9 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 						return;
 
 					if (method == Method.PHASECORRELATION)
-						Calculate_Pairwise_Shifts.processPhaseCorrelation( (SpimData2) panel.getSpimData(), filteringAndGrouping, params, dsFactors );
+						Calculate_Pairwise_Shifts.processPhaseCorrelation( (SpimData2) panel.getSpimData(), filteringAndGrouping, params, dsFactors, taskExecutor );
 					if (method == Method.LUCASKANADE)
-						Calculate_Pairwise_Shifts.processLucasKanade( (SpimData2) panel.getSpimData(), filteringAndGrouping, LKParams, dsFactors );
+						Calculate_Pairwise_Shifts.processLucasKanade( (SpimData2) panel.getSpimData(), filteringAndGrouping, LKParams, dsFactors, taskExecutor );
 
 
 					IOFunctions.println( new Date( System.currentTimeMillis() ) + ": DONE." );

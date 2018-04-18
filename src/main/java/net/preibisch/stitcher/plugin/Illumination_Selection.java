@@ -22,12 +22,14 @@
 package net.preibisch.stitcher.plugin;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import ij.plugin.PlugIn;
 import mpicbg.spim.data.sequence.ViewId;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.stitcher.gui.popup.SelectIlluminationPopup;
 
 public class Illumination_Selection implements PlugIn
@@ -43,12 +45,15 @@ public class Illumination_Selection implements PlugIn
 		final SpimData2 data = result.getData();
 		ArrayList< ViewId > selectedViews = SpimData2.getAllViewIdsSorted( result.getData(), result.getViewSetupsToProcess(), result.getTimePointsToProcess() );
 
+		final ExecutorService taskExecutor = DeconViews.createExecutorService();
+
 		SpimData2 filteredSpimData = SelectIlluminationPopup.processIlluminationSelection( 
 				data, 
 				selectedViews.stream().map( vid -> data.getSequenceDescription().getViewDescription( vid ) ).collect( Collectors.toList() ),
 				false,
 				false,
-				null );
+				null,
+				taskExecutor );
 
 		if (filteredSpimData != null)
 		{

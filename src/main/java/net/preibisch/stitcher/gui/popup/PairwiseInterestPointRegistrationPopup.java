@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import javax.swing.JCheckBoxMenuItem;
@@ -91,15 +92,17 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 	private JMenuItem withDetection;
 	private JMenuItem withoutDetection;
 	private JCheckBoxMenuItem expertGrouping;
+	final ExecutorService taskExecutor;
 
 	private boolean wizardMode;
 
-	public PairwiseInterestPointRegistrationPopup(String description, boolean wizardMode )
+	public PairwiseInterestPointRegistrationPopup(String description, boolean wizardMode, final ExecutorService taskExecutor )
 	{
 		super( description );
 		this.addActionListener( new MyActionListener(false) );
 
 		this.wizardMode = wizardMode;
+		this.taskExecutor = taskExecutor;
 
 		withDetection = new JMenuItem( "With new Interest Points" );
 		withoutDetection = new JMenuItem( "With existing Interest Points" );
@@ -235,7 +238,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 				}
 
 
-				if (Calculate_Pairwise_Shifts.processInterestPoint( data, filteringAndGrouping, existingInterestPoints ))
+				if (Calculate_Pairwise_Shifts.processInterestPoint( data, filteringAndGrouping, existingInterestPoints, taskExecutor ))
 					if (wizardMode)
 					{
 						// ask user if they want to switch to preview mode

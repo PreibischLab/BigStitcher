@@ -21,6 +21,8 @@
  */
 package net.preibisch.stitcher.gui.popup;
 
+import java.util.concurrent.ExecutorService;
+
 import javax.swing.JComponent;
 import javax.swing.JMenu;
 
@@ -39,22 +41,25 @@ public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindow
 	final CalculatePCPopup phaseCorr;
 	final CalculatePCPopup lucasKanade;
 	final PairwiseInterestPointRegistrationPopup interestPoint;
+	final ExecutorService taskExecutor;
+
 	boolean wizardMode;
 
-	public CalculatePCPopupExpertBatch( String description, boolean wizardMode )
+	public CalculatePCPopupExpertBatch( String description, boolean wizardMode, final ExecutorService taskExecutor  )
 	{
 		super( description );
 
 		this.wizardMode = wizardMode;
+		this.taskExecutor = taskExecutor;
 
 		if (!wizardMode)
-			phaseCorrSimple = new CalculatePCPopup( "Phase Correlation", true, Method.PHASECORRELATION, wizardMode );
+			phaseCorrSimple = new CalculatePCPopup( "Phase Correlation", true, Method.PHASECORRELATION, wizardMode, taskExecutor );
 		else
 			phaseCorrSimple = null;
 			
-		phaseCorr = new CalculatePCPopup( wizardMode ? "Phase Correlation" : "Phase Correlation (expert)", false, Method.PHASECORRELATION, wizardMode );
-		lucasKanade = new CalculatePCPopup( "Lucas-Kanade", false, Method.LUCASKANADE, wizardMode );
-		interestPoint = new PairwiseInterestPointRegistrationPopup( "Interest point based", wizardMode );
+		phaseCorr = new CalculatePCPopup( wizardMode ? "Phase Correlation" : "Phase Correlation (expert)", false, Method.PHASECORRELATION, wizardMode, taskExecutor );
+		lucasKanade = new CalculatePCPopup( "Lucas-Kanade", false, Method.LUCASKANADE, wizardMode, taskExecutor );
+		interestPoint = new PairwiseInterestPointRegistrationPopup( "Interest point based", wizardMode, taskExecutor );
 
 		if(!wizardMode)
 			this.add(phaseCorrSimple);

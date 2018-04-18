@@ -65,6 +65,7 @@ import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
+import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
 import net.preibisch.stitcher.algorithm.TransformTools;
 
@@ -446,6 +447,8 @@ public class Align<T extends RealType< T >>
 
 	public static void main(String[] args)
 	{
+		final ExecutorService taskExecutor = DeconViews.createExecutorService();
+
 		Img< FloatType > a = ImgLib2Util.openAs32Bit( new File( "73.tif.zip" ) );
 		Img< FloatType > b = ImgLib2Util.openAs32Bit( new File( "74.tif.zip" ) );
 
@@ -487,8 +490,8 @@ public class Align<T extends RealType< T >>
 		ImageJFunctions.show( rotated, "in");
 
 		// downsample input
-		RandomAccessibleInterval< FloatType > simple2x1 = Downsample.simple2x( Views.zeroMin( Views.interval( a, interval1 ) ), new ArrayImgFactory<>(), new boolean[] {true, true, false} );
-		RandomAccessibleInterval< FloatType > simple2x2 = Downsample.simple2x( Views.zeroMin( Views.interval( rotated, interval2 ) ), new ArrayImgFactory<>(), new boolean[] {true, true, false} );
+		RandomAccessibleInterval< FloatType > simple2x1 = Downsample.simple2x( Views.zeroMin( Views.interval( a, interval1 ) ), new ArrayImgFactory<>(), new boolean[] {true, true, false}, taskExecutor );
+		RandomAccessibleInterval< FloatType > simple2x2 = Downsample.simple2x( Views.zeroMin( Views.interval( rotated, interval2 ) ), new ArrayImgFactory<>(), new boolean[] {true, true, false}, taskExecutor );
 
 		// align
 

@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import bdv.export.ProgressWriter;
+import ch.qos.logback.core.util.ExecutorServiceUtil;
 import ij.IJ;
 import mpicbg.models.TranslationModel3D;
 import mpicbg.spim.data.SpimData;
@@ -61,6 +62,7 @@ import net.imglib2.util.ValuePair;
 import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
+import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOpt;
 import net.preibisch.mvrecon.process.interestpointregistration.global.convergence.ConvergenceStrategy;
 import net.preibisch.mvrecon.process.interestpointregistration.global.pointmatchcreating.strong.ImageCorrelationPointMatchCreator;
@@ -260,8 +262,8 @@ public class TransformationTools
 			return null;
 
 		// get one image per group
-		final RandomAccessibleInterval<T> img1 = gva.aggregate( viewIdsA, sd, downsampleFactors, dsCorrectionT1 );	
-		final RandomAccessibleInterval<T> img2 = gva.aggregate( viewIdsB, sd, downsampleFactors, dsCorrectionT2 );
+		final RandomAccessibleInterval<T> img1 = gva.aggregate( viewIdsA, sd, downsampleFactors, dsCorrectionT1, service );	
+		final RandomAccessibleInterval<T> img2 = gva.aggregate( viewIdsB, sd, downsampleFactors, dsCorrectionT2, service );
 
 		if (img1 == null || img2 == null)
 		{
@@ -330,8 +332,8 @@ public class TransformationTools
 			return null;
 
 		// get one image per group
-		final RandomAccessibleInterval<T> img1 = gva.aggregate( viewIdsA, sd, downsampleFactors, dsCorrectionT1 );	
-		final RandomAccessibleInterval<T> img2 = gva.aggregate( viewIdsB, sd, downsampleFactors, dsCorrectionT2 );
+		final RandomAccessibleInterval<T> img1 = gva.aggregate( viewIdsA, sd, downsampleFactors, dsCorrectionT1, service );	
+		final RandomAccessibleInterval<T> img2 = gva.aggregate( viewIdsB, sd, downsampleFactors, dsCorrectionT2, service );
 
 		if (img1 == null || img2 == null)
 		{
@@ -415,11 +417,10 @@ public class TransformationTools
 			final ViewRegistrations vrs,
 			final AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd,
 			final GroupedViewAggregator gva, final long[] downsamplingFactors,
-			final ProgressWriter progressWriter)
+			final ProgressWriter progressWriter,
+			final ExecutorService taskExecutor )
 	{
 		// set up executor service
-		final ExecutorService serviceGlobal = Executors
-				.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 2 ) );
 		final ArrayList< Callable< Pair< Pair< Group< V >, Group< V > >, Pair< Pair< AffineGet, Double >, RealInterval > > > > tasks = new ArrayList<>();
 
 		// remove non-overlapping comparisons
@@ -446,9 +447,6 @@ public class TransformationTools
 							IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: "
 									+ p.getA() + " <> " + p.getB() );
 
-							final ExecutorService serviceLocal = Executors.newFixedThreadPool(
-									Math.max( 2, Runtime.getRuntime().availableProcessors() / 4 ) );
-
 							final ViewId firstVdA = p.getA().iterator().next();
 							final ViewId firstVdB = p.getB().iterator().next();
 
@@ -459,15 +457,13 @@ public class TransformationTools
 							{
 
 								result = computeStitchingLucasKanade( p.getA(), p.getB(), vrs, params, sd, gva,
-										downsamplingFactors, serviceLocal );
+										downsamplingFactors, taskExecutor );
 							}
 							else
 							{
 								result = computeStitchingNonEqualTransformationsLucasKanade( p.getA(), p.getB(), vrs, params, sd,
-										gva, downsamplingFactors, serviceLocal );
+										gva, downsamplingFactors, taskExecutor );
 							}
-
-							serviceLocal.shutdown();
 
 							int nCompletedI = nCompleted.incrementAndGet();
 							if (progressWriter != null)							
@@ -486,7 +482,7 @@ public class TransformationTools
 
 		try
 		{
-			for ( final Future< Pair< Pair< Group< V >, Group< V > >, Pair< Pair< AffineGet, Double >, RealInterval > > > future : serviceGlobal
+			for ( final Future< Pair< Pair< Group< V >, Group< V > >, Pair< Pair< AffineGet, Double >, RealInterval > > > future : taskExecutor
 					.invokeAll( tasks ) )
 			{
 				// wait for task to complete
@@ -525,15 +521,15 @@ public class TransformationTools
 		return results;
 	}
 	
-	public static <V extends ViewId > ArrayList< PairwiseStitchingResult<ViewId> > computePairs( 	final List< Pair<  Group< V >,  Group< V > > > pairs, 
+	public static <V extends ViewId > ArrayList< PairwiseStitchingResult<ViewId> > computePairs(
+																		final List< Pair<  Group< V >,  Group< V > > > pairs, 
 																		final PairwiseStitchingParameters params, 
 																		final ViewRegistrations vrs,
 																		final AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd, 
 																		final GroupedViewAggregator gva,
-																		final long[] downsamplingFactors)
+																		final long[] downsamplingFactors,
+																		final ExecutorService taskExecutor )
 	{
-		// set up executor service
-		final ExecutorService serviceGlobal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 2 ) );
 		final ArrayList< Callable< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > > > tasks = new ArrayList<>();
 
 		// remove non-overlapping comparisons
@@ -555,8 +551,6 @@ public class TransformationTools
 				{
 					Pair<Pair< AffineGet, Double >, RealInterval> result = null;
 
-					final ExecutorService serviceLocal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 4 ) );
-
 					// TODO: do non-equal transformation registration when views within a group have differing transformations
 					final ViewId firstVdA = p.getA().iterator().next();
 					final ViewId firstVdB = p.getB().iterator().next();
@@ -574,7 +568,7 @@ public class TransformationTools
 								sd,
 								gva,
 								downsamplingFactors,
-								serviceLocal );
+								taskExecutor );
 					}
 					else
 					{
@@ -586,11 +580,9 @@ public class TransformationTools
 								sd,
 								gva,
 								downsamplingFactors,
-								serviceLocal );
+								taskExecutor );
 						System.out.println( "non translations NOT equal, using virtually fused views for stitching" );
 					}
-
-					serviceLocal.shutdown();
 
 					// show progress in ImageJ progress bar (TODO: should we really do this here or leave it GUI-independent?)
 					int nCompletedI = nCompleted.incrementAndGet();
@@ -610,7 +602,7 @@ public class TransformationTools
 
 		try
 		{
-			for ( final Future< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > > future : serviceGlobal.invokeAll( tasks ) )
+			for ( final Future< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > > future : taskExecutor.invokeAll( tasks ) )
 			{
 				// wait for task to complete
 				final Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > result = future.get();
@@ -663,6 +655,8 @@ public class TransformationTools
 
 	public static void main( String[] args )
 	{
+		final ExecutorService service = DeconViews.createExecutorService();
+
 		final SpimData d = GenerateSpimData.grid3x2();
 		final SequenceDescription sd = d.getSequenceDescription();
 
@@ -694,7 +688,8 @@ public class TransformationTools
 																d.getViewRegistrations(),
 																d.getSequenceDescription() ,
 																gva,
-																downsamplingFactors);
+																downsamplingFactors,
+																service );
 
 		results.forEach( r -> System.out.println( r.getTransform() ) );
 		

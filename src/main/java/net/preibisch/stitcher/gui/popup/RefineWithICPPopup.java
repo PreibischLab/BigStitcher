@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import javax.swing.JComponent;
 import javax.swing.JMenu;
@@ -123,12 +124,14 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 
 	DemoLinkOverlay overlay;
 	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	final ExecutorService taskExecutor;
 
-	public RefineWithICPPopup( String description, final DemoLinkOverlay overlay )
+	public RefineWithICPPopup( String description, final DemoLinkOverlay overlay, final ExecutorService taskExecutor )
 	{
 		super( description );
 
 		this.overlay = overlay;
+		this.taskExecutor = taskExecutor;
 
 		final JMenuItem simpleICPtiles = new JMenuItem( "Simple (tile registration)" );
 		final JMenuItem simpleICPchannels = new JMenuItem( "Simple (chromatic abberation)" );
@@ -334,7 +337,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 					if ( labels.size() == 0 )
 					{
 						IOFunctions.println( "No interest point defined, please detect interest point and re-run" );
-						new Interest_Point_Detection().detectInterestPoints( data, viewIds );
+						new Interest_Point_Detection().detectInterestPoints( data, viewIds, taskExecutor );
 						return;
 					}
 
@@ -456,7 +459,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 						{
 							IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Processing channel: " + group.getViews().iterator().next().getViewSetup().getChannel().getName() );
 
-							final DoGParameters dog = new DoGParameters();
+							final DoGParameters dog = new DoGParameters( taskExecutor );
 		
 							dog.imgloader = data.getSequenceDescription().getImgLoader();
 							dog.toProcess = new ArrayList< ViewDescription >();
@@ -601,9 +604,9 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 					HashMap< ViewId, mpicbg.models.Tile > models;
 
 					if ( Interest_Point_Registration.hasGroups( subsets ) )
-						models = groupedSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, overlay );
+						models = groupedSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, overlay, taskExecutor );
 					else
-						models = pairSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, overlay );
+						models = pairSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, overlay, taskExecutor );
 
 					if ( models == null )
 						continue;
@@ -675,7 +678,8 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 			final Map< ViewId, String > labelMap,
 			final IterativeClosestPointParameters icpp,
 			final List< ViewId > fixedViews,
-			final DemoLinkOverlay overlay )
+			final DemoLinkOverlay overlay,
+			final ExecutorService taskExecutor )
 	{
 		final List< Pair< ViewId, ViewId > > pairs = subset.getPairs();
 
@@ -690,7 +694,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 
 		// compute all pairwise matchings
 		final List< Pair< Pair< ViewId, ViewId >, PairwiseResult< InterestPoint > > > resultsPairs =
-				MatcherPairwiseTools.computePairs( pairs, interestpoints, new IterativeClosestPointPairwise< InterestPoint >( icpp ) );
+				MatcherPairwiseTools.computePairs( pairs, interestpoints, new IterativeClosestPointPairwise< InterestPoint >( icpp ), taskExecutor );
 
 		if ( overlay != null )
 		{
@@ -763,7 +767,8 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 			final Map< ViewId, String > labelMap,
 			final IterativeClosestPointParameters icpp,
 			final List< ViewId > fixedViews,
-			final DemoLinkOverlay overlay )
+			final DemoLinkOverlay overlay,
+			final ExecutorService taskExecutor )
 	{
 		final List< Pair< Group< ViewId >, Group< ViewId > > > groupedPairs = subset.getGroupedPairs();
 		final Map< Group< ViewId >, List< GroupedInterestPoint< ViewId > > > groupedInterestpoints = new HashMap<>();
@@ -803,7 +808,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 		}
 
 		final List< Pair< Pair< Group< ViewId >, Group< ViewId > >, PairwiseResult< GroupedInterestPoint< ViewId > > > > resultsGroups =
-				MatcherPairwiseTools.computePairs( groupedPairs, groupedInterestpoints, new IterativeClosestPointPairwise< GroupedInterestPoint< ViewId > >( icpp ) );
+				MatcherPairwiseTools.computePairs( groupedPairs, groupedInterestpoints, new IterativeClosestPointPairwise< GroupedInterestPoint< ViewId > >( icpp ), taskExecutor );
 
 		if ( overlay != null )
 		{

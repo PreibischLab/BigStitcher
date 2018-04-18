@@ -45,6 +45,7 @@ import net.imglib2.util.Util;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import net.preibisch.mvrecon.process.deconvolution.DeconViews;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOpt;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptIterative;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptTwoRound;
@@ -102,7 +103,8 @@ public class TestGlobalOptTwoRound
 				(List<Pair<Group<ViewId>, Group<ViewId>>>) pairs,
 				params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
 				filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
-				dsFactors );
+				dsFactors,
+				DeconViews.createExecutorService() );
 
 		// add the second illumination and group them together with the first
 		final Collection< Group< ViewId > > groupsIn = new ArrayList<>();

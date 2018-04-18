@@ -83,10 +83,12 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 	public static boolean defaultVerify = true;
 
 	private FilteredAndGroupedExplorerPanel< ?, ? > panel;
-	
-	public SelectIlluminationPopup()
+	final ExecutorService taskExecutor;
+
+	public SelectIlluminationPopup( final ExecutorService taskExecutor )
 	{
 		super( "Select Best Illuminations" );
+		this.taskExecutor = taskExecutor;
 		this.addActionListener( new MyActionListener() );
 	}
 	
@@ -142,7 +144,8 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 							selected.stream().reduce( new ArrayList<>(), (x,y) -> {x.addAll( y ); return x;}),
 							true,
 							bdv != null,
-							bdv );
+							bdv,
+							taskExecutor );
 
 					if (filteredSpimData != null)
 					{
@@ -170,8 +173,8 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 			Collection< ? extends BasicViewDescription< ? > > selected,
 			boolean showOnlySelectedOption,
 			boolean showPreviewOption,
-			BigDataViewer bdvForPreview
-			)
+			BigDataViewer bdvForPreview,
+			final ExecutorService taskExecutor )
 	{
 		final GenericDialogPlus gdpParams = new GenericDialogPlus( "Illumination Selection" );
 		if (showOnlySelectedOption)
@@ -223,7 +226,6 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		// multithreaded best illuination determination
 		List< Callable< ViewId > > tasks = new ArrayList<>();
 		List< ViewId > bestViews = new ArrayList<>();
-		ExecutorService service = Executors.newFixedThreadPool(Math.max( 2, Runtime.getRuntime().availableProcessors() ));
 
 		final AtomicInteger progress = new AtomicInteger( 0 );
 		final int numTasks = groupedViews.size();
@@ -246,7 +248,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		List< Future< ViewId > > futures;
 		try
 		{
-			futures = service.invokeAll( tasks );
+			futures = taskExecutor.invokeAll( tasks );
 			for (Future< ViewId > f : futures)
 				bestViews.add( f.get() );
 		}
@@ -255,7 +257,6 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		service.shutdown();
 
 		IJ.showProgress( 1.0 );
 
