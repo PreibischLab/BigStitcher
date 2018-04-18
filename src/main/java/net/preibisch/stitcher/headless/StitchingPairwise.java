@@ -38,19 +38,18 @@ import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
+import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
 import net.preibisch.simulation.SimulateTileStitching;
 import net.preibisch.stitcher.algorithm.PairwiseStitching;
 import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
-import net.preibisch.mvrecon.Threads;
-import net.preibisch.mvrecon.process.deconvolution.DeconViews;
-import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
 
 public class StitchingPairwise
 {
 	public static void main( String[] args )
 	{
 		new ImageJ();
-
+		final ExecutorService service = FFTConvolution.createExecutorService( Math.max( 1, Runtime.getRuntime().availableProcessors() - 2 ) );
+		
 		final double minOverlap = 0.85;
 
 		final Thread[] threads = new Thread[ 8 ];
@@ -80,10 +79,9 @@ public class StitchingPairwise
 				{
 					final float snr = snrInt;
 			
-					final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, Util.getArrayFromValue( minOverlap, 3 ) );
+					final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, Util.getArrayFromValue( minOverlap, 3 ), service );
 			
 					final PairwiseStitchingParameters params = new PairwiseStitchingParameters( 0.1, 5, subpixel, subpixel, false );
-					final ExecutorService service = FFTConvolution.createExecutorService( 4 );
 			
 					final Random rnd = new Random( 34 );
 			
