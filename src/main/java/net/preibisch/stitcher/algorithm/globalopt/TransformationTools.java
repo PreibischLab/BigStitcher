@@ -667,10 +667,15 @@ public class TransformationTools
 
 		final ArrayList< PairwiseStitchingResult< ViewId > > results = new ArrayList<>();
 
+		final int batchSize = Math.max( 2, Threads.numThreads() / 6 );
+
+		IOFunctions.println( "Computing overlap for: " + batchSize + " pairs of images at once (in total " + Threads.numThreads() + " threads." );
+
 		try
 		{
-			for ( final Future< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > > future : taskExecutor.invokeAll( tasks ) )
-			{
+			for ( final ArrayList< Callable< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > > > part : Threads.splitTasks( tasks, batchSize ) )
+				for ( final Future< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > > future : taskExecutor.invokeAll( part ) )
+				{
 				// wait for task to complete
 				final Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > result = future.get();
 
