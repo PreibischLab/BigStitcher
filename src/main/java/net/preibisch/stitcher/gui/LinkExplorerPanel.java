@@ -62,6 +62,9 @@ import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingRes
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.FilteredStitchingResults;
+import net.preibisch.stitcher.algorithm.globalopt.ExecuteGlobalOpt;
+import net.preibisch.stitcher.algorithm.globalopt.GlobalOptimizationParameters;
+import net.preibisch.stitcher.algorithm.globalopt.GlobalOptimizationParameters.GlobalOptType;
 import net.preibisch.stitcher.gui.popup.LinkExplorerRemoveLinkPopup;
 
 public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData<?> >
@@ -157,6 +160,19 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		corrPanel.add( maxCorrTextField );
 		footer.add( corrPanel );
 
+		final JPanel iterativeLinkPanel = new JPanel();
+		iterativeLinkPanel.setLayout( new BoxLayout( iterativeLinkPanel, BoxLayout.LINE_AXIS ) );
+		final JCheckBox iterativeLinkCB = new JCheckBox( "remove inconsistent links", false );
+		final JTextField absThrTextField = new JTextField(Double.toString( GlobalOptimizationParameters.defaultAbsoluteError ));
+		final JTextField relThrTextField = new JTextField(Double.toString( GlobalOptimizationParameters.defaultRelativeError ));
+
+		iterativeLinkPanel.add( iterativeLinkCB );
+		iterativeLinkPanel.add( new JLabel( "abs Thr: " ) );
+		iterativeLinkPanel.add( absThrTextField );
+		iterativeLinkPanel.add( new JLabel( "rel Thr: " ) );
+		iterativeLinkPanel.add( relThrTextField );
+		footer.add( iterativeLinkPanel );
+
 		final JPanel shiftAbsPanel = new JPanel();
 		shiftAbsPanel.setLayout( new BoxLayout( shiftAbsPanel, BoxLayout.LINE_AXIS ) );
 		final JCheckBox absoluteShiftCB = new JCheckBox( "filter by shift in dimensions" );
@@ -210,6 +226,55 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 			else
 				model.getFilteredResults().clearFilter( FilteredStitchingResults.CorrelationFilter.class );
 
+			if ( iterativeLinkCB.isSelected() )
+			{
+				model.getFilteredResults().clearFilter( FilteredStitchingResults.IterativeLinkRemovalFilter.class );
+				relThrTextField.setEnabled( true );
+				absThrTextField.setEnabled( true );
+				iterativeLinkCB.setSelected( false );
+			}
+
+			model.fireTableDataChanged();
+			parent.updateBDVPreviewMode();
+		});
+
+		iterativeLinkCB.addActionListener( e -> {
+			if ( iterativeLinkCB.isSelected())
+			{
+				double relCorr = 2.5;
+				double absCorr = 3.5;
+
+				try { relCorr = Double.parseDouble( relThrTextField.getText() ); }
+				catch (Exception e1)
+				{
+					relThrTextField.setText( "" + relCorr );
+				}
+
+				try { absCorr = Double.parseDouble( absThrTextField.getText() ); }
+				catch (Exception e1)
+				{
+					absThrTextField.setText( "" + relCorr );
+				}
+
+				relThrTextField.setEnabled( false );
+				absThrTextField.setEnabled( false );
+
+				final GlobalOptimizationParameters params = new GlobalOptimizationParameters( relCorr, absCorr, GlobalOptType.ITERATIVE, false );
+				params.applyResults = false;
+
+				final ExecuteGlobalOpt gl = new ExecuteGlobalOpt( parent, parent.savedFilteringAndGrouping, params );
+				gl.run();
+
+				model.getFilteredResults().addFilter( new FilteredStitchingResults.IterativeLinkRemovalFilter( gl ) );
+			}
+			else
+			{
+				model.getFilteredResults().clearFilter( FilteredStitchingResults.IterativeLinkRemovalFilter.class );
+
+				relThrTextField.setEnabled( true );
+				absThrTextField.setEnabled( true );
+			}
+
 			model.fireTableDataChanged();
 			parent.updateBDVPreviewMode();
 		});
@@ -244,6 +309,15 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 				absShiftCallback.changedUpdate( null );
 			else
 				model.getFilteredResults().clearFilter( FilteredStitchingResults.AbsoluteShiftFilter.class );
+
+			if ( iterativeLinkCB.isSelected() )
+			{
+				model.getFilteredResults().clearFilter( FilteredStitchingResults.IterativeLinkRemovalFilter.class );
+				relThrTextField.setEnabled( true );
+				absThrTextField.setEnabled( true );
+				iterativeLinkCB.setSelected( false );
+			}
+
 			model.fireTableDataChanged();
 			parent.updateBDVPreviewMode();
 
@@ -269,6 +343,14 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 				shiftMagCallback.changedUpdate( null );
 			else
 				model.getFilteredResults().clearFilter( FilteredStitchingResults.ShiftMagnitudeFilter.class );
+
+			if ( iterativeLinkCB.isSelected() )
+			{
+				model.getFilteredResults().clearFilter( FilteredStitchingResults.IterativeLinkRemovalFilter.class );
+				relThrTextField.setEnabled( true );
+				absThrTextField.setEnabled( true );
+				iterativeLinkCB.setSelected( false );
+			}
 
 			model.fireTableDataChanged();
 			parent.updateBDVPreviewMode();
@@ -313,6 +395,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 
 		footer.add( buttons );
 
+		System.out.println( "a" );
 		// add help link to bottom of footer
 		try{
 			final JLabel helpLabel = SimpleHyperlinkPopup.createHyperlinkLabel( "click here to get help on the BigStitcher wiki", URI.create( "https://imagej.net/BigStitcher_Preview_Pairwise_shift" ) );

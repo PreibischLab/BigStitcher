@@ -84,7 +84,7 @@ public class Global_Optimization_Stitching implements PlugIn
 
 		final ArrayList< Pair< Group< ViewId >, Group< ViewId > > > removedInconsistentPairs = new ArrayList<>();
 
-		if (!GlobalOptStitcher.processGlobalOptimization( data, grouping, params, removedInconsistentPairs, false ))
+		if (!GlobalOptStitcher.processGlobalOptimization( data, grouping, params, removedInconsistentPairs, false, true ))
 			return;
 
 		GlobalOptStitcher.removeInconsistentLinks( removedInconsistentPairs, data.getStitchingResults().getPairwiseResults() );

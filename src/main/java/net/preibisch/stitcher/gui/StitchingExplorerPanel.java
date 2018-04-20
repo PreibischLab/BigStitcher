@@ -84,6 +84,7 @@ import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
+import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
@@ -320,10 +321,20 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			}
 
 			initLinkExplorer();
+			System.out.println( "1" );
+
 			table.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
+			System.out.println( "2" );
+
+			// sometimes runs into an infinite loop here
+			//SimpleMultiThreading.threadWait( 100 );
 			table.setRowSelectionInterval( oldFirstSelection, oldFirstSelection );
+			System.out.println( "3" );
+
 			if (bdvPopup().bdvRunning())
 				updateBDVPreviewMode();
+			System.out.println( "4" );
+
 		}
 		else
 		{

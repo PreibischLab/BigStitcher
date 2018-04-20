@@ -39,7 +39,8 @@ import net.imglib2.util.ValuePair;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
-import net.preibisch.stitcher.gui.StitchingExplorerPanel;
+import net.preibisch.stitcher.algorithm.globalopt.ExecuteGlobalOpt;
+import net.preibisch.stitcher.algorithm.globalopt.TransformationTools;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class FilteredStitchingResults 
@@ -47,6 +48,40 @@ public class FilteredStitchingResults
 	public static interface Filter
 	{
 		public <C extends Comparable< C >> boolean conforms(final PairwiseStitchingResult< C > result);
+	}
+
+	public static class IterativeLinkRemovalFilter implements Filter
+	{
+		final ExecuteGlobalOpt globalOpt;
+
+		public IterativeLinkRemovalFilter( final ExecuteGlobalOpt globalOpt )
+		{
+			this.globalOpt = globalOpt;
+		}
+
+		@Override
+		public <C extends Comparable< C >> boolean conforms( final PairwiseStitchingResult< C > result )
+		{
+			if ( globalOpt == null )
+				return true;
+
+			final ArrayList< Pair< Group< ViewId >, Group< ViewId > > > removed = globalOpt.getRemovedInconsistentPairs();
+
+			if ( removed == null || removed.size() == 0 )
+				return true;
+
+			for ( final Pair< Group< ViewId >, Group< ViewId > > inconsistentPair : removed )
+			{
+				final Pair< Group< ViewId >, Group< ViewId > > reverseInconsistentPair = TransformationTools.reversePair( inconsistentPair );
+
+				if ( result.pair().equals( inconsistentPair ) )
+					return false;
+				else if ( result.pair().equals( reverseInconsistentPair ) )
+					return false;
+			}
+
+			return true;
+		}
 	}
 
 	public static class CorrelationFilter implements Filter

@@ -16,6 +16,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
+import net.preibisch.stitcher.algorithm.globalopt.GlobalOptimizationParameters.GlobalOptType;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
@@ -25,23 +26,51 @@ public class ExecuteGlobalOpt implements Runnable
 	private boolean expertMode;
 	private SpimDataFilteringAndGrouping<? extends AbstractSpimData<?> > savedFiltering;
 
+	private GlobalOptimizationParameters params;
+	private ArrayList< Pair< Group< ViewId >, Group< ViewId > > > removedInconsistentPairs = null;
+
 	public ExecuteGlobalOpt(
 			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel, 
 			final boolean expertMode )
 	{
+		this( panel, expertMode, null );
+	}
+
+	public ExecuteGlobalOpt(
+			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel,
+			final boolean expertMode,
+			final GlobalOptimizationParameters params )
+	{
 		this.panel = panel;
 		this.expertMode = expertMode;
 		this.savedFiltering = null;
+		this.params = params;
 	}
-	
+
 	public ExecuteGlobalOpt(
 			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel,
 			final SpimDataFilteringAndGrouping<? extends AbstractSpimData<?> > savedFiltering)
 	{
+		this( panel, savedFiltering, null );
+	}
+
+	public ExecuteGlobalOpt(
+			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel,
+			final SpimDataFilteringAndGrouping<? extends AbstractSpimData<?> > savedFiltering,
+			final GlobalOptimizationParameters params )
+	{
 		this.panel = panel;
 		this.expertMode = savedFiltering.requestExpertSettingsForGlobalOpt;
 		this.savedFiltering = savedFiltering;
+		this.params = params;
 	}
+
+	public ArrayList< Pair< Group< ViewId >, Group< ViewId > > > getRemovedInconsistentPairs()
+	{
+		return removedInconsistentPairs;
+	}
+
+	public GlobalOptimizationParameters getParams() { return params; }
 
 	@Override
 	public void run()
@@ -55,9 +84,13 @@ public class ExecuteGlobalOpt implements Runnable
 			}
 
 			final boolean isSavedFaG = savedFiltering != null;
-			final GlobalOptimizationParameters params = expertMode ? GlobalOptimizationParameters.askUserForParameters(!isSavedFaG) : GlobalOptimizationParameters.askUserForSimpleParameters();
+
 			if ( params == null )
-				return;
+			{
+				params = expertMode ? GlobalOptimizationParameters.askUserForParameters(!isSavedFaG) : new GlobalOptimizationParameters( Double.MAX_VALUE, Double.MAX_VALUE, GlobalOptType.TWO_ROUND, false );
+				if ( params == null )
+					return;
+			}
 
 			final SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping;
 			if ( !isSavedFaG )
@@ -102,37 +135,46 @@ public class ExecuteGlobalOpt implements Runnable
 				filteringAndGrouping = (SpimDataFilteringAndGrouping< SpimData2 >) savedFiltering;
 			}
 
-			final ArrayList< Pair< Group< ViewId >, Group< ViewId > > > removedInconsistentPairs = new ArrayList<>();
+			this.removedInconsistentPairs = new ArrayList<>();
 
-			GlobalOptStitcher.processGlobalOptimization( (SpimData2) panel.getSpimData(), filteringAndGrouping, params, removedInconsistentPairs, !expertMode );
+			GlobalOptStitcher.processGlobalOptimization( (SpimData2) panel.getSpimData(), filteringAndGrouping, params, removedInconsistentPairs, !expertMode, params.applyResults );
 
-			GlobalOptStitcher.removeInconsistentLinks( removedInconsistentPairs, ((SpimData2) panel.getSpimData()).getStitchingResults().getPairwiseResults() );
-
-			final DemoLinkOverlay demoOverlay;
-
-			if ( !StitchingExplorerPanel.class.isInstance( panel ) )
-				demoOverlay = null;
-			else
-				demoOverlay = (( StitchingExplorerPanel<?,?> )panel).getDemoLinkOverlay();
-
-			if ( demoOverlay != null )
+			if ( params.applyResults )
 			{
-				synchronized ( demoOverlay )
+				GlobalOptStitcher.removeInconsistentLinks( removedInconsistentPairs, ((SpimData2) panel.getSpimData()).getStitchingResults().getPairwiseResults() );
+	
+				final DemoLinkOverlay demoOverlay;
+	
+				if ( !StitchingExplorerPanel.class.isInstance( panel ) )
+					demoOverlay = null;
+				else
+					demoOverlay = (( StitchingExplorerPanel<?,?> )panel).getDemoLinkOverlay();
+	
+				if ( demoOverlay != null )
 				{
-					demoOverlay.getInconsistentResults().clear();
-					demoOverlay.getInconsistentResults().addAll( removedInconsistentPairs );
+					synchronized ( demoOverlay )
+					{
+						demoOverlay.getInconsistentResults().clear();
+						demoOverlay.getInconsistentResults().addAll( removedInconsistentPairs );
+					}
 				}
 			}
 		}
 		finally
 		{
-			System.out.println( "resetting savedFilteringAndGrouping" );
-			// remove saved filtering and grouping once we are done here
-			// regardless of whether optimization was successful or not
-			( (StitchingExplorerPanel< ?, ? >) panel ).setSavedFilteringAndGrouping( null );
+			if ( params.applyResults )
+			{
+				System.out.println( "resetting savedFilteringAndGrouping" );
+				// remove saved filtering and grouping once we are done here
+				// regardless of whether optimization was successful or not
+				( (StitchingExplorerPanel< ?, ? >) panel ).setSavedFilteringAndGrouping( null );
+			}
 		}
 
-		panel.updateContent();
-		panel.bdvPopup().updateBDV();
+		if ( params.applyResults )
+		{
+			panel.updateContent();
+			panel.bdvPopup().updateBDV();
+		}
 	}
 }

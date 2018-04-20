@@ -32,7 +32,6 @@ import net.preibisch.mvrecon.fiji.plugin.resave.PluginHelper;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
-import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOpt;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptIterative;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptTwoRound;
@@ -57,7 +56,8 @@ public class GlobalOptStitcher
 			final SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping,
 			final GlobalOptimizationParameters params,
 			final Collection< Pair< Group< ViewId >, Group< ViewId > > > removedInconsistentPairs,
-			final boolean fixFirstTileByDefault)
+			final boolean fixFirstTileByDefault,
+			final boolean applyParameters )
 	{
 		// why can type not be BasicViewDescription?
 		PairwiseSetup< ViewId > setup = new PairwiseSetup< ViewId >(
@@ -182,20 +182,24 @@ public class GlobalOptStitcher
 						subset.getGroups() );
 
 				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
-				globalOptResults.forEach( (k, v) -> {
 
-					final ViewRegistration vr = data.getViewRegistrations()
-							.getViewRegistration( k );
-
-					AffineTransform3D viewTransform = new AffineTransform3D();
-					viewTransform.set( v );
-
-					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform",
-							viewTransform );
-					vr.preconcatenateTransform( vt );
-					vr.updateModel();
-
-				} );
+				if ( applyParameters )
+				{
+					globalOptResults.forEach( (k, v) -> {
+	
+						final ViewRegistration vr = data.getViewRegistrations()
+								.getViewRegistration( k );
+	
+						AffineTransform3D viewTransform = new AffineTransform3D();
+						viewTransform.set( v );
+	
+						final ViewTransform vt = new ViewTransformAffine( "Stitching Transform",
+								viewTransform );
+						vr.preconcatenateTransform( vt );
+						vr.updateModel();
+	
+					} );
+				}
 			}
 			else if ( params.method == GlobalOptType.ITERATIVE)
 			{
@@ -209,17 +213,20 @@ public class GlobalOptStitcher
 						fixed, subset.getGroups() );
 
 				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
-				globalOptResults.forEach( (k, v) -> {
-
-					final ViewRegistration vr = data.getViewRegistrations().getViewRegistration( k );
-					AffineTransform3D viewTransform = new AffineTransform3D();
-					viewTransform.set( v.getModel().getMatrix( null ) );
-
-					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
-					vr.preconcatenateTransform( vt );
-					vr.updateModel();
-
-				} );
+				if ( applyParameters )
+				{
+					globalOptResults.forEach( (k, v) -> {
+	
+						final ViewRegistration vr = data.getViewRegistrations().getViewRegistration( k );
+						AffineTransform3D viewTransform = new AffineTransform3D();
+						viewTransform.set( v.getModel().getMatrix( null ) );
+	
+						final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
+						vr.preconcatenateTransform( vt );
+						vr.updateModel();
+	
+					} );
+				}
 			}
 			else // Simple global opt
 			{
@@ -232,17 +239,20 @@ public class GlobalOptStitcher
 						subset.getGroups() );
 
 				globalOptResults.forEach( (k, v) -> System.out.println( k + ": " + v ) );
-				globalOptResults.forEach( (k, v) -> {
 
-					final ViewRegistration vr = data.getViewRegistrations().getViewRegistration( k );
-					AffineTransform3D viewTransform = new AffineTransform3D();
-					viewTransform.set( v.getModel().getMatrix( null ) );
-
-					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
-					vr.preconcatenateTransform( vt );
-					vr.updateModel();
-
-				} );
+				if ( applyParameters )
+				{
+					globalOptResults.forEach( (k, v) -> {
+	
+						final ViewRegistration vr = data.getViewRegistrations().getViewRegistration( k );
+						AffineTransform3D viewTransform = new AffineTransform3D();
+						viewTransform.set( v.getModel().getMatrix( null ) );
+	
+						final ViewTransform vt = new ViewTransformAffine( "Stitching Transform", viewTransform );
+						vr.preconcatenateTransform( vt );
+						vr.updateModel();
+					} );
+				}
 			}
 
 		}
