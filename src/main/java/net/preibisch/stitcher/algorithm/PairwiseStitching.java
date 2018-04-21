@@ -30,19 +30,25 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import mpicbg.spim.io.IOFunctions;
+import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
+import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.algorithm.phasecorrelation.PhaseCorrelation2;
 import net.imglib2.algorithm.phasecorrelation.PhaseCorrelationPeak2;
 import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -58,6 +64,9 @@ import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
+import net.preibisch.mvrecon.process.export.DisplayImage;
+import net.preibisch.mvrecon.process.fusion.FusionTools;
+import net.preibisch.mvrecon.process.fusion.ImagePortion;
 import net.preibisch.mvrecon.process.interestpointregistration.TransformationTools;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.lucaskanade.Align;
@@ -316,6 +325,8 @@ public class PairwiseStitching
 				extension, new ArrayImgFactory< FloatType >(), new FloatType(),
 				new ArrayImgFactory< ComplexFloatType >(), new ComplexFloatType(), service );
 
+		normalizePCM( pcm, service );
+
 		final PhaseCorrelationPeak2 shiftPeak = PhaseCorrelation2.getShift( pcm,
 				Views.zeroMin( Views.interval( img1, interval1 ) ), Views.zeroMin( Views.interval( img2, interval2 ) ),
 				params.peaksToCheck, minOverlap, params.doSubpixel, params.interpolateCrossCorrelation, service );
@@ -359,6 +370,108 @@ public class PairwiseStitching
 		}
 
 		return new ValuePair< >( new Translation(finalShift), shiftPeak.getCrossCorr() );
+	}
+
+	public static void normalizePCM( final RandomAccessibleInterval< FloatType > pcm, final ExecutorService service )
+	{
+		// so that the peak doesn't stick out too much, that interferes with the subpixel detection
+		final float min = min( pcm, service );
+
+		adjustPCM( pcm, min, service );
+	}
+
+	public static float min( final RandomAccessibleInterval< FloatType > img, final ExecutorService taskExecutor )
+	{
+		final IterableInterval< FloatType > iterable = Views.iterable( img );
+		
+		// split up into many parts for multithreading
+		final Vector< ImagePortion > portions = FusionTools.divideIntoPortions( iterable.size() );
+
+		// set up executor service
+		final ArrayList< Callable< Float > > tasks = new ArrayList<>();
+
+		for ( final ImagePortion portion : portions )
+		{
+			tasks.add( new Callable< Float >() 
+					{
+						@Override
+						public Float call() throws Exception
+						{
+							float min = Float.MAX_VALUE;
+
+							final Cursor< FloatType > c = iterable.cursor();
+							c.jumpFwd( portion.getStartPosition() );
+
+							for ( long j = 0; j < portion.getLoopSize(); ++j )
+								min = Math.min( min, c.next().get() );
+
+							// min & max of this portion
+							return min;
+						}
+					});
+		}
+
+		// run threads and combine results
+		float min = Float.MAX_VALUE;
+
+		try
+		{
+			// invokeAll() returns when all tasks are complete
+			final List< Future< Float > > futures = taskExecutor.invokeAll( tasks );
+
+			for ( final Future< Float > future : futures )
+				min = Math.min( min, future.get() );
+		}
+		catch ( final Exception e )
+		{
+			IOFunctions.println( "Failed to compute min: " + e );
+			e.printStackTrace();
+			return Float.NaN;
+		}
+
+		return min;
+	}
+
+	public static void adjustPCM( final RandomAccessibleInterval< FloatType > img, final float min, final ExecutorService taskExecutor )
+	{
+		final IterableInterval< FloatType > iterable = Views.iterable( img );
+		
+		// split up into many parts for multithreading
+		final Vector< ImagePortion > portions = FusionTools.divideIntoPortions( iterable.size() );
+
+		// set up executor service
+		final ArrayList< Callable< Void > > tasks = new ArrayList<>();
+
+		for ( final ImagePortion portion : portions )
+		{
+			tasks.add( new Callable< Void >() 
+					{
+						@Override
+						public Void call() throws Exception
+						{
+							final Cursor< FloatType > c = iterable.cursor();
+							c.jumpFwd( portion.getStartPosition() );
+
+							for ( long j = 0; j < portion.getLoopSize(); ++j )
+							{
+								final FloatType t = c.next();
+								t.set( (float)Math.sqrt( t.get() - min + 0.01 ) );
+							}
+
+							return null;
+						}
+					});
+		}
+
+		try
+		{
+			// invokeAll() returns when all tasks are complete
+			taskExecutor.invokeAll( tasks );
+		}
+		catch ( final Exception e )
+		{
+			IOFunctions.println( "Failed to subtract: " + e );
+		}
 	}
 
 	public static <T extends RealType< T >, C extends Comparable< C >> List< PairwiseStitchingResult< C > > getPairwiseShiftsLucasKanade(
