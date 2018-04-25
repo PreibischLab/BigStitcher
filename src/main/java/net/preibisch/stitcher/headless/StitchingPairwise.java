@@ -25,7 +25,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 import ij.ImageJ;
@@ -39,6 +41,7 @@ import net.imglib2.realtransform.Translation;
 import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
+import net.imglib2.util.RealSum;
 import net.imglib2.util.Util;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
 import net.preibisch.simulation.SimulateTileStitching;
@@ -49,32 +52,46 @@ public class StitchingPairwise
 {
 	public static void main( String[] args )
 	{
-		//parseTexts();
-		//System.exit( 0 );
+		parseTexts();
+		System.exit( 0 );
 
-		new ImageJ();
-		final ExecutorService service = FFTConvolution.createExecutorService( Math.max( 1, Runtime.getRuntime().availableProcessors() - 2 ) );
+		//new ImageJ();
+		IOFunctions.printIJLog = false;
 
 		final double minOverlap = 0.85;
 
-		for ( int snr = 1; snr <= 32; snr *= 2 )
+		final ExecutorService service = FFTConvolution.createExecutorService( Runtime.getRuntime().availableProcessors() - 4  );
+		System.out.println( "numThreads = " + ( Runtime.getRuntime().availableProcessors() - 4 ) );
+
+		for ( int snr = 32; snr <= 64; snr *= 2 )
 		{
-			final Thread[] threads = new Thread[ 2 ];
-	
-			for ( int i = 1; i <= 8; i = i * 2 )
+			final ArrayList< Callable< Void > > tasks = new ArrayList< Callable< Void > >();
+
+			for ( int i = 0; i < 4; i++ )
 			{
 				final int snrInt = snr;
 				final boolean subpixel = true;
-				final int downsample = i;
+				final int downsample;
+				
+				if ( i == 0 )
+					downsample = 1;
+				else if ( i == 1 )
+					downsample = 2;
+				else if ( i == 2 )
+					downsample = 4;
+				else
+					downsample = 8;
 	
 				System.out.println( i + " " + snrInt + " " + downsample + " " + subpixel );
-	
-				threads[ i ] = new Thread( new Runnable()
+
+				tasks.add( new Callable< Void >()
 				{
-					public void run()
+					
+					@Override
+					public Void call() throws Exception
 					{
 						final float snr = snrInt;
-				
+
 						final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, Util.getArrayFromValue( minOverlap, 3 ), service );
 				
 						final PairwiseStitchingParameters params = new PairwiseStitchingParameters( 0.1, 5, subpixel, subpixel, false );
@@ -131,40 +148,39 @@ public class StitchingPairwise
 								final Pair< Translation, Double > r = PairwiseStitching.getShift( img1, img2, t1, t2, params, service );
 
 								double[] shift = r.getA().getTranslationCopy();
-								
+
 								for ( int d = 0; d < correct.length; ++d )
 									shift[ d ] *= ds[ d ];
-				
+
 								for ( int d = 0; d < correct.length; ++d )
 									shift[ d ] -= correct[ d ];
-				
+
 								double d = dist( shift );
-				
+
 								time = System.currentTimeMillis() - time;
-				
+
 								IOFunctions.println( time + "ms, " + shift[ 0 ] + " " + shift[ 1 ]  + " " + shift[ 2 ] + " " + d + " " + r.getB() );
 								//SimpleMultiThreading.threadHaltUnClean();
 								out.println( shift[ 0 ] + "\t" + shift[ 1 ]  + "\t" + shift[ 2 ] + "\t" + d + "\t" + r.getB() + "\t" + time );
 								out.flush();
 							}
-				
+
 							out.close();
 						}
+
+						return null;
 					}
 				} );
 			}
-	
-			for ( int ithread = 0; ithread < threads.length; ++ithread )
-				if ( threads[ ithread ] != null )
-					threads[ ithread ].start();
-	
+
 			try
 			{
-				for ( int ithread = 0; ithread < threads.length; ++ithread )
-					if ( threads[ ithread ] != null )
-						threads[ ithread ].join();
+				service.invokeAll( tasks );
+			} catch ( InterruptedException e )
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			catch ( InterruptedException ie ) { throw new RuntimeException(ie); }
 		}
 	}
 
@@ -172,9 +188,11 @@ public class StitchingPairwise
 	{
 		final boolean subpixel = true;
 
-		for ( int snr = 1; snr <= 32; snr *= 2 )
+		for ( int downsample = 1; downsample <= 8; downsample *= 2 )
 		{
-			for ( int downsample = 1; downsample <= 8; downsample *= 2 )
+			final ArrayList< Double > time = new ArrayList<>();
+
+			for ( int snr = 8; snr <= 8; snr *= 2 )
 			{
 				final BufferedReader in;
 	
@@ -192,17 +210,38 @@ public class StitchingPairwise
 						//out.println( shift[ 0 ] + "\t" + shift[ 1 ]  + "\t" + shift[ 2 ] + "\t" + d + "\t" + r.getB() );
 						final String[] line = in.readLine().trim().split( "\t" );
 						
-						values.add( Double.parseDouble( line[ 3 ] ) );
+						System.out.println( Double.parseDouble( line[ 3 ] ) );
+						//values.add( Double.parseDouble( line[ 3 ] ) );
+						//time.add( Double.parseDouble( line[ 5 ] ) );
 					}
 
-					System.out.println( snr + "\t" + downsample + "\t" + Util.averageDouble( values ) );
+					//final double mean = Util.averageDouble( values );
+					//final double stdev = stDevDouble( values, mean );
+					//System.out.println( snr + "\t" + downsample + "\t" + mean + "\t" + stdev );
 				}
 				catch ( Exception e )
 				{
 					continue;
 				}
 			}
+
+			//final double mean = Util.averageDouble( time );
+			//final double stdev = stDevDouble( time, mean );
+			//System.out.println( downsample + "\t" + mean + "\t" + stdev );
+
+			System.out.println( );
 		}
+	}
+
+	public static double stDevDouble( final List< Double > values, final double mean )
+	{
+		final double size = values.size();
+		double stdev = 0;
+
+		for ( final double v : values )
+			stdev += Math.pow( v - mean, 2 );
+
+		return Math.sqrt( stdev / size );
 	}
 
 	public static RandomAccessibleInterval< FloatType > downsample( RandomAccessibleInterval< FloatType > input, final int[] downsample, final ExecutorService taskExecutor )
