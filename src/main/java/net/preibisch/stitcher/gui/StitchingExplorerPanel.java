@@ -36,10 +36,8 @@ import java.awt.event.WindowEvent;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
@@ -56,14 +54,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import bdv.BigDataViewer;
 import bdv.img.hdf5.Hdf5ImageLoader;
-import bdv.tools.HelpDialog;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.transformation.TransformedSource;
 import bdv.viewer.DisplayMode;
@@ -76,7 +72,6 @@ import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
@@ -88,7 +83,6 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.util.Pair;
-import net.imglib2.util.Util;
 import net.preibisch.mvrecon.fiji.plugin.util.MultiWindowLayoutHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.SpimDataTools;
@@ -123,7 +117,6 @@ import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.globalopt.ExecuteGlobalOpt;
-import net.preibisch.stitcher.algorithm.globalopt.TransformationTools;
 import net.preibisch.stitcher.gui.bdv.BDVFlyThrough;
 import net.preibisch.stitcher.gui.bdv.BDVVisibilityHandlerNeighborhood;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
@@ -142,6 +135,8 @@ import net.preibisch.stitcher.gui.popup.SimpleSubMenu;
 import net.preibisch.stitcher.gui.popup.TranslateGroupManuallyPopup;
 import net.preibisch.stitcher.gui.popup.VerifyLinksPopup;
 import net.preibisch.stitcher.input.FractalImgLoader;
+import spim.fiji.spimdata.explorer.popup.FlatFieldCorrectionPopup;
+import spim.fiji.spimdata.imgloaders.flatfield.FlatfieldCorrectionWrappedImgLoader;
 
 public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS >>
 		extends FilteredAndGroupedExplorerPanel< AS, X > implements ExplorerWindow< AS, X >
@@ -193,7 +188,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		initComponent();
 
 		if ( requestStartBDV && 
-				(Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) 
+				(Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
+				|| (FlatfieldCorrectionWrappedImgLoader.class.isInstance(data.getSequenceDescription().getImgLoader()) &&
+						((FlatfieldCorrectionWrappedImgLoader) data.getSequenceDescription().getImgLoader()).isCached() &&
+						((FlatfieldCorrectionWrappedImgLoader) data.getSequenceDescription().getImgLoader()).isActive())
 				|| FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) 
 				|| (( data instanceof SpimData2 ) && ((SpimData2)data).gridMoveRequested )  
 				|| FileMapImgLoaderLOCI2.class.isInstance( data.getSequenceDescription().getImgLoader() ) ) )
@@ -807,6 +805,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		//popups.add( regularGridPopup );
 		popups.add( new SimpleSubMenu( "Arrange Views", new TranslateGroupManuallyPopup(), new ReadTileConfigurationPopup(), regularGridPopup ) );
 		popups.add( new SelectIlluminationPopup() );
+		popups.add( new FlatFieldCorrectionPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Stitching Wizard" ) );
