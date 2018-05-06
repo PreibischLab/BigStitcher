@@ -75,6 +75,7 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constell
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.illuminationselection.BrightestViewSelection;
 import net.preibisch.stitcher.algorithm.illuminationselection.IlluminationSelectionPreviewGUI;
+import net.preibisch.stitcher.algorithm.illuminationselection.MeanGradientMagnitudeViewSelection;
 import net.preibisch.stitcher.algorithm.illuminationselection.ViewSelection;
 
 public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindowSetable
@@ -103,6 +104,8 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		String choice = gd.getNextChoice();
 		if (choice.equals( "Pick brightest" ))
 			return new BrightestViewSelection( sd );
+		else if (choice.equals("Pick highest mean gradient magnitude"))
+			return new MeanGradientMagnitudeViewSelection(sd);
 		else
 			return null;
 		
@@ -110,7 +113,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 	
 	public static void addViewSelectionQuery(GenericDialog gd)
 	{
-		final String[] choices = new String[] {"Pick brightest"};
+		final String[] choices = new String[] {"Pick brightest", "Pick highest mean gradient magnitude"};
 		gd.addChoice( "Selection Method", choices, choices[0] );
 	}
 	
