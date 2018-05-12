@@ -168,10 +168,14 @@ public class DownsampleTools
 			dsz = downsampleFactors[2];
 
 		ImgFactory< T > f = null;
-		
+
 		if ( Img.class.isInstance( input ) )
-			f = ((Img<T>)input).factory();
-		
+			// factory is not implemented for e.g. LazyCellImg yet
+			try
+			{
+				f = ((Img<T>)input).factory();
+			} catch (UnsupportedOperationException e) {}
+
 		if ( f == null )
 			f = new ArrayImgFactory();
 		
