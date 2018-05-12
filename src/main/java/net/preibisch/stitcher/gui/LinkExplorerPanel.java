@@ -66,7 +66,7 @@ import net.preibisch.stitcher.gui.popup.LinkExplorerRemoveLinkPopup;
 
 public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData<?> >
 {
-	public static double minCorrDefault = 0.4;
+	public static double minCorrDefault = 0.7;
 	public static double maxCorrDefault = 1.0;
 
 	public static class SimpleDocumentListener implements DocumentListener
