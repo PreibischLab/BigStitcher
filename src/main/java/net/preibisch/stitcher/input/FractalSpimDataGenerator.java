@@ -255,31 +255,31 @@ public class FractalSpimDataGenerator
 
 			final Tile tile = vs.getTile();
 
+			final double minResolution = Math.min( Math.min( vs.getVoxelSize().dimension( 0 ), vs.getVoxelSize().dimension( 1 ) ), vs.getVoxelSize().dimension( 2 ) );
+
+			final double calX = vs.getVoxelSize().dimension( 0 ) / minResolution;
+			final double calY = vs.getVoxelSize().dimension( 1 ) / minResolution;
+			final double calZ = numDimensions > 2 ? vs.getVoxelSize().dimension( 2 ) / minResolution : 1.0;
+
 			final AffineTransform3D translation = new AffineTransform3D();
 
 			if ( tile.hasLocation() )
 			{
-				translation.set( tile.getLocation()[ 0 ], 0, 3 );
-				translation.set( tile.getLocation()[ 1 ], 1, 3 );
-				if (numDimensions > 2) translation.set( tile.getLocation()[ 2 ], 2, 3 );
+				translation.set( tile.getLocation()[ 0 ] * calX, 0, 3 );
+				translation.set( tile.getLocation()[ 1 ] * calY, 1, 3 );
+				if (numDimensions > 2) translation.set( tile.getLocation()[ 2 ] * calZ, 2, 3 );
 			}
 
 			vr.concatenateTransform( new ViewTransformAffine( "Translation", translation ) );
 
-			final double minResolution = Math.min( Math.min( vs.getVoxelSize().dimension( 0 ), vs.getVoxelSize().dimension( 1 ) ), vs.getVoxelSize().dimension( 2 ) );
-			
-			final double calX = vs.getVoxelSize().dimension( 0 ) / minResolution;
-			final double calY = vs.getVoxelSize().dimension( 1 ) / minResolution;
-			final double calZ = numDimensions > 2 ? vs.getVoxelSize().dimension( 2 ) / minResolution : 1.0;
-			
 			final AffineTransform3D m = new AffineTransform3D();
 			m.set( calX, 0.0f, 0.0f, 0.0f, 
 				   0.0f, calY, 0.0f, 0.0f,
 				   0.0f, 0.0f, calZ, 0.0f );
 			final ViewTransform vt = new ViewTransformAffine( "Calibration", m );
-			vr.preconcatenateTransform( vt );
+			vr.concatenateTransform( vt );
 
-			vr.updateModel();		
+			vr.updateModel();
 			
 			registrations.add( vr );
 		}
