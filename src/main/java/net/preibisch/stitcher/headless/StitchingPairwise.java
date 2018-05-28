@@ -76,7 +76,7 @@ public class StitchingPairwise
 				{
 					final float snr = snrInt;
 			
-					final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, Util.getArrayFromValue( minOverlap, 3 ) );
+					final SimulateTileStitching sts = new SimulateTileStitching( new Random( 123432 ), true, Util.getArrayFromValue( minOverlap, 3 ), DeconViews.createExecutorService() );
 			
 					final PairwiseStitchingParameters params = new PairwiseStitchingParameters( 0.1, 5, subpixel, subpixel, false );
 					final ExecutorService service = DeconViews.createExecutorService();
