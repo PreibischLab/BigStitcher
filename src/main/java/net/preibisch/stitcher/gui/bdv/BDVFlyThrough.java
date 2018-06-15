@@ -15,6 +15,7 @@ import bdv.viewer.overlay.MultiBoxOverlayRenderer;
 import bdv.viewer.overlay.ScaleBarOverlayRenderer;
 import bdv.viewer.render.MultiResolutionRenderer;
 import bdv.viewer.state.ViewerState;
+import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -24,6 +25,8 @@ import net.imglib2.ui.RenderTarget;
 public class BDVFlyThrough
 {
 	final public static ArrayList< AffineTransform3D > viewerTransforms = new ArrayList<>();
+	public static boolean skipDialog = false;
+	public static String defaultPath = "";
 	public static int interpolateSteps = 100;
 
 	public static void addCurrentViewerTransform( final BigDataViewer bdv )
@@ -41,7 +44,22 @@ public class BDVFlyThrough
 
 	public static void record( final BigDataViewer bdv, final boolean showScaleBar, final boolean showBoxes )
 	{
-		IOFunctions.println( "Recording images for " + viewerTransforms.size() + " transforms, interpolated with " + interpolateSteps + " steps in between ..." );
+		if ( !skipDialog )
+		{
+			final GenericDialogPlus gd = new GenericDialogPlus( "Select directory for movie" );
+			gd.addDirectoryField( "Movie directory", defaultPath );
+			gd.addNumericField( "Interpolation steps between keypoints", interpolateSteps, 0 );
+	
+			gd.showDialog();
+			if ( gd.wasCanceled())
+				return;
+	
+			defaultPath = gd.getNextString();
+			interpolateSteps = (int)Math.round( gd.getNextNumber() );
+		}
+
+		IOFunctions.println( "Recording images for " + viewerTransforms.size() + " transforms, interpolated with " + interpolateSteps + " steps in between to directory " + defaultPath );
+
 
 		final ViewerPanel viewer = bdv.getViewer();
 		final ViewerState renderState = viewer.getState();

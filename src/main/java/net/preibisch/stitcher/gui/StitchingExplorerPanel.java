@@ -1127,6 +1127,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		this.demoLinkOverlayPopup.setExplorerWindow( this );
 	}
 
+	private boolean enableFlyThrough = false;
+
 	protected void addScreenshot()
 	{
 		table.addKeyListener( new KeyListener()
@@ -1134,20 +1136,31 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			@Override
 			public void keyPressed(final KeyEvent arg0)
 			{
-				if ( arg0.getKeyChar() == 's' || arg0.getKeyChar() == 'S' )
-					new Thread( new Runnable()
-					{
-						@Override
-						public void run()
-						{ BDVFlyThrough.record( bdvPopup().bdv, true, true ); }
-					} ).start();
-					
+				if ( arg0.getKeyChar() == 'E' )
+				{
+					enableFlyThrough = true;
 
-				if ( arg0.getKeyChar() == 'a' )
-					BDVFlyThrough.addCurrentViewerTransform( bdvPopup().bdv );
+					IOFunctions.println( "EASTER EGG activated." );
+					IOFunctions.println( "You can now record a fly-through, press 'a' to add the current view as keypoint, 'x' to remove all keypoints and 's' to start recording!" );
+				}
 
-				if ( arg0.getKeyChar() == 'x' )
-					BDVFlyThrough.clearAllViewerTransform();
+				if ( enableFlyThrough )
+				{
+					if ( arg0.getKeyChar() == 's' || arg0.getKeyChar() == 'S' )
+						new Thread( new Runnable()
+						{
+							@Override
+							public void run()
+							{ BDVFlyThrough.record( bdvPopup().bdv, true, true ); }
+						} ).start();
+						
+	
+					if ( arg0.getKeyChar() == 'a' )
+						BDVFlyThrough.addCurrentViewerTransform( bdvPopup().bdv );
+	
+					if ( arg0.getKeyChar() == 'x' )
+						BDVFlyThrough.clearAllViewerTransform();
+				}
 			}
 
 			@Override
