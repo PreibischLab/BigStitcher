@@ -62,14 +62,17 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.methods.
 import net.preibisch.stitcher.gui.StitchingUIHelper;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 import net.preibisch.stitcher.gui.popup.RefineWithICPPopup;
-import net.preibisch.stitcher.gui.popup.RefineWithICPPopup.ICPType;
 
 public class ICPRefinement
 {
+	public static enum ICPType{ TileRefine, ChromaticAbberation, All, Expert }
+	public static String[] refinementType = new String[]{ "Simple (tile registration)", "Simple (chromatic abberation)", "Simple (all together)", "Expert ..." };
+	public static int defaultRefinementChoice = 0;
+
 	public static String[] downsampling = new String[]{ "Downsampling 2/2/1", "Downsampling 4/4/2", "Downsampling 8/8/4", "Downsampling 16/16/8" };
 	public static int defaultDownsamplingChoice = 2;
 
-	public static String[] thresold = new String[]{ "Low Threshold (many points)", "Average Threshold", "High Threshold (few points)" };
+	public static String[] threshold = new String[]{ "Low Threshold (many points)", "Average Threshold", "High Threshold (few points)" };
 	public static int defaultThresholdChoice = 1;
 
 	public static String[] distance = new String[]{ "Fine Adjustment (<1px)", "Normal Adjustment (<5px)", "Gross Adjustment (<20px, careful)" };

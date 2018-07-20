@@ -24,42 +24,76 @@ package net.preibisch.stitcher.plugin;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import ij.gui.GenericDialog;
 import ij.plugin.PlugIn;
 import mpicbg.spim.data.sequence.ViewId;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
+import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
-import net.preibisch.stitcher.gui.popup.SelectIlluminationPopup;
+import net.preibisch.stitcher.process.ICPRefinement;
+import net.preibisch.stitcher.process.ICPRefinement.ICPRefinementParameters;
+import net.preibisch.stitcher.process.ICPRefinement.ICPType;
 
 public class ICP_Refine implements PlugIn
 {
-
 	@Override
 	public void run(String arg)
 	{
 		final LoadParseQueryXML result = new LoadParseQueryXML();
-		if ( !result.queryXML( "for ICP refinement", false, false, false, false, false ) )
+		if ( !result.queryXML( "for ICP refinement", true, true, true, true, true ) )
 			return;
 
 		final SpimData2 data = result.getData();
 		ArrayList< ViewId > selectedViews = SpimData2.getAllViewIdsSorted( result.getData(), result.getViewSetupsToProcess(), result.getTimePointsToProcess() );
 
-		SpimData2 filteredSpimData = SelectIlluminationPopup.processIlluminationSelection( 
-				data, 
-				selectedViews.stream().map( vid -> data.getSequenceDescription().getViewDescription( vid ) ).collect( Collectors.toList() ),
-				false,
-				false,
-				null );
+		final ICPRefinementParameters params = ICPRefinement.initICPRefinement( data, selectedViews.stream().map( vid -> data.getSequenceDescription().getViewDescription( vid ) ).collect( Collectors.toList() ) );
 
-		if (filteredSpimData != null)
+		if ( params == null )
+			return;
+
+		final GenericDialog gd = new GenericDialog( "ICP Refinement" );
+
+		gd.addChoice( "ICP_Refinement_Type", ICPRefinement.refinementType, ICPRefinement.refinementType[ ICPRefinement.defaultRefinementChoice ] );
+
+		gd.addMessage( "" );
+		gd.addMessage( "The following parameters are ignored if EXPERT is selected above", GUIHelper.mediumstatusfont );
+		gd.addMessage( "" );
+
+		gd.addChoice( "Downsampling", ICPRefinement.downsampling, ICPRefinement.downsampling[ ICPRefinement.defaultDownsamplingChoice ] );
+		gd.addChoice( "Interest Point threshold", ICPRefinement.threshold, ICPRefinement.threshold[ ICPRefinement.defaultThresholdChoice ] );
+		gd.addChoice( "ICP_Max_Error", ICPRefinement.distance, ICPRefinement.distance[ ICPRefinement.defaultDistanceChoice ] );
+
+		gd.showDialog();
+		if ( gd.wasCanceled() )
+			return;
+
+		final ICPType icpType = ICPType.values()[ ICPRefinement.defaultRefinementChoice = gd.getNextChoiceIndex() ];
+
+		if ( icpType == ICPType.Expert )
 		{
-			SpimData2.saveXML( filteredSpimData, result.getXMLFileName(), result.getClusterExtension() );
+			if ( !ICPRefinement.getGUIParametersAdvanced( data, params ) )
+				return;
 		}
+		else
+		{
+			final int downsamplingChoice = ICPRefinement.defaultDownsamplingChoice = gd.getNextChoiceIndex();
+			final int thresholdChoice = ICPRefinement.defaultThresholdChoice = gd.getNextChoiceIndex();
+			final int distanceChoice = ICPRefinement.defaultDistanceChoice = gd.getNextChoiceIndex();
+
+			if ( !ICPRefinement.getGUIParametersSimple( icpType, data, params, downsamplingChoice, thresholdChoice, distanceChoice ) )
+				return;
+		}
+
+		ICPRefinement.refine( data, params, null );
+
+		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
 
 	}
 
 
 	public static void main(String[] args)
 	{
+		BigStitcher.setupTesting();
 		new ICP_Refine().run( "" );
 	}
 

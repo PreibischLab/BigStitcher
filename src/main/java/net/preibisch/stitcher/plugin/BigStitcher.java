@@ -84,7 +84,7 @@ public class BigStitcher implements Command, PlugIn
 		explorer.getFrame().toFront();
 	}
 
-	public static void main( String[] args )
+	public static void setupTesting()
 	{
 		IOFunctions.printIJLog = true;
 		new ImageJ();
@@ -95,7 +95,11 @@ public class BigStitcher implements Command, PlugIn
 			GenericLoadParseQueryXML.defaultXMLfilename = "/home/preibisch/Documents/Microscopy/SPIM/HisYFP-SPIM//dataset_tp18.xml";
 		else
 			GenericLoadParseQueryXML.defaultXMLfilename = "/Users/spreibi/Documents/BIMSB/Projects/CLARITY/Big Data Sticher/Dros_converted/dataset.xml";
+	}
 
+	public static void main( String[] args )
+	{
+		setupTesting();
 		new BigStitcher().run( );
 	}
 }

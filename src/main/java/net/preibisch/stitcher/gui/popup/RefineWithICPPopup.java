@@ -45,12 +45,11 @@ import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 import net.preibisch.stitcher.process.ICPRefinement;
 import net.preibisch.stitcher.process.ICPRefinement.ICPRefinementParameters;
+import net.preibisch.stitcher.process.ICPRefinement.ICPType;
 
 public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 {
 	private static final long serialVersionUID = 1L;
-
-	public static enum ICPType{ TileRefine, ChromaticAbberation, All, Expert }
 
 	DemoLinkOverlay overlay;
 	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
@@ -65,10 +64,10 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 
 		this.overlay = overlay;
 
-		final JMenuItem simpleICPtiles = new JMenuItem( "Simple (tile registration)" );
-		final JMenuItem simpleICPchannels = new JMenuItem( "Simple (chromatic abberation)" );
-		final JMenuItem simpleICPall = new JMenuItem( "Simple (all together)" );
-		final JMenuItem advancedICP = new JMenuItem( "Expert ..." );
+		final JMenuItem simpleICPtiles = new JMenuItem( ICPRefinement.refinementType[ 0 ] );
+		final JMenuItem simpleICPchannels = new JMenuItem( ICPRefinement.refinementType[ 1 ] );
+		final JMenuItem simpleICPall = new JMenuItem( ICPRefinement.refinementType[ 2 ] );
+		final JMenuItem advancedICP = new JMenuItem( ICPRefinement.refinementType[ 3 ] );
 
 		simpleICPtiles.addActionListener( new ICPListener( ICPType.TileRefine ) );
 		simpleICPchannels.addActionListener( new ICPListener( ICPType.ChromaticAbberation ) );
@@ -109,12 +108,12 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 
 		this.add( new Separator() );
 
-		final JMenuItem[] thrItems = new JMenuItem[ ICPRefinement.thresold.length ];
+		final JMenuItem[] thrItems = new JMenuItem[ ICPRefinement.threshold.length ];
 		final StateChanger thrStateChanger = new StateChanger() { public void setSelectedState( int state ) { thresholdChoice = ICPRefinement.defaultThresholdChoice = state; } };
 
 		for ( int i = 0; i < thrItems.length; ++i )
 		{
-			final JMenuItem item = new JMenuItem( ICPRefinement.thresold[ i ] );
+			final JMenuItem item = new JMenuItem( ICPRefinement.threshold[ i ] );
 
 			if ( i == thresholdChoice )
 				item.setForeground( Color.RED );
@@ -229,6 +228,9 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 				if ( params == null )
 					return;
 
+				// remember for macro recording
+				ICPRefinement.defaultRefinementChoice = icpType.ordinal();
+
 				if ( icpType == ICPType.Expert )
 				{
 					if ( !ICPRefinement.getGUIParametersAdvanced( data, params ) )
@@ -236,6 +238,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 				}
 				else
 				{
+					
 					if ( !ICPRefinement.getGUIParametersSimple( icpType, data, params, downsamplingChoice, thresholdChoice, distanceChoice ) )
 						return;
 				}
