@@ -42,9 +42,8 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constell
 
 public class BrightestViewSelection extends BasicViewSelection<ViewId>
 {
-
 	public BrightestViewSelection(AbstractSequenceDescription<?,?,?> sd) 
-	{	
+	{
 		super( sd );
 	}
 	
@@ -141,4 +140,9 @@ public class BrightestViewSelection extends BasicViewSelection<ViewId>
 		return getBestViewMean( views );
 	}
 
+	@Override
+	public boolean runMultithreaded()
+	{
+		return true;
+	}
 }
