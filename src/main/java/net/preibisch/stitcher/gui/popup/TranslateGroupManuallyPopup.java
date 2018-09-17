@@ -115,7 +115,10 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 		final int maxSelectionIndex = lsm.getMaxSelectionIndex();
 		for (int i = 0; i <= maxSelectionIndex; i++)
 			if (lsm.isSelectedIndex( i ))
+			{
+				lsm.removeSelectionInterval( i, i );
 				lsm.addSelectionInterval( i, i );
+			}
 	}
 	
 	
