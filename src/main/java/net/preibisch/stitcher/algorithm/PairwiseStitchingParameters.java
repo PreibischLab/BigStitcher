@@ -38,6 +38,12 @@ public class PairwiseStitchingParameters
 	}
 
 	public PairwiseStitchingParameters(double minOverlap, int peaksToCheck, boolean doSubpixel,
+		boolean interpolateCrossCorrelation, boolean showExpertGrouping)
+	{
+		this(minOverlap, peaksToCheck, doSubpixel, interpolateCrossCorrelation, showExpertGrouping, false);
+	}
+
+	public PairwiseStitchingParameters(double minOverlap, int peaksToCheck, boolean doSubpixel,
 			boolean interpolateCrossCorrelation, boolean showExpertGrouping, boolean useWholeImage )
 	{
 		this.minOverlap = minOverlap;
