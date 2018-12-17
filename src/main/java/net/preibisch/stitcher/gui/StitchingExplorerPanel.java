@@ -104,6 +104,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.FlatFieldCorrectionPop
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.FusionPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.LabelPopUp;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.MaxProjectPopup;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.QualityPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.RemoveTransformationPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ResavePopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.Separator;
@@ -795,6 +796,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new LabelPopUp( " Displaying" ) );
 		popups.add( new BDVPopupStitching( linkOverlay ) );
 		popups.add( new DisplayRawImagesPopup() );
+		popups.add( new QualityPopup() );
 		popups.add( new MaxProjectPopup() );
 		//popups.add( demoLinkOverlayPopup );
 		popups.add( new Separator() );

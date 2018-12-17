@@ -61,6 +61,7 @@ import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.io.IOFunctions;
+import net.preibisch.mvrecon.fiji.plugin.fusion.QualityGUI;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBoxes;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
@@ -76,6 +77,7 @@ import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.illuminationselection.BrightestViewSelection;
 import net.preibisch.stitcher.algorithm.illuminationselection.IlluminationSelectionPreviewGUI;
 import net.preibisch.stitcher.algorithm.illuminationselection.MeanGradientMagnitudeViewSelection;
+import net.preibisch.stitcher.algorithm.illuminationselection.RelativeFRCSelection;
 import net.preibisch.stitcher.algorithm.illuminationselection.ViewSelection;
 
 public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindowSetable
@@ -99,13 +101,34 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		return this;
 	}
 
-	public static ViewSelection< ViewId > getViewSelectionResult(GenericDialog gd, AbstractSequenceDescription< ?, ?, ? > sd)
+	public static ViewSelection< ViewId > getViewSelectionResult( final GenericDialog gd, final AbstractSequenceDescription< ?, ?, ? > sd )
 	{
 		String choice = gd.getNextChoice();
 		if (choice.equals( "Pick brightest" ))
 			return new BrightestViewSelection( sd );
 		else if (choice.equals("Pick highest mean gradient magnitude"))
 			return new MeanGradientMagnitudeViewSelection(sd);
+		else if (choice.equals("Relative Fourier Ring Correlation"))
+		{
+			final GenericDialog gd1 = new GenericDialog( "Relative FRC Parameters" );
+
+			gd1.addCheckbox( "Relative_FRC", QualityGUI.defaultUseRelativeFRC );
+			gd1.addCheckbox( "Smooth_Local_FRC", QualityGUI.defaultSmoothLocalFRC );
+			gd1.addNumericField( "FRC_FFT_Size", QualityGUI.defaultFFTSize, 0 );
+			gd1.addNumericField( "FRC_Stepsize (z)", QualityGUI.defaultFRCStepSize, 0 );
+
+			gd1.showDialog();
+
+			if ( gd1.wasCanceled() )
+				return null;
+
+			final boolean useRelativeFRC = QualityGUI.defaultUseRelativeFRC = gd1.getNextBoolean();
+			final boolean useSmoothLocalFRC = QualityGUI.defaultSmoothLocalFRC = gd1.getNextBoolean();
+			final int fftSize = QualityGUI.defaultFFTSize = Math.max( 16, (int)Math.round( gd1.getNextNumber() ) );
+			final int frcStepSize = QualityGUI.defaultFRCStepSize = Math.max( 1, (int)Math.round( gd1.getNextNumber() ) );
+
+			return new RelativeFRCSelection( sd, frcStepSize, fftSize, useRelativeFRC, useSmoothLocalFRC );
+		}
 		else
 			return null;
 		
@@ -113,7 +136,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 	
 	public static void addViewSelectionQuery(GenericDialog gd)
 	{
-		final String[] choices = new String[] {"Pick brightest", "Pick highest mean gradient magnitude"};
+		final String[] choices = new String[] {"Pick brightest", "Pick highest mean gradient magnitude", "Relative Fourier Ring Correlation" };
 		gd.addChoice( "Selection Method", choices, choices[0] );
 	}
 	
@@ -224,9 +247,15 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		} );
 
 		// multithreaded best illuination determination
-		List< Callable< ViewId > > tasks = new ArrayList<>();
+		final List< Callable< ViewId > > tasks = new ArrayList<>();
 		List< ViewId > bestViews = new ArrayList<>();
-		ExecutorService service = Executors.newFixedThreadPool(Math.max( 2, Runtime.getRuntime().availableProcessors() ));
+
+		final ExecutorService service;
+
+		if ( viewSelection.runMultithreaded() )
+			service = Executors.newFixedThreadPool(Math.max( 2, Runtime.getRuntime().availableProcessors() ));
+		else
+			service = Executors.newFixedThreadPool( 1 );
 
 		final AtomicInteger progress = new AtomicInteger( 0 );
 		final int numTasks = groupedViews.size();

@@ -180,4 +180,10 @@ public class MeanGradientMagnitudeViewSelection extends BasicViewSelection<ViewI
 		return res / Views.iterable(image).size();		
 	}
 
+	@Override
+	public boolean runMultithreaded()
+	{
+		return true;
+	}
+
 }
