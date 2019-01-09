@@ -24,7 +24,7 @@ import net.preibisch.stitcher.plugin.Fast_Translation_Fusion;
 public class FastFusionPopup extends JMenuItem implements ExplorerWindowSetable
 {
 
-	ExplorerWindow< ?, ? > panel;
+	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
 	
 	public FastFusionPopup()
 	{
@@ -36,7 +36,7 @@ public class FastFusionPopup extends JMenuItem implements ExplorerWindowSetable
 	
 	@Override
 	public JComponent setExplorerWindow(
-			ExplorerWindow<  ?, ? > panel)
+			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
 	{
 		this.panel = panel;
 		return this;

@@ -34,8 +34,9 @@ import net.imglib2.realtransform.Scale3D;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.Intervals;
+import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
+import net.imglib2.util.ValuePair;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import net.preibisch.mvrecon.process.fusion.FusionTools;
@@ -43,13 +44,11 @@ import net.preibisch.mvrecon.process.fusion.ImagePortion;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.DownsampleTools;
 
 
-
 public class FastFusionTools
 {
 
 	private static final int[] ds = new int[] {1,2,4,8,16,32};
 
-	
 	/**
 	 * add input image to output image with given offset
 	 * @param in input image
@@ -110,6 +109,60 @@ public class FastFusionTools
 		catch ( InterruptedException | ExecutionException e ) { e.printStackTrace(); }
 	}
 
+	
+	public static <T extends RealType<T>, R extends RealType< R > > void alphaBlendTranslated(
+			IterableInterval< T > in,
+			RandomAccessibleInterval< R > out,
+			int[] translation,
+			ExecutorService pool)
+	{
+		final Vector< ImagePortion > portions = FusionTools.divideIntoPortions( in.size() );
+		final ArrayList< Callable< Void > > calls = new ArrayList<>();
+		for (final ImagePortion portion : portions)
+		{
+			calls.add( new Callable< Void >()
+			{
+				@Override
+				public Void call() throws Exception
+				{
+					Cursor<T> inC = in.localizingCursor();
+					RandomAccess< R > outRA = out.randomAccess();
+					inC.jumpFwd( portion.getStartPosition() );
+					for (long i=0; i<portion.getLoopSize(); i++)
+					{
+						inC.fwd();
+						outRA.setPosition( inC );
+						outRA.move( translation );
+
+						// check whether we moved outside of destination image
+						boolean oob = false;
+						for (int d=0; d<out.numDimensions(); d++)
+							if (outRA.getLongPosition( d ) > out.max( d ) || outRA.getLongPosition( d ) < out.min( d ) )
+								oob = true;
+						if (oob)
+							continue;
+
+						// do alpha blend
+						final double aO = outRA.get().getRealDouble();
+						final double aI = inC.get().getRealDouble();
+						final double aNew =  aO + (1 - aO) * aI ;
+						outRA.get().setReal( aNew );
+
+					}
+
+					return null;
+				}
+			} );
+		}
+
+		try
+		{
+			final List< Future< Void > > futures = pool.invokeAll( calls );
+			for (final Future< Void > f : futures)
+				f.get();
+		}
+		catch ( InterruptedException | ExecutionException e ) { e.printStackTrace(); }
+	}
 
 	/**
 	 * get linear interpolation of image with a given subpixel shift
@@ -121,16 +174,17 @@ public class FastFusionTools
 	 * @param <T> out pixel type
 	 * @return interpolated image (size +1 in each dimension)
 	 */
-	public static <T extends RealType<T> & NativeType<T>, R extends RealType<R> > RandomAccessibleInterval<T> getLinearInterpolation(
+	public static <T extends RealType<T> & NativeType<T>, R extends RealType<R> > Pair<RandomAccessibleInterval<T>, RandomAccessibleInterval<T>> getLinearInterpolation(
 			RandomAccessibleInterval< R > in,
 			T type,
 			float[] off,
 			ExecutorService pool)
 	{
-		// TODO: save weights of border pixels
+		// save alpha of border pixels
 		// otherwise, we get dark lines in output (unless we blend) 
 
-		// create new image with dimensions in.dimensions(d) + 1 for each axis d 
+		// create new image & alpha image with dimensions in.dimensions(d) + 1 for each axis d
+		// get size
 		long size = 1;
 		for (int d=0; d<in.numDimensions(); d++)
 			size *= (in.dimension( d ) + 1);
@@ -139,7 +193,10 @@ public class FastFusionTools
 		in.dimensions( dimensions );
 		for (int d=0; d<in.numDimensions(); d++)
 			dimensions[d] += 1;
+
+		// allocate images
 		final Img< T > interpolated = needCellImg ? new CellImgFactory<>( type ).create( dimensions ) : new ArrayImgFactory<>( type ).create( dimensions );
+		final Img< T > weights = needCellImg ? new CellImgFactory<>( type ).create( dimensions ) : new ArrayImgFactory<>( type ).create( dimensions );
 		addTranslated( Views.iterable( Views.zeroMin( in ) ), interpolated, Util.getArrayFromValue( 1, in.numDimensions() ), pool );
 
 		// pass over image numDimensions times, interpolating along each axis
@@ -160,6 +217,7 @@ public class FastFusionTools
 					{
 
 						RandomAccess< T > outRA = interpolated.randomAccess();
+						RandomAccess< T > weightRA = weights.randomAccess();
 						Cursor<T> inC = startSlice.localizingCursor();
 						inC.jumpFwd( portion.getStartPosition() );
 
@@ -175,11 +233,33 @@ public class FastFusionTools
 								pos[d2] = d2==dFinal ? 0 : inC.getIntPosition( d2 - additionalDim);
 								if (d2==dFinal)
 									additionalDim++;
+
+								// do not set the first pixel for subsequent interpolations
+								else
+									if (pos[d2] == 0)
+										continue;
 							}
 
 							// interpolate along d
 							outRA.setPosition( pos );
-							for (int x=0; x<(interpolated.dimension( dFinal ) - 1); x++)
+							weightRA.setPosition( pos );
+
+							// set first pixel, alpha
+							weightRA.fwd( dFinal );
+							final double w0 = weightRA.get().getRealDouble();
+							weightRA.bck( dFinal );
+							weightRA.get().setReal( (1.0 - off[dFinal]) );
+
+							// value: copy second pixel
+							final double x1p = outRA.get().getRealDouble();
+							outRA.fwd( dFinal );
+							final double x2p = outRA.get().getRealDouble();
+							outRA.bck( dFinal );
+							//outRA.get().setReal( dFinal==0 ? x2p : (w0 * x1p + x2p * (1.0 - off[dFinal])) / (w0 + (1.0 - off[dFinal]) ) );
+							outRA.get().setReal( x2p );
+							outRA.fwd( dFinal );
+
+							for (int x=1; x<(interpolated.dimension( dFinal ) - 1); x++)
 							{
 								final double x1 = outRA.get().getRealDouble();
 								outRA.fwd( dFinal );
@@ -187,11 +267,20 @@ public class FastFusionTools
 								outRA.bck( dFinal );
 								outRA.get().setReal( (1.0 - off[dFinal]) * x1 + off[dFinal] * x2 );
 								outRA.fwd( dFinal );
+
+								// other pixels: weights stay the same
+								weightRA.fwd( dFinal );
+								final double w1 = weightRA.get().getRealDouble();
+								weightRA.get().setReal((dFinal==0 ? 1.0 : w1) * 1.0f );
 							}
 	
 							// last pixel
-							final double x1 = outRA.get().getRealDouble();
-							outRA.get().setReal( (1.0 - off[dFinal]) * x1 );
+							//final double x1 = outRA.get().getRealDouble();
+							//outRA.get().setReal( x1 );
+
+							weightRA.fwd( dFinal );
+							final double w2 = weightRA.get().getRealDouble();
+							weightRA.get().setReal( (dFinal==0 ? 1.0 : w2) * off[dFinal] );
 						}
 
 						return null;
@@ -206,7 +295,7 @@ public class FastFusionTools
 			}
 			catch ( InterruptedException | ExecutionException e ) { e.printStackTrace(); }
 		}
-		return interpolated;
+		return new ValuePair< RandomAccessibleInterval<T>, RandomAccessibleInterval<T> >( interpolated, weights );
 	}
 
 
@@ -225,6 +314,7 @@ public class FastFusionTools
 			final float[] renderOffset,
 			final float[] border, 
 			final float[] blending,
+			final boolean multiplyWeights,
 			final ExecutorService pool)
 	{
 		final int n = image.numDimensions();
@@ -260,7 +350,15 @@ public class FastFusionTools
 							position[d] -= renderOffset[d];
 						final float w = BlendingTools.computeWeight( position, min, dimMinus1, border, blending, n );
 						inC.get().setReal( inC.get().getRealFloat() * w);
-						weightC.get().setReal( w );
+						
+						if (multiplyWeights)
+						{
+							weightC.get().setReal(weightC.get().getRealDouble() * w );
+						}
+						else
+						{
+							weightC.get().setReal( w );
+						}
 					}
 					return null;
 				}
@@ -398,6 +496,52 @@ public class FastFusionTools
 	}
 
 
+	public static <T extends RealType< T >, R extends RealType< R >> void multiplyEqualSizeImages(
+			final RandomAccessibleInterval< T > iOut,
+			final RandomAccessibleInterval< R > iMult,
+			final ExecutorService pool
+			)
+	{
+		final Vector< ImagePortion > portions = FusionTools.divideIntoPortions(  Views.iterable( iOut ).size() );
+		final ArrayList< Callable< Void > > calls = new ArrayList<>();
+		for (final ImagePortion portion : portions)
+		{
+			calls.add( new Callable< Void >()
+			{
+				@Override
+				public Void call() throws Exception
+				{
+					// NB: this assumes the iteration order of image and weights is equal
+					// (which it is in the current use case)
+					// TODO: implement more cleanly?
+					final Cursor<T> inC = Views.iterable( iOut ).localizingCursor();
+					final Cursor<R> wC = Views.iterable( iMult ).localizingCursor();
+					inC.jumpFwd( portion.getStartPosition() );
+					wC.jumpFwd( portion.getStartPosition() );
+					for (long i=0; i<portion.getLoopSize(); i++)
+					{
+						inC.fwd();
+						wC.fwd();
+						final double w = wC.get().getRealDouble();
+						final double v = inC.get().getRealDouble();
+						inC.get().setReal( w * v );
+					}
+					return null;
+				}
+			} );
+		}
+
+		try
+		{
+			final List< Future< Void > > futures = pool.invokeAll( calls );
+			for (final Future< Void > f : futures)
+				f.get();
+		}
+		catch ( InterruptedException | ExecutionException e ) { e.printStackTrace(); }
+		
+	}
+
+
 	/**
 	 * get the affine transform to map a downsampled image opened with {@link DownsampleTools.openAndDownsample} back to full resolution space. 
 	 * @param imgLoader ImgLoader to do the laoding
@@ -474,9 +618,10 @@ public class FastFusionTools
 		RandomAccessibleInterval< ? extends RealType > img = ImageJFunctions.wrapReal( imp );
 		ArrayImg< FloatType, FloatArray > f = ArrayImgs.floats( 1024, 1024 );
 		ArrayImg< FloatType, FloatArray > w = ArrayImgs.floats( 1024, 1024 );
-		RandomAccessibleInterval< FloatType > interp = getLinearInterpolation( img, new FloatType(), new float[] {0.5f,0.5f}, Executors.newSingleThreadExecutor() );
+		RandomAccessibleInterval< FloatType > interp = (RandomAccessibleInterval< FloatType >) getLinearInterpolation( img, new FloatType(), new float[] {0.5f,0.5f}, Executors.newSingleThreadExecutor() ).getA();
+		
 		RandomAccessibleInterval< FloatType > weight = new ArrayImgFactory( new FloatType() ).create( interp );
-		applyWeights( interp, weight, new float[] {0.5f,0.5f}, new float[] {0,0}, new float[] {20,20}, Executors.newSingleThreadExecutor() );
+		applyWeights( interp, weight, new float[] {0.5f,0.5f}, new float[] {0,0}, new float[] {20,20}, false, Executors.newSingleThreadExecutor() );
 		addTranslated( Views.iterable( interp ), f, new int[] {500, 700}, Executors.newSingleThreadExecutor() );
 		addTranslated( Views.iterable( interp ), f, new int[] {400, 500}, Executors.newSingleThreadExecutor() );
 		addTranslated( Views.iterable( weight ), w, new int[] {500, 700}, Executors.newSingleThreadExecutor() );
