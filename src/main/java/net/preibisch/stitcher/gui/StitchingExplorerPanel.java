@@ -109,6 +109,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.RemoveTransformationPo
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ResavePopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.Separator;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.SimpleHyperlinkPopup;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.VisualizeNonRigid;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.util.ColorStream;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.filemap2.FileMapImgLoaderLOCI2;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.flatfield.FlatfieldCorrectionWrappedImgLoader;
@@ -823,6 +824,11 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		popups.add( new LabelPopUp( "Registration Refinement (optional)" ) );
 		popups.add( new RefineWithICPPopup( "Refine with ICP", demoLinkOverlay ) );
+		popups.add( new VisualizeNonRigid() );
+		popups.add( new Separator() );
+
+		popups.add( new LabelPopUp( " Quality (optional)" ) );
+		popups.add( new QualityPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Fusion" ) );
