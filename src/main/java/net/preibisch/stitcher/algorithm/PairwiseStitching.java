@@ -53,6 +53,7 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Translation;
+import net.imglib2.realtransform.Translation3D;
 import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
@@ -233,8 +234,8 @@ public class PairwiseStitching
 			singletonDims[d] = !(input1.dimension( d ) > 1 && input2.dimension( d ) > 1);
 		// TODO: should we consider cases where a dimension is singleton in one image but not the other?
 
-		final RealInterval transformed1 = TransformTools.applyTranslation( input1, t1, singletonDims );
-		final RealInterval transformed2 = TransformTools.applyTranslation( input2, t2, singletonDims );
+		final RealInterval transformed1 = TransformTools.applyTranslation( input1, params.useWholeImage ? new Translation3D() : t1, singletonDims );
+		final RealInterval transformed2 = TransformTools.applyTranslation( input2, params.useWholeImage ? new Translation3D() : t2, singletonDims );
 
 		final RandomAccessibleInterval< T > img1;
 		final RandomAccessibleInterval< S > img2;
@@ -365,6 +366,12 @@ public class PairwiseStitching
 	
 				finalShift[d] = localRelativeShift;
 				d2++;
+			}
+
+			// if we used the whole image, subtract existing shift
+			if (params.useWholeImage)
+			{
+				finalShift[d] -= t2.getTranslation( d ) - t1.getTranslation( d );
 			}
 		}
 
