@@ -61,6 +61,7 @@ import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.XmlIoSpimData;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
+import mpicbg.spim.io.IOFunctions;
 
 public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > > extends FilteredAndGroupedExplorer< AS, X >
 {
@@ -134,6 +135,12 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 
 		// set the initial focus to the table
 		panel.table.requestFocus();
+
+		if ( panel.getTableModel().getRowCount() == 1 )
+		{
+			IOFunctions.println( "Only one tile, starting in MultiView mode." );
+			switchMode( Mode.MULTIVIEW );
+		}
 	}
 
 	public void updateButtons()
