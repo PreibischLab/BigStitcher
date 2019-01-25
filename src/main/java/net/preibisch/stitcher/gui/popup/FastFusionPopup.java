@@ -18,8 +18,8 @@ import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ApplyTransformationPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.FusionPopup.MyActionListener;
 import net.preibisch.stitcher.plugin.Fast_Translation_Fusion;
+import net.preibisch.stitcher.plugin.Fast_Translation_Fusion.FastFusionParameters;
 
 public class FastFusionPopup extends JMenuItem implements ExplorerWindowSetable
 {
@@ -68,7 +68,13 @@ public class FastFusionPopup extends JMenuItem implements ExplorerWindowSetable
 					viewIds.addAll( ApplyTransformationPopup.getSelectedViews( panel ) );
 					Collections.sort( viewIds );
 
-					if ( Fast_Translation_Fusion.fuse( (SpimData2)panel.getSpimData(), viewIds ) )
+
+					FastFusionParameters params = Fast_Translation_Fusion.queryParameters( (SpimData2)panel.getSpimData(), viewIds );
+
+					if (params == null)
+						return;
+
+					if ( Fast_Translation_Fusion.fuse( (SpimData2)panel.getSpimData(), viewIds, params ) )
 					{
 						panel.updateContent(); // update interestpoint and registration panel if available
 						panel.bdvPopup().updateBDV();
