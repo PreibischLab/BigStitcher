@@ -1154,17 +1154,24 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 				if ( enableFlyThrough )
 				{
+					final boolean bdvRunning = bdvPopup().bdvRunning() && !(bdvPopup().bdv == null);
+
 					if ( arg0.getKeyChar() == 's' || arg0.getKeyChar() == 'S' )
-						new Thread( new Runnable()
-						{
-							@Override
-							public void run()
-							{ BDVFlyThrough.record( bdvPopup().bdv, true, true ); }
-						} ).start();
-						
+						if (bdvRunning)
+							new Thread( new Runnable()
+							{
+								@Override
+								public void run()
+								{ BDVFlyThrough.record( bdvPopup().bdv, true, true ); }
+							} ).start();
+						else
+							IOFunctions.println("Please open BigDataViewer to record a fly-through or add keypoints.");
 	
 					if ( arg0.getKeyChar() == 'a' )
-						BDVFlyThrough.addCurrentViewerTransform( bdvPopup().bdv );
+						if (bdvRunning)
+							BDVFlyThrough.addCurrentViewerTransform( bdvPopup().bdv );
+						else
+							IOFunctions.println("Please open BigDataViewer to record a fly-through or add keypoints.");
 	
 					if ( arg0.getKeyChar() == 'x' )
 						BDVFlyThrough.clearAllViewerTransform();
