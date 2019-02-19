@@ -130,12 +130,14 @@ import net.preibisch.stitcher.gui.popup.CalculatePCPopup;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopup.Method;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopupExpertBatch;
 import net.preibisch.stitcher.gui.popup.DemoLinkOverlayPopup;
+import net.preibisch.stitcher.gui.popup.FlipAxesPopup;
 import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopup;
 import net.preibisch.stitcher.gui.popup.ReadTileConfigurationPopup;
 import net.preibisch.stitcher.gui.popup.RefineWithICPPopup;
 import net.preibisch.stitcher.gui.popup.RegularGridPopup;
 import net.preibisch.stitcher.gui.popup.SelectIlluminationPopup;
 import net.preibisch.stitcher.gui.popup.SimpleSubMenu;
+import net.preibisch.stitcher.gui.popup.SkewImagesPopup;
 import net.preibisch.stitcher.gui.popup.TranslateGroupManuallyPopup;
 import net.preibisch.stitcher.gui.popup.VerifyLinksPopup;
 import net.preibisch.stitcher.input.FractalImgLoader;
@@ -806,7 +808,12 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		//popups.add( new ReadTileConfigurationPopup() );
 		regularGridPopup = new RegularGridPopup();
 		//popups.add( regularGridPopup );
-		popups.add( new SimpleSubMenu( "Arrange Views", new TranslateGroupManuallyPopup(), new ReadTileConfigurationPopup(), regularGridPopup ) );
+		popups.add( new SimpleSubMenu( "Arrange Views",
+				new TranslateGroupManuallyPopup(),
+				new ReadTileConfigurationPopup(),
+				regularGridPopup,
+				new FlipAxesPopup(),
+				new SkewImagesPopup() ) );
 		popups.add( new SelectIlluminationPopup() );
 		popups.add( new FlatFieldCorrectionPopup() );
 		popups.add( new Separator() );
