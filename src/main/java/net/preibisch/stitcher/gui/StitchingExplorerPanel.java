@@ -104,10 +104,12 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.FlatFieldCorrectionPop
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.FusionPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.LabelPopUp;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.MaxProjectPopup;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.QualityPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.RemoveTransformationPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ResavePopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.Separator;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.SimpleHyperlinkPopup;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.VisualizeNonRigid;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.util.ColorStream;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.filemap2.FileMapImgLoaderLOCI2;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.flatfield.FlatfieldCorrectionWrappedImgLoader;
@@ -794,6 +796,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new LabelPopUp( " Displaying" ) );
 		popups.add( new BDVPopupStitching( linkOverlay ) );
 		popups.add( new DisplayRawImagesPopup() );
+		popups.add( new QualityPopup() );
 		popups.add( new MaxProjectPopup() );
 		//popups.add( demoLinkOverlayPopup );
 		popups.add( new Separator() );
@@ -821,6 +824,11 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		popups.add( new LabelPopUp( "Registration Refinement (optional)" ) );
 		popups.add( new RefineWithICPPopup( "Refine with ICP", demoLinkOverlay ) );
+		popups.add( new VisualizeNonRigid() );
+		popups.add( new Separator() );
+
+		popups.add( new LabelPopUp( " Quality (optional)" ) );
+		popups.add( new QualityPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( "Fusion" ) );
@@ -1146,17 +1154,24 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 				if ( enableFlyThrough )
 				{
+					final boolean bdvRunning = bdvPopup().bdvRunning() && !(bdvPopup().bdv == null);
+
 					if ( arg0.getKeyChar() == 's' || arg0.getKeyChar() == 'S' )
-						new Thread( new Runnable()
-						{
-							@Override
-							public void run()
-							{ BDVFlyThrough.record( bdvPopup().bdv, true, true ); }
-						} ).start();
-						
+						if (bdvRunning)
+							new Thread( new Runnable()
+							{
+								@Override
+								public void run()
+								{ BDVFlyThrough.record( bdvPopup().bdv, true, true ); }
+							} ).start();
+						else
+							IOFunctions.println("Please open BigDataViewer to record a fly-through or add keypoints.");
 	
 					if ( arg0.getKeyChar() == 'a' )
-						BDVFlyThrough.addCurrentViewerTransform( bdvPopup().bdv );
+						if (bdvRunning)
+							BDVFlyThrough.addCurrentViewerTransform( bdvPopup().bdv );
+						else
+							IOFunctions.println("Please open BigDataViewer to record a fly-through or add keypoints.");
 	
 					if ( arg0.getKeyChar() == 'x' )
 						BDVFlyThrough.clearAllViewerTransform();

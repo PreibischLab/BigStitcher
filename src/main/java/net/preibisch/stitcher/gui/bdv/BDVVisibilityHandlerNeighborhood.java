@@ -3,19 +3,24 @@ package net.preibisch.stitcher.gui.bdv;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import bdv.BigDataViewer;
 import bdv.tools.brightness.ConverterSetup;
 import mpicbg.spim.data.generic.AbstractSpimData;
+import mpicbg.spim.data.generic.base.Entity;
+import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.type.numeric.ARGBType;
 import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.ISpimDataTableModel;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
@@ -73,8 +78,37 @@ public class BDVVisibilityHandlerNeighborhood implements BDVVisibilityHandler
 		final int currentTPId = panel.getSpimData().getSequenceDescription().getTimePoints().getTimePointsOrdered().get( currentTimepoint ).getId();
 
 		// all vids of current timepoint
-		for (final ViewId vid : panel.getSpimData().getSequenceDescription().getViewDescriptions().keySet()
-				.stream().filter( vi -> vi.getTimePointId() == currentTPId ).collect( Collectors.toList() ))
+		List< ViewId > candidates = panel.getSpimData().getSequenceDescription().getViewDescriptions().keySet()
+				.stream().filter( vi -> vi.getTimePointId() == currentTPId ).collect( Collectors.toList() );
+
+		// ignore views that are filtered out via the grouped table model
+		// e.g. views from another angle
+		if (FilteredAndGroupedExplorerPanel.class.isInstance( panel ))
+		{
+			// get all filters from model
+			final ISpimDataTableModel< ? extends AbstractSpimData< ? > > tableModel =
+					((FilteredAndGroupedExplorerPanel< ? extends AbstractSpimData< ? >, ? >)panel).getTableModel();
+			final Map< Class< ? extends Entity >, List< ? extends Entity > > filters = tableModel.getFilters();
+
+			// check all candidates
+			candidates = candidates.stream().filter( c -> {
+				for( final Entry< Class< ? extends Entity >, List< ? extends Entity > >  e : filters.entrySet())
+				{
+					// we checked for time points before
+					if (e.getKey() == TimePoint.class)
+						continue;
+
+					// ignore view if it was hidden by filter 
+					final Entity attribute = panel.getSpimData().getSequenceDescription()
+							.getViewDescriptions().get( c ).getViewSetup().getAttribute( e.getKey() );
+					if (!e.getValue().contains( attribute ))
+						return false;
+				}
+				return true;
+			}).collect( Collectors.toList() );
+		}
+
+		for (final ViewId vid : candidates)
 		{
 			// we have this view selected -> no need to re-color
 			if (selectedViewIds.contains( vid ))
