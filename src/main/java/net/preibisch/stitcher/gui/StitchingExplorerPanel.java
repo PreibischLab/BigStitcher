@@ -131,6 +131,7 @@ import net.preibisch.stitcher.gui.popup.CalculatePCPopup.Method;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopupExpertBatch;
 import net.preibisch.stitcher.gui.popup.DemoLinkOverlayPopup;
 import net.preibisch.stitcher.gui.popup.FlipAxesPopup;
+import net.preibisch.stitcher.gui.popup.FastFusionPopup;
 import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopup;
 import net.preibisch.stitcher.gui.popup.ReadTileConfigurationPopup;
 import net.preibisch.stitcher.gui.popup.RefineWithICPPopup;
@@ -842,6 +843,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new BoundingBoxPopup() );
 		popups.add( new DisplayFusedImagesPopup() );
 		popups.add( new FusionPopup() );
+		popups.add( new FastFusionPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
@@ -1250,3 +1252,4 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		table.repaint();
 	}
 }
+
