@@ -41,7 +41,6 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import net.preibisch.mvrecon.process.fusion.FusionTools;
 import net.preibisch.mvrecon.process.fusion.ImagePortion;
-import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.DownsampleTools;
 
 
 public class FastFusionTools
@@ -306,7 +305,10 @@ public class FastFusionTools
 	 * @param renderOffset (subpixel) offset of the original image to the provided version
 	 * @param border blank pixels on each border
 	 * @param blending extent of blending on each border
+	 * @param multiplyWeights false: just set weightImage to new weights, true: multiply existing weightImage
 	 * @param pool thread pool
+	 * @param <T> image pixel data type
+	 * @param <R> weight image pixel data type
 	 */
 	public static <T extends RealType<T>, R extends RealType<R> > void applyWeights(
 			final RandomAccessibleInterval< T > image,
@@ -543,7 +545,7 @@ public class FastFusionTools
 
 
 	/**
-	 * get the affine transform to map a downsampled image opened with {@link DownsampleTools.openAndDownsample} back to full resolution space. 
+	 * get the affine transform to map a downsampled image opened with {@link net.preibisch.stitcher.algorithm.DownsampleTools}.openAndDownsample back to full resolution space. 
 	 * @param imgLoader ImgLoader to do the laoding
 	 * @param vd view description to load
 	 * @param downsamplefactor by how much we downsample (has to be a power of two)

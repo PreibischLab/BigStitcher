@@ -206,6 +206,9 @@ public class PhaseCorrelation2 {
 	 * @param subpixelAccuracy whether to do subpixel shift peak localization or not
 	 * @param interpolateSubpixel whether to interpolate the subpixel shift in cross. corr.
 	 * @param service thread pool
+	 * @param <R> PCM pixel type
+	 * @param <T> image 1 pixel type
+	 * @param <S> image 2 pixel type
 	 * @return best (highest c.c.) shift peak
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>> PhaseCorrelationPeak2 getShift(
@@ -240,6 +243,9 @@ public class PhaseCorrelation2 {
 	 * @param minOverlap minimal overlap (in pixels)
 	 * @param subpixelAccuracy whether to do subpixel shift peak localization or not
 	 * @param service thread pool
+	 * @param <R> PCM pixel type
+	 * @param <T> image 1 pixel type
+	 * @param <S> image 2 pixel type
 	 * @return best (highest c.c.) shift peak
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>> PhaseCorrelationPeak2 getShift(
@@ -255,6 +261,9 @@ public class PhaseCorrelation2 {
 	 * @param pcm the phase correlation matrix of img1 and img2
 	 * @param img1 source image 1
 	 * @param img2 source image 2
+	 * @param <R> PCM pixel type
+	 * @param <T> image 1 pixel type
+	 * @param <S> image 2 pixel type
 	 * @return best (highest c.c.) shift peak
 	 */
 	public static <T extends RealType<T>, S extends RealType<S>, R extends RealType<R>> PhaseCorrelationPeak2 getShift(

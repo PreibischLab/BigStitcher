@@ -385,7 +385,10 @@ public class Align<T extends RealType< T >>
 	 * @param difference
 	 *            Output image. The pixel-wise difference between the
 	 *            transformed source image and the target image is stored here.
-	 *            
+	 * @param service
+	 *            thread pool for difference calculation
+	 * @param nTasks
+	 *            number of image parts that are processed in parallel
 	 * @param <T> pixel type source
 	 * @param <S> pixel type target
 	 */
