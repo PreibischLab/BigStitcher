@@ -82,7 +82,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/PreibischLab/BigStitcher</connection>
 		<developerConnection>scm:git:git@github.com:PreibischLab/BigStitcher</developerConnection>
-		<tag>BigStitcher-0.2.10</tag>
+		<tag>HEAD</tag>
 		<url>https://github.com/PreibischLab/BigStitcher</url>
 	</scm>
 	<issueManagement>
