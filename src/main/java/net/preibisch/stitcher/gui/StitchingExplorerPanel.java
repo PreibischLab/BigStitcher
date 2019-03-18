@@ -59,7 +59,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import bdv.BigDataViewer;
-import bdv.img.hdf5.Hdf5ImageLoader;
+import bdv.ViewerImgLoader;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.transformation.TransformedSource;
 import bdv.viewer.DisplayMode;
@@ -190,7 +190,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		initComponent();
 
 		if ( requestStartBDV && 
-				(Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
+				(ViewerImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
 				|| (FlatfieldCorrectionWrappedImgLoader.class.isInstance(data.getSequenceDescription().getImgLoader()) &&
 						((FlatfieldCorrectionWrappedImgLoader) data.getSequenceDescription().getImgLoader()).isCached() &&
 						((FlatfieldCorrectionWrappedImgLoader) data.getSequenceDescription().getImgLoader()).isActive())
