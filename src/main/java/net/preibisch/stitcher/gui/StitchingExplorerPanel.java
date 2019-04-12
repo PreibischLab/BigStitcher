@@ -843,7 +843,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new BoundingBoxPopup() );
 		popups.add( new DisplayFusedImagesPopup() );
 		popups.add( new FusionPopup() );
-		popups.add( new FastFusionPopup() );
+		//popups.add( new FastFusionPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
