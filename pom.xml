@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>24.2.0</version>
+		<version>25.0.0</version>
 		<relativePath />
 	</parent>
 
 	<groupId>net.preibisch</groupId>
 	<artifactId>BigStitcher</artifactId>
-	<version>0.3.1-SNAPSHOT</version>
+	<version>0.3.4-SNAPSHOT</version>
 
 	<name>Big Stitcher</name>
 	<description>Multiview stitching of large datasets.</description>
@@ -33,7 +33,7 @@
 		<developer>
 			<id>StephanPreibisch</id>
 			<name>Stephan Preibisch</name>
-			<url>http://imagej.net/User:StephanP</url>
+			<url>https://imagej.net/User:StephanP</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -47,7 +47,7 @@
 		<developer>
 			<id>hoerldavid</id>
 			<name>David Hoerl</name>
-			<url>http://imagej.net/User:Davidhoerl</url>
+			<url>https://imagej.net/User:Davidhoerl</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -62,12 +62,12 @@
 	<contributors>
 		<contributor>
 			<name>Tobias Pietzsch</name>
-			<url>http://imagej.net/User:Pietzsch</url>
+			<url>https://imagej.net/User:Pietzsch</url>
 			<properties><id>tpietzsch</id></properties>
 		</contributor>
 		<contributor>
 			<name>Curtis Rueden</name>
-			<url>http://imagej.net/User:Rueden</url>
+			<url>https://imagej.net/User:Rueden</url>
 			<properties><id>ctrueden</id></properties>
 		</contributor>
 	</contributors>
@@ -99,7 +99,7 @@
 
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
-		<multiview-reconstruction.version>0.3.0</multiview-reconstruction.version>
+		<multiview-reconstruction.version>0.3.3</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
 
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
