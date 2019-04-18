@@ -78,8 +78,6 @@ import net.preibisch.stitcher.input.GenerateSpimData;
 public class TransformationTools
 {
 
-	public static int defaultBatchSize = 0;
-
 	public static < A > Pair< A, A > reversePair( final Pair< A, A > pair )
 	{
 		return new ValuePair< A, A >( pair.getB(), pair.getA() );
@@ -427,9 +425,6 @@ public class TransformationTools
 			final GroupedViewAggregator gva, final long[] downsamplingFactors,
 			final ProgressWriter progressWriter)
 	{
-		// set up executor service
-		final ExecutorService serviceGlobal = Executors
-				.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 2 ) );
 		final ArrayList< Callable< Pair< Pair< Group< V >, Group< V > >, Pair< Pair< AffineGet, Double >, RealInterval > > > > tasks = new ArrayList<>();
 
 		// remove non-overlapping comparisons
@@ -494,6 +489,10 @@ public class TransformationTools
 
 		final ArrayList< PairwiseStitchingResult< ViewId > > results = new ArrayList<>();
 
+		// set up executor service
+		final int batchSize = params.manualNumTasks ? params.numTasks : Math.max( 2, Threads.numThreads() / 6 );
+		final ExecutorService serviceGlobal = Executors.newFixedThreadPool( batchSize );
+
 		try
 		{
 			for ( final Future< Pair< Pair< Group< V >, Group< V > >, Pair< Pair< AffineGet, Double >, RealInterval > > > future : serviceGlobal
@@ -542,8 +541,7 @@ public class TransformationTools
 																		final GroupedViewAggregator gva,
 																		final long[] downsamplingFactors)
 	{
-		// set up executor service
-		final ExecutorService serviceGlobal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 2 ) );
+
 		final ArrayList< Callable< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > > > tasks = new ArrayList<>();
 
 		// remove non-overlapping comparisons
@@ -618,7 +616,8 @@ public class TransformationTools
 
 		final ArrayList< PairwiseStitchingResult< ViewId > > results = new ArrayList<>();
 
-		final int batchSize = defaultBatchSize > 0 ? defaultBatchSize : Math.max( 2, Threads.numThreads() / 6 );
+		final int batchSize = params.manualNumTasks ? params.numTasks : Math.max( 2, Threads.numThreads() / 6 );
+		final ExecutorService serviceGlobal = Executors.newFixedThreadPool( batchSize );
 
 		IOFunctions.println( "Computing overlap for: " + batchSize + " pairs of images at once (in total " + Threads.numThreads() + " threads." );
 

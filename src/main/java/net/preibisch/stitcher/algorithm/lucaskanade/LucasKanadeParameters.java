@@ -23,6 +23,7 @@ package net.preibisch.stitcher.algorithm.lucaskanade;
 
 
 import ij.gui.GenericDialog;
+import net.preibisch.mvrecon.Threads;
 
 public class LucasKanadeParameters
 {
@@ -42,13 +43,17 @@ public class LucasKanadeParameters
 	public final WarpFunctionType modelType;
 	public final double minParameterChange;
 	public final boolean showExpertGrouping;
+	public boolean manualNumTasks;
+	public int numTasks;
 
-	public LucasKanadeParameters(WarpFunctionType modelType, int maxNumIterations, double minParameterChange, boolean showExpertGrouping)
+	public LucasKanadeParameters(WarpFunctionType modelType, int maxNumIterations, double minParameterChange, boolean showExpertGrouping, boolean manualNumTasks, int numTasks)
 	{
 		this.modelType = modelType;
 		this.maxNumIterations = maxNumIterations;
 		this.minParameterChange = minParameterChange;
 		this.showExpertGrouping = showExpertGrouping;
+		this.manualNumTasks = manualNumTasks;
+		this.numTasks = numTasks;
 	}
 
 	/**
@@ -57,7 +62,7 @@ public class LucasKanadeParameters
 	 */
 	public LucasKanadeParameters(WarpFunctionType modelType)
 	{
-		this( modelType, 100, 0.01, false);
+		this( modelType, 100, 0.01, false, false, Math.max( 2, Threads.numThreads() / 6 ));
 	}
 
 	/**
@@ -82,6 +87,8 @@ public class LucasKanadeParameters
 		gd.addNumericField( "minimum_parameter_change_for_convergence", 0.01, 2, 10, "" );
 		if (askForModelType)
 			gd.addChoice( "transformation_type", modelChoices, modelChoices[0] );
+		gd.addCheckbox( "manually set number of parallel tasks", false );
+		gd.addNumericField( "number of parallel tasks", (int) Math.max( 2, Threads.numThreads() / 6 ), 0 );
 		gd.addCheckbox( "show_expert_grouping_options", false );
 	}
 
@@ -102,9 +109,11 @@ public class LucasKanadeParameters
 		else
 			modelType = defaultModelType;
 
+		boolean manualNumTasks = gd.getNextBoolean();
+		int numTasks = (int) (manualNumTasks ? gd.getNextNumber() : Math.max( 2, Threads.numThreads() / 6 ));
 		boolean expertGrouping = gd.getNextBoolean();
 
-		return new LucasKanadeParameters(modelType, nIterations, minParameterChance, expertGrouping);
+		return new LucasKanadeParameters(modelType, nIterations, minParameterChance, expertGrouping, manualNumTasks, numTasks);
 	}
 
 	/**

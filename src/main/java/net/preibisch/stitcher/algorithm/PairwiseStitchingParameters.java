@@ -22,6 +22,7 @@
 package net.preibisch.stitcher.algorithm;
 
 import ij.gui.GenericDialog;
+import net.preibisch.mvrecon.Threads;
 
 public class PairwiseStitchingParameters
 {
@@ -31,20 +32,23 @@ public class PairwiseStitchingParameters
 	public boolean interpolateCrossCorrelation;
 	public boolean showExpertGrouping;
 	public boolean useWholeImage;
+	public boolean manualNumTasks;
+	public int numTasks;
 
 	public PairwiseStitchingParameters()
 	{
-		this(0, 5, true, false, false, false);
+		this(0, 5, true, false, false, false, false, (int) Math.max( 2, Threads.numThreads() / 6 ));
 	}
 
 	public PairwiseStitchingParameters(double minOverlap, int peaksToCheck, boolean doSubpixel,
 		boolean interpolateCrossCorrelation, boolean showExpertGrouping)
 	{
-		this(minOverlap, peaksToCheck, doSubpixel, interpolateCrossCorrelation, showExpertGrouping, false);
+		this(minOverlap, peaksToCheck, doSubpixel, interpolateCrossCorrelation, showExpertGrouping, false, false, (int)  Math.max( 2, Threads.numThreads() / 6 ));
 	}
 
 	public PairwiseStitchingParameters(double minOverlap, int peaksToCheck, boolean doSubpixel,
-			boolean interpolateCrossCorrelation, boolean showExpertGrouping, boolean useWholeImage )
+			boolean interpolateCrossCorrelation, boolean showExpertGrouping, boolean useWholeImage,
+			boolean manualNumTaksks, int numTasks)
 	{
 		this.minOverlap = minOverlap;
 		this.peaksToCheck = peaksToCheck;
@@ -52,6 +56,8 @@ public class PairwiseStitchingParameters
 		this.interpolateCrossCorrelation = interpolateCrossCorrelation;
 		this.showExpertGrouping = showExpertGrouping;
 		this.useWholeImage = useWholeImage;
+		this.manualNumTasks = manualNumTaksks;
+		this.numTasks = numTasks;
 	}
 
 	public static void addQueriesToGD(final GenericDialog gd)
@@ -61,6 +67,8 @@ public class PairwiseStitchingParameters
 		gd.addCheckbox( "subpixel accuracy", true );
 		gd.addCheckbox( "interpolate_subpixel_cross_correlation_(warning: slow!)", false );
 		gd.addCheckbox( "use_whole_image_(warning: slow!)", false );
+		gd.addCheckbox( "manually set number of parallel tasks", false );
+		gd.addNumericField( "number of parallel tasks", (int) Math.max( 2, Threads.numThreads() / 6 ), 0 );
 		gd.addCheckbox( "show_expert_grouping_options", false );
 	}
 
@@ -74,9 +82,11 @@ public class PairwiseStitchingParameters
 		boolean doSubpixel = gd.getNextBoolean();
 		boolean interpolateSubpixel = gd.getNextBoolean();
 		boolean useWholeImage = gd.getNextBoolean();
+		boolean manualNumTasks = gd.getNextBoolean();
+		int numTasks = (int) (manualNumTasks ? gd.getNextNumber() : Math.max( 2, Threads.numThreads() / 6 ));
 		boolean showExpertGrouping = gd.getNextBoolean();
 
-		return new PairwiseStitchingParameters(minOverlap, peaksToCheck, doSubpixel, interpolateSubpixel, showExpertGrouping, useWholeImage);
+		return new PairwiseStitchingParameters(minOverlap, peaksToCheck, doSubpixel, interpolateSubpixel, showExpertGrouping, useWholeImage, manualNumTasks, numTasks);
 	}
 
 	public static PairwiseStitchingParameters askUserForParameters()
