@@ -59,7 +59,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import bdv.BigDataViewer;
-import bdv.img.hdf5.Hdf5ImageLoader;
+import bdv.ViewerImgLoader;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.transformation.TransformedSource;
 import bdv.viewer.DisplayMode;
@@ -130,12 +130,15 @@ import net.preibisch.stitcher.gui.popup.CalculatePCPopup;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopup.Method;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopupExpertBatch;
 import net.preibisch.stitcher.gui.popup.DemoLinkOverlayPopup;
+import net.preibisch.stitcher.gui.popup.FlipAxesPopup;
+import net.preibisch.stitcher.gui.popup.FastFusionPopup;
 import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopup;
 import net.preibisch.stitcher.gui.popup.ReadTileConfigurationPopup;
 import net.preibisch.stitcher.gui.popup.RefineWithICPPopup;
 import net.preibisch.stitcher.gui.popup.RegularGridPopup;
 import net.preibisch.stitcher.gui.popup.SelectIlluminationPopup;
 import net.preibisch.stitcher.gui.popup.SimpleSubMenu;
+import net.preibisch.stitcher.gui.popup.SkewImagesPopup;
 import net.preibisch.stitcher.gui.popup.TranslateGroupManuallyPopup;
 import net.preibisch.stitcher.gui.popup.VerifyLinksPopup;
 import net.preibisch.stitcher.input.FractalImgLoader;
@@ -190,7 +193,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		initComponent();
 
 		if ( requestStartBDV && 
-				(Hdf5ImageLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
+				(ViewerImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
 				|| (FlatfieldCorrectionWrappedImgLoader.class.isInstance(data.getSequenceDescription().getImgLoader()) &&
 						((FlatfieldCorrectionWrappedImgLoader) data.getSequenceDescription().getImgLoader()).isCached() &&
 						((FlatfieldCorrectionWrappedImgLoader) data.getSequenceDescription().getImgLoader()).isActive())
@@ -806,7 +809,12 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		//popups.add( new ReadTileConfigurationPopup() );
 		regularGridPopup = new RegularGridPopup();
 		//popups.add( regularGridPopup );
-		popups.add( new SimpleSubMenu( "Arrange Views", new TranslateGroupManuallyPopup(), new ReadTileConfigurationPopup(), regularGridPopup ) );
+		popups.add( new SimpleSubMenu( "Arrange Views",
+				new TranslateGroupManuallyPopup(),
+				new ReadTileConfigurationPopup(),
+				regularGridPopup,
+				new FlipAxesPopup(),
+				new SkewImagesPopup() ) );
 		popups.add( new SelectIlluminationPopup() );
 		popups.add( new FlatFieldCorrectionPopup() );
 		popups.add( new Separator() );
@@ -835,6 +843,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups.add( new BoundingBoxPopup() );
 		popups.add( new DisplayFusedImagesPopup() );
 		popups.add( new FusionPopup() );
+		//popups.add( new FastFusionPopup() );
 		popups.add( new Separator() );
 
 		popups.add( new LabelPopUp( " Calibration/Transformations" ) );
@@ -1243,3 +1252,4 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		table.repaint();
 	}
 }
+

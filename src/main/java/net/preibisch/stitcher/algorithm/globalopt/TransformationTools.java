@@ -107,7 +107,10 @@ public class TransformationTools
 		BoundingBoxMaximalGroupOverlap< ViewId > bbDet = new BoundingBoxMaximalGroupOverlap<ViewId>( views, sd, vrs );
 		BoundingBox bbOverlap = bbDet.estimate( "Max Overlap" );
 
-		
+		// we could not find overlap -> ignore this pair
+		if (bbOverlap == null)
+			return null;
+
 		List<RandomAccessibleInterval< FloatType >> raiOverlaps = new ArrayList<>();		
 		for (List< ViewId > tileViews : views)
 		{
@@ -182,7 +185,10 @@ public class TransformationTools
 		BoundingBoxMaximalGroupOverlap< ViewId > bbDet = new BoundingBoxMaximalGroupOverlap<ViewId>( views, sd, vrs );
 		BoundingBox bbOverlap = bbDet.estimate( "Max Overlap" );
 
-		
+		// we could not find overlap -> ignore this pair
+		if (bbOverlap == null)
+			return null;
+
 		List<RandomAccessibleInterval< FloatType >> raiOverlaps = new ArrayList<>();		
 		for (List< ViewId > tileViews : views)
 		{
@@ -247,7 +253,7 @@ public class TransformationTools
 			final long[] downsampleFactors,
 			final ExecutorService service )
 	{
-		
+
 		// the transformation that maps the downsampled image coordinates back to the original input(!) image space
 		final AffineTransform3D dsCorrectionT1 = new AffineTransform3D();
 		final AffineTransform3D dsCorrectionT2 = new AffineTransform3D();
