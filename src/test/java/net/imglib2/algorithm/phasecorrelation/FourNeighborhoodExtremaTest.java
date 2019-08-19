@@ -45,11 +45,13 @@ import org.junit.Test;
 public class FourNeighborhoodExtremaTest
 {
 
+	public static long seed = 4353;
+
 	@Test
 	public void testRandomPeaks()
 	{
 		Img< FloatType > img = ArrayImgs.floats( 50, 50 );
-		Random rnd = new Random( 4353 );
+		Random rnd = new Random( seed );
 		
 		for( FloatType t : img )
 			t.set( rnd.nextFloat() );
@@ -105,7 +107,7 @@ public class FourNeighborhoodExtremaTest
 	public void testRandomPeaksMT()
 	{
 		Img< FloatType > img = ArrayImgs.floats( 50, 50 );
-		Random rnd = new Random( 4353 );
+		Random rnd = new Random( seed );
 		
 		for( FloatType t : img )
 			t.set( rnd.nextFloat() );
@@ -152,7 +154,7 @@ public class FourNeighborhoodExtremaTest
 	public void testCornerPeaksMT()
 	{
 		Img< FloatType > img = ArrayImgs.floats( 50, 50 );
-		Random rnd = new Random( 4353 );
+		Random rnd = new Random( seed );
 		
 		for( FloatType t : img )
 			t.set( rnd.nextFloat() );
@@ -217,7 +219,7 @@ public class FourNeighborhoodExtremaTest
 	public void testCornerPeaksMTMirroring()
 	{
 		Img< FloatType > img = ArrayImgs.floats( 50, 50 );
-		Random rnd = new Random( 4353 );
+		Random rnd = new Random( seed );
 		
 		for( FloatType t : img )
 			t.set( rnd.nextFloat() );
@@ -280,7 +282,7 @@ public class FourNeighborhoodExtremaTest
 	public void testEqualPeaks()
 	{
 		Img< FloatType > img = ArrayImgs.floats( 50, 50 );
-		Random rnd = new Random( 4353 );
+		Random rnd = new Random( seed );
 		
 		for( FloatType t : img )
 			t.set( rnd.nextFloat() );

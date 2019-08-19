@@ -52,13 +52,15 @@ import net.imglib2.view.Views;
 
 public class PhaseCorrelationTest {
 
+	public static long seed = 4353;
+
 	@Test
 	public void testPC() {
 		
 		// TODO: very large shifts (nearly no overlap) lead to incorrect shift determination (as expected)
 		// maybe we can optimize behaviour in this situation
 		Img< FloatType > img = ArrayImgs.floats( 200, 200 );
-		Random rnd = new Random( System.currentTimeMillis() );
+		Random rnd = new Random( seed );
 		
 		for( FloatType t : img )
 			t.set( rnd.nextFloat());
@@ -97,7 +99,7 @@ public class PhaseCorrelationTest {
 		// TODO: very large shifts (nearly no overlap) lead to incorrect shift determination (as expected)
 		// maybe we can optimize behaviour in this situation
 		Img< FloatType > img = ArrayImgs.floats( 200, 200 );
-		Random rnd = new Random( System.currentTimeMillis() );
+		Random rnd = new Random( seed );
 		
 		for( FloatType t : img )
 			t.set( rnd.nextFloat());
@@ -141,7 +143,7 @@ public class PhaseCorrelationTest {
 		// TODO: very large shifts (nearly no overlap) lead to incorrect shift determination (as expected)
 		// maybe we can optimize behaviour in this situation
 		Img< FloatType > img = ArrayImgs.floats( 200, 200 );
-		Random rnd = new Random( System.currentTimeMillis() );
+		Random rnd = new Random( seed );
 		
 		for( FloatType t : img )
 			t.set( rnd.nextFloat());
