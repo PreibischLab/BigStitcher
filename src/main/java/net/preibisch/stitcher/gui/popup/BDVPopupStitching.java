@@ -286,7 +286,7 @@ public class BDVPopupStitching extends BDVPopup
 		final Collection< BasicViewDescription< ? > > viewDescriptions =
 			(Collection< BasicViewDescription< ? > >) panel.getSpimData().getSequenceDescription().getViewDescriptions().values();
 		for (final BasicViewDescription< ? > vd : viewDescriptions)
-			if (vd.isPresent() && vd.getViewSetup().hasSize() && vd.getViewSetup().getSize().dimension( 2 ) != 1)
+			if (vd.isPresent() && vd.getViewSetup().hasSize() && (vd.getViewSetup().getSize().numDimensions()>2) && vd.getViewSetup().getSize().dimension( 2 ) != 1)
 			{
 				allViews2D = false;
 				break;
