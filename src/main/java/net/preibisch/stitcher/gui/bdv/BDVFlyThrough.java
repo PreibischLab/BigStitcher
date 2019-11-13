@@ -17,10 +17,10 @@ import bdv.viewer.render.MultiResolutionRenderer;
 import bdv.viewer.state.ViewerState;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
-import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.ui.PainterThread;
 import net.imglib2.ui.RenderTarget;
+import net.preibisch.legacy.io.IOFunctions;
 
 public class BDVFlyThrough
 {
