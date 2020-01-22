@@ -16,6 +16,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
+import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGroupingFunctions;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
@@ -104,7 +105,7 @@ public class ExecuteGlobalOpt implements Runnable
 
 			final ArrayList< Pair< Group< ViewId >, Group< ViewId > > > removedInconsistentPairs = new ArrayList<>();
 
-			GlobalOptStitcher.processGlobalOptimization( (SpimData2) panel.getSpimData(), filteringAndGrouping, params, removedInconsistentPairs, !expertMode );
+			GlobalOptStitcher.processGlobalOptimization( (SpimData2) panel.getSpimData(),filteringAndGrouping, params, removedInconsistentPairs, !expertMode );
 
 			GlobalOptStitcher.removeInconsistentLinks( removedInconsistentPairs, ((SpimData2) panel.getSpimData()).getStitchingResults().getPairwiseResults() );
 

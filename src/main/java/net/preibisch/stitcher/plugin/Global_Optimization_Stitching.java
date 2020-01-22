@@ -38,6 +38,7 @@ import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
+import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGroupingFunctions;
 import net.preibisch.stitcher.algorithm.globalopt.GlobalOptStitcher;
 import net.preibisch.stitcher.algorithm.globalopt.GlobalOptimizationParameters;
 
