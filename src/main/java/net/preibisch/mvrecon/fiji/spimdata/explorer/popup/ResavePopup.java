@@ -48,7 +48,7 @@ import net.preibisch.mvrecon.fiji.plugin.resave.Generic_Resave_HDF5;
 import net.preibisch.mvrecon.fiji.plugin.resave.ProgressWriterIJ;
 import net.preibisch.mvrecon.fiji.plugin.resave.Resave_HDF5;
 import net.preibisch.mvrecon.fiji.plugin.resave.Resave_TIFF;
-import net.preibisch.mvrecon.fiji.plugin.resave.Resave_TIFF.Parameters;
+import net.preibisch.mvrecon.fiji.plugin.resave.ResaveTIFF.Parameters;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;

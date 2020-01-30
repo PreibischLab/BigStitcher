@@ -37,6 +37,8 @@ import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.fusion.FusionGUI;
 import net.preibisch.mvrecon.fiji.plugin.interestpointdetection.DifferenceOfGaussianGUI;
 import net.preibisch.mvrecon.fiji.plugin.interestpointdetection.DifferenceOfMeanGUI;
+//import net.preibisch.mvrecon.fiji.plugin.interestpointdetection.DifferenceOfGaussianGUI;
+//import net.preibisch.mvrecon.fiji.plugin.interestpointdetection.DifferenceOfMeanGUI;
 import net.preibisch.mvrecon.fiji.plugin.interestpointdetection.InterestPointDetectionGUI;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;

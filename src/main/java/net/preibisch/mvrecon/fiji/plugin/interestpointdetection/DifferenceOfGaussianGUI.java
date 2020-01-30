@@ -261,6 +261,7 @@ public class DifferenceOfGaussianGUI extends DifferenceOfGUI implements GenericD
 	protected void addAddtionalParameters( final GenericDialog gd )
 	{
 		gd.addChoice( "Compute_on", computationOnChoice, computationOnChoice[ defaultComputationChoiceIndex ] );
+		
 	}
 
 	@Override
@@ -314,6 +315,7 @@ public class DifferenceOfGaussianGUI extends DifferenceOfGUI implements GenericD
 		{
 			deviceList = null;
 		}
+
 		return true;
 	}
 
