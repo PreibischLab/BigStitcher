@@ -43,13 +43,13 @@ import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
-import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
-import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.GroupedViewAggregator.ActionType;
+import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
+import net.preibisch.stitcher.algorithm.PairwiseStitchingParametersGUI;
+import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.lucaskanade.LucasKanadeParameters;
+import net.preibisch.stitcher.algorithm.lucaskanade.LucasKanadeParametersGUI;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
-import net.preibisch.stitcher.gui.StitchingResultsSettable;
 import net.preibisch.stitcher.gui.StitchingUIHelper;
 import net.preibisch.stitcher.plugin.Calculate_Pairwise_Shifts;
 
@@ -109,9 +109,9 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					PairwiseStitchingParameters params = null;
 					LucasKanadeParameters LKParams = null;
 					if (method == Method.PHASECORRELATION)
-						params = simple ? new PairwiseStitchingParameters() : PairwiseStitchingParameters.askUserForParameters();
+						params = simple ? new PairwiseStitchingParameters() : PairwiseStitchingParametersGUI.askUserForParameters();
 					if (method == Method.LUCASKANADE)
-						LKParams = LucasKanadeParameters.askUserForParameters();
+						LKParams = LucasKanadeParametersGUI.askUserForParameters();
 
 					if (params == null && LKParams == null)
 						return;

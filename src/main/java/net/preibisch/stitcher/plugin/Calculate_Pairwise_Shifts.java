@@ -23,7 +23,6 @@ package net.preibisch.stitcher.plugin;
 
 import java.awt.Font;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,10 +62,12 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.Pairwise
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.PairwiseSetup;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
+import net.preibisch.stitcher.algorithm.PairwiseStitchingParametersGUI;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.globalopt.TransformationTools;
 import net.preibisch.stitcher.algorithm.lucaskanade.LucasKanadeParameters;
 import net.preibisch.stitcher.algorithm.lucaskanade.LucasKanadeParameters.WarpFunctionType;
+import net.preibisch.stitcher.algorithm.lucaskanade.LucasKanadeParametersGUI;
 import net.preibisch.stitcher.gui.StitchingUIHelper;
 
 public class Calculate_Pairwise_Shifts implements PlugIn
@@ -145,13 +146,13 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 
 			if (defaultMethodIdx == 0) // Phase Correlation
 			{
-				PairwiseStitchingParameters params = expertAlgorithmParameters ? PairwiseStitchingParameters.askUserForParameters() : new PairwiseStitchingParameters();
+				PairwiseStitchingParameters params = expertAlgorithmParameters ? PairwiseStitchingParametersGUI.askUserForParameters() : new PairwiseStitchingParameters();
 				if (!processPhaseCorrelation( data, grouping, params, ds ))
 					return;
 			}
 			else if (defaultMethodIdx == 1) // Lucas-Kanade
 			{
-				LucasKanadeParameters params = expertAlgorithmParameters ? LucasKanadeParameters.askUserForParameters() : new LucasKanadeParameters( WarpFunctionType.TRANSLATION );
+				LucasKanadeParameters params = expertAlgorithmParameters ? LucasKanadeParametersGUI.askUserForParameters() : new LucasKanadeParameters( WarpFunctionType.TRANSLATION );
 				if (!processLucasKanade( data, grouping, params, ds ))
 					return;
 			}

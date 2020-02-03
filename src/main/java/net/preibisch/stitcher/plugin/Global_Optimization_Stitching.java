@@ -41,6 +41,7 @@ import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGroupingFunctions;
 import net.preibisch.stitcher.algorithm.globalopt.GlobalOptStitcher;
 import net.preibisch.stitcher.algorithm.globalopt.GlobalOptimizationParameters;
+import net.preibisch.stitcher.algorithm.globalopt.GlobalOptimizationParametersGUI;
 
 public class Global_Optimization_Stitching implements PlugIn
 {
@@ -66,7 +67,7 @@ public class Global_Optimization_Stitching implements PlugIn
 		final HashSet< Class< ? extends Entity > > defaultComparisonFactors = new HashSet<>();
 		defaultComparisonFactors.add( Tile.class );
 
-		GlobalOptimizationParameters params = GlobalOptimizationParameters.askUserForParameters(true);
+		GlobalOptimizationParameters params = GlobalOptimizationParametersGUI.askUserForParameters(true);
 
 		if (params.showExpertGrouping)
 			grouping.askUserForGrouping( 

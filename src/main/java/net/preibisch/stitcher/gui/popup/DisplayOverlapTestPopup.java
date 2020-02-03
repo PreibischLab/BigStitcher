@@ -68,6 +68,7 @@ import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling
 import net.preibisch.stitcher.algorithm.GroupedViewAggregator;
 import net.preibisch.stitcher.algorithm.PairwiseStitching;
 import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
+import net.preibisch.stitcher.algorithm.PairwiseStitchingParametersGUI;
 import net.preibisch.stitcher.algorithm.GroupedViewAggregator.ActionType;
 
 public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindowSetable {
@@ -152,7 +153,7 @@ public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindow
 			
 			Pair< Translation, Double > shift = PairwiseStitching.getShift( rai1, rai2, 
 					new Translation( rai1.numDimensions() ), new Translation( rai1.numDimensions() ),
-					PairwiseStitchingParameters.askUserForParameters(), service );
+					PairwiseStitchingParametersGUI.askUserForParameters(), service );
 			
 			final double[] translation = shift.getA().getTranslationCopy();
 			System.out.println( Util.printCoordinates( translation ) );

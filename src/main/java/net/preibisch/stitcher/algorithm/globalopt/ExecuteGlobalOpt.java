@@ -16,7 +16,6 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
-import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGroupingFunctions;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
@@ -56,7 +55,7 @@ public class ExecuteGlobalOpt implements Runnable
 			}
 
 			final boolean isSavedFaG = savedFiltering != null;
-			final GlobalOptimizationParameters params = expertMode ? GlobalOptimizationParameters.askUserForParameters(!isSavedFaG) : GlobalOptimizationParameters.askUserForSimpleParameters();
+			final GlobalOptimizationParameters params = expertMode ? GlobalOptimizationParametersGUI.askUserForParameters(!isSavedFaG) : GlobalOptimizationParametersGUI.askUserForSimpleParameters();
 			if ( params == null )
 				return;
 

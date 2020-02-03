@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +46,7 @@ import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.Dimensions;
+import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import net.preibisch.legacy.io.IOFunctions;
@@ -62,6 +64,7 @@ import net.preibisch.mvrecon.fiji.plugin.resave.ProgressWriterIJ;
 import net.preibisch.mvrecon.fiji.plugin.resave.Resave_HDF5;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.util.ColorStream;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.LegacyFileMapImgLoaderLOCI;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.filemap2.FileMapGettable;
 import net.preibisch.mvrecon.process.interestpointregistration.TransformationTools;
@@ -108,8 +111,7 @@ public class FileListDatasetDefinition extends FileListDatasetDefinitionCore imp
 			sb.append( "</html>" );
 			return sb.toString();
 		}
-		
-		
+			
 		
 		@Override
 		public List< File > getFileList()
@@ -818,6 +820,39 @@ public class FileListDatasetDefinition extends FileListDatasetDefinitionCore imp
 		
 	}
 	
+	public static String getColoredHtmlFromPattern(String pattern, boolean withRootTag)
+	{
+		final StringBuilder sb = new StringBuilder();
+		if (withRootTag)
+			sb.append( "<html>" );
+		int n = 0;
+		for (int i = 0; i<pattern.length(); i++)
+		{
+			if (pattern.charAt( i ) == '{')
+			{
+				Color col = getColorN( n++ );
+				sb.append( "<span style=\"color: rgb("+ col.getRed() + "," + col.getGreen() + "," + col.getBlue()   +")\">{" );
+			}
+			else if (pattern.charAt( i ) == '}')
+				sb.append( "}</span>");
+			else
+				sb.append( pattern.charAt( i ) );
+		}
+		if (withRootTag)
+			sb.append( "</html>" );
+		return sb.toString();
+	}
+	
+	public static Color getColorN(long n)
+	{
+		Iterator< ARGBType > iterator = ColorStream.iterator();
+		ARGBType c = new ARGBType();
+		for (int i = 0; i<n+43; i++)
+			for (int j = 0; j<3; j++)
+				c = iterator.next();
+		return new Color( ARGBType.red( c.get() ), ARGBType.green( c.get() ), ARGBType.blue( c.get() ) );
+	}
+
 	@Override
 	public String getTitle() { return "Automatic Loader (Bioformats based)"; }
 	
@@ -837,4 +872,13 @@ public class FileListDatasetDefinition extends FileListDatasetDefinitionCore imp
 		return new FileListDatasetDefinition();
 	}
 	
+	public static void main(String[] args)
+	{
+		//new FileListDatasetDefinition().createDataset();
+		//new WildcardFileListChooser().getFileList().forEach( f -> System.out.println( f.getAbsolutePath() ) );
+		GenericDialog gd = new GenericDialog( "A" );
+		gd.addMessage( getColoredHtmlFromPattern( "a{b}c{d}e{aaaaaaaaaa}aa{bbbbbbbbbbbb}ccccc{ddddddd}", true ) );
+		System.out.println( getColoredHtmlFromPattern( "a{b}c{d}e", false ) );
+		gd.showDialog();
+	}
 }
