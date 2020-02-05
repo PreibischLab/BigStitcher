@@ -101,6 +101,7 @@
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
 		<multiview-reconstruction.version>0.8.0-SNAPSHOT</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
+		<distribution.version>0.2.2-SNAPSHOT</distribution.version>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
@@ -118,6 +119,11 @@
 			<groupId>net.preibisch</groupId>
 			<artifactId>multiview-simulation</artifactId>
 			<version>${multiview-simulation.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.preibisch</groupId>
+			<artifactId>distribution</artifactId>
+			<version>${distribution.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>mpicbg</groupId>
