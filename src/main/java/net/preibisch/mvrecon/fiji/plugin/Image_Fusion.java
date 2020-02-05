@@ -53,6 +53,8 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
+import net.preibisch.distribution.algorithm.clustering.scripting.TaskType;
+import net.preibisch.distribution.headless.Clustering;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.fiji.plugin.fusion.FusionGUI;
@@ -129,6 +131,15 @@ public class Image_Fusion implements PlugIn
 
 		// one common executerservice
 		final ExecutorService taskExecutor = Executors.newFixedThreadPool( Threads.numThreads() );
+		
+		if ( fusion.clusterProcessing() )
+		{ 
+			if ( fusion.getNonRigidParameters().isActive() ) {
+				Clustering.init(TaskType.NON_RIGID);
+			}else {
+				Clustering.init(TaskType.FUSION);
+			}
+		}
 
 		for ( final Group< ViewDescription > group : Group.getGroupsSorted( groups ) )
 		{
@@ -167,6 +178,38 @@ public class Image_Fusion implements PlugIn
 			{
 				if ( fusion.getNonRigidParameters().isActive() )
 				{
+					if ( fusion.clusterProcessing() )
+					{ 
+						final HashMap< ViewId, AffineTransform3D > viewRegistrations = new HashMap<>();
+
+						for ( final ViewId viewId : viewsToUse )
+						{
+							final ViewRegistration vr = spimData.getViewRegistrations().getViewRegistration( viewId );
+							vr.updateModel();
+							viewRegistrations.put( viewId, vr.getModel().copy() );
+						}
+
+						for ( final ViewId viewId : group.getViews() )
+						{
+							final ViewRegistration vr = spimData.getViewRegistrations().getViewRegistration( viewId );
+							vr.updateModel();
+							viewRegistrations.put( viewId, vr.getModel().copy() );
+						}	
+						
+						Clustering.fuseNonRigid(spimData,
+								viewRegistrations,
+								group.getViews(),
+								viewsToUse,
+								fusion.getNonRigidParameters(),
+								fusion.useBlending(),
+								fusion.useContentBased(),
+								false,
+								fusion.getInterpolation(),
+								boundingBox,
+								fusion.getDownsampling(),
+								fusion.adjustIntensities() ? spimData.getIntensityAdjustments().getIntensityAdjustments() : null);
+						continue;
+					}else {
 					virtual = NonRigidTools.fuseVirtualInterpolatedNonRigid(
 									spimData,
 									group.getViews(),
@@ -183,9 +226,31 @@ public class Image_Fusion implements PlugIn
 									fusion.getDownsampling(),
 									fusion.adjustIntensities() ? spimData.getIntensityAdjustments().getIntensityAdjustments() : null,
 									taskExecutor ).getA();
+					}
 				}
 				else
 				{
+					if ( fusion.clusterProcessing() )
+					{ 
+						final HashMap< ViewId, AffineTransform3D > registrations = new HashMap<>();
+
+						for ( final ViewId viewId : group.getViews() )
+						{
+							final ViewRegistration vr = spimData.getViewRegistrations().getViewRegistration( viewId );
+							vr.updateModel();
+							registrations.put( viewId, vr.getModel().copy() );
+						}
+						Clustering.fuse(spimData,
+								registrations,
+								group.getViews(),
+								fusion.useBlending(),
+								fusion.useContentBased(),
+								fusion.getInterpolation(),
+								boundingBox,
+								fusion.getDownsampling(),
+								fusion.adjustIntensities() ? spimData.getIntensityAdjustments().getIntensityAdjustments() : null);		
+						continue;
+					}else {
 					virtual = FusionTools.fuseVirtual(
 						spimData,
 						group.getViews(),
@@ -195,6 +260,7 @@ public class Image_Fusion implements PlugIn
 						boundingBox,
 						fusion.getDownsampling(),
 						fusion.adjustIntensities() ? spimData.getIntensityAdjustments().getIntensityAdjustments() : null ).getA();
+					}
 				}
 			}
 			else
@@ -220,6 +286,23 @@ public class Image_Fusion implements PlugIn
 
 				if ( fusion.getNonRigidParameters().isActive() )
 				{
+					if ( fusion.clusterProcessing() )
+					{ 
+						Clustering.fuseNonRigid(spimData,
+								registrations,
+								group.getViews(),
+								viewsToUse,
+								fusion.getNonRigidParameters(),
+								fusion.useBlending(),
+								fusion.useContentBased(),
+								false,
+								fusion.getInterpolation(),
+								boundingBox,
+								fusion.getDownsampling(),
+								fusion.adjustIntensities() ? spimData.getIntensityAdjustments().getIntensityAdjustments() : null
+								);
+						continue;
+					}else {
 					virtual = NonRigidTools.fuseVirtualInterpolatedNonRigid(
 									spimData.getSequenceDescription().getImgLoader(),
 									registrations,
@@ -239,9 +322,21 @@ public class Image_Fusion implements PlugIn
 									fusion.getDownsampling(),
 									fusion.adjustIntensities() ? spimData.getIntensityAdjustments().getIntensityAdjustments() : null,
 									taskExecutor ).getA();
+					}
 				}
 				else
-				{
+				{if( fusion.clusterProcessing() ) {
+					Clustering.fuse(spimData,
+							registrations,
+							group.getViews(),
+							fusion.useBlending(),
+							fusion.useContentBased(),
+							fusion.getInterpolation(),
+							boundingBox,
+							fusion.getDownsampling(),
+							fusion.adjustIntensities() ? spimData.getIntensityAdjustments().getIntensityAdjustments() : null);		
+					continue;
+				}else {
 					virtual = FusionTools.fuseVirtual(
 							spimData.getSequenceDescription().getImgLoader(),
 							registrations,
@@ -253,6 +348,7 @@ public class Image_Fusion implements PlugIn
 							boundingBox,
 							fusion.getDownsampling(),
 							fusion.adjustIntensities() ? spimData.getIntensityAdjustments().getIntensityAdjustments() : null ).getA();
+				}
 				}
 			}
 
@@ -272,6 +368,11 @@ public class Image_Fusion implements PlugIn
 				if ( !cacheAndExport( virtual, taskExecutor, new FloatType(), fusion, exporter, group, null ) )
 					return false;
 			}
+		}
+		
+		if ( fusion.clusterProcessing() )
+		{ 
+				Clustering.run();
 		}
 
 		exporter.finish();
