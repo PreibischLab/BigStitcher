@@ -36,7 +36,7 @@ import ij.plugin.PlugIn;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.ImgLib2Temp.Pair;
 import net.preibisch.mvrecon.fiji.ImgLib2Temp.ValuePair;
-import net.preibisch.mvrecon.fiji.datasetmanager.FileListDatasetDefinition;
+import net.preibisch.mvrecon.fiji.datasetmanager.FileListDatasetDefinitionGUI;
 import net.preibisch.mvrecon.fiji.datasetmanager.LightSheetZ1GUI;
 import net.preibisch.mvrecon.fiji.datasetmanager.MicroManagerGUI;
 import net.preibisch.mvrecon.fiji.datasetmanager.MultiViewDatasetDefinition;
@@ -63,7 +63,7 @@ public class Define_Multi_View_Dataset implements PlugIn
 	static
 	{
 		IOFunctions.printIJLog = true;
-		staticDatasetDefinitions.add( new FileListDatasetDefinition() );
+		staticDatasetDefinitions.add( new FileListDatasetDefinitionGUI() );
 		staticDatasetDefinitions.add( new StackListLOCIGUI<StackListGUI>() );
 		staticDatasetDefinitions.add( new StackListImageJGUI<StackListGUI>() );
 		staticDatasetDefinitions.add( new LightSheetZ1GUI() );

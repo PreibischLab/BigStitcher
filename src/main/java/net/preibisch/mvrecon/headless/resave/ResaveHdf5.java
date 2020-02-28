@@ -57,7 +57,7 @@ public class ResaveHdf5 {
 
         final Map< Integer, ExportMipmapInfo> perSetupExportMipmapInfo = Resave_HDF5.proposeMipmaps( xml.getViewSetupsToProcess() );
 
-        Generic_Resave_HDF5.lastExportPath = xmlfile;
+        GenericResaveHDF5GUI.lastExportPath = xmlfile;
 
         final int firstviewSetupId = xml.getData().getSequenceDescription().getViewSetupsOrdered().get( 0 ).getId();
         ExportMipmapInfo autoMipmapSettings = perSetupExportMipmapInfo.get( firstviewSetupId );
@@ -105,7 +105,7 @@ public class ResaveHdf5 {
 
 
 
-        Generic_Resave_HDF5.Parameters newParameters = new Generic_Resave_HDF5.Parameters(
+        GenericResaveHDF5GUI.Parameters newParameters = new GenericResaveHDF5GUI.Parameters(
                 params.setMipmapManual,
                 resolutions,
                 subdivisions,
@@ -123,7 +123,7 @@ public class ResaveHdf5 {
         );
 
         // write hdf5
-        Generic_Resave_HDF5.writeHDF5(Resave_HDF5.reduceSpimData2(data, viewIds), newParameters, progressWriter);
+        GenericResaveHDF5GUI.writeHDF5(Resave_HDF5.reduceSpimData2(data, viewIds), newParameters, progressWriter);
 
         // write xml sequence description
         try

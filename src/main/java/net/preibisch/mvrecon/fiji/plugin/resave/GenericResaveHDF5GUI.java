@@ -63,7 +63,7 @@ import bdv.img.hdf5.Partition;
 import bdv.spimdata.SpimDataMinimal;
 import bdv.spimdata.XmlIoSpimDataMinimal;
 
-public class Generic_Resave_HDF5 extends GenericResaveHDF5 implements PlugIn
+public class GenericResaveHDF5GUI extends GenericResaveHDF5 implements PlugIn
 {
 	public static final String[] convertChoices = {
 		"Use min/max of each image (might flicker over time)",
@@ -75,7 +75,7 @@ public class Generic_Resave_HDF5 extends GenericResaveHDF5 implements PlugIn
 
 	public static void main( final String[] args )
 	{
-		new Generic_Resave_HDF5().run( null );
+		new GenericResaveHDF5GUI().run( null );
 	}
 
 	@Override

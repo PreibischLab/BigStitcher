@@ -15,7 +15,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.data.sequence.ViewSetup;
 import net.imglib2.util.Pair;
 import net.preibisch.mvrecon.fiji.plugin.fusion.FusionExportInterface;
-import net.preibisch.mvrecon.fiji.plugin.resave.Generic_Resave_HDF5;
+import net.preibisch.mvrecon.fiji.plugin.resave.GenericResaveHDF5GUI;
 import net.preibisch.mvrecon.fiji.plugin.resave.ResaveHDF5;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 
@@ -59,7 +59,7 @@ public class AppendSpimData2HDF5Gui extends AppendSpimData2HDF5 implements ImgEx
 		boolean is16bit = fusion.getPixelType() == 1;
 
 		final int firstviewSetupId = newViewSetups.get( 0 ).getId();
-		params = Generic_Resave_HDF5.getParameters( perSetupExportMipmapInfo.get( firstviewSetupId ), false, getDescription(), is16bit );
+		params = GenericResaveHDF5GUI.getParameters( perSetupExportMipmapInfo.get( firstviewSetupId ), false, getDescription(), is16bit );
 		if ( params == null )
 		{
 			System.out.println( "abort " );

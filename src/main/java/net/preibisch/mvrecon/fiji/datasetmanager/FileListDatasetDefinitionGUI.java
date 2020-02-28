@@ -58,7 +58,7 @@ import net.preibisch.mvrecon.fiji.datasetmanager.grid.RegularTranformHelpersGUI;
 import net.preibisch.mvrecon.fiji.datasetmanager.patterndetector.FilenamePatternDetector;
 import net.preibisch.mvrecon.fiji.datasetmanager.patterndetector.NumericalFilenamePatternDetector;
 import net.preibisch.mvrecon.fiji.plugin.resave.GenericResaveHDF5.Parameters;
-import net.preibisch.mvrecon.fiji.plugin.resave.Generic_Resave_HDF5;
+import net.preibisch.mvrecon.fiji.plugin.resave.GenericResaveHDF5GUI;
 import net.preibisch.mvrecon.fiji.plugin.resave.PluginHelper;
 import net.preibisch.mvrecon.fiji.plugin.resave.ProgressWriterIJ;
 import net.preibisch.mvrecon.fiji.plugin.resave.Resave_HDF5;
@@ -70,7 +70,7 @@ import net.preibisch.mvrecon.fiji.spimdata.imgloaders.filemap2.FileMapGettable;
 import net.preibisch.mvrecon.process.interestpointregistration.TransformationTools;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
-public class FileListDatasetDefinition extends FileListDatasetDefinitionCore implements MultiViewDatasetDefinition {
+public class FileListDatasetDefinitionGUI extends FileListDatasetDefinition implements MultiViewDatasetDefinition {
 
 	public static final String[] loadChoices = new String[] {"Re-save as multiresolution HDF5", "Load raw data virtually (with caching)", "Load raw data"};
 	public static final String Z_VARIABLE_CHOICE = "Z-Planes (experimental)";
@@ -789,8 +789,8 @@ public class FileListDatasetDefinition extends FileListDatasetDefinitionCore imp
 		{
 			final Map< Integer, ExportMipmapInfo > perSetupExportMipmapInfo = Resave_HDF5.proposeMipmaps( data.getSequenceDescription().getViewSetupsOrdered() );
 			final int firstviewSetupId = data.getSequenceDescription().getViewSetupsOrdered().get( 0 ).getId();
-			Generic_Resave_HDF5.lastExportPath = String.join( File.separator, chosenPath.getAbsolutePath(), "dataset");
-			final Parameters params = Generic_Resave_HDF5.getParameters( perSetupExportMipmapInfo.get( firstviewSetupId ), true, true );
+			GenericResaveHDF5GUI.lastExportPath = String.join( File.separator, chosenPath.getAbsolutePath(), "dataset");
+			final Parameters params = GenericResaveHDF5GUI.getParameters( perSetupExportMipmapInfo.get( firstviewSetupId ), true, true );
 
 			// HDF5 options dialog was cancelled
 			if (params == null)
@@ -799,7 +799,7 @@ public class FileListDatasetDefinition extends FileListDatasetDefinitionCore imp
 			final ProgressWriter progressWriter = new ProgressWriterIJ();
 			progressWriter.out().println( "starting export..." );
 			
-			Generic_Resave_HDF5.writeHDF5( data, params, progressWriter );
+			GenericResaveHDF5GUI.writeHDF5( data, params, progressWriter );
 			
 			System.out.println( "HDF5 resave finished." );
 			
@@ -869,7 +869,7 @@ public class FileListDatasetDefinition extends FileListDatasetDefinitionCore imp
 	@Override
 	public MultiViewDatasetDefinition newInstance()
 	{
-		return new FileListDatasetDefinition();
+		return new FileListDatasetDefinitionGUI();
 	}
 	
 	public static void main(String[] args)

@@ -42,7 +42,7 @@ import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.ImgLib2Temp.Pair;
-import net.preibisch.mvrecon.fiji.plugin.resave.Generic_Resave_HDF5;
+import net.preibisch.mvrecon.fiji.plugin.resave.GenericResaveHDF5GUI;
 import net.preibisch.mvrecon.fiji.plugin.resave.ProgressWriterIJ;
 import net.preibisch.mvrecon.fiji.plugin.resave.ResaveTIFF.Parameters;
 import net.preibisch.mvrecon.fiji.plugin.resave.Resave_HDF5;
@@ -193,8 +193,8 @@ public class ResavePopup extends JMenu implements ExplorerWindowSetable
 						final File hdf5File = new File( hdf5Filename );
 						IOFunctions.println( "HDF5 file: " + hdf5File.getAbsolutePath() );
 
-						final Generic_Resave_HDF5.Parameters params =
-								new Generic_Resave_HDF5.Parameters(
+						final GenericResaveHDF5GUI.Parameters params =
+								new GenericResaveHDF5GUI.Parameters(
 										false,
 										autoMipmapSettings.getExportResolutions(),
 										autoMipmapSettings.getSubdivisions(),
@@ -209,7 +209,7 @@ public class ResavePopup extends JMenu implements ExplorerWindowSetable
 										0, Double.NaN, Double.NaN );
 
 						// write hdf5
-						Generic_Resave_HDF5.writeHDF5( Resave_HDF5.reduceSpimData2( data, viewIds ), params, progressWriter );
+						GenericResaveHDF5GUI.writeHDF5( Resave_HDF5.reduceSpimData2( data, viewIds ), params, progressWriter );
 
 						final Pair< SpimData2, List< String > > result = Resave_HDF5.createXMLObject( data, viewIds, params, progressWriter, true );
 

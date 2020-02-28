@@ -63,8 +63,7 @@ import net.preibisch.stitcher.gui.StitchingUIHelper;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 import net.preibisch.stitcher.gui.popup.RefineWithICPPopup;
 
-public class ICPRefinement
-{
+public class ICPRefinement {
 	public static enum ICPType{ TileRefine, ChromaticAbberation, All, Expert }
 	public static String[] refinementType = new String[]{ "Simple (tile registration)", "Simple (chromatic abberation)", "Simple (all together)", "Expert ..." };
 	public static int defaultRefinementChoice = 0;
@@ -601,7 +600,7 @@ public class ICPRefinement
 
 		return (HashMap< ViewId, mpicbg.models.Tile >)GlobalOpt.compute( (Model)icpp.getModel().copy(), pmc, cs, fixedViews, groups );
 	}
-
+	
 	/**
 	 * TODO: this is just a hack, we need to change the original splitorcombine method in Group to support not only classes, but classed + ids
 	 * 
@@ -644,7 +643,7 @@ public class ICPRefinement
 
 		return newGroups;
 	}
-
+	
 	public static double[] minmax( final SpimData2 spimData, final Collection< ? extends ViewId > viewIdsToProcess )
 	{
 		IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Determining it approximate Min & Max for all views at lowest resolution levels ... " );
@@ -697,4 +696,5 @@ public class ICPRefinement
 
 		return presentLabels;
 	}
+	
 }

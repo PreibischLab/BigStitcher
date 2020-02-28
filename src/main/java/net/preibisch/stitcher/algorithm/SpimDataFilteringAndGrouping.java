@@ -39,7 +39,7 @@ import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
-import net.preibisch.mvrecon.fiji.datasetmanager.FileListDatasetDefinition;
+import net.preibisch.mvrecon.fiji.datasetmanager.FileListDatasetDefinitionGUI;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimDataTools;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
@@ -86,7 +86,7 @@ public class SpimDataFilteringAndGrouping< AS extends AbstractSpimData< ? > >  e
 		
 		final String msg = ( "<html><strong>Select wether you want to process all instances of an attribute <br>"
 				+ " or just the currently selected Views</strong> </html>" ) ;
-		FileListDatasetDefinition.addMessageAsJLabel(msg, gdp1);
+		FileListDatasetDefinitionGUI.addMessageAsJLabel(msg, gdp1);
 		
 		String[] viewSelectionChoices = new String[] {"all", "selected"};
 		
@@ -156,7 +156,7 @@ public class SpimDataFilteringAndGrouping< AS extends AbstractSpimData< ? > >  e
 				+ "<strong>COMPARE:</strong> calculate pairwise shift between instances <br>"
 				+ "<strong>GROUP:</strong> combine all instances into one view<br>"
 				+ "<strong>TREAT INDIVIDUALLY:</strong> process instances one after the other, but do not compare or group <br> </html>");
-		FileListDatasetDefinition.addMessageAsJLabel(msg, gdp2);
+		FileListDatasetDefinitionGUI.addMessageAsJLabel(msg, gdp2);
 
 		String[] computeChoices = new String[] {"compare", "group", "treat individually"};
 		for (Class<? extends Entity> cl : entityClasses)

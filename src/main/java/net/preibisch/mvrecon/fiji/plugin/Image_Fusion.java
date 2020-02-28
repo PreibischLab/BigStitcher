@@ -54,7 +54,7 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.preibisch.distribution.algorithm.clustering.scripting.TaskType;
-import net.preibisch.distribution.headless.Clustering;
+import net.preibisch.distribution.plugin.Clustering;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.fiji.plugin.fusion.FusionGUI;

@@ -10,7 +10,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.data.sequence.ViewSetup;
 import net.imglib2.util.Pair;
 import net.preibisch.mvrecon.fiji.plugin.fusion.FusionExportInterface;
-import net.preibisch.mvrecon.fiji.plugin.resave.Generic_Resave_HDF5;
+import net.preibisch.mvrecon.fiji.plugin.resave.GenericResaveHDF5GUI;
 import net.preibisch.mvrecon.fiji.plugin.resave.ResaveHDF5;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 
@@ -35,15 +35,15 @@ public class ExportSpimData2HDF5Gui extends ExportSpimData2HDF5 implements ImgEx
 			fn = fn.substring( 0, fn.length() - ".xml".length() );
 		for ( int i = 0;; ++i )
 		{
-			Generic_Resave_HDF5.lastExportPath = String.format( "%s-f%d.xml", fn, i );
-			if ( !new File( Generic_Resave_HDF5.lastExportPath ).exists() )
+			GenericResaveHDF5GUI.lastExportPath = String.format( "%s-f%d.xml", fn, i );
+			if ( !new File( GenericResaveHDF5GUI.lastExportPath ).exists() )
 				break;
 		}
 
 		boolean is16bit = fusion.getPixelType() == 1;
 
 		final int firstviewSetupId = newViewSetups.get( 0 ).getId();
-		params = Generic_Resave_HDF5.getParameters( perSetupExportMipmapInfo.get( firstviewSetupId ), true, getDescription(), is16bit );
+		params = GenericResaveHDF5GUI.getParameters( perSetupExportMipmapInfo.get( firstviewSetupId ), true, getDescription(), is16bit );
 
 		if ( params == null )
 		{
