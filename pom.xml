@@ -122,7 +122,7 @@
 		</dependency>
 		<dependency>
 			<groupId>net.preibisch</groupId>
-			<artifactId>distribution</artifactId>
+			<artifactId>dbio</artifactId>
 			<version>${distribution.version}</version>
 		</dependency>
 		<dependency>
@@ -153,11 +153,11 @@
 			<groupId>sc.fiji</groupId>
 			<artifactId>fiji-lib</artifactId>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 			<groupId>net.preibisch</groupId>
 			<artifactId>multiview-reconstruction</artifactId>
 			<version>${multiview-reconstruction.version}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm-fft</artifactId>

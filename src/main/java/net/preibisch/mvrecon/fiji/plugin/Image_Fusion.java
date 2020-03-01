@@ -372,7 +372,7 @@ public class Image_Fusion implements PlugIn
 		
 		if ( fusion.clusterProcessing() )
 		{ 
-				Clustering.run();
+				Clustering.run(fusion.getBoundingBox());
 		}
 
 		exporter.finish();
