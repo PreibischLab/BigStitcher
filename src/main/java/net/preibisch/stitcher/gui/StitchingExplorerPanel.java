@@ -1158,7 +1158,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					enableFlyThrough = true;
 
 					IOFunctions.println( "EASTER EGG activated." );
-					IOFunctions.println( "You can now record a fly-through, press 'a' to add the current view as keypoint, 'x' to remove all keypoints and 'c' to start recording!" );
+					IOFunctions.println( "You can now record a fly-through, press 'a' to add the current view as keypoint, 'x' to remove all keypoints and 's' to start recording!" );
 					IOFunctions.println( "'S' makes a screenshot with a user-defined resolution" );
 				}
 
