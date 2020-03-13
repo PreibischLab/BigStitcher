@@ -17,6 +17,8 @@ import bdv.viewer.render.MultiResolutionRenderer;
 import bdv.viewer.state.ViewerState;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
+import ij.ImagePlus;
+import ij.process.ColorProcessor;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.ui.PainterThread;
 import net.imglib2.ui.RenderTarget;
@@ -29,6 +31,10 @@ public class BDVFlyThrough
 	public static String defaultPath = "";
 	public static int interpolateSteps = 100;
 
+	public static boolean defaultScalebar = false;
+	public static boolean defaultBoxes = false;
+	public static int defaultWidth = 0;
+
 	public static void addCurrentViewerTransform( final BigDataViewer bdv )
 	{
 		AffineTransform3D currentViewerTransform = bdv.getViewer().getDisplay().getTransformEventHandler().getTransform().copy();
@@ -40,6 +46,59 @@ public class BDVFlyThrough
 	{
 		viewerTransforms.clear();
 		IOFunctions.println( "Cleared all transforms." );
+	}
+
+	public static void renderScreenshot( final BigDataViewer bdv )
+	{
+		final ViewerPanel viewer = bdv.getViewer();
+		final ViewerState renderState = viewer.getState();
+		final int canvasW = viewer.getDisplay().getWidth();
+		final int canvasH = viewer.getDisplay().getHeight();
+
+		int width = canvasW;
+		int height = canvasH;
+
+		final GenericDialogPlus gd = new GenericDialogPlus( "Select screenshot size" );
+
+		if ( defaultWidth <= 0 )
+			defaultWidth = width;
+
+		gd.addNumericField( "Width (current width=" + width + ", height scaled accordingly)", defaultWidth, 0 );
+		gd.addCheckbox( "Show_scalebar", defaultScalebar );
+		gd.addCheckbox( "Show_boxes", defaultBoxes );
+		
+		gd.showDialog();
+		if ( gd.wasCanceled())
+			return;
+
+		width = defaultWidth = (int)Math.round( gd.getNextNumber() );
+		height = (int)Math.round( ( (double)width / (double)canvasW ) * height );
+		final boolean showScaleBar = defaultScalebar = gd.getNextBoolean();
+		final boolean showBoxes = defaultBoxes = gd.getNextBoolean();
+
+		IOFunctions.println( "Making screenshot with resolution: " + width + "x" + height + ", boxes=" + showBoxes + ", scalebar=" + showScaleBar );
+
+		final AffineTransform3D affine = new AffineTransform3D();
+		renderState.getViewerTransform( affine );
+		affine.set( affine.get( 0, 3 ) - canvasW / 2, 0, 3 );
+		affine.set( affine.get( 1, 3 ) - canvasH / 2, 1, 3 );
+		affine.scale( ( double ) width / canvasW );
+		affine.set( affine.get( 0, 3 ) + width / 2, 0, 3 );
+		affine.set( affine.get( 1, 3 ) + height / 2, 1, 3 );
+		renderState.setViewerTransform( affine );
+
+		final MyRenderTarget target = new MyRenderTarget( width, height );
+		final MultiResolutionRenderer renderer = new MultiResolutionRenderer(
+				target, new PainterThread( null ), new double[] { 1 }, 0, false, 1, null, false,
+				viewer.getOptionValues().getAccumulateProjectorFactory(), new CacheControl.Dummy() );
+
+		renderer.requestRepaint();
+		renderer.paint( renderState );
+
+		renderScalebar( showScaleBar ? new ScaleBarOverlayRenderer() : null, target, renderState, width, height );
+		renderBoxes( showBoxes ? new MultiBoxOverlayRenderer( width, height ) : null, target, renderState, width, height );
+
+		new ImagePlus( "BDV Screenshot", new ColorProcessor( target.bi ) ).show();
 	}
 
 	public static void record( final BigDataViewer bdv, final boolean showScaleBar, final boolean showBoxes )
@@ -90,6 +149,14 @@ public class BDVFlyThrough
 
 		IJ.showProgress( 0.0 );
 
+		final File dir = new File( defaultPath, "movie" );
+
+		if ( !dir.exists() )
+		{
+			IOFunctions.println( "Creating directory: " + dir.getAbsolutePath() );
+			dir.mkdirs();
+		}
+
 		for ( int i = 0; i < transforms.size(); ++i )
 		{
 			IOFunctions.println( (i+1) + "/" + transforms.size() + ": " + transforms.get( i ) );
@@ -99,25 +166,15 @@ public class BDVFlyThrough
 			renderer.requestRepaint();
 			renderer.paint( renderState );
 
-			if ( scalebar != null )
-			{
-				final Graphics2D g2 = target.bi.createGraphics();
-				g2.setClip( 0, 0, width, height );
-				scalebar.setViewerState( renderState );
-				scalebar.paint( g2 );
-			}
-
-			if ( boxRender != null )
-			{
-				final Graphics2D g2 = target.bi.createGraphics();
-				g2.setClip( 0, 0, width, height );
-				boxRender.setViewerState( renderState );
-				boxRender.paint( g2 );
-			}
+			renderScalebar( scalebar, target, renderState, width, height );
+			renderBoxes( boxRender, target, renderState, width, height );
 
 			try
 			{
-				ImageIO.write( target.bi, "png", new File( String.format( "%s/img-%03d.png", new File( "./movie" ), i ) ) );
+				final File file = new File( String.format( "%s/img-%05d.png", dir, i ) );
+				IOFunctions.println( "Writing file: " + file.getAbsolutePath() );
+
+				ImageIO.write( target.bi, "png", file );
 			}
 			catch ( IOException e )
 			{
@@ -133,6 +190,28 @@ public class BDVFlyThrough
 		viewer.setCurrentViewerTransform( transforms.get( 0 ) );
 
 		IOFunctions.println( "Done" );
+	}
+
+	protected static void renderScalebar( final ScaleBarOverlayRenderer scalebar, final MyRenderTarget target, final ViewerState renderState, final int width, final int height )
+	{
+		if ( scalebar != null )
+		{
+			final Graphics2D g2 = target.bi.createGraphics();
+			g2.setClip( 0, 0, width, height );
+			scalebar.setViewerState( renderState );
+			scalebar.paint( g2 );
+		}
+	}
+
+	protected static void renderBoxes( final MultiBoxOverlayRenderer boxRender, final MyRenderTarget target, final ViewerState renderState, final int width, final int height )
+	{
+		if ( boxRender != null )
+		{
+			final Graphics2D g2 = target.bi.createGraphics();
+			g2.setClip( 0, 0, width, height );
+			boxRender.setViewerState( renderState );
+			boxRender.paint( g2 );
+		}
 	}
 
 	public static ArrayList< AffineTransform3D > interpolateTransforms( final ArrayList< AffineTransform3D > steps, final int interpolateSteps )

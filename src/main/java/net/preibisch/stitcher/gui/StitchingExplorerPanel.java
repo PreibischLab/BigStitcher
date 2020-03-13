@@ -1158,14 +1158,15 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					enableFlyThrough = true;
 
 					IOFunctions.println( "EASTER EGG activated." );
-					IOFunctions.println( "You can now record a fly-through, press 'a' to add the current view as keypoint, 'x' to remove all keypoints and 's' to start recording!" );
+					IOFunctions.println( "You can now record a fly-through, press 'a' to add the current view as keypoint, 'x' to remove all keypoints and 'c' to start recording!" );
+					IOFunctions.println( "'S' makes a screenshot with a user-defined resolution" );
 				}
 
 				if ( enableFlyThrough )
 				{
 					final boolean bdvRunning = bdvPopup().bdvRunning() && !(bdvPopup().bdv == null);
 
-					if ( arg0.getKeyChar() == 's' || arg0.getKeyChar() == 'S' )
+					if ( arg0.getKeyChar() == 's' )
 						if (bdvRunning)
 							new Thread( new Runnable()
 							{
@@ -1184,6 +1185,17 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	
 					if ( arg0.getKeyChar() == 'x' )
 						BDVFlyThrough.clearAllViewerTransform();
+
+					if ( arg0.getKeyChar() == 'S' )
+						if (bdvRunning)
+							new Thread( new Runnable()
+							{
+								@Override
+								public void run()
+								{ BDVFlyThrough.renderScreenshot( bdvPopup().bdv ); }
+							} ).start();
+						else
+							IOFunctions.println("Please open BigDataViewer to make a screenshot.");
 				}
 			}
 
