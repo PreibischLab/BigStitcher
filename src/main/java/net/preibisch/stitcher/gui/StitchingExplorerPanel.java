@@ -121,7 +121,6 @@ import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.globalopt.ExecuteGlobalOpt;
-import net.preibisch.stitcher.gui.bdv.BDVFlyThrough;
 import net.preibisch.stitcher.gui.bdv.BDVVisibilityHandlerNeighborhood;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 import net.preibisch.stitcher.gui.overlay.LinkOverlay;
@@ -1142,69 +1141,6 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	{
 		table.addKeyListener( this.demoLinkOverlayPopup );
 		this.demoLinkOverlayPopup.setExplorerWindow( this );
-	}
-
-	private boolean enableFlyThrough = false;
-
-	protected void addScreenshot()
-	{
-		table.addKeyListener( new KeyListener()
-		{
-			@Override
-			public void keyPressed(final KeyEvent arg0)
-			{
-				if ( arg0.getKeyChar() == 'E' )
-				{
-					enableFlyThrough = true;
-
-					IOFunctions.println( "EASTER EGG activated." );
-					IOFunctions.println( "You can now record a fly-through, press 'a' to add the current view as keypoint, 'x' to remove all keypoints and 's' to start recording!" );
-					IOFunctions.println( "'S' makes a screenshot with a user-defined resolution" );
-				}
-
-				if ( enableFlyThrough )
-				{
-					final boolean bdvRunning = bdvPopup().bdvRunning() && !(bdvPopup().bdv == null);
-
-					if ( arg0.getKeyChar() == 's' )
-						if (bdvRunning)
-							new Thread( new Runnable()
-							{
-								@Override
-								public void run()
-								{ BDVFlyThrough.record( bdvPopup().bdv, true, true ); }
-							} ).start();
-						else
-							IOFunctions.println("Please open BigDataViewer to record a fly-through or add keypoints.");
-	
-					if ( arg0.getKeyChar() == 'a' )
-						if (bdvRunning)
-							BDVFlyThrough.addCurrentViewerTransform( bdvPopup().bdv );
-						else
-							IOFunctions.println("Please open BigDataViewer to record a fly-through or add keypoints.");
-	
-					if ( arg0.getKeyChar() == 'x' )
-						BDVFlyThrough.clearAllViewerTransform();
-
-					if ( arg0.getKeyChar() == 'S' )
-						if (bdvRunning)
-							new Thread( new Runnable()
-							{
-								@Override
-								public void run()
-								{ BDVFlyThrough.renderScreenshot( bdvPopup().bdv ); }
-							} ).start();
-						else
-							IOFunctions.println("Please open BigDataViewer to make a screenshot.");
-				}
-			}
-
-			@Override
-			public void keyReleased(final KeyEvent arg0) {}
-
-			@Override
-			public void keyTyped(final KeyEvent arg0){}
-		} );
 	}
 
 	protected void addColorMode()
