@@ -99,8 +99,15 @@
 
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
-		<multiview-reconstruction.version>0.6.0</multiview-reconstruction.version>
+		<multiview-reconstruction.version>0.6.1</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
+
+		<bigdataviewer-core.version>9.0.0</bigdataviewer-core.version>
+		<imglib2.version>5.9.0</imglib2.version>
+		<imglib2-cache.version>1.0.0-beta-13</imglib2-cache.version>
+		<spim_data.version>2.2.3</spim_data.version>
+		<ui-behaviour.version>2.0.1</ui-behaviour.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-17</bigdataviewer-vistools.version>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
@@ -123,28 +130,23 @@
 			<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>spim_data</artifactId>
-			<version>2.2.3</version>
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-core</artifactId>
-			<version>9.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-vistools</artifactId>
-			<version>1.0.0-beta-17</version>
 		</dependency>
 
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
-			<version>5.8.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-cache</artifactId>
-			<version>1.0.0-beta-12</version>
 		</dependency>
 
 		<dependency>
