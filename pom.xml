@@ -107,7 +107,7 @@
 		<imglib2-cache.version>1.0.0-beta-13</imglib2-cache.version>
 		<spim_data.version>2.2.3</spim_data.version>
 		<ui-behaviour.version>2.0.1</ui-behaviour.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-17</bigdataviewer-vistools.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-19</bigdataviewer-vistools.version>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
