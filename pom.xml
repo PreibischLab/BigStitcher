@@ -102,7 +102,7 @@
 		<multiview-reconstruction.version>0.6.2</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
 
-		<bigdataviewer-core.version>9.0.0</bigdataviewer-core.version>
+		<bigdataviewer-core.version>9.0.1</bigdataviewer-core.version>
 		<imglib2.version>5.9.0</imglib2.version>
 		<imglib2-cache.version>1.0.0-beta-13</imglib2-cache.version>
 		<spim_data.version>2.2.3</spim_data.version>
