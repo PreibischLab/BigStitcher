@@ -38,7 +38,7 @@ import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
-
+//TODO: REMOVE THIS CLASS, there is one in net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling
 public class DownsampleTools
 {
 	public static final int[] ds = { 1, 2, 4, 8, 16, 32, 64, 128 };
@@ -145,11 +145,11 @@ public class DownsampleTools
 					"using precomputed Multiresolution Images [" + fx + "x" + fy + "x" + fz + "], " +
 					"Remaining downsampling [" + dsx + "x" + dsy + "x" + dsz + "]" );
 
-			input = (RandomAccessibleInterval< T >) mrImgLoader.getSetupImgLoader( vd.getViewSetupId() ).getFloatImage( vd.getTimePointId(), bestLevel, false, LOAD_COMPLETELY );
+			input = (RandomAccessibleInterval< T >) mrImgLoader.getSetupImgLoader( vd.getViewSetupId() ).getFloatImage( vd.getTimePointId(), bestLevel, false );
 		}
 		else
 		{
-			input =  (RandomAccessibleInterval< T >) imgLoader.getSetupImgLoader( vd.getViewSetupId() ).getImage( vd.getTimePointId(), LOAD_COMPLETELY );
+			input =  (RandomAccessibleInterval< T >) imgLoader.getSetupImgLoader( vd.getViewSetupId() ).getImage( vd.getTimePointId() );
 		}
 
 		return downsample( input, new long[]{ dsx, dsy, dsz } );
