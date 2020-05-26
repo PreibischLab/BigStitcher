@@ -65,7 +65,8 @@ import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
-import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
+import net.preibisch.mvrecon.process.downsampling.Downsample;
+import net.preibisch.mvrecon.process.downsampling.DownsampleTools;
 import net.preibisch.stitcher.algorithm.TransformTools;
 
 public class Align<T extends RealType< T >>
