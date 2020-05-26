@@ -43,7 +43,7 @@ public class DownsampleTools
 {
 	public static final int[] ds = { 1, 2, 4, 8, 16, 32, 64, 128 };
 
-	public static < T extends RealType<T> > void openAndDownsampleAdjustTransformation(
+	public static < T extends RealType<T> > void XopenAndDownsampleAdjustTransformation(
 			final BasicImgLoader imgLoader,
 			final ViewId vd,
 			long[] downsampleFactors,
@@ -94,7 +94,7 @@ public class DownsampleTools
 		t.set( t.get( 2, 2 ) * dsz, 2, 2 );
 	}
 
-	public static < T extends RealType<T> > RandomAccessibleInterval< T > openAndDownsample(
+	public static < T extends RealType<T> > RandomAccessibleInterval< T > XopenAndDownsample(
 			final BasicImgLoader imgLoader,
 			final ViewId vd,
 			long[] downsampleFactors )
