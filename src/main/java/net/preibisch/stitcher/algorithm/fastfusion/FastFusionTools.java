@@ -545,7 +545,7 @@ public class FastFusionTools
 
 
 	/**
-	 * get the affine transform to map a downsampled image opened with {@link net.preibisch.stitcher.algorithm.DownsampleTools}.openAndDownsample back to full resolution space. 
+	 * get the affine transform to map a downsampled image opened with DownsampleTools.openAndDownsample back to full resolution space. 
 	 * @param imgLoader ImgLoader to do the laoding
 	 * @param vd view description to load
 	 * @param downsamplefactor by how much we downsample (has to be a power of two)
