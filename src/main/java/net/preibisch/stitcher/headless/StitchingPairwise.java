@@ -41,7 +41,7 @@ import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.legacy.io.TextFileAccess;
 import net.preibisch.mvrecon.process.deconvolution.DeconViews;
-import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
+import net.preibisch.mvrecon.process.downsampling.Downsample;
 
 public class StitchingPairwise
 {

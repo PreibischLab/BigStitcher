@@ -49,7 +49,7 @@ import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
-import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.DownsampleTools;
+import net.preibisch.mvrecon.process.downsampling.DownsampleTools;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.TransformTools;
 import net.preibisch.stitcher.algorithm.fastfusion.FastFusionTools;

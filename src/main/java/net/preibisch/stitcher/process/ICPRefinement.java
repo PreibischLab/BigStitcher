@@ -37,11 +37,11 @@ import net.preibisch.mvrecon.fiji.spimdata.interestpoints.CorrespondingInterestP
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.InterestPoint;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.InterestPointList;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseLinkImpl;
+import net.preibisch.mvrecon.process.downsampling.DownsampleTools;
 import net.preibisch.mvrecon.process.fusion.FusionTools;
 import net.preibisch.mvrecon.process.interestpointdetection.InterestPointTools;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.dog.DoG;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.dog.DoGParameters;
-import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.DownsampleTools;
 import net.preibisch.mvrecon.process.interestpointregistration.TransformationTools;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOpt;
 import net.preibisch.mvrecon.process.interestpointregistration.global.convergence.ConvergenceStrategy;
