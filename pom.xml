@@ -99,7 +99,7 @@
 
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
-		<multiview-reconstruction.version>0.7.1</multiview-reconstruction.version>
+		<multiview-reconstruction.version>0.7.2</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
 
 		<bigdataviewer-core.version>9.0.1</bigdataviewer-core.version>
