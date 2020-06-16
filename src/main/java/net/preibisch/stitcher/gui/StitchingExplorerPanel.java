@@ -96,6 +96,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.bdv.ScrollableBrightnessDialog;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BakeManualTransformationPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BoundingBoxPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DisplayFusedImagesPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DisplayRawImagesPopup;
@@ -813,7 +814,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				new ReadTileConfigurationPopup(),
 				regularGridPopup,
 				new FlipAxesPopup(),
-				new SkewImagesPopup() ) );
+				new SkewImagesPopup(),
+				new BakeManualTransformationPopup() ) );
 		popups.add( new SelectIlluminationPopup() );
 		popups.add( new FlatFieldCorrectionPopup() );
 		popups.add( new Separator() );
