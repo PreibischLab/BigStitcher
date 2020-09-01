@@ -19,22 +19,18 @@ public class RelativeFRCSelection implements ViewSelection< ViewId >
 	final int zStepSize;
 	final int fftSize;
 	final boolean relative;
-	final boolean smooth;
 
 	public RelativeFRCSelection(
 			final AbstractSequenceDescription< ?, ?, ? > sd,
 			final int zStepSize,
 			final int fftSize,
-			final boolean relative,
-			final boolean smooth
-			)
+			final boolean relative )
 	{
 		this.sd = sd;
 
 		this.zStepSize = zStepSize;
 		this.fftSize = fftSize;
 		this.relative = relative;
-		this.smooth = smooth;
 	}
 
 	@Override
@@ -53,7 +49,7 @@ public class RelativeFRCSelection implements ViewSelection< ViewId >
 		for ( final ViewId view : views)
 		{
 			final FRCRealRandomAccessible< FloatType > frc =
-					FRCTools.computeFRC( view, imgLoader, zStepSize, fftSize, relative, smooth );
+					FRCTools.computeFRC( view, imgLoader, zStepSize, fftSize, relative );
 
 			final double quality = frc.getTotalAvgQuality();
 

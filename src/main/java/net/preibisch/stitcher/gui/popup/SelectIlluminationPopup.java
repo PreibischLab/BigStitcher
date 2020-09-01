@@ -113,7 +113,6 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 			final GenericDialog gd1 = new GenericDialog( "Relative FRC Parameters" );
 
 			gd1.addCheckbox( "Relative_FRC", QualityGUI.defaultUseRelativeFRC );
-			gd1.addCheckbox( "Smooth_Local_FRC", QualityGUI.defaultSmoothLocalFRC );
 			gd1.addNumericField( "FRC_FFT_Size", QualityGUI.defaultFFTSize, 0 );
 			gd1.addNumericField( "FRC_Stepsize (z)", QualityGUI.defaultFRCStepSize, 0 );
 
@@ -123,11 +122,10 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 				return null;
 
 			final boolean useRelativeFRC = QualityGUI.defaultUseRelativeFRC = gd1.getNextBoolean();
-			final boolean useSmoothLocalFRC = QualityGUI.defaultSmoothLocalFRC = gd1.getNextBoolean();
 			final int fftSize = QualityGUI.defaultFFTSize = Math.max( 16, (int)Math.round( gd1.getNextNumber() ) );
 			final int frcStepSize = QualityGUI.defaultFRCStepSize = Math.max( 1, (int)Math.round( gd1.getNextNumber() ) );
 
-			return new RelativeFRCSelection( sd, frcStepSize, fftSize, useRelativeFRC, useSmoothLocalFRC );
+			return new RelativeFRCSelection( sd, frcStepSize, fftSize, useRelativeFRC );
 		}
 		else
 			return null;
