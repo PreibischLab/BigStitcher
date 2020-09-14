@@ -6,8 +6,8 @@ import java.util.Date;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.sequence.ViewId;
-import mpicbg.spim.io.IOFunctions;
 import net.imglib2.type.numeric.real.FloatType;
+import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.mvrecon.process.quality.FRCRealRandomAccessible;
 import net.preibisch.mvrecon.process.quality.FRCTools;
@@ -19,22 +19,18 @@ public class RelativeFRCSelection implements ViewSelection< ViewId >
 	final int zStepSize;
 	final int fftSize;
 	final boolean relative;
-	final boolean smooth;
 
 	public RelativeFRCSelection(
 			final AbstractSequenceDescription< ?, ?, ? > sd,
 			final int zStepSize,
 			final int fftSize,
-			final boolean relative,
-			final boolean smooth
-			)
+			final boolean relative )
 	{
 		this.sd = sd;
 
 		this.zStepSize = zStepSize;
 		this.fftSize = fftSize;
 		this.relative = relative;
-		this.smooth = smooth;
 	}
 
 	@Override
@@ -53,7 +49,7 @@ public class RelativeFRCSelection implements ViewSelection< ViewId >
 		for ( final ViewId view : views)
 		{
 			final FRCRealRandomAccessible< FloatType > frc =
-					FRCTools.computeFRC( view, imgLoader, zStepSize, fftSize, relative, smooth );
+					FRCTools.computeFRC( view, imgLoader, zStepSize, fftSize, relative );
 
 			final double quality = frc.getTotalAvgQuality();
 

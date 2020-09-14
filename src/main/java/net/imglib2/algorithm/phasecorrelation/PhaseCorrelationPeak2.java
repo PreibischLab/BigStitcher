@@ -220,7 +220,12 @@ public class PhaseCorrelationPeak2 {
 			img2 = Views.interval( Views.raster( RealViews.transform( rra, transform ) ), img2 );
 		}
 
-		crossCorr = PhaseCorrelation2Util.getCorrelation(Views.zeroMin(Views.interval(img1, intervals.getA())), Views.zeroMin(Views.interval(img2, intervals.getB())));
+		// calculate cross correlation.
+		// note that the overlap we calculate assumes zero-min input
+		crossCorr = PhaseCorrelation2Util.getCorrelation(
+				Views.zeroMin( Views.interval(Views.zeroMin(img1), intervals.getA())),
+				Views.zeroMin( Views.interval(Views.zeroMin(img2), intervals.getB()))
+			);
 		
 	}
 	

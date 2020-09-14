@@ -78,11 +78,11 @@ import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
-import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.util.Pair;
+import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.util.MultiWindowLayoutHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.SpimDataTools;
@@ -96,6 +96,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.bdv.ScrollableBrightnessDialog;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BakeManualTransformationPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BoundingBoxPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DisplayFusedImagesPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DisplayRawImagesPopup;
@@ -121,7 +122,6 @@ import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.globalopt.ExecuteGlobalOpt;
-import net.preibisch.stitcher.gui.bdv.BDVFlyThrough;
 import net.preibisch.stitcher.gui.bdv.BDVVisibilityHandlerNeighborhood;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 import net.preibisch.stitcher.gui.overlay.LinkOverlay;
@@ -814,7 +814,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				new ReadTileConfigurationPopup(),
 				regularGridPopup,
 				new FlipAxesPopup(),
-				new SkewImagesPopup() ) );
+				new SkewImagesPopup(),
+				new BakeManualTransformationPopup() ) );
 		popups.add( new SelectIlluminationPopup() );
 		popups.add( new FlatFieldCorrectionPopup() );
 		popups.add( new Separator() );
@@ -1142,57 +1143,6 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	{
 		table.addKeyListener( this.demoLinkOverlayPopup );
 		this.demoLinkOverlayPopup.setExplorerWindow( this );
-	}
-
-	private boolean enableFlyThrough = false;
-
-	protected void addScreenshot()
-	{
-		table.addKeyListener( new KeyListener()
-		{
-			@Override
-			public void keyPressed(final KeyEvent arg0)
-			{
-				if ( arg0.getKeyChar() == 'E' )
-				{
-					enableFlyThrough = true;
-
-					IOFunctions.println( "EASTER EGG activated." );
-					IOFunctions.println( "You can now record a fly-through, press 'a' to add the current view as keypoint, 'x' to remove all keypoints and 's' to start recording!" );
-				}
-
-				if ( enableFlyThrough )
-				{
-					final boolean bdvRunning = bdvPopup().bdvRunning() && !(bdvPopup().bdv == null);
-
-					if ( arg0.getKeyChar() == 's' || arg0.getKeyChar() == 'S' )
-						if (bdvRunning)
-							new Thread( new Runnable()
-							{
-								@Override
-								public void run()
-								{ BDVFlyThrough.record( bdvPopup().bdv, true, true ); }
-							} ).start();
-						else
-							IOFunctions.println("Please open BigDataViewer to record a fly-through or add keypoints.");
-	
-					if ( arg0.getKeyChar() == 'a' )
-						if (bdvRunning)
-							BDVFlyThrough.addCurrentViewerTransform( bdvPopup().bdv );
-						else
-							IOFunctions.println("Please open BigDataViewer to record a fly-through or add keypoints.");
-	
-					if ( arg0.getKeyChar() == 'x' )
-						BDVFlyThrough.clearAllViewerTransform();
-				}
-			}
-
-			@Override
-			public void keyReleased(final KeyEvent arg0) {}
-
-			@Override
-			public void keyTyped(final KeyEvent arg0){}
-		} );
 	}
 
 	protected void addColorMode()

@@ -47,6 +47,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import bdv.BigDataViewer;
+import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.util.MultiWindowLayoutHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
@@ -61,7 +62,6 @@ import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.XmlIoSpimData;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
-import mpicbg.spim.io.IOFunctions;
 
 public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > > extends FilteredAndGroupedExplorer< AS, X >
 {

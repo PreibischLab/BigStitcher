@@ -37,7 +37,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
@@ -63,6 +62,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
+import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import net.preibisch.mvrecon.process.export.DisplayImage;
 import net.preibisch.mvrecon.process.fusion.FusionTools;

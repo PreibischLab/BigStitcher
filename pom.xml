@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>25.0.0</version>
+		<version>29.2.1</version>
 		<relativePath />
 	</parent>
 
 	<groupId>net.preibisch</groupId>
 	<artifactId>BigStitcher</artifactId>
-	<version>0.3.4-SNAPSHOT</version>
+	<version>0.6.1-SNAPSHOT</version>
 
 	<name>Big Stitcher</name>
 	<description>Multiview stitching of large datasets.</description>
@@ -74,8 +74,8 @@
 
 	<mailingLists>
 		<mailingList>
-			<name>ImageJ Forum</name>
-			<archive>http://forum.imagej.net/</archive>
+			<name>Image.sc Forum</name>
+			<archive>https://forum.image.sc/tags/bigstitcher</archive>
 		</mailingList>
 	</mailingLists>
 
@@ -99,21 +99,49 @@
 
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
-		<multiview-reconstruction.version>0.3.3</multiview-reconstruction.version>
+		<multiview-reconstruction.version>0.8.0</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
 
-		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
-		<releaseProfiles>deploy-to-imagej</releaseProfiles>
+		<!-- NB: Deploy releases to the SciJava Maven repository. -->
+		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 	</properties>
 
 	<repositories>
 		<repository>
-			<id>imagej.public</id>
-			<url>https://maven.imagej.net/content/groups/public</url>
+			<id>scijava.public</id>
+			<url>https://maven.scijava.org/content/groups/public</url>
 		</repository>
 	</repositories>
 
 	<dependencies>
+		<dependency>
+			<groupId>net.preibisch</groupId>
+			<artifactId>multiview-reconstruction</artifactId>
+			<version>${multiview-reconstruction.version}</version>
+		</dependency>
+
+			<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>spim_data</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigdataviewer-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigdataviewer-vistools</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-cache</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>net.preibisch</groupId>
 			<artifactId>multiview-simulation</artifactId>
@@ -141,17 +169,9 @@
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
-			<artifactId>spim_data</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>sc.fiji</groupId>
 			<artifactId>fiji-lib</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>net.preibisch</groupId>
-			<artifactId>multiview-reconstruction</artifactId>
-			<version>${multiview-reconstruction.version}</version>
-		</dependency>
+
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm-fft</artifactId>
@@ -173,19 +193,6 @@
 			<artifactId>junit</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>bigdataviewer-vistools</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>bigdataviewer-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2</artifactId>
-		</dependency>
-
 		<!-- Test scope dependencies -->
 		<dependency>
 			<!-- NB: dependency:analyze erroneously flags this, but it's required -->
@@ -193,4 +200,60 @@
 			<artifactId>legacy-imglib1</artifactId>
 		</dependency>
 	</dependencies>
+	<profiles>
+		<profile>
+			<id>fatjar</id>
+			<build>
+				<plugins>
+					<!-- Maven shade for Uber Jar -->
+					<!-- https://maven.apache.org/plugins/maven-shade-plugin/shade-mojo.html -->
+					<!-- https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/troubleshooting/missing_dependencies_in_jar_files.html -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-shade-plugin</artifactId>
+						<configuration>
+							<!-- Do not minimize for now to speed up packaging. -->
+							<transformers combine.children="append">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/json/org.scijava.plugin.Plugin</resource>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/json/mpicbg.spim.data.generic.sequence.ImgLoaderIo</resource>
+								</transformer>
+							</transformers>
+							<!--<minimizeJar>true</minimizeJar> -->
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
+							<!-- Additional configuration. -->
+							<relocations>
+								<relocation>
+									<pattern>org.apache.commons.compress</pattern>
+									<shadedPattern>org.janelia.saalfeldlab.org.apache.commons.compress</shadedPattern>
+								</relocation>
+							</relocations>
+						</configuration>
+						<!-- binds by default to package phase -->
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>shade</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<!-- Maven shade end -->
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 </project>

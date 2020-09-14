@@ -29,8 +29,7 @@ import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPositionable;
 import net.imglib2.type.numeric.RealType;
-//import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.DownsampleTools;
-
+import net.preibisch.mvrecon.process.downsampling.DownsampleTools;
 
 public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterval< T >
 {
@@ -47,11 +46,11 @@ public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterva
 		this.vid = vid;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void loadIfNecessary()
 	{
-		// FIXME: use DownsampleTools from SPIM_Registration
 		if (rai == null)
-			rai = DownsampleTools.openAndDownsample( imgLoader, vid, downsampleFactors );
+			rai = DownsampleTools.openAndDownsample( imgLoader, vid, null, downsampleFactors, false, false, false );
 	}
 	
 	@Override

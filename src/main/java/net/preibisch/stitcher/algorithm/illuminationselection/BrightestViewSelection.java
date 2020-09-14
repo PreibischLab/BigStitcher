@@ -30,13 +30,13 @@ import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import mpicbg.spim.data.sequence.MultiResolutionSetupImgLoader;
 import mpicbg.spim.data.sequence.ViewId;
-import mpicbg.spim.io.IOFunctions;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.RealSum;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
+import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.process.deconvolution.normalization.AdjustInput;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 

@@ -27,8 +27,6 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 
 import ij.ImageJ;
-import mpicbg.spim.io.IOFunctions;
-import mpicbg.spim.io.TextFileAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
@@ -40,8 +38,10 @@ import net.imglib2.util.Util;
 import net.preibisch.simulation.SimulateTileStitching;
 import net.preibisch.stitcher.algorithm.PairwiseStitching;
 import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
+import net.preibisch.legacy.io.IOFunctions;
+import net.preibisch.legacy.io.TextFileAccess;
 import net.preibisch.mvrecon.process.deconvolution.DeconViews;
-import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.Downsample;
+import net.preibisch.mvrecon.process.downsampling.Downsample;
 
 public class StitchingPairwise
 {

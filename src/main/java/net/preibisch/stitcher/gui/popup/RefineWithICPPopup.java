@@ -32,7 +32,7 @@ import javax.swing.JMenuItem;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import mpicbg.spim.io.IOFunctions;
+import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.util.MouseOverPopUpStateChanger;
 import net.preibisch.mvrecon.fiji.plugin.util.MouseOverPopUpStateChanger.StateChanger;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;

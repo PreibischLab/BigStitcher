@@ -39,7 +39,7 @@ import net.preibisch.mvrecon.fiji.plugin.resave.PluginHelper;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
-import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.DownsampleTools;
+import net.preibisch.mvrecon.process.downsampling.DownsampleTools;
 
 public class StitchingUIHelper
 {

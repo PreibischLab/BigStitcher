@@ -27,7 +27,6 @@ import mpicbg.models.Affine3D;
 import mpicbg.models.AffineModel3D;
 import mpicbg.models.PointMatch;
 import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.io.IOFunctions;
 import net.imglib2.FinalInterval;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.RealInterval;
@@ -39,6 +38,7 @@ import net.imglib2.realtransform.Translation3D;
 import net.imglib2.realtransform.TranslationGet;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import net.preibisch.legacy.io.IOFunctions;
 
 public class TransformTools {
 	

@@ -33,9 +33,9 @@ import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
 import mpicbg.spim.data.sequence.ViewId;
-import mpicbg.spim.io.IOFunctions;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 

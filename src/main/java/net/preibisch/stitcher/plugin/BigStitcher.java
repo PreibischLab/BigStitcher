@@ -31,6 +31,7 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
@@ -39,8 +40,6 @@ import net.preibisch.stitcher.gui.StitchingExplorer;
 
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
-
-import mpicbg.spim.io.IOFunctions;
 
 @Plugin(type = Command.class, menuPath = "Plugins>BigStitcher>BigStitcher")
 public class BigStitcher implements Command, PlugIn

@@ -26,7 +26,6 @@ import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
-import mpicbg.spim.io.IOFunctions;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
@@ -45,11 +44,12 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
+import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
-import net.preibisch.mvrecon.process.interestpointdetection.methods.downsampling.DownsampleTools;
+import net.preibisch.mvrecon.process.downsampling.DownsampleTools;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.TransformTools;
 import net.preibisch.stitcher.algorithm.fastfusion.FastFusionTools;
@@ -321,7 +321,7 @@ public class Fast_Translation_Fusion implements PlugIn
 							// TODO: load T, not float?
 							RandomAccessibleInterval< FloatType > downsampledImg = DownsampleTools.openAndDownsample(
 									spimData.getSequenceDescription().getImgLoader(), presentViewDescriptions.get( i2 ),
-									new AffineTransform3D(), parameters.downsampling, parameters.downsampling, true );
+									new AffineTransform3D(), new long[] { parameters.downsampling, parameters.downsampling, parameters.downsampling }, false, true, true );
 							return new ValuePair< Integer, RandomAccessibleInterval<FloatType> >( i2, downsampledImg );
 						}
 					});
