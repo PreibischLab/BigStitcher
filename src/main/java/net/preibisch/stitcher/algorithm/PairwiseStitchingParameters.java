@@ -62,13 +62,13 @@ public class PairwiseStitchingParameters
 
 	public static void addQueriesToGD(final GenericDialog gd)
 	{
-		gd.addNumericField( "number of peaks to check", 5, 0 );
-		gd.addNumericField( "minimal overlap (percent of current overlap)", 0, 0 );
-		gd.addCheckbox( "subpixel accuracy", true );
-		gd.addCheckbox( "interpolate_subpixel_cross_correlation_(warning: slow!)", false );
-		gd.addCheckbox( "use_whole_image_(warning: slow!)", false );
-		gd.addCheckbox( "manually set number of parallel tasks", false );
-		gd.addNumericField( "number of parallel tasks", (int) Math.max( 2, Threads.numThreads() / 6 ), 0 );
+		gd.addNumericField( "number_of_peaks_to_check", 5, 0 );
+		gd.addNumericField( "minimal_overlap (percent of current overlap)", 0, 0 );
+		gd.addCheckbox( "subpixel_accuracy", true );
+		gd.addCheckbox( "interpolate_subpixel_cross_correlation (warning: slow!)", false );
+		gd.addCheckbox( "use_whole_image (warning: slow!)", false );
+		gd.addCheckbox( "manually_set_number_of_parallel_tasks", false );
+		gd.addNumericField( "number_of_parallel_tasks", (int) Math.max( 2, Threads.numThreads() / 6 ), 0 );
 		gd.addCheckbox( "show_expert_grouping_options", false );
 	}
 
