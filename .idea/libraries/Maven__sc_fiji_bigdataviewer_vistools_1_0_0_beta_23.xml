@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: sc.fiji:bigdataviewer-vistools:1.0.0-beta-23">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/sc/fiji/bigdataviewer-vistools/1.0.0-beta-23/bigdataviewer-vistools-1.0.0-beta-23.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/sc/fiji/bigdataviewer-vistools/1.0.0-beta-23/bigdataviewer-vistools-1.0.0-beta-23-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/sc/fiji/bigdataviewer-vistools/1.0.0-beta-23/bigdataviewer-vistools-1.0.0-beta-23-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

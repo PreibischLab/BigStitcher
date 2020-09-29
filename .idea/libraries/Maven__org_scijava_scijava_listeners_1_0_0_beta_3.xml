@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.scijava:scijava-listeners:1.0.0-beta-3">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scijava/scijava-listeners/1.0.0-beta-3/scijava-listeners-1.0.0-beta-3.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scijava/scijava-listeners/1.0.0-beta-3/scijava-listeners-1.0.0-beta-3-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scijava/scijava-listeners/1.0.0-beta-3/scijava-listeners-1.0.0-beta-3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

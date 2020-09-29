@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.scijava:scijava-common:2.83.3">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scijava/scijava-common/2.83.3/scijava-common-2.83.3.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scijava/scijava-common/2.83.3/scijava-common-2.83.3-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scijava/scijava-common/2.83.3/scijava-common-2.83.3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

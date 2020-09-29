@@ -99,8 +99,14 @@
 
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
-		<multiview-reconstruction.version>0.8.0</multiview-reconstruction.version>
+		<multiview-reconstruction.version>0.8.1-SNAPSHOT</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
+
+
+		<bigdataviewer-core.version>10.0.2</bigdataviewer-core.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-23</bigdataviewer-vistools.version>
+		<imglib2-cache.version>1.0.0-beta-15</imglib2-cache.version>
+
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
