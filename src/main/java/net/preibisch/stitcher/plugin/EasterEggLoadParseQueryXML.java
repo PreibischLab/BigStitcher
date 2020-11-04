@@ -21,16 +21,16 @@
  */
 package net.preibisch.stitcher.plugin;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-
-import net.preibisch.simulation.imgloader.SimulatedBeadsImgLoader;
-import net.preibisch.simulation.imgloader.SimulatedBeadsImgLoader2;
-import net.preibisch.stitcher.input.FractalSpimDataGenerator;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.simulation.imgloader.SimulatedBeadsImgLoader;
+import net.preibisch.simulation.imgloader.SimulatedBeadsImgLoader2;
+import net.preibisch.stitcher.input.FractalSpimDataGenerator;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 
 public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 {
@@ -45,6 +45,18 @@ public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 		if ( input.equals( "define" ) )
 		{
 			this.message1 = "This will define a new dataset, press OK to continue";
+			this.message2 = "";
+			this.color = GUIHelper.good;
+
+			this.data = null;
+			this.attributes = null;
+
+			return true;
+		}
+
+		else if ( input.equals( "aws" ) )
+		{
+			this.message1 = "This will import dataset from AWS, press OK to continue";
 			this.message2 = "";
 			this.color = GUIHelper.good;
 

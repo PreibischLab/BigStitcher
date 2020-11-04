@@ -24,22 +24,18 @@ package net.preibisch.stitcher.plugin;
 
 import ij.ImageJ;
 import ij.plugin.PlugIn;
-
-import java.awt.Button;
-import java.awt.TextField;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.gui.StitchingExplorer;
-
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 @Plugin(type = Command.class, menuPath = "Plugins>BigStitcher>BigStitcher")
 public class BigStitcher implements Command, PlugIn
@@ -70,8 +66,24 @@ public class BigStitcher implements Command, PlugIn
 			}
 		});
 
+		result.addButton( "AWS Input", new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				((TextField)result.getGenericDialog().getStringFields().firstElement()).setText( "aws" );
+				Button ok = result.getGenericDialog().getButtons()[ 0 ];
+				System.out.println("Button: "+ok.getLabel());
+
+				ActionEvent ae =  new ActionEvent( ok, ActionEvent.ACTION_PERFORMED, "");
+				Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(ae);
+			}
+		});
+
 		if ( !result.queryXML( "Stitching Explorer", "", false, false, false, false, false ) && !newDataset )
+		{
 			return;
+		}
 
 		final SpimData2 data = result.getData();
 		final String xml = result.getXMLFileName();

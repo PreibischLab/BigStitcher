@@ -11,7 +11,7 @@
 
 	<groupId>net.preibisch</groupId>
 	<artifactId>BigStitcher</artifactId>
-	<version>0.6.2-SNAPSHOT</version>
+	<version>0.6.3-SNAPSHOT</version>
 
 	<name>Big Stitcher</name>
 	<description>Multiview stitching of large datasets.</description>
@@ -99,9 +99,10 @@
 
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
-		<multiview-reconstruction.version>0.8.0</multiview-reconstruction.version>
+		<multiview-reconstruction.version>0.8.4</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
 
+		<jackson.version>2.5.2</jackson.version>
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 	</properties>
@@ -192,7 +193,27 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.bigdistributor</groupId>
+			<artifactId>BD_DataExchange</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
 
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
 		<!-- Test scope dependencies -->
 		<dependency>
 			<!-- NB: dependency:analyze erroneously flags this, but it's required -->
