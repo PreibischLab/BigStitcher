@@ -627,7 +627,8 @@ public class TransformationTools
 
 		final ExecutorService serviceGlobal = Executors.newFixedThreadPool( batchSize );
 
-		IOFunctions.println( "Computing overlap for: " + batchSize + " pairs of images at once (in total " + Threads.numThreads() + " threads." );
+		IOFunctions.println( "Computing overlap for: " + batchSize + " pairs of images at once, each " + (Threads.numThreads() / batchSize) + " threads, (in total <=" + Threads.numThreads() + " threads)" );
+		IOFunctions.println( "Total num CPUs: " + Runtime.getRuntime().availableProcessors() );
 
 		try
 		{
