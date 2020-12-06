@@ -553,7 +553,15 @@ public class TransformationTools
 		AtomicInteger nCompleted = new AtomicInteger();
 		
 		IJ.showProgress( 0.0 );
-		
+
+		// how many pairs of Phase Correlations we run in parallel
+		// it should not be more than max(Threads.numThreads() / 2, 1)
+		// so we can dedicate two threads per PCM pair
+		int batchSize = 
+				Math.min(
+						Math.max( 1, Threads.numThreads() / 2 ), // Threads.numThreads() could be 1
+						params.manualNumTasks ? params.numTasks : Math.max( 2, Threads.numThreads() / 6 ) );
+
 		for ( final Pair< Group< V >, Group< V > > p : pairs )
 		{
 			tasks.add( new Callable< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > >()
@@ -563,7 +571,8 @@ public class TransformationTools
 				{
 					Pair<Pair< AffineGet, Double >, RealInterval> result = null;
 
-					final ExecutorService serviceLocal = Executors.newFixedThreadPool( Math.max( 2, Runtime.getRuntime().availableProcessors() / 4 ) );
+					final int numLocalThreads = Threads.numThreads() / batchSize; //Math.max( 2, Threads.numThreads() / 4 );
+					final ExecutorService serviceLocal = Executors.newFixedThreadPool( numLocalThreads );
 
 					// TODO: do non-equal transformation registration when views within a group have differing transformations
 					final ViewId firstVdA = p.getA().iterator().next();
@@ -616,7 +625,6 @@ public class TransformationTools
 
 		final ArrayList< PairwiseStitchingResult< ViewId > > results = new ArrayList<>();
 
-		final int batchSize = params.manualNumTasks ? params.numTasks : Math.max( 2, Threads.numThreads() / 6 );
 		final ExecutorService serviceGlobal = Executors.newFixedThreadPool( batchSize );
 
 		IOFunctions.println( "Computing overlap for: " + batchSize + " pairs of images at once (in total " + Threads.numThreads() + " threads." );
