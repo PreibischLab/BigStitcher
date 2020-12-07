@@ -23,6 +23,8 @@ package net.preibisch.stitcher.algorithm.lucaskanade;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import Jama.Matrix;
 
@@ -46,6 +48,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
 import net.preibisch.mvrecon.process.downsampling.Downsample;
 import net.preibisch.mvrecon.process.downsampling.DownsampleTools;
@@ -133,17 +136,24 @@ public class RigidWarp implements WarpFunction
 		ImageJFunctions.show( Views.interval( a,  interval1 ) );
 		ImageJFunctions.show( rotated );
 
+		final ExecutorService service = Executors.newFixedThreadPool( Threads.numThreads() );
+
 		// downsample input
-		RandomAccessibleInterval< FloatType > simple2x1 = Downsample.simple2x( Views.zeroMin( Views.interval( a, interval1 ) ), new ArrayImgFactory<>(), new boolean[] {false, false} );
-		RandomAccessibleInterval< FloatType > simple2x2 = Downsample.simple2x( Views.zeroMin( Views.interval( rotated, interval2 ) ), new ArrayImgFactory<>(), new boolean[] {false, false} );
+		RandomAccessibleInterval<FloatType> simple2x1 = Downsample.simple2x(Views.zeroMin(Views.interval(a, interval1)),
+				new ArrayImgFactory<>( new FloatType() ), new boolean[] { false, false }, service );
+		RandomAccessibleInterval<FloatType> simple2x2 = Downsample.simple2x(
+				Views.zeroMin(Views.interval(rotated, interval2)), new ArrayImgFactory<>( new FloatType() ),
+				new boolean[] { false, false }, service );
 
 		// align
 
 		//Align< FloatType > lk = new Align<>( Views.zeroMin( Views.interval( a, interval1 ) ), new ArrayImgFactory<>(), warp );
-		Align< FloatType > lk = new Align<>( simple2x1, new ArrayImgFactory<>(), warp );
+		Align< FloatType > lk = new Align<>( simple2x1, new ArrayImgFactory<>( new FloatType() ), warp );
 		//System.out.println( Util.printCoordinates( lk.align( Views.zeroMin( Views.interval( b, interval2 ) ), 100, 0.01 ).getRowPackedCopy() ) );
 		//final AffineTransform transform = lk.align( Views.zeroMin( rotated ), 100, 0.01 );
-		final AffineTransform transform = lk.align( simple2x2, 100, 0.1 );
+		final AffineTransform transform = lk.align( simple2x2, 100, 0.1, service );
+
+		service.shutdown();
 
 		// transformation matrix
 		System.out.println( Util.printCoordinates( transform.getRowPackedCopy() ) );

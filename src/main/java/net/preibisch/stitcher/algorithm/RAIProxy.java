@@ -21,6 +21,8 @@
  */
 package net.preibisch.stitcher.algorithm;
 
+import java.util.concurrent.ExecutorService;
+
 import mpicbg.spim.data.generic.sequence.BasicImgLoader;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Interval;
@@ -37,20 +39,22 @@ public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterva
 	private BasicImgLoader imgLoader;
 	private ViewId vid;
 	private long[] downsampleFactors;
+	private ExecutorService service;
 
-	public RAIProxy(BasicImgLoader imgLoader, ViewId vid, long[] downsampleFactors )
+	public RAIProxy(BasicImgLoader imgLoader, ViewId vid, long[] downsampleFactors, final ExecutorService service )
 	{
 		this.rai = null;
 		this.downsampleFactors = downsampleFactors;
 		this.imgLoader = imgLoader;
 		this.vid = vid;
+		this.service = service;
 	}
 	
 	@SuppressWarnings("unchecked")
 	private void loadIfNecessary()
 	{
 		if (rai == null)
-			rai = DownsampleTools.openAndDownsample( imgLoader, vid, null, downsampleFactors, false, false, false );
+			rai = DownsampleTools.openAndDownsample( imgLoader, vid, null, downsampleFactors, false, false, false, service );
 	}
 	
 	@Override

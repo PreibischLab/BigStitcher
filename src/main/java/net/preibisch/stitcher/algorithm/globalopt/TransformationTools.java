@@ -268,8 +268,8 @@ public class TransformationTools
 			return null;
 
 		// get one image per group
-		final RandomAccessibleInterval<T> img1 = gva.aggregate( viewIdsA, sd, downsampleFactors, dsCorrectionT1 );	
-		final RandomAccessibleInterval<T> img2 = gva.aggregate( viewIdsB, sd, downsampleFactors, dsCorrectionT2 );
+		final RandomAccessibleInterval<T> img1 = gva.aggregate( viewIdsA, sd, downsampleFactors, dsCorrectionT1, service );
+		final RandomAccessibleInterval<T> img2 = gva.aggregate( viewIdsB, sd, downsampleFactors, dsCorrectionT2, service );
 
 		if (img1 == null || img2 == null)
 		{
@@ -338,8 +338,8 @@ public class TransformationTools
 			return null;
 
 		// get one image per group
-		final RandomAccessibleInterval<T> img1 = gva.aggregate( viewIdsA, sd, downsampleFactors, dsCorrectionT1 );	
-		final RandomAccessibleInterval<T> img2 = gva.aggregate( viewIdsB, sd, downsampleFactors, dsCorrectionT2 );
+		final RandomAccessibleInterval<T> img1 = gva.aggregate( viewIdsA, sd, downsampleFactors, dsCorrectionT1, service );	
+		final RandomAccessibleInterval<T> img2 = gva.aggregate( viewIdsB, sd, downsampleFactors, dsCorrectionT2, service );
 
 		if (img1 == null || img2 == null)
 		{
