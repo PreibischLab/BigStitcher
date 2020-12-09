@@ -1,7 +1,11 @@
-package net.preibisch.stitcher.gui.popup.aws;
+package net.preibisch.stitcher.gui.aws;
 
 import fiji.util.gui.GenericDialogPlus;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class AWSLoadParseQueryXML extends LoadParseQueryXML {
     private final static String defaultBucketName = "bigstitcher";
@@ -26,10 +30,6 @@ public class AWSLoadParseQueryXML extends LoadParseQueryXML {
         String bucketName = gd.getNextString();
         String path = gd.getNextString();
         String xmlFile = gd.getNextString();
-        System.out.println("Inputs: keyPath: " + keyPath + " | " +
-                "bucketName: " + bucketName + " | " +
-                "path: " + path + " | " +
-                "xmlFile: " + xmlFile);
 
         AWSXmlIoSpimData2 result = null;
         try {
@@ -43,6 +43,14 @@ public class AWSLoadParseQueryXML extends LoadParseQueryXML {
             return false;
         }
         this.data  = result.getData();
+        this.attributes = getAttributes(this.data, this.comparator);
+        int numAttributes = this.attributes.size();
+        this.allAttributeInstances = new HashMap();
+        ArrayList<HashSet<Integer>> numEntitiesPerAttrib = this.entitiesPerAttribute();
+        this.populateAttributesEntities(numAttributes, numEntitiesPerAttrib);
+        this.message1 = goodMsg1;
+        this.message2 = getSpimDataDescription(this.data, this.attributes, numEntitiesPerAttrib, numAttributes);
+
         this.xmlfilename = xmlFile;
         this.io = result.getIO();
 
@@ -50,5 +58,8 @@ public class AWSLoadParseQueryXML extends LoadParseQueryXML {
 
 
     }
+    public static void main(String[] args) {
+		new AWSLoadParseQueryXML().queryXML();
+	}
 
 }

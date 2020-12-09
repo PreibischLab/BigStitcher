@@ -8,12 +8,12 @@
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -30,6 +30,7 @@ import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.gui.StitchingExplorer;
+import net.preibisch.stitcher.gui.aws.AWSLoadParseQueryXML;
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
 
@@ -38,79 +39,82 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 @Plugin(type = Command.class, menuPath = "Plugins>BigStitcher>BigStitcher")
-public class BigStitcher implements Command, PlugIn
-{
-	boolean newDataset = false;
+public class BigStitcher implements Command, PlugIn {
+    boolean newDataset = false;
+    boolean awsMode = false;
 
-	@Override
-	public void run( String arg )
-	{
-		run();
-	}
+    @Override
+    public void run(String arg) {
+        run();
+    }
 
-	@Override
-	public void run( )
-	{
-		final LoadParseQueryXML result = new EasterEggLoadParseQueryXML();
+    @Override
+    public void run() {
+        final LoadParseQueryXML result = new EasterEggLoadParseQueryXML();
 
-		result.addButton( "Define a new dataset", new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				((TextField)result.getGenericDialog().getStringFields().firstElement()).setText( "define" );
-				Button ok = result.getGenericDialog().getButtons()[ 0 ];
 
-				ActionEvent ae =  new ActionEvent( ok, ActionEvent.ACTION_PERFORMED, "");
-				Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(ae);
-			}
-		});
+        result.addButton("Define a new dataset", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ((TextField) result.getGenericDialog().getStringFields().firstElement()).setText("define");
+                Button ok = result.getGenericDialog().getButtons()[0];
 
-		result.addButton( "AWS Input", new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				((TextField)result.getGenericDialog().getStringFields().firstElement()).setText( "aws" );
-				Button ok = result.getGenericDialog().getButtons()[ 0 ];
-				System.out.println("Button: "+ok.getLabel());
+                ActionEvent ae = new ActionEvent(ok, ActionEvent.ACTION_PERFORMED, "");
+                Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(ae);
+            }
+        });
 
-				ActionEvent ae =  new ActionEvent( ok, ActionEvent.ACTION_PERFORMED, "");
-				Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(ae);
-			}
-		});
+        result.addButton("AWS Input", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                result.getGenericDialog().setVisible(false);
 
-		if ( !result.queryXML( "Stitching Explorer", "", false, false, false, false, false ) && !newDataset )
-		{
-			return;
-		}
+                awsMode = true;
+                LoadParseQueryXML lpq = new AWSLoadParseQueryXML();
+                ;
+                lpq.queryXML();
+                startExplorer(lpq.getData(), lpq.getXMLFileName(), lpq.getIO());
+            }
+        });
 
-		final SpimData2 data = result.getData();
-		final String xml = result.getXMLFileName();
-		final XmlIoSpimData2 io = result.getIO();
 
-		final StitchingExplorer< SpimData2, XmlIoSpimData2 > explorer =
-				new StitchingExplorer< >( data, xml, io );
+        if (!result.queryXML("Stitching Explorer", "", false, false, false, false, false) && !newDataset) {
+            return;
+        }
 
-		explorer.getFrame().toFront();
-	}
+        if (awsMode) {
+            return;
+        }
 
-	public static void setupTesting()
-	{
-		IOFunctions.printIJLog = true;
-		new ImageJ();
+        final SpimData2 data = result.getData();
+        final String xml = result.getXMLFileName();
+        final XmlIoSpimData2 io = result.getIO();
 
-		if ( System.getProperty("os.name").toLowerCase().contains( "win" ) )
-			GenericLoadParseQueryXML.defaultXMLfilename = "Z:\\Data\\Expansion Microscopy/dataset.xml";
-		else if ( !System.getProperty("os.name").toLowerCase().contains( "mac" ) )
-			GenericLoadParseQueryXML.defaultXMLfilename = "/home/preibisch/Documents/Microscopy/SPIM/HisYFP-SPIM//dataset_tp18.xml";
-		else
-			GenericLoadParseQueryXML.defaultXMLfilename = "/Users/spreibi/Documents/BIMSB/Projects/CLARITY/Big Data Sticher/Dros_converted/dataset.xml";
-	}
+        startExplorer(data, xml, io);
 
-	public static void main( String[] args )
-	{
-		setupTesting();
-		new BigStitcher().run( );
-	}
+    }
+
+    private void startExplorer(SpimData2 data, String xml, XmlIoSpimData2 io) {
+        final StitchingExplorer<SpimData2, XmlIoSpimData2> explorer =
+                new StitchingExplorer<>(data, xml, io);
+
+        explorer.getFrame().toFront();
+    }
+
+    public static void setupTesting() {
+        IOFunctions.printIJLog = true;
+        new ImageJ();
+
+        if (System.getProperty("os.name").toLowerCase().contains("win"))
+            GenericLoadParseQueryXML.defaultXMLfilename = "Z:\\Data\\Expansion Microscopy/dataset.xml";
+        else if (!System.getProperty("os.name").toLowerCase().contains("mac"))
+            GenericLoadParseQueryXML.defaultXMLfilename = "/home/preibisch/Documents/Microscopy/SPIM/HisYFP-SPIM//dataset_tp18.xml";
+        else
+            GenericLoadParseQueryXML.defaultXMLfilename = "/Users/spreibi/Documents/BIMSB/Projects/CLARITY/Big Data Sticher/Dros_converted/dataset.xml";
+    }
+
+    public static void main(String[] args) {
+        setupTesting();
+        new BigStitcher().run();
+    }
 }

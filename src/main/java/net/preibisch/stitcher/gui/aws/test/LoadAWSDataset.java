@@ -1,4 +1,4 @@
-package net.preibisch.stitcher.plugin;
+package net.preibisch.stitcher.gui.aws.test;
 
 import ij.ImageJ;
 import ij.plugin.PlugIn;
@@ -7,7 +7,7 @@ import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.gui.StitchingExplorer;
-import net.preibisch.stitcher.gui.popup.aws.AWSLoadParseQueryXML;
+import net.preibisch.stitcher.gui.aws.AWSLoadParseQueryXML;
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
 
@@ -22,7 +22,7 @@ public class LoadAWSDataset  implements Command, PlugIn {
         }
 
         final SpimData2 data = result.getData();
-        final String xml = result.getXMLFileName();;
+        final String xml = result.getXMLFileName();
         final XmlIoSpimData2 io = result.getIO();
 
         final StitchingExplorer< SpimData2, XmlIoSpimData2 > explorer =
