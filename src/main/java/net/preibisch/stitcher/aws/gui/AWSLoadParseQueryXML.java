@@ -1,7 +1,8 @@
-package net.preibisch.stitcher.gui.aws;
+package net.preibisch.stitcher.aws.gui;
 
 import fiji.util.gui.GenericDialogPlus;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
+import net.preibisch.stitcher.aws.reader.AWSXmlIoSpimData2;
 
 import java.util.ArrayList;
 import java.util.HashMap;

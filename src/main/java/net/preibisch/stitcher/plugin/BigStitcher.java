@@ -30,7 +30,7 @@ import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.gui.StitchingExplorer;
-import net.preibisch.stitcher.gui.aws.AWSLoadParseQueryXML;
+import net.preibisch.stitcher.aws.gui.AWSLoadParseQueryXML;
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
 

@@ -1,9 +1,10 @@
-package net.preibisch.stitcher.gui.aws;
+package net.preibisch.stitcher.aws.reader;
 
 
 import com.amazonaws.regions.Regions;
 import com.bigdistributor.dataexchange.aws.s3.func.auth.AWSCredentialInstance;
 import com.bigdistributor.dataexchange.aws.s3.func.bucket.S3BucketInstance;
+import com.bigdistributor.dataexchange.aws.s3.func.read.AWSXMLReader;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
@@ -21,7 +22,7 @@ import java.io.IOException;
 
 public class AWSXmlIoSpimData2<S extends AbstractSequenceDescription<?, ?, ?>, T extends AbstractSpimData<S>> extends XmlIoAbstractSpimData {
 
-    protected AWSXMLReader2 awsio;
+    protected AWSXMLReader awsio;
     private Document doc;
     private SpimData2 data;
     private XmlIoSpimData2 io;
@@ -33,7 +34,7 @@ public class AWSXmlIoSpimData2<S extends AbstractSequenceDescription<?, ?, ?>, T
 
         S3BucketInstance.init(AWSCredentialInstance.get(), Regions.EU_CENTRAL_1, bucketName);
 
-        awsio = new AWSXMLReader2(S3BucketInstance.get(), path, xmlFile);
+        awsio = new AWSXMLReader(S3BucketInstance.get(), path, xmlFile);
 
     }
 

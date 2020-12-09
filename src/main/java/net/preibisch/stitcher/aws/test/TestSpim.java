@@ -1,4 +1,4 @@
-package net.preibisch.stitcher.gui.aws.test;
+package net.preibisch.stitcher.aws.test;
 
 import mpicbg.spim.data.sequence.ImgLoader;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
