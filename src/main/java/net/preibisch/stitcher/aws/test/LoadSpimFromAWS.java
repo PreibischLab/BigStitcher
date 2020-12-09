@@ -18,12 +18,11 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 
 public class LoadSpimFromAWS {
-    private static String path = "/Users/Marwan/Desktop/Task/data/n5aws/dataset-n5.xml";
 
     public static void main(String[] args) throws SpimDataException, IllegalAccessException, JDOMException, XMLStreamException, IOException {
 
           // Init S3
-        JobID.set(DEFAULT.id);
+        JobID.set(DEFAULT.bucket_name);
         AWSCredentialInstance.init(DEFAULT.AWS_CREDENTIALS_PATH);
 
         S3BucketInstance.init(AWSCredentialInstance.get(), Regions.EU_CENTRAL_1, DEFAULT.id);

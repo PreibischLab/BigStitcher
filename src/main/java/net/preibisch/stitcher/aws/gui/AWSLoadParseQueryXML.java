@@ -1,5 +1,7 @@
 package net.preibisch.stitcher.aws.gui;
 
+import com.bigdistributor.dataexchange.job.model.Params;
+import com.bigdistributor.dataexchange.utils.DEFAULT;
 import fiji.util.gui.GenericDialogPlus;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.stitcher.aws.reader.AWSXmlIoSpimData2;
@@ -9,10 +11,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class AWSLoadParseQueryXML extends LoadParseQueryXML {
-    private final static String defaultBucketName = "bigstitcher";
+    private final static String defaultBucketName = DEFAULT.bucket_name;
     private final static String defaultKeyPath = "/Users/Marwan/Desktop/BigDistributer/aws_credentials/bigdistributer.csv";
-    private final static String defaultPath = "big/";
-    private final static String defaultFileName = "dataset.xml";
+    private final static String defaultPath = "";
+    private final static String defaultFileName = "dataset-n5.xml";
 
 
     public boolean queryXML() {
@@ -34,7 +36,9 @@ public class AWSLoadParseQueryXML extends LoadParseQueryXML {
 
         AWSXmlIoSpimData2 result = null;
         try {
-            result = new AWSXmlIoSpimData2(keyPath, bucketName, path, xmlFile);
+            Params.init(keyPath, bucketName, path, xmlFile);
+//            result = new AWSXmlIoSpimData2(keyPath, bucketName, path, xmlFile);
+            result = new AWSXmlIoSpimData2();
         } catch (IllegalAccessException e) {
             System.out.println(e.toString());
             return false;
