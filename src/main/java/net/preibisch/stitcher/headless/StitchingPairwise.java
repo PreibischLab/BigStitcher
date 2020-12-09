@@ -2,7 +2,7 @@
  * #%L
  * Multiview stitching of large datasets.
  * %%
- * Copyright (C) 2016 - 2017 Big Stitcher developers.
+ * Copyright (C) 2016 - 2020 Big Stitcher developers.
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,8 +25,8 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import ij.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
@@ -35,13 +35,14 @@ import net.imglib2.realtransform.Translation3D;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
+import net.preibisch.legacy.io.IOFunctions;
+import net.preibisch.legacy.io.TextFileAccess;
+import net.preibisch.mvrecon.Threads;
+import net.preibisch.mvrecon.process.deconvolution.DeconViews;
+import net.preibisch.mvrecon.process.downsampling.Downsample;
 import net.preibisch.simulation.SimulateTileStitching;
 import net.preibisch.stitcher.algorithm.PairwiseStitching;
 import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
-import net.preibisch.legacy.io.IOFunctions;
-import net.preibisch.legacy.io.TextFileAccess;
-import net.preibisch.mvrecon.process.deconvolution.DeconViews;
-import net.preibisch.mvrecon.process.downsampling.Downsample;
 
 public class StitchingPairwise
 {
@@ -172,28 +173,31 @@ public class StitchingPairwise
 		int dsy = downsample[ 1 ];
 		int dsz = downsample[ 2 ];
 
+		final ExecutorService service = Executors.newFixedThreadPool( Threads.numThreads() );
+
 		while ( dsx > 1 || dsy > 1 || dsz > 1 )
 		{
 			if ( dsy > 1 )
 			{
-				input = Downsample.simple2x( input, new ArrayImgFactory<>(), new boolean[]{ false, true, false } );
+				input = Downsample.simple2x( input, new ArrayImgFactory<>( new FloatType() ), new boolean[]{ false, true, false }, service );
 				dsy /= 2;
 			}
 
 			if ( dsx > 1 )
 			{
-				input = Downsample.simple2x( input, new ArrayImgFactory<>(), new boolean[]{ true, false, false } );
+				input = Downsample.simple2x( input, new ArrayImgFactory<>( new FloatType() ), new boolean[]{ true, false, false }, service );
 				dsx /= 2;
 			}
 
 
 			if ( dsz > 1 )
 			{
-				input = Downsample.simple2x( input, new ArrayImgFactory<>(), new boolean[]{ false, false, true } );
+				input = Downsample.simple2x( input, new ArrayImgFactory<>( new FloatType() ), new boolean[]{ false, false, true }, service );
 				dsz /= 2;
 			}
 		}
 
+		service.shutdown();
 		/*
 		for ( ;dsx > 1; dsx /= 2 )
 			input = Downsample.simple2x( input, new ArrayImgFactory<>(), new boolean[]{ true, false, false } );

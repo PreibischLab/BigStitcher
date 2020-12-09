@@ -2,7 +2,7 @@
  * #%L
  * Multiview stitching of large datasets.
  * %%
- * Copyright (C) 2016 - 2017 Big Stitcher developers.
+ * Copyright (C) 2016 - 2020 Big Stitcher developers.
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,6 +29,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import ij.ImageJ;
 import mpicbg.spim.data.generic.base.Entity;
@@ -62,6 +64,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.process.deconvolution.normalization.AdjustInput;
 import net.preibisch.mvrecon.process.downsampling.DownsampleTools;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
@@ -355,7 +358,8 @@ public class GroupedViewAggregator
 	public <T extends RealType<T>> RandomAccessibleInterval< T > aggregate(Group<? extends ViewId> gv, 
 												AbstractSequenceDescription< ?, ? extends BasicViewDescription< ? >, ? > sd,
 												long[] downsampleFactors,
-												final AffineTransform3D dsCorrectionT){
+												final AffineTransform3D dsCorrectionT,
+												final ExecutorService service){
 
 		Map<BasicViewDescription< ? >, RandomAccessibleInterval<T>> map = new HashMap<>();
 		boolean dsAdjusted = false;
@@ -369,12 +373,12 @@ public class GroupedViewAggregator
 			// if view is not present, add null as the RAIProxy
 			if ( vd.isPresent() )
 			{
-				rai = new RAIProxy< T >( sd.getImgLoader(), vid, downsampleFactors );
+				rai = new RAIProxy< T >( sd.getImgLoader(), vid, downsampleFactors, service );
 
 				if ( !dsAdjusted )
 				{
 					// we only get the transformation for downsampling once (could be three channels averaged here)
-					DownsampleTools.openAndDownsample( sd.getImgLoader(), vid, dsCorrectionT, downsampleFactors, true, false, false );
+					DownsampleTools.openAndDownsample( sd.getImgLoader(), vid, dsCorrectionT, downsampleFactors, true, false, false, service );
 					dsAdjusted = true;
 				}
 			}
@@ -496,11 +500,14 @@ public class GroupedViewAggregator
 		setupsVID.add( new ViewId(0,3) );
 		Group<ViewId> gv = new Group<>( setupsVID );
 
-		RandomAccessibleInterval< FloatType > res = (RandomAccessibleInterval< FloatType >) gva.aggregate( gv, sd, new long[] {1,1,1} , new AffineTransform3D());
+		final ExecutorService taskExecutor = Executors.newFixedThreadPool( Threads.numThreads() );
+
+		RandomAccessibleInterval< FloatType > res = (RandomAccessibleInterval< FloatType >) gva.aggregate( gv, sd, new long[] {1,1,1} , new AffineTransform3D(), taskExecutor );
 		System.out.println( Views.iterable( res ).firstElement().getClass() );
 		if (res != null)
 			ImageJFunctions.show( res );
 
+		taskExecutor.shutdown();
 		new ImageJ();
 		
 	}

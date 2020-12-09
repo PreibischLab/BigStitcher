@@ -11,7 +11,7 @@
 
 	<groupId>net.preibisch</groupId>
 	<artifactId>BigStitcher</artifactId>
-	<version>0.6.3-SNAPSHOT</version>
+	<version>0.7.1-SNAPSHOT</version>
 
 	<name>Big Stitcher</name>
 	<description>Multiview stitching of large datasets.</description>
@@ -96,10 +96,9 @@
 
 	<properties>
 		<package-name>net.preibisch.stitcher</package-name>
-
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
-		<multiview-reconstruction.version>0.8.4</multiview-reconstruction.version>
+		<multiview-reconstruction.version>0.9.1-SNAPSHOT</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
 
 		<jackson.version>2.5.2</jackson.version>

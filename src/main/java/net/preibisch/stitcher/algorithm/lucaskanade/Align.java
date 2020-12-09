@@ -2,7 +2,7 @@
  * #%L
  * Multiview stitching of large datasets.
  * %%
- * Copyright (C) 2016 - 2017 Big Stitcher developers.
+ * Copyright (C) 2016 - 2020 Big Stitcher developers.
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -64,6 +64,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
+import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
 import net.preibisch.mvrecon.process.downsampling.Downsample;
 import net.preibisch.mvrecon.process.downsampling.DownsampleTools;
@@ -243,11 +244,13 @@ public class Align<T extends RealType< T >>
 	/*
 	 * Computed and return the affine transform that aligns image to template.
 	 */
-	public AffineTransform align(final RandomAccessibleInterval< T > image, final int maxIterations,
-			final double minParameterChange)
+	public AffineTransform align(
+			final RandomAccessibleInterval< T > image,
+			final int maxIterations,
+			final double minParameterChange,
+			final ExecutorService service )
 	{
 		lastAlignConverged = false;
-		ExecutorService service = Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() * 2);
 
 		currentTransform.set( new AffineTransform( n ) );
 		int i = 0;
@@ -490,18 +493,25 @@ public class Align<T extends RealType< T >>
 		ImageJFunctions.show( Views.interval( a,  interval1 ), "target" );
 		ImageJFunctions.show( rotated, "in");
 
+		final ExecutorService service = Executors.newFixedThreadPool( Threads.numThreads() );
+
 		// downsample input
-		RandomAccessibleInterval< FloatType > simple2x1 = Downsample.simple2x( Views.zeroMin( Views.interval( a, interval1 ) ), new ArrayImgFactory<>(), new boolean[] {true, true, false} );
-		RandomAccessibleInterval< FloatType > simple2x2 = Downsample.simple2x( Views.zeroMin( Views.interval( rotated, interval2 ) ), new ArrayImgFactory<>(), new boolean[] {true, true, false} );
+		RandomAccessibleInterval<FloatType> simple2x1 = Downsample.simple2x(Views.zeroMin(Views.interval(a, interval1)),
+				new ArrayImgFactory<>( new FloatType() ), new boolean[] { true, true, false }, service);
+		RandomAccessibleInterval<FloatType> simple2x2 = Downsample.simple2x(
+				Views.zeroMin(Views.interval(rotated, interval2)), new ArrayImgFactory<>( new FloatType() ),
+				new boolean[] { true, true, false }, service );
 
 		// align
 
 		//Align< FloatType > lk = new Align<>( Views.zeroMin( Views.interval( a, interval1 ) ), new ArrayImgFactory<>(), warp );
-		Align< FloatType > lk = new Align<>( simple2x1, new ArrayImgFactory<>(), warp );
+		Align< FloatType > lk = new Align<>( simple2x1, new ArrayImgFactory<>( new FloatType()), warp );
 		//System.out.println( Util.printCoordinates( lk.align( Views.zeroMin( Views.interval( b, interval2 ) ), 100, 0.01 ).getRowPackedCopy() ) );
 		//final AffineTransform transform = lk.align( Views.zeroMin( rotated ), 100, 0.01 );
-		final AffineTransform transform = lk.align( simple2x2, 100, 0.01 );
+		final AffineTransform transform = lk.align( simple2x2, 100, 0.01, service );
 
+		service.shutdown();
+	
 		final AffineTransform scale = new AffineTransform( 3 );
 		scale.set( 2, 0, 0 );
 		scale.set( 1, 1, 1 );

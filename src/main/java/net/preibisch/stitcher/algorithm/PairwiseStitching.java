@@ -2,7 +2,7 @@
  * #%L
  * Multiview stitching of large datasets.
  * %%
- * Copyright (C) 2016 - 2017 Big Stitcher developers.
+ * Copyright (C) 2016 - 2020 Big Stitcher developers.
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -148,10 +148,10 @@ public class PairwiseStitching
 
 		// do the alignment
 		Align< T > lkAlign = new Align< T >( Views.zeroMin( Views.interval( img1, interval1 ) ),
-				new ArrayImgFactory< FloatType >(), params.getWarpFunctionInstance( img1.numDimensions() ) );
+				new ArrayImgFactory< FloatType >( new FloatType() ), params.getWarpFunctionInstance( img1.numDimensions() ) );
 
 		AffineTransform res = lkAlign.align( Views.zeroMin( Views.interval( img2, interval2 ) ), params.maxNumIterations,
-				params.minParameterChange );
+				params.minParameterChange, service );
 
 		if (lkAlign.didConverge())
 			IOFunctions.println("(" + new Date( System.currentTimeMillis() ) + ") determined transformation:" +  Util.printCoordinates( res.getRowPackedCopy() ) );
