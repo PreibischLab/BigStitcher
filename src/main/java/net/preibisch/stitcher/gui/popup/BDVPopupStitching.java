@@ -39,7 +39,7 @@ import bdv.BigDataViewer;
 import bdv.SpimSource;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.transformation.TransformedSource;
-import bdv.util.BehaviourTransformEventHandlerPlanar.BehaviourTransformEventHandlerPlanarFactory;
+//import bdv.util.BehaviourTransformEventHandlerPlanar.BehaviourTransformEventHandlerPlanarFactory;
 import bdv.viewer.ViewerOptions;
 import bdv.viewer.state.SourceGroup;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -293,10 +293,10 @@ public class BDVPopupStitching extends BDVPopup
 			}
 
 		final ViewerOptions options = ViewerOptions.options().accumulateProjectorFactory( MaximumProjectorARGB.factory );
-		if (allViews2D)
+		/*if (allViews2D)
 		{
 			options.transformEventHandlerFactory(new BehaviourTransformEventHandlerPlanarFactory() );
-		}
+		}*/
 
 		BigDataViewer bdv = BigDataViewer.open( panel.getSpimData(), 
 												"BigDataViewer", 
@@ -323,7 +323,7 @@ public class BDVPopupStitching extends BDVPopup
 		ScrollableBrightnessDialog.setAsBrightnessDialog( bdv );
 
 		bdv.getViewer().addTransformListener( lo );
-		bdv.getViewer().getDisplay().addOverlayRenderer( lo );
+		bdv.getViewer().getDisplay().overlays().add( lo );
 		
 		bdv.getViewerFrame().setVisible( true );		
 		bdv.getViewer().requestRepaint();

@@ -93,7 +93,7 @@ public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSet
 	
 			// remove if it is already there
 			bdv.getViewer().removeTransformListener( overlay );
-			bdv.getViewer().getDisplay().removeTransformListener( overlay );
+			bdv.getViewer().getDisplay().overlays().remove( overlay );
 
 			for ( int i = 0; i < Math.min( oldColors.size(), bdv.getSetupAssignments().getConverterSetups().size() ); ++i )
 				bdv.getSetupAssignments().getConverterSetups().get( i ).setColor( oldColors.get( i ) );
