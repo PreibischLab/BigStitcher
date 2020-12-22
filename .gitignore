@@ -3,3 +3,7 @@
 /.classpath
 /.project
 /.settings/
+
+# IntelliJ  #
+.idea/
+BigStitcher.iml
