@@ -21,47 +21,22 @@
  */
 package net.preibisch.stitcher.gui;
 
-import ij.ImageJ;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Rectangle;
-import java.awt.TextField;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.beans.PropertyChangeListener;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-
-import javax.swing.Action;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
-
 import bdv.BigDataViewer;
+import ij.ImageJ;
+import mpicbg.spim.data.generic.AbstractSpimData;
+import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.util.MultiWindowLayoutHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorer;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerPanel;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.*;
 import net.preibisch.stitcher.input.GenerateSpimData;
 
-import mpicbg.spim.data.SpimData;
-import mpicbg.spim.data.XmlIoSpimData;
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > > extends FilteredAndGroupedExplorer< AS, X >
 {
@@ -220,7 +195,9 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 		// set the focus to the table, otherwise key-bindings do not work right away
 		panel.table.requestFocus();
 	}
-	
+
+
+
 	public void quit()
 	{
 		for ( final SelectedViewDescriptionListener< AS > l : panel.getListeners() )
