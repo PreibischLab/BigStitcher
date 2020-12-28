@@ -104,6 +104,8 @@
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
+		<maven.compiler.source>8</maven.compiler.source>
+		<maven.compiler.target>8</maven.compiler.target>
 	</properties>
 
 	<repositories>
@@ -192,6 +194,15 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.leapmotion.leap/leap-java -->
+		<dependency>
+			<groupId>com.leapmotion.leap</groupId>
+			<artifactId>leapMotion</artifactId>
+			<version>2.1.5</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/LeapJava.jar</systemPath>
+		</dependency>
+
 
 		<!-- Test scope dependencies -->
 		<dependency>
