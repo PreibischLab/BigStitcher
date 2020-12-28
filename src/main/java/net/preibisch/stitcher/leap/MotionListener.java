@@ -9,8 +9,17 @@ import com.leapmotion.leap.*;
  * Left hand: scale
  */
 public class MotionListener extends Listener {
-    private static final double TRANSLATION_THRESHOLD = 0.3;
-    Frame oldframe;
+    private static final int RESET_PERIOD = 300;
+    private static final double TRANSLATION_THRESHOLD = 1.3;
+    private static final double ROTATION_THRESHOLD = 0.98;
+    private static final double SCALE_THRESHOLD = 0.4;
+    private final MotionHandler motionHandler;
+    Frame oldFrame;
+    int resetCounter = 0;
+
+    public MotionListener(MotionHandler handler) {
+        this.motionHandler = handler;
+    }
 
     public void onInit(Controller controller) {
         System.out.println("Initialized");
@@ -31,43 +40,59 @@ public class MotionListener extends Listener {
 
     public void onFrame(Controller controller) {
         Frame frame = controller.frame();
-                System.out.println("Frame id: " + frame.id()
-                + ", timestamp: " + frame.timestamp()
-                + ", hands: " + frame.hands().count()
-                + ", fingers: " + frame.fingers().count()
-                + ", tools: " + frame.tools().count()
-                + ", gestures " + frame.gestures().count());
-        if (oldframe == null) {
-            oldframe = frame;
+        if (oldFrame == null) {
+            oldFrame = frame;
             return;
         }
-
-        //Get hands
-
         for (Hand hand : frame.hands()) {
             if (hand.isLeft()) {
-                processLeftHand(oldframe, frame);
+                processLeftHand(oldFrame, frame);
             } else {
-                processRightHand(oldframe, frame);
+                processRightHand(oldFrame, frame);
             }
         }
-        oldframe = frame;
+        oldFrame = frame;
     }
 
     private void processRightHand(Frame oldFrame, Frame frame) {
 
-        float angle = frame.rotationAngle(oldFrame);
-        Vector axis = frame.rotationAxis(oldFrame);
-        System.out.println("rotation angle: " + angle + " axis:" + axis.toString());
+//        Vector rotationAxis = frame.rotationAxis(oldFrame);
+//        float[] normalizedRotation = threshold(rotationAxis, ROTATION_THRESHOLD);
+//
+//        if (normalizedRotation != null) {
+//            System.out.println("rotation angles: " + getString(normalizedRotation));
+//            rotate(normalizedRotation);
+//        }
 
         Vector translation = frame.translation(oldFrame);
-        float[] normalized = threshold(translation, TRANSLATION_THRESHOLD);
-        if (normalized != null)
-//        System.out.println("Translation :"+translation);
-            System.out.println("Translation :" + normalized[0] + "," + normalized[1] + "," + normalized[2]);
+        float[] normalizedTranslation = threshold(translation, TRANSLATION_THRESHOLD);
 
+        if (normalizedTranslation != null) {
+            resetCounter = 0;
+            System.out.println("Translations : " + getString(normalizedTranslation));
+            translate(normalizedTranslation);
+        } else {
+            resetCounter += 1;
+        }
+        if (resetCounter > RESET_PERIOD) {
+            resetCounter=0;
+            reset();
+        }
 
     }
+
+    private void reset() {
+        System.out.println("Reset");
+        motionHandler.reset();
+    }
+
+    private String getString(float[] list) {
+        String s = "";
+        for (float l : list)
+            s += (l + ",");
+        return s;
+    }
+
 
     private float[] threshold(Vector vector, double threshVal) {
         float[] vals = vector.toFloatArray();
@@ -83,16 +108,24 @@ public class MotionListener extends Listener {
     }
 
     private void processLeftHand(Frame oldFrame, Frame frame) {
-        float scale = frame.scaleFactor(oldFrame);
-
-        System.out.println("Scale: " + scale);
-        scale(scale);
+        double scale = frame.scaleFactor(oldFrame);
+        if ((scale > SCALE_THRESHOLD) || (scale < -SCALE_THRESHOLD)) {
+            System.out.println("Scale: " + scale);
+            scale(scale);
+        }
     }
 
-    private void scale(float scale) {
-        LeapBDV.scale(scale);
+    private void scale(double scale) {
+        motionHandler.scale(scale);
     }
 
+    private void translate(float[] vector) {
+        motionHandler.translate(vector);
+    }
+
+    private void rotate(float[] vector) {
+        motionHandler.rotate(vector);
+    }
 }
 
 

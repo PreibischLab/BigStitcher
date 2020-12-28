@@ -8,5 +8,6 @@ Using [LeapMotion Controller](https://www.ultraleap.com/product/leap-motion-cont
 No hand contact or touching are required.
 
 Controlling BigDataViewer panel with hand gesture:
-- Right hand used for Rotation and translation
+- Right hand used for Rotation and translation.
 - Left hand used for zooming to the data.
+- To reset transformation keep right hand without movement for 3 sec.

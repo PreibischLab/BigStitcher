@@ -12,7 +12,7 @@ public class Sample {
         // Create a sample listener and controller
 
 //        SampleListener listener = new SampleListener();
-        MotionListener listener = new MotionListener();
+        MotionListener listener = new MotionListener(null);
         Controller controller = new Controller();
 
         // Have the sample listener receive events from the controller
