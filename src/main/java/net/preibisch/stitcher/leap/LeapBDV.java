@@ -37,13 +37,13 @@ public class LeapBDV implements MotionHandler {
     }
 
     @Override
-    public void translate(float[] vector) {
+    public void translate(double[] vector) {
         currentViewerTransform.translate(vector[0],vector[2],vector[1]);
         bdv.getViewer().setCurrentViewerTransform(currentViewerTransform);
     }
 
     @Override
-    public void rotate(float[] vector) {
+    public void rotate(double[] vector) {
         for (int i = 0; i < 3; i++)
         currentViewerTransform.rotate(i, vector[i]/300);
         bdv.getViewer().setCurrentViewerTransform(currentViewerTransform);

@@ -9,17 +9,13 @@ import com.leapmotion.leap.*;
  * Left hand: scale
  */
 public class MotionListener extends Listener {
-    private static final int RESET_PERIOD = 300;
-    private static final float[] TRANSLATION_THRESHOLD = new float[]{1.3f, 4.0f};
-    private static final float[] ROTATION_THRESHOLD = new float[]{0.8f, 4.0f};
-    private static final float[] SCALE_THRESHOLD = new float[]{0.4f, 50.8f};
+    private static final int RESET_PERIOD = 200;
+    private static final double[] TRANSLATION_THRESHOLD = new double[]{1.3f, 4.0f};
+    private static final double[] ROTATION_THRESHOLD = new double[]{0.8f, 4.0f};
+    private static final double[] SCALE_THRESHOLD = new double[]{0.4f, 50.8f};
     private final MotionHandler motionHandler;
     Frame oldFrame;
     int resetCounter = 0;
-
-
-    private  float[] max_rotation = new float[]{0,0, 0};
-    private  float[] min_rotation = new float[]{0,0, 0};
 
     public void onFrame(Controller controller) {
         Frame frame = controller.frame();
@@ -28,11 +24,10 @@ public class MotionListener extends Listener {
             return;
         }
         for (Hand hand : frame.hands()) {
-            if (hand.isLeft()) {
+            if (hand.isLeft())
                 processLeftHand(oldFrame, frame);
-            } else {
+            else
                 processRightHand(oldFrame, frame);
-            }
         }
         oldFrame = frame;
     }
@@ -40,15 +35,15 @@ public class MotionListener extends Listener {
     private void processLeftHand(Frame oldFrame, Frame frame) {
 
         Vector rotationAxis = frame.rotationAxis(oldFrame);
-        float[] normalizedRotation = threshold(rotationAxis, ROTATION_THRESHOLD);
+        double[] normalizedRotation = threshold(rotationAxis, ROTATION_THRESHOLD);
 
         if (normalizedRotation != null) {
             System.out.println("rotation angles: " + getString(normalizedRotation));
             rotate(normalizedRotation);
         }
         double scale = frame.scaleFactor(oldFrame);
-        float normalizedScale = threshold((float) scale, SCALE_THRESHOLD);
-        if(normalizedScale>0){
+        double normalizedScale = threshold((float) scale, SCALE_THRESHOLD);
+        if (normalizedScale > 0) {
             System.out.println("Scale: " + normalizedScale);
             scale(scale);
         }
@@ -57,7 +52,7 @@ public class MotionListener extends Listener {
     private void processRightHand(Frame oldFrame, Frame frame) {
 
         Vector translation = frame.translation(oldFrame);
-        float[] normalizedTranslation = threshold(translation, TRANSLATION_THRESHOLD);
+        double[] normalizedTranslation = threshold(translation, TRANSLATION_THRESHOLD);
 
         if (normalizedTranslation != null) {
             resetCounter = 0;
@@ -78,28 +73,29 @@ public class MotionListener extends Listener {
         motionHandler.reset();
     }
 
-    private String getString(float[] list) {
+    private String getString(double[] list) {
         String s = "";
-        for (float l : list)
+        for (double l : list)
             s += (l + ",");
         return s;
     }
 
 
-    private float[] threshold(Vector vector, float[] threshVal) {
+    private double[] threshold(Vector vector, double[] threshVal) {
         float[] vals = vector.toFloatArray();
+        double[] result = new double[]{0, 0, 0};
         boolean valid = false;
         for (int i = 0; i < vals.length; i++) {
-            float v = threshold(vals[i], threshVal);
-            vals[i] = v;
-            if (v > 0) {
+            double v = threshold(vals[i], threshVal);
+            result[i] = v;
+            if (v != 0) {
                 valid = true;
             }
         }
-        return (valid) ? vals : null;
+        return (valid) ? result : null;
     }
 
-    private float threshold(float val, float[] threshVal) {
+    private double threshold(double val, double[] threshVal) {
         if ((val > (-threshVal[0])) && (val < threshVal[0])) {
             return 0;
         } else if ((val < (-threshVal[1])) || (val > threshVal[1])) {
@@ -113,23 +109,12 @@ public class MotionListener extends Listener {
         motionHandler.scale(scale);
     }
 
-    private void translate(float[] vector) {
+    private void translate(double[] vector) {
         motionHandler.translate(vector);
     }
 
-    private void rotate(float[] vector) {
-        updateminmax(vector);
+    private void rotate(double[] vector) {
         motionHandler.rotate(vector);
-    }
-
-    private void updateminmax(float[] vector) {
-        for(int i =0;i<3;i++){
-            if(vector[i]<min_rotation[i])
-                min_rotation[i]=vector[i];
-            if(vector[i]>max_rotation[i])
-                max_rotation[i]=vector[i];
-        }
-        System.out.println("Rotation: min: "+getString(min_rotation)+"   -Max: "+getString(max_rotation));
     }
 
 
