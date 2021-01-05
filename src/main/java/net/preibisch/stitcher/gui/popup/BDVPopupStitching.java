@@ -21,6 +21,7 @@
  */
 package net.preibisch.stitcher.gui.popup;
 
+import bdv.TransformEventHandler2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -293,10 +294,10 @@ public class BDVPopupStitching extends BDVPopup
 			}
 
 		final ViewerOptions options = ViewerOptions.options().accumulateProjectorFactory( MaximumProjectorARGB.factory );
-		/*if (allViews2D)
+		if (allViews2D)
 		{
-			options.transformEventHandlerFactory(new BehaviourTransformEventHandlerPlanarFactory() );
-		}*/
+			options.transformEventHandlerFactory( TransformEventHandler2D::new );
+		}
 
 		BigDataViewer bdv = BigDataViewer.open( panel.getSpimData(), 
 												"BigDataViewer", 
