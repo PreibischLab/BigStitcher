@@ -29,14 +29,13 @@ import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
-import net.preibisch.stitcher.gui.StitchingExplorer;
 import net.preibisch.stitcher.aws.gui.AWSLoadParseQueryXML;
+import net.preibisch.stitcher.gui.StitchingExplorer;
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 @Plugin(type = Command.class, menuPath = "Plugins>BigStitcher>BigStitcher")
 public class BigStitcher implements Command, PlugIn {
@@ -53,39 +52,43 @@ public class BigStitcher implements Command, PlugIn {
         final LoadParseQueryXML result = new EasterEggLoadParseQueryXML();
 
 
-        result.addButton("Define a new dataset", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ((TextField) result.getGenericDialog().getStringFields().firstElement()).setText("define");
-                Button ok = result.getGenericDialog().getButtons()[0];
+        result.addButton("Define a new dataset", e -> {
+            ((TextField) result.getGenericDialog().getStringFields().firstElement()).setText("define");
+            Button ok = result.getGenericDialog().getButtons()[0];
 
-                ActionEvent ae = new ActionEvent(ok, ActionEvent.ACTION_PERFORMED, "");
-                Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(ae);
-            }
+            ActionEvent ae = new ActionEvent(ok, ActionEvent.ACTION_PERFORMED, "");
+            Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(ae);
         });
 
-        result.addButton("AWS Input", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                result.getGenericDialog().setVisible(false);
+        result.addButton("AWS Input", e -> {
+            ((TextField) result.getGenericDialog().getStringFields().firstElement()).setText("aws");
+//            Button ok = result.getGenericDialog().getButtons()[0];
+//
+//            ActionEvent ae = new ActionEvent(ok, ActionEvent.ACTION_PERFORMED, "");
+//            Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(ae);
 
-                awsMode = true;
-                LoadParseQueryXML lpq = new AWSLoadParseQueryXML();
-                ;
-                lpq.queryXML();
-                startExplorer(lpq.getData(), lpq.getXMLFileName(), lpq.getIO());
-            }
+            result.getGenericDialog().setVisible(false);
+
+//            awsMode = true;
+
+            LoadParseQueryXML lpq = new AWSLoadParseQueryXML();
+
+            lpq.queryXML();
+            startExplorer(lpq.getData(), lpq.getXMLFileName(), lpq.getIO());
+            return;
         });
 
 
         if (!result.queryXML("Stitching Explorer", "", false, false, false, false, false) && !newDataset) {
+            System.out.println("return here");
             return;
         }
 
         if (awsMode) {
+            System.out.println("AWS mode..");
             return;
         }
-
+        System.out.println("contine");
         final SpimData2 data = result.getData();
         final String xml = result.getXMLFileName();
         final XmlIoSpimData2 io = result.getIO();
@@ -114,7 +117,7 @@ public class BigStitcher implements Command, PlugIn {
     }
 
     public static void main(String[] args) {
-        setupTesting();
+//        setupTesting();
         new BigStitcher().run();
     }
 }

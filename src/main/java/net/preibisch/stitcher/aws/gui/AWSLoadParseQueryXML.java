@@ -1,9 +1,10 @@
 package net.preibisch.stitcher.aws.gui;
 
-import com.bigdistributor.aws.dataexchange.job.model.Params;
-import com.bigdistributor.aws.spimloader.AWSXmlIoSpimData2;
+import com.bigdistributor.aws.dataexchange.aws.s3.func.auth.AWSCredentialInstance;
 import fiji.util.gui.GenericDialogPlus;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
+import net.preibisch.stitcher.aws.reader.AWSDataParam;
+import net.preibisch.stitcher.aws.spimloader.AWSXmlIoSpimData2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,7 +36,8 @@ public class AWSLoadParseQueryXML extends LoadParseQueryXML {
 
         AWSXmlIoSpimData2 result = null;
         try {
-            Params.init(keyPath, bucketName, path, xmlFile);
+            AWSCredentialInstance.init(keyPath);
+            AWSDataParam.init(bucketName, path, xmlFile);
 //            result = new AWSXmlIoSpimData2(keyPath, bucketName, path, xmlFile);
             result = new AWSXmlIoSpimData2();
         } catch (IllegalAccessException e) {
@@ -46,7 +48,7 @@ public class AWSLoadParseQueryXML extends LoadParseQueryXML {
         if (!result.queryXML()) {
             return false;
         }
-        this.data  = result.getData();
+        this.data = result.getData();
         this.attributes = getAttributes(this.data, this.comparator);
         int numAttributes = this.attributes.size();
         this.allAttributeInstances = new HashMap();
@@ -62,6 +64,7 @@ public class AWSLoadParseQueryXML extends LoadParseQueryXML {
 
 
     }
+
     public static void main(String[] args) {
         new AWSLoadParseQueryXML().queryXML();
     }

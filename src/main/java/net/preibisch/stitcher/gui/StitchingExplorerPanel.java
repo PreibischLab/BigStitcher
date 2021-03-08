@@ -8,12 +8,12 @@
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -153,8 +153,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	boolean previewMode = false;
 
 	LinkOverlay linkOverlay;
-	RegularGridPopup regularGridPopup; 
-	
+	RegularGridPopup regularGridPopup;
+
 	DemoLinkOverlay demoLinkOverlay;
 	DemoLinkOverlayPopup demoLinkOverlayPopup;
 
@@ -163,10 +163,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	LinkExplorerPanel linkExplorer;
 	JFrame linkFrame;
 	JComboBox< ? > angleCB;
-	
+
 	// save SpimDataFilteringAndGrouping so we can go preview -> global opt
 	SpimDataFilteringAndGrouping< ? extends AbstractSpimData< ? > > savedFilteringAndGrouping;
-	
+
 	// offset to get different "random" colors
 	private long colorOffset = 0;
 
@@ -174,7 +174,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	protected JCheckBox checkboxGroupIllums;
 
 	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
-			final X io, boolean requestStartBDV)
+								  final X io, boolean requestStartBDV)
 	{
 		super( explorer, data, xml, io );
 
@@ -192,14 +192,14 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		popups = initPopups();
 		initComponent();
 
-		if ( requestStartBDV && 
+		if ( requestStartBDV &&
 				(ViewerImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
-				|| (FlatfieldCorrectionWrappedImgLoader.class.isInstance(data.getSequenceDescription().getImgLoader()) &&
+						|| (FlatfieldCorrectionWrappedImgLoader.class.isInstance(data.getSequenceDescription().getImgLoader()) &&
 						((FlatfieldCorrectionWrappedImgLoader) data.getSequenceDescription().getImgLoader()).isCached() &&
 						((FlatfieldCorrectionWrappedImgLoader) data.getSequenceDescription().getImgLoader()).isActive())
-				|| FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) 
-				|| (( data instanceof SpimData2 ) && ((SpimData2)data).gridMoveRequested )  
-				|| FileMapImgLoaderLOCI2.class.isInstance( data.getSequenceDescription().getImgLoader() ) ) )
+						|| FractalImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() )
+						|| (( data instanceof SpimData2 ) && ((SpimData2)data).gridMoveRequested )
+						|| FileMapImgLoaderLOCI2.class.isInstance( data.getSequenceDescription().getImgLoader() ) ) )
 		{
 			if (!bdvPopup().bdvRunning())
 				bdvPopup().bdv = BDVPopupStitching.createBDV( this, linkOverlay );
@@ -390,7 +390,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				final List< Group< BasicViewDescription< ? > > > savedGroups = savedFilteringAndGrouping.getGroupedViews( true );
 				final ISpimDataTableModel< AS > model = (ISpimDataTableModel< AS >) table.getModel();
 				final List< List< BasicViewDescription< ? > > > elements = model.getElements();
-			A:	for (int i = 0; i<elements.size(); i++)
+				A:	for (int i = 0; i<elements.size(); i++)
 				{
 					List< BasicViewDescription< ? > > row = elements.get( i );
 					for (Group< BasicViewDescription< ? > > grp : savedGroups)
@@ -440,7 +440,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 			@Override
 			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-					boolean hasFocus, int row, int column)
+														   boolean hasFocus, int row, int column)
 			{
 				final Component c = super.getTableCellRendererComponent( table, value, isSelected, hasFocus, row,
 						column );
@@ -471,10 +471,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					else
 						c.setBackground( Color.yellow );
 				else
-					if( isSelected)
-						c.setBackground( Color.pink );
-					else
-						c.setBackground( Color.gray );
+				if( isSelected)
+					c.setBackground( Color.pink );
+				else
+					c.setBackground( Color.gray );
 
 				return c;
 			}
@@ -901,7 +901,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		if (selectedPair != null)
 			for (final ConverterSetup cs : bdvPopup().bdv.getSetupAssignments().getConverterSetups())
 				cs.setColor(new ARGBType(ARGBType.rgba( 0, 0, 0, 0) ) );
-		
+
 		// always use the first timepoint
 		final TimePoint firstTP = firstVD.getTimePoint();
 		bdvPopup().bdv.getViewer().setTimepoint( getBDVTimePointIndex( firstTP, data ) );
@@ -914,7 +914,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		SpimData2.filterMissingViews( data, selectedVids );
 		List< PairwiseStitchingResult< ViewId > > resultsForId = stitchingResults
 				.getAllPairwiseResultsForViewId( selectedVids );
-		
+
 		// if links have been filtered out, do not display them
 		if (linkExplorer != null)
 			resultsForId = resultsForId.stream().filter( r -> linkExplorer.model.getActiveLinks().contains( r.pair() ) ).collect( Collectors.toList() );
@@ -934,7 +934,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 		List< Pair< Group< ViewId >, Group< ViewId > > > activeLinks = new ArrayList< >();
 
-		
+
 		for ( PairwiseStitchingResult< ViewId > psr : resultsForId )
 		{
 			activeLinks.add( psr.pair() );
@@ -964,7 +964,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 								if (cs.getSetupId() == vid.getViewSetupId())
 									cs.setColor(new ARGBType(ARGBType.rgba( 255, 0, 255, 255) ) );
 					}
-					
+
 					for ( final BasicViewDescription< ? > vd : groupInner )
 						if ( vd.getTimePointId() == firstTP.getId() )
 						{
@@ -974,7 +974,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							SourceState< ? > s = bdvPopup().bdv.getViewer().getVisibilityAndGrouping().getSources()
 									.get( sourceIdx );
 							active[sourceIdx] = true;
- 
+
 							// accumulative transform determined by stitching
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getTransform().getRowPackedCopy() );
@@ -985,7 +985,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 						}
 
 				}
-				
+
 
 				// there is a link other -> selected
 				if ( psr.pair().getB().getViews().equals( selectedVids ) && psr.pair().getA().getViews().containsAll( groupInner ) )
@@ -1001,7 +1001,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 								if (cs.getSetupId() == vid.getViewSetupId())
 									cs.setColor(new ARGBType(ARGBType.rgba( 255, 0, 255, 255) ) );
 					}
-					
+
 					for ( final BasicViewDescription< ? > vd : groupInner )
 						if ( vd.getTimePointId() == firstTP.getId() )
 						{
@@ -1014,7 +1014,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 							// accumulative transform determined by stitching
 							AffineTransform3D trans = new AffineTransform3D();
 							trans.set( psr.getInverseTransform().getRowPackedCopy() );
-							
+
 //							trans.concatenate( selectedModel.inverse() );
 //							trans.preConcatenate( selectedModel );
 
@@ -1034,7 +1034,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		}
 
 		linkOverlay.setActiveLinks( activeLinks, new Group<ViewId>( selectedVids ));
-		
+
 
 		setVisibleSources( bdvPopup().bdv.getViewer().getVisibilityAndGrouping(), active );
 
@@ -1202,4 +1202,3 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		table.repaint();
 	}
 }
-

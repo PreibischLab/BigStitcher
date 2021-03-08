@@ -8,21 +8,18 @@
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
  */
 package net.preibisch.stitcher.algorithm.globalopt;
-
-import java.util.ArrayList;
-import java.util.Date;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
@@ -40,6 +37,9 @@ import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
+import java.util.ArrayList;
+import java.util.Date;
+
 public class ExecuteGlobalOpt implements Runnable
 {
 	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
@@ -47,14 +47,14 @@ public class ExecuteGlobalOpt implements Runnable
 	private SpimDataFilteringAndGrouping<? extends AbstractSpimData<?> > savedFiltering;
 
 	public ExecuteGlobalOpt(
-			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel, 
+			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel,
 			final boolean expertMode )
 	{
 		this.panel = panel;
 		this.expertMode = expertMode;
 		this.savedFiltering = null;
 	}
-	
+
 	public ExecuteGlobalOpt(
 			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel,
 			final SpimDataFilteringAndGrouping<? extends AbstractSpimData<?> > savedFiltering)

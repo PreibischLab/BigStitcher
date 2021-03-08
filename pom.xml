@@ -1,268 +1,299 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.scijava</groupId>
-		<artifactId>pom-scijava</artifactId>
-		<version>30.0.0</version>
-		<relativePath />
-	</parent>
+    <parent>
+        <groupId>org.scijava</groupId>
+        <artifactId>pom-scijava</artifactId>
+        <version>30.0.0</version>
+        <relativePath/>
+    </parent>
 
-	<groupId>net.preibisch</groupId>
-	<artifactId>BigStitcher</artifactId>
-	<version>1.2.0-SNAPSHOT</version>
+    <groupId>net.preibisch</groupId>
+    <artifactId>BigStitcher</artifactId>
+    <version>1.2.0-SNAPSHOT</version>
 
-	<name>Big Stitcher</name>
-	<description>Multiview stitching of large datasets.</description>
-	<url>https://github.com/PreibischLab/BigStitcher</url>
-	<inceptionYear>2016</inceptionYear>
-	<organization>
-		<name>Preibisch Lab</name>
-		<url>http://preibischlab.mdc-berlin.de</url>
-	</organization>
-	<licenses>
-		<license>
-			<name>GNU General Public License v2+</name>
-			<url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
+    <name>Big Stitcher</name>
+    <description>Multiview stitching of large datasets.</description>
+    <url>https://github.com/PreibischLab/BigStitcher</url>
+    <inceptionYear>2016</inceptionYear>
+    <organization>
+        <name>Preibisch Lab</name>
+        <url>http://preibischlab.mdc-berlin.de</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>GNU General Public License v2+</name>
+            <url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
-	<developers>
-		<developer>
-			<id>StephanPreibisch</id>
-			<name>Stephan Preibisch</name>
-			<url>https://imagej.net/User:StephanP</url>
-			<roles>
-				<role>founder</role>
-				<role>lead</role>
-				<role>developer</role>
-				<role>debugger</role>
-				<role>reviewer</role>
-				<role>support</role>
-				<role>maintainer</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>hoerldavid</id>
-			<name>David Hoerl</name>
-			<url>https://imagej.net/User:Davidhoerl</url>
-			<roles>
-				<role>founder</role>
-				<role>lead</role>
-				<role>developer</role>
-				<role>debugger</role>
-				<role>reviewer</role>
-				<role>support</role>
-				<role>maintainer</role>
-			</roles>
-		</developer>
-	</developers>
-	<contributors>
-		<contributor>
-			<name>Tobias Pietzsch</name>
-			<url>https://imagej.net/User:Pietzsch</url>
-			<properties><id>tpietzsch</id></properties>
-		</contributor>
-		<contributor>
-			<name>Curtis Rueden</name>
-			<url>https://imagej.net/User:Rueden</url>
-			<properties><id>ctrueden</id></properties>
-		</contributor>
-	</contributors>
+    <developers>
+        <developer>
+            <id>StephanPreibisch</id>
+            <name>Stephan Preibisch</name>
+            <url>https://imagej.net/User:StephanP</url>
+            <roles>
+                <role>founder</role>
+                <role>lead</role>
+                <role>developer</role>
+                <role>debugger</role>
+                <role>reviewer</role>
+                <role>support</role>
+                <role>maintainer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>hoerldavid</id>
+            <name>David Hoerl</name>
+            <url>https://imagej.net/User:Davidhoerl</url>
+            <roles>
+                <role>founder</role>
+                <role>lead</role>
+                <role>developer</role>
+                <role>debugger</role>
+                <role>reviewer</role>
+                <role>support</role>
+                <role>maintainer</role>
+            </roles>
+        </developer>
+    </developers>
+    <contributors>
+        <contributor>
+            <name>Tobias Pietzsch</name>
+            <url>https://imagej.net/User:Pietzsch</url>
+            <properties>
+                <id>tpietzsch</id>
+            </properties>
+        </contributor>
+        <contributor>
+            <name>Curtis Rueden</name>
+            <url>https://imagej.net/User:Rueden</url>
+            <properties>
+                <id>ctrueden</id>
+            </properties>
+        </contributor>
+    </contributors>
 
-	<mailingLists>
-		<mailingList>
-			<name>Image.sc Forum</name>
-			<archive>https://forum.image.sc/tags/bigstitcher</archive>
-		</mailingList>
-	</mailingLists>
+    <mailingLists>
+        <mailingList>
+            <name>Image.sc Forum</name>
+            <archive>https://forum.image.sc/tags/bigstitcher</archive>
+        </mailingList>
+    </mailingLists>
 
-	<scm>
-		<connection>scm:git:git://github.com/PreibischLab/BigStitcher</connection>
-		<developerConnection>scm:git:git@github.com:PreibischLab/BigStitcher</developerConnection>
-		<tag>HEAD</tag>
-		<url>https://github.com/PreibischLab/BigStitcher</url>
-	</scm>
-	<issueManagement>
-		<system>GitHub Issues</system>
-		<url>https://github.com/PreibischLab/BigStitcher/issues</url>
-	</issueManagement>
-	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.org/PreibischLab/BigStitcher</url>
-	</ciManagement>
+    <scm>
+        <connection>scm:git:git://github.com/PreibischLab/BigStitcher</connection>
+        <developerConnection>scm:git:git@github.com:PreibischLab/BigStitcher</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/PreibischLab/BigStitcher</url>
+    </scm>
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/PreibischLab/BigStitcher/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <system>Travis CI</system>
+        <url>https://travis-ci.org/PreibischLab/BigStitcher</url>
+    </ciManagement>
 
-	<properties>
-		<package-name>net.preibisch.stitcher</package-name>
+    <properties>
+        <package-name>net.preibisch.stitcher</package-name>
 
-		<license.licenseName>gpl_v2</license.licenseName>
-		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
-		<multiview-reconstruction.version>0.10.1</multiview-reconstruction.version>
-		<multiview-simulation.version>0.2.0</multiview-simulation.version>
+        <license.licenseName>gpl_v2</license.licenseName>
+        <license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
+        <multiview-reconstruction.version>0.10.1</multiview-reconstruction.version>
+        <multiview-simulation.version>0.2.0</multiview-simulation.version>
 
-		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
-		<bigdataviewer_fiji.version>6.2.1</bigdataviewer_fiji.version>
-		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
+        <bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
+        <bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
+        <bigdataviewer_fiji.version>6.2.1</bigdataviewer_fiji.version>
+        <imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
+        <jackson.version>2.5.2</jackson.version>
+        <!-- NB: Deploy releases to the SciJava Maven repository. -->
+        <releaseProfiles>deploy-to-scijava</releaseProfiles>
+    </properties>
 
-		<!-- NB: Deploy releases to the SciJava Maven repository. -->
-		<releaseProfiles>deploy-to-scijava</releaseProfiles>
-	</properties>
+    <repositories>
+        <repository>
+            <id>scijava.public</id>
+            <url>https://maven.scijava.org/content/groups/public</url>
+        </repository>
+    </repositories>
 
-	<repositories>
-		<repository>
-			<id>scijava.public</id>
-			<url>https://maven.scijava.org/content/groups/public</url>
-		</repository>
-	</repositories>
+    <dependencies>
+<!--        Fix conflict     -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
 
-	<dependencies>
-		<dependency>
-			<groupId>net.preibisch</groupId>
-			<artifactId>multiview-reconstruction</artifactId>
-			<version>${multiview-reconstruction.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>net.preibisch</groupId>
+            <artifactId>multiview-reconstruction</artifactId>
+            <version>${multiview-reconstruction.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>spim_data</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>bigdataviewer-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>bigdataviewer-vistools</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>sc.fiji</groupId>
+            <artifactId>spim_data</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>sc.fiji</groupId>
+            <artifactId>bigdataviewer-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>sc.fiji</groupId>
+            <artifactId>bigdataviewer-vistools</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-cache</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>net.imglib2</groupId>
+            <artifactId>imglib2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.imglib2</groupId>
+            <artifactId>imglib2-cache</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>net.preibisch</groupId>
-			<artifactId>multiview-simulation</artifactId>
-			<version>${multiview-simulation.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>mpicbg</groupId>
-			<artifactId>mpicbg</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>gov.nist.math</groupId>
-			<artifactId>jama</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-algorithm</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-realtransform</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>fiji-lib</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>net.preibisch</groupId>
+            <artifactId>multiview-simulation</artifactId>
+            <version>${multiview-simulation.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>mpicbg</groupId>
+            <artifactId>mpicbg</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gov.nist.math</groupId>
+            <artifactId>jama</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.imglib2</groupId>
+            <artifactId>imglib2-algorithm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.imglib2</groupId>
+            <artifactId>imglib2-realtransform</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>sc.fiji</groupId>
+            <artifactId>fiji-lib</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-algorithm-fft</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>ij</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-ij</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-ui</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.bigdistributor</groupId>
-			<artifactId>AWS_DataExchange</artifactId>
-			<version>0.1-SNAPSHOT</version>
-		</dependency>
-		<!-- Test scope dependencies -->
-		<dependency>
-			<!-- NB: dependency:analyze erroneously flags this, but it's required -->
-			<groupId>sc.fiji</groupId>
-			<artifactId>legacy-imglib1</artifactId>
-		</dependency>
-	</dependencies>
-	<profiles>
-		<profile>
-			<id>fatjar</id>
-			<build>
-				<plugins>
-					<!-- Maven shade for Uber Jar -->
-					<!-- https://maven.apache.org/plugins/maven-shade-plugin/shade-mojo.html -->
-					<!-- https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/troubleshooting/missing_dependencies_in_jar_files.html -->
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-shade-plugin</artifactId>
-						<configuration>
-							<!-- Do not minimize for now to speed up packaging. -->
-							<transformers combine.children="append">
-								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-									<resource>META-INF/json/org.scijava.plugin.Plugin</resource>
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-									<resource>META-INF/json/mpicbg.spim.data.generic.sequence.ImgLoaderIo</resource>
-								</transformer>
-							</transformers>
-							<!--<minimizeJar>true</minimizeJar> -->
-							<filters>
-								<filter>
-									<artifact>*:*</artifact>
-									<excludes>
-										<exclude>META-INF/*.SF</exclude>
-										<exclude>META-INF/*.DSA</exclude>
-										<exclude>META-INF/*.RSA</exclude>
-									</excludes>
-								</filter>
-							</filters>
-							<!-- Additional configuration. -->
-							<relocations>
-								<relocation>
-									<pattern>org.apache.commons.compress</pattern>
-									<shadedPattern>org.janelia.saalfeldlab.org.apache.commons.compress</shadedPattern>
-								</relocation>
-							</relocations>
-						</configuration>
-						<!-- binds by default to package phase -->
-						<executions>
-							<execution>
-								<phase>package</phase>
-								<goals>
-									<goal>shade</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<!-- Maven shade end -->
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+        <dependency>
+            <groupId>net.imglib2</groupId>
+            <artifactId>imglib2-algorithm-fft</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.imagej</groupId>
+            <artifactId>ij</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.imglib2</groupId>
+            <artifactId>imglib2-ij</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.imglib2</groupId>
+            <artifactId>imglib2-ui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+
+        <!--		AWS related 		-->
+        <dependency>
+            <groupId>com.bigdistributor</groupId>
+            <artifactId>AWS_DataExchange</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.saalfeldlab</groupId>
+            <artifactId>n5-aws-s3</artifactId>
+            <version>3.2.1-SNAPSHOT</version>
+        </dependency>
+        <!-- Test scope dependencies -->
+        <dependency>
+            <!-- NB: dependency:analyze erroneously flags this, but it's required -->
+            <groupId>sc.fiji</groupId>
+            <artifactId>legacy-imglib1</artifactId>
+        </dependency>
+    </dependencies>
+    <profiles>
+        <profile>
+            <id>fatjar</id>
+            <build>
+                <plugins>
+                    <!-- Maven shade for Uber Jar -->
+                    <!-- https://maven.apache.org/plugins/maven-shade-plugin/shade-mojo.html -->
+                    <!-- https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/troubleshooting/missing_dependencies_in_jar_files.html -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <configuration>
+                            <!-- Do not minimize for now to speed up packaging. -->
+                            <transformers combine.children="append">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/json/org.scijava.plugin.Plugin</resource>
+                                </transformer>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/json/mpicbg.spim.data.generic.sequence.ImgLoaderIo</resource>
+                                </transformer>
+                            </transformers>
+                            <!--<minimizeJar>true</minimizeJar> -->
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <!-- Additional configuration. -->
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.apache.commons.compress</pattern>
+                                    <shadedPattern>org.janelia.saalfeldlab.org.apache.commons.compress</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                        <!-- binds by default to package phase -->
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Maven shade end -->
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

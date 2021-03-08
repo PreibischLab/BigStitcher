@@ -54,7 +54,7 @@ public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 			return true;
 		}
 
-		else if ( input.equals( "aws" ) )
+		else if ( input.equals("aws") )
 		{
 			this.message1 = "This will import dataset from AWS, press OK to continue";
 			this.message2 = "";
