@@ -1,17 +1,16 @@
 package net.preibisch.stitcher.aws.gui;
 
-import com.bigdistributor.dataexchange.job.model.Params;
-import com.bigdistributor.dataexchange.utils.DEFAULT;
+import com.bigdistributor.aws.dataexchange.job.model.Params;
+import com.bigdistributor.aws.spimloader.AWSXmlIoSpimData2;
 import fiji.util.gui.GenericDialogPlus;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
-import net.preibisch.stitcher.aws.reader.AWSXmlIoSpimData2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class AWSLoadParseQueryXML extends LoadParseQueryXML {
-    private final static String defaultBucketName = DEFAULT.bucket_name;
+    private final static String defaultBucketName = "bigstitcher";
     private final static String defaultKeyPath = "/Users/Marwan/Desktop/BigDistributer/aws_credentials/bigdistributer.csv";
     private final static String defaultPath = "";
     private final static String defaultFileName = "dataset-n5.xml";
@@ -64,7 +63,7 @@ public class AWSLoadParseQueryXML extends LoadParseQueryXML {
 
     }
     public static void main(String[] args) {
-		new AWSLoadParseQueryXML().queryXML();
-	}
+        new AWSLoadParseQueryXML().queryXML();
+    }
 
 }

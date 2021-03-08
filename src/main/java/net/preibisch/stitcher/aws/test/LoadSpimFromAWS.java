@@ -1,17 +1,17 @@
 package net.preibisch.stitcher.aws.test;
 
-import bdv.img.awsspim.AWSSpimImageLoader;
+import bdv.img.aws.AWSSpimImageLoader;
 import com.amazonaws.regions.Regions;
-import com.bigdistributor.dataexchange.aws.s3.func.auth.AWSCredentialInstance;
-import com.bigdistributor.dataexchange.aws.s3.func.bucket.S3BucketInstance;
-import com.bigdistributor.dataexchange.job.model.JobID;
-import com.bigdistributor.dataexchange.utils.DEFAULT;
+import com.bigdistributor.aws.dataexchange.aws.s3.func.auth.AWSCredentialInstance;
+import com.bigdistributor.aws.dataexchange.aws.s3.func.bucket.S3BucketInstance;
+import com.bigdistributor.aws.dataexchange.utils.AWS_DEFAULT;
+import com.bigdistributor.aws.spimloader.AWSSpimLoader;
+import com.bigdistributor.core.spim.SpimDataLoader;
 import mpicbg.spim.data.SpimDataException;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
-import net.preibisch.stitcher.aws.reader.AWSSpimReader;
 import org.jdom2.JDOMException;
 
 import javax.xml.stream.XMLStreamException;
@@ -21,18 +21,14 @@ public class LoadSpimFromAWS {
 
     public static void main(String[] args) throws SpimDataException, IllegalAccessException, JDOMException, XMLStreamException, IOException {
 
-          // Init S3
-        JobID.set(DEFAULT.bucket_name);
-        AWSCredentialInstance.init(DEFAULT.AWS_CREDENTIALS_PATH);
+        AWSCredentialInstance.init(AWS_DEFAULT.AWS_CREDENTIALS_PATH);
 
-        S3BucketInstance.init(AWSCredentialInstance.get(), Regions.EU_CENTRAL_1, DEFAULT.id);
+        S3BucketInstance.init(AWSCredentialInstance.get(), Regions.EU_CENTRAL_1, AWS_DEFAULT.bucket_name);
 
-        // Init XML
-        AWSSpimReader reader = new AWSSpimReader(S3BucketInstance.get(),"","dataset-n5.xml");
+        SpimDataLoader spimLoader = new AWSSpimLoader(S3BucketInstance.get(),"","dataset-n5.xml");
+        SpimData2 data = spimLoader.getSpimdata();
+        System.out.println(data.toString());
 
-        //Init Spim
-
-        SpimData2 data = reader.getSpim();
 
         System.out.println("Class: " + data.getSequenceDescription().getImgLoader().getClass());
 
