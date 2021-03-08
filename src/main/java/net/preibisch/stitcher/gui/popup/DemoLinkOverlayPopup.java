@@ -2,7 +2,7 @@
  * #%L
  * Multiview stitching of large datasets.
  * %%
- * Copyright (C) 2016 - 2020 Big Stitcher developers.
+ * Copyright (C) 2016 - 2021 Big Stitcher developers.
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -93,7 +93,7 @@ public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSet
 	
 			// remove if it is already there
 			bdv.getViewer().removeTransformListener( overlay );
-			bdv.getViewer().getDisplay().removeTransformListener( overlay );
+			bdv.getViewer().getDisplay().overlays().remove( overlay );
 
 			for ( int i = 0; i < Math.min( oldColors.size(), bdv.getSetupAssignments().getConverterSetups().size() ); ++i )
 				bdv.getSetupAssignments().getConverterSetups().get( i ).setColor( oldColors.get( i ) );

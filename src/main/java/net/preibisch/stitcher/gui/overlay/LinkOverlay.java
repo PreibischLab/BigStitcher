@@ -2,7 +2,7 @@
  * #%L
  * Multiview stitching of large datasets.
  * %%
- * Copyright (C) 2016 - 2020 Big Stitcher developers.
+ * Copyright (C) 2016 - 2021 Big Stitcher developers.
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -40,8 +40,8 @@ import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
 import net.imglib2.Interval;
 import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.ui.OverlayRenderer;
-import net.imglib2.ui.TransformListener;
+import bdv.viewer.OverlayRenderer;
+import bdv.viewer.TransformListener;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;

@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>29.2.1</version>
+		<version>30.0.0</version>
 		<relativePath />
 	</parent>
 
 	<groupId>net.preibisch</groupId>
 	<artifactId>BigStitcher</artifactId>
-	<version>0.7.1-SNAPSHOT</version>
+	<version>0.8.2-SNAPSHOT</version>
 
 	<name>Big Stitcher</name>
 	<description>Multiview stitching of large datasets.</description>
@@ -102,6 +102,10 @@
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
 
 		<jackson.version>2.5.2</jackson.version>
+		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
+		<bigdataviewer_fiji.version>6.2.1</bigdataviewer_fiji.version>
+		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 	</properties>

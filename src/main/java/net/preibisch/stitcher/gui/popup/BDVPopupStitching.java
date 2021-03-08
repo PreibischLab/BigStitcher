@@ -2,7 +2,7 @@
  * #%L
  * Multiview stitching of large datasets.
  * %%
- * Copyright (C) 2016 - 2020 Big Stitcher developers.
+ * Copyright (C) 2016 - 2021 Big Stitcher developers.
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -37,9 +37,9 @@ import javax.swing.JOptionPane;
 
 import bdv.BigDataViewer;
 import bdv.SpimSource;
+import bdv.TransformEventHandler2D;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.tools.transformation.TransformedSource;
-import bdv.util.BehaviourTransformEventHandlerPlanar.BehaviourTransformEventHandlerPlanarFactory;
 import bdv.viewer.ViewerOptions;
 import bdv.viewer.state.SourceGroup;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -295,7 +295,7 @@ public class BDVPopupStitching extends BDVPopup
 		final ViewerOptions options = ViewerOptions.options().accumulateProjectorFactory( MaximumProjectorARGB.factory );
 		if (allViews2D)
 		{
-			options.transformEventHandlerFactory(new BehaviourTransformEventHandlerPlanarFactory() );
+			options.transformEventHandlerFactory( TransformEventHandler2D::new );
 		}
 
 		BigDataViewer bdv = BigDataViewer.open( panel.getSpimData(), 
