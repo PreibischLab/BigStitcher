@@ -11,7 +11,7 @@
 
 	<groupId>net.preibisch</groupId>
 	<artifactId>BigStitcher</artifactId>
-	<version>0.8.2-SNAPSHOT</version>
+	<version>1.2.0-SNAPSHOT</version>
 
 	<name>Big Stitcher</name>
 	<description>Multiview stitching of large datasets.</description>
@@ -96,16 +96,17 @@
 
 	<properties>
 		<package-name>net.preibisch.stitcher</package-name>
+
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
 		<multiview-reconstruction.version>0.10.1</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
 
-		<jackson.version>2.5.2</jackson.version>
 		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
 		<bigdataviewer_fiji.version>6.2.1</bigdataviewer_fiji.version>
 		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
+
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 	</properties>
@@ -196,7 +197,11 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>com.bigdistributor</groupId>
+			<artifactId>AWS_DataExchange</artifactId>
+			<version>0.1-SNAPSHOT</version>
+		</dependency>
 		<!-- Test scope dependencies -->
 		<dependency>
 			<!-- NB: dependency:analyze erroneously flags this, but it's required -->
