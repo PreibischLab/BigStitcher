@@ -29,7 +29,7 @@ import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
-import net.preibisch.stitcher.aws.gui.AWSLoadParseQueryXML;
+import net.preibisch.stitcher.aws.gui.AWSLoadGui;
 import net.preibisch.stitcher.gui.StitchingExplorer;
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
@@ -61,34 +61,24 @@ public class BigStitcher implements Command, PlugIn {
         });
 
         result.addButton("AWS Input", e -> {
-            ((TextField) result.getGenericDialog().getStringFields().firstElement()).setText("aws");
-//            Button ok = result.getGenericDialog().getButtons()[0];
-//
-//            ActionEvent ae = new ActionEvent(ok, ActionEvent.ACTION_PERFORMED, "");
-//            Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(ae);
-
             result.getGenericDialog().setVisible(false);
 
-//            awsMode = true;
+            AWSLoadGui awsLoadGui = new AWSLoadGui();
+            if (!awsLoadGui.readData())
+                return;
 
-            LoadParseQueryXML lpq = new AWSLoadParseQueryXML();
+            LoadParseQueryXML lpq = awsLoadGui.getResult();
 
-            lpq.queryXML();
             startExplorer(lpq.getData(), lpq.getXMLFileName(), lpq.getIO());
             return;
         });
 
 
+        System.out.println(newDataset);
         if (!result.queryXML("Stitching Explorer", "", false, false, false, false, false) && !newDataset) {
-            System.out.println("return here");
             return;
         }
 
-        if (awsMode) {
-            System.out.println("AWS mode..");
-            return;
-        }
-        System.out.println("contine");
         final SpimData2 data = result.getData();
         final String xml = result.getXMLFileName();
         final XmlIoSpimData2 io = result.getIO();

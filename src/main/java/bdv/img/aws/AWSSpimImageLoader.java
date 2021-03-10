@@ -30,6 +30,7 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.type.volatiles.*;
 import net.imglib2.util.Cast;
 import net.imglib2.view.Views;
+import net.preibisch.stitcher.aws.reader.AWSDataParam;
 import org.janelia.saalfeldlab.n5.*;
 import org.janelia.saalfeldlab.n5.s3.N5AmazonS3Reader;
 
@@ -85,8 +86,10 @@ public class AWSSpimImageLoader implements ViewerImgLoader, MultiResolutionImgLo
 
                 try
                 {
-                    System.out.println("N5 file = "+n5File.getName());
-                    this.n5 = new N5AmazonS3Reader(S3BucketInstance.get().getS3(), S3BucketInstance.get().getBucketName(),n5File.getName());
+                    String path = AWSDataParam.get().getPath();
+                    String file = path.isEmpty() ? n5File.getName() : new File(path, n5File.getName()).getPath();
+                    System.out.println("N5 file = "+file);
+                    this.n5 = new N5AmazonS3Reader(S3BucketInstance.get().getS3(), S3BucketInstance.get().getBucketName(),file);
 
 //                    this.n5 = new N5FSReader( n5File.getAbsolutePath() );
 

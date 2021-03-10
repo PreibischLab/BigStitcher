@@ -21,43 +21,6 @@
  */
 package net.preibisch.stitcher.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Vector;
-import java.util.stream.Collectors;
-
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultListSelectionModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableCellRenderer;
-
 import bdv.BigDataViewer;
 import bdv.ViewerImgLoader;
 import bdv.tools.brightness.ConverterSetup;
@@ -69,15 +32,11 @@ import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
+import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.data.sequence.Angle;
-import mpicbg.spim.data.sequence.Channel;
-import mpicbg.spim.data.sequence.Illumination;
-import mpicbg.spim.data.sequence.Tile;
-import mpicbg.spim.data.sequence.TimePoint;
-import mpicbg.spim.data.sequence.ViewId;
+import mpicbg.spim.data.sequence.*;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
@@ -86,31 +45,10 @@ import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.util.MultiWindowLayoutHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.SpimDataTools;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedTableModel;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.ISpimDataTableModel;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerInfoBox;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerPanel;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.*;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.bdv.ScrollableBrightnessDialog;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BakeManualTransformationPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BoundingBoxPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DisplayFusedImagesPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.DisplayRawImagesPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.FlatFieldCorrectionPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.FusionPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.LabelPopUp;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.MaxProjectPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.QualityPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.RemoveTransformationPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ResavePopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.Separator;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.SimpleHyperlinkPopup;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.VisualizeNonRigid;
+import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.*;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.util.ColorStream;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.filemap2.FileMapImgLoaderLOCI2;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.flatfield.FlatfieldCorrectionWrappedImgLoader;
@@ -122,26 +60,27 @@ import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.globalopt.ExecuteGlobalOpt;
+import net.preibisch.stitcher.aws.S3DataExchanger;
+import net.preibisch.stitcher.aws.reader.AWSDataParam;
 import net.preibisch.stitcher.gui.bdv.BDVVisibilityHandlerNeighborhood;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 import net.preibisch.stitcher.gui.overlay.LinkOverlay;
-import net.preibisch.stitcher.gui.popup.BDVPopupStitching;
-import net.preibisch.stitcher.gui.popup.CalculatePCPopup;
+import net.preibisch.stitcher.gui.popup.*;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopup.Method;
-import net.preibisch.stitcher.gui.popup.CalculatePCPopupExpertBatch;
-import net.preibisch.stitcher.gui.popup.DemoLinkOverlayPopup;
-import net.preibisch.stitcher.gui.popup.FlipAxesPopup;
-import net.preibisch.stitcher.gui.popup.FastFusionPopup;
-import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopup;
-import net.preibisch.stitcher.gui.popup.ReadTileConfigurationPopup;
-import net.preibisch.stitcher.gui.popup.RefineWithICPPopup;
-import net.preibisch.stitcher.gui.popup.RegularGridPopup;
-import net.preibisch.stitcher.gui.popup.SelectIlluminationPopup;
-import net.preibisch.stitcher.gui.popup.SimpleSubMenu;
-import net.preibisch.stitcher.gui.popup.SkewImagesPopup;
-import net.preibisch.stitcher.gui.popup.TranslateGroupManuallyPopup;
-import net.preibisch.stitcher.gui.popup.VerifyLinksPopup;
 import net.preibisch.stitcher.input.FractalImgLoader;
+
+import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS >>
 		extends FilteredAndGroupedExplorerPanel< AS, X > implements ExplorerWindow< AS, X >
@@ -352,7 +291,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			}
 
 			if (doGlobalOpt)
-				new Thread( new ExecuteGlobalOpt( this, savedFilteringAndGrouping ) ).start();
+				new Thread( new ExecuteGlobalOpt((ExplorerWindow<? extends AbstractSpimData<? extends AbstractSequenceDescription<?, ?, ?>>, ?>) this, savedFilteringAndGrouping ) ).start();
 
 			// discard the temp. SpimDataFilteringAndGrouping
 			// if we discard it right now, but want to do global opt (which runs asynchronously)
@@ -1127,10 +1066,15 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					}
 				}
 			}
+			if(AWSDataParam.isCloudMode()){
+				System.out.println( "Saving data in S3.." );
+				S3DataExchanger.send(AWSDataParam.get().getLocalFolder());
+			}
 
 			IOFunctions.println( "Saved XML '" + xml + "'." );
+
 		}
-		catch ( SpimDataException e )
+		catch (SpimDataException | IllegalAccessException | IOException | InterruptedException e )
 		{
 			IOFunctions.println( "Failed to save XML '" + xml + "': " + e );
 			e.printStackTrace();
@@ -1142,7 +1086,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	protected void addDemoLink()
 	{
 		table.addKeyListener( this.demoLinkOverlayPopup );
-		this.demoLinkOverlayPopup.setExplorerWindow( this );
+		this.demoLinkOverlayPopup.setExplorerWindow((ExplorerWindow<? extends AbstractSpimData<? extends AbstractSequenceDescription<?, ?, ?>>, ?>) this);
 	}
 
 	protected void addColorMode()
