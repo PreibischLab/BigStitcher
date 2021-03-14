@@ -4,7 +4,7 @@ import com.amazonaws.regions.Regions;
 import com.bigdistributor.aws.dataexchange.aws.s3.func.auth.AWSCredentialInstance;
 import com.bigdistributor.aws.dataexchange.aws.s3.func.bucket.S3BucketInstance;
 import fiji.util.gui.GenericDialogPlus;
-import net.preibisch.stitcher.aws.reader.AWSDataParam;
+import net.preibisch.stitcher.aws.tools.AWSDataParam;
 import net.preibisch.stitcher.aws.spimloader.AWSLoadParseQueryXML;
 import net.preibisch.stitcher.aws.tools.TempFolder;
 

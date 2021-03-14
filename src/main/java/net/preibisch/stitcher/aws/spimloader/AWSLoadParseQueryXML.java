@@ -5,7 +5,7 @@ import com.bigdistributor.aws.dataexchange.aws.s3.func.bucket.S3BucketInstance;
 import mpicbg.spim.data.SpimDataException;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
-import net.preibisch.stitcher.aws.reader.AWSDataParam;
+import net.preibisch.stitcher.aws.tools.AWSDataParam;
 
 import java.io.File;
 import java.io.IOException;

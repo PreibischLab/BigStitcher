@@ -1,7 +1,6 @@
-package net.preibisch.stitcher.aws.reader;
+package net.preibisch.stitcher.aws.tools;
 
 import com.amazonaws.regions.Regions;
-import net.preibisch.stitcher.aws.tools.TempFolder;
 
 import java.io.File;
 

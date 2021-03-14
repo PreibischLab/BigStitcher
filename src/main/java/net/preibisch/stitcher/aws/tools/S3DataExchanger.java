@@ -1,7 +1,6 @@
-package net.preibisch.stitcher.aws;
+package net.preibisch.stitcher.aws.tools;
 
 import com.bigdistributor.aws.dataexchange.aws.s3.func.bucket.S3BucketInstance;
-import net.preibisch.stitcher.aws.reader.AWSDataParam;
 
 import java.io.File;
 import java.io.IOException;

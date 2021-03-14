@@ -30,7 +30,7 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.type.volatiles.*;
 import net.imglib2.util.Cast;
 import net.imglib2.view.Views;
-import net.preibisch.stitcher.aws.reader.AWSDataParam;
+import net.preibisch.stitcher.aws.tools.AWSDataParam;
 import org.janelia.saalfeldlab.n5.*;
 import org.janelia.saalfeldlab.n5.s3.N5AmazonS3Reader;
 
