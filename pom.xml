@@ -104,7 +104,7 @@
 
         <license.licenseName>gpl_v2</license.licenseName>
         <license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
-        <multiview-reconstruction.version>0.10.1</multiview-reconstruction.version>
+        <multiview-reconstruction.version>1.1.2-SNAPSHOT</multiview-reconstruction.version>
         <multiview-simulation.version>0.2.0</multiview-simulation.version>
 
         <bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
@@ -126,20 +126,40 @@
     <dependencies>
         <!--        Fix conflict     -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.13</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
+            <version>2.6.7.4</version>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson.version}</version>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.2</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-core</artifactId>-->
+<!--            <version>${jackson.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-databind</artifactId>-->
+<!--            <version>${jackson.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-annotations</artifactId>-->
+<!--            <version>${jackson.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.httpcomponents</groupId>-->
+<!--            <artifactId>httpclient</artifactId>-->
+<!--            <version>4.3.4</version>-->
+<!--        </dependency>-->
         <!--         / Fix conflict     -->
         <dependency>
             <groupId>net.preibisch</groupId>
@@ -220,17 +240,6 @@
             <artifactId>junit</artifactId>
         </dependency>
 
-        <!--		AWS related 		-->
-        <dependency>
-            <groupId>com.bigdistributor</groupId>
-            <artifactId>AWS_DataExchange</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.saalfeldlab</groupId>
-            <artifactId>n5-aws-s3</artifactId>
-            <version>3.2.1-SNAPSHOT</version>
-        </dependency>
         <!-- Test scope dependencies -->
         <dependency>
             <!-- NB: dependency:analyze erroneously flags this, but it's required -->

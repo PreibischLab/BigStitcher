@@ -24,12 +24,12 @@ package net.preibisch.stitcher.plugin;
 
 import ij.ImageJ;
 import ij.plugin.PlugIn;
+import net.preibisch.aws.gui.AWSLoadGui;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
-import net.preibisch.stitcher.aws.gui.AWSLoadGui;
 import net.preibisch.stitcher.gui.StitchingExplorer;
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
@@ -107,7 +107,7 @@ public class BigStitcher implements Command, PlugIn {
     }
 
     public static void main(String[] args) {
-//        setupTesting();
+        setupTesting();
         new BigStitcher().run();
     }
 }
