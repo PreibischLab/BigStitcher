@@ -407,8 +407,11 @@ public class ICPRefinement
 		final IterativeClosestPointParameters icpp =
 				new IterativeClosestPointParameters(
 						params.transformationModel,
+						params.maxError * 2,
+						100,
+						true,
 						params.maxError,
-						100 );
+						200 );
 
 		final Map< ViewId, String > labelMap = new HashMap<>();
 
