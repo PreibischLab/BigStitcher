@@ -19,7 +19,7 @@
 	<inceptionYear>2016</inceptionYear>
 	<organization>
 		<name>Preibisch Lab</name>
-		<url>http://preibischlab.mdc-berlin.de</url>
+		<url>https://preibischlab.mdc-berlin.de</url>
 	</organization>
 	<licenses>
 		<license>
@@ -33,7 +33,7 @@
 		<developer>
 			<id>StephanPreibisch</id>
 			<name>Stephan Preibisch</name>
-			<url>https://imagej.net/User:StephanP</url>
+			<url>https://imagej.net/people/StephanPreibisch</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -47,7 +47,7 @@
 		<developer>
 			<id>hoerldavid</id>
 			<name>David Hoerl</name>
-			<url>https://imagej.net/User:Davidhoerl</url>
+			<url>https://imagej.net/people/hoerldavid</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -62,12 +62,12 @@
 	<contributors>
 		<contributor>
 			<name>Tobias Pietzsch</name>
-			<url>https://imagej.net/User:Pietzsch</url>
+			<url>https://imagej.net/people/tpietzsch</url>
 			<properties><id>tpietzsch</id></properties>
 		</contributor>
 		<contributor>
 			<name>Curtis Rueden</name>
-			<url>https://imagej.net/User:Rueden</url>
+			<url>https://imagej.net/people/ctrueden</url>
 			<properties><id>ctrueden</id></properties>
 		</contributor>
 	</contributors>
@@ -75,7 +75,7 @@
 	<mailingLists>
 		<mailingList>
 			<name>Image.sc Forum</name>
-			<archive>https://forum.image.sc/tags/bigstitcher</archive>
+			<archive>https://forum.image.sc/tag/bigstitcher</archive>
 		</mailingList>
 	</mailingLists>
 
