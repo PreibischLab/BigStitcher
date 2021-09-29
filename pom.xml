@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>30.0.0</version>
+		<version>31.1.0</version>
 		<relativePath />
 	</parent>
 
@@ -99,13 +99,9 @@
 
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
+
 		<multiview-reconstruction.version>0.11.0</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
-
-		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
-		<bigdataviewer_fiji.version>6.2.1</bigdataviewer_fiji.version>
-		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
@@ -189,20 +185,18 @@
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-ij</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-ui</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-		</dependency>
 
-		<!-- Test scope dependencies -->
 		<dependency>
 			<!-- NB: dependency:analyze erroneously flags this, but it's required -->
 			<groupId>sc.fiji</groupId>
 			<artifactId>legacy-imglib1</artifactId>
+		</dependency>
+
+		<!-- Test scope dependencies -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<profiles>
