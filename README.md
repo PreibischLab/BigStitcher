@@ -1,2 +1,2 @@
-[![](https://travis-ci.org/PreibischLab/BigStitcher.svg?branch=master)](https://travis-ci.org/PreibischLab/BigStitcher)
+[![](https://github.com/PreibischLab/BigStitcher/actions/workflows/build-main.yml/badge.svg)](https://github.com/PreibischLab/BigStitcher/actions/workflows/build-main.yml)
 

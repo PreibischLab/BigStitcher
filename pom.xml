@@ -90,8 +90,8 @@
 		<url>https://github.com/PreibischLab/BigStitcher/issues</url>
 	</issueManagement>
 	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.org/PreibischLab/BigStitcher</url>
+		<system>GitHub Actions</system>
+		<url>https://github.com/PreibischLab/BigStitcher/actions</url>
 	</ciManagement>
 
 	<properties>
@@ -108,7 +108,7 @@
 		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
-		<releaseProfiles>deploy-to-scijava</releaseProfiles>
+		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 	</properties>
 
 	<repositories>
