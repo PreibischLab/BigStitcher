@@ -80,7 +80,7 @@
 	</mailingLists>
 
 	<scm>
-		<connection>scm:git:git://github.com/PreibischLab/BigStitcher</connection>
+		<connection>scm:git:https://github.com/PreibischLab/BigStitcher</connection>
 		<developerConnection>scm:git:git@github.com:PreibischLab/BigStitcher</developerConnection>
 		<tag>HEAD</tag>
 		<url>https://github.com/PreibischLab/BigStitcher</url>
