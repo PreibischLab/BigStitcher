@@ -411,7 +411,8 @@ public class ICPRefinement
 						100,
 						true,
 						params.maxError,
-						200 );
+						200,
+						IterativeClosestPointParameters.defaultMinNumPoints );
 
 		final Map< ViewId, String > labelMap = new HashMap<>();
 
