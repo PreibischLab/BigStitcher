@@ -19,7 +19,7 @@
 	<inceptionYear>2016</inceptionYear>
 	<organization>
 		<name>Preibisch Lab</name>
-		<url>http://preibischlab.mdc-berlin.de</url>
+		<url>https://preibischlab.mdc-berlin.de</url>
 	</organization>
 	<licenses>
 		<license>
@@ -33,7 +33,7 @@
 		<developer>
 			<id>StephanPreibisch</id>
 			<name>Stephan Preibisch</name>
-			<url>https://imagej.net/User:StephanP</url>
+			<url>https://imagej.net/people/StephanPreibisch</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -47,7 +47,7 @@
 		<developer>
 			<id>hoerldavid</id>
 			<name>David Hoerl</name>
-			<url>https://imagej.net/User:Davidhoerl</url>
+			<url>https://imagej.net/people/hoerldavid</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -62,12 +62,12 @@
 	<contributors>
 		<contributor>
 			<name>Tobias Pietzsch</name>
-			<url>https://imagej.net/User:Pietzsch</url>
+			<url>https://imagej.net/people/tpietzsch</url>
 			<properties><id>tpietzsch</id></properties>
 		</contributor>
 		<contributor>
 			<name>Curtis Rueden</name>
-			<url>https://imagej.net/User:Rueden</url>
+			<url>https://imagej.net/people/ctrueden</url>
 			<properties><id>ctrueden</id></properties>
 		</contributor>
 	</contributors>
@@ -75,12 +75,12 @@
 	<mailingLists>
 		<mailingList>
 			<name>Image.sc Forum</name>
-			<archive>https://forum.image.sc/tags/bigstitcher</archive>
+			<archive>https://forum.image.sc/tag/bigstitcher</archive>
 		</mailingList>
 	</mailingLists>
 
 	<scm>
-		<connection>scm:git:git://github.com/PreibischLab/BigStitcher</connection>
+		<connection>scm:git:https://github.com/PreibischLab/BigStitcher</connection>
 		<developerConnection>scm:git:git@github.com:PreibischLab/BigStitcher</developerConnection>
 		<tag>HEAD</tag>
 		<url>https://github.com/PreibischLab/BigStitcher</url>
@@ -90,8 +90,8 @@
 		<url>https://github.com/PreibischLab/BigStitcher/issues</url>
 	</issueManagement>
 	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.org/PreibischLab/BigStitcher</url>
+		<system>GitHub Actions</system>
+		<url>https://github.com/PreibischLab/BigStitcher/actions</url>
 	</ciManagement>
 
 	<properties>
@@ -99,16 +99,11 @@
 
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
-		<multiview-reconstruction.version>0.11.1</multiview-reconstruction.version>
+		<multiview-reconstruction.version>0.11.2</multiview-reconstruction.version>
 		<multiview-simulation.version>0.2.0</multiview-simulation.version>
 
-		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
-		<bigdataviewer_fiji.version>6.2.1</bigdataviewer_fiji.version>
-		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
-
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
-		<releaseProfiles>deploy-to-scijava</releaseProfiles>
+		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 	</properties>
 
 	<repositories>
@@ -189,20 +184,18 @@
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-ij</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-ui</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-		</dependency>
 
-		<!-- Test scope dependencies -->
 		<dependency>
 			<!-- NB: dependency:analyze erroneously flags this, but it's required -->
 			<groupId>sc.fiji</groupId>
 			<artifactId>legacy-imglib1</artifactId>
+		</dependency>
+
+		<!-- Test scope dependencies -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<profiles>
