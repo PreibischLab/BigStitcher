@@ -179,20 +179,20 @@ public class StitchingPairwise
 		{
 			if ( dsy > 1 )
 			{
-				input = Downsample.simple2x( input, new ArrayImgFactory<>( new FloatType() ), new boolean[]{ false, true, false }, service );
+				input = Downsample.simple2x( input, new boolean[]{ false, true, false } );
 				dsy /= 2;
 			}
 
 			if ( dsx > 1 )
 			{
-				input = Downsample.simple2x( input, new ArrayImgFactory<>( new FloatType() ), new boolean[]{ true, false, false }, service );
+				input = Downsample.simple2x( input, new boolean[]{ true, false, false } );
 				dsx /= 2;
 			}
 
 
 			if ( dsz > 1 )
 			{
-				input = Downsample.simple2x( input, new ArrayImgFactory<>( new FloatType() ), new boolean[]{ false, false, true }, service );
+				input = Downsample.simple2x( input, new boolean[]{ false, false, true } );
 				dsz /= 2;
 			}
 		}

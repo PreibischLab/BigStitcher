@@ -496,11 +496,12 @@ public class Align<T extends RealType< T >>
 		final ExecutorService service = Executors.newFixedThreadPool( Threads.numThreads() );
 
 		// downsample input
-		RandomAccessibleInterval<FloatType> simple2x1 = Downsample.simple2x(Views.zeroMin(Views.interval(a, interval1)),
-				new ArrayImgFactory<>( new FloatType() ), new boolean[] { true, true, false }, service);
+		RandomAccessibleInterval<FloatType> simple2x1 = Downsample.simple2x(
+				Views.zeroMin(Views.interval(a, interval1)),
+				new boolean[] { true, true, false });
 		RandomAccessibleInterval<FloatType> simple2x2 = Downsample.simple2x(
-				Views.zeroMin(Views.interval(rotated, interval2)), new ArrayImgFactory<>( new FloatType() ),
-				new boolean[] { true, true, false }, service );
+				Views.zeroMin(Views.interval(rotated, interval2)),
+				new boolean[] { true, true, false } );
 
 		// align
 

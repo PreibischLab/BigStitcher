@@ -342,7 +342,7 @@ public class Fast_Translation_Fusion implements PlugIn
 							// TODO: load T, not float?
 							RandomAccessibleInterval< FloatType > downsampledImg = DownsampleTools.openAndDownsample(
 									spimData.getSequenceDescription().getImgLoader(), presentViewDescriptions.get( i2 ),
-									new AffineTransform3D(), new long[] { parameters.downsampling, parameters.downsampling, parameters.downsampling }, false, true, true, pool );
+									new AffineTransform3D(), new long[] { parameters.downsampling, parameters.downsampling, parameters.downsampling }, false, true );
 							return new ValuePair< Integer, RandomAccessibleInterval<FloatType> >( i2, downsampledImg );
 						}
 					});
