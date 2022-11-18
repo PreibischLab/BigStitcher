@@ -185,11 +185,6 @@
 			<artifactId>imglib2-ij</artifactId>
 		</dependency>
 
-		<dependency>
-			<!-- NB: dependency:analyze erroneously flags this, but it's required -->
-			<groupId>sc.fiji</groupId>
-			<artifactId>legacy-imglib1</artifactId>
-		</dependency>
 
 		<!-- Test scope dependencies -->
 		<dependency>

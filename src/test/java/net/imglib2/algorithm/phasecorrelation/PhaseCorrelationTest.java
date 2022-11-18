@@ -21,19 +21,16 @@
  */
 package net.imglib2.algorithm.phasecorrelation;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.math3.ode.ExpandableStatefulODE;
 import org.junit.Test;
 
-import mpicbg.imglib.interpolation.linear.LinearInterpolatorFactory;
-import mpicbg.imglib.outofbounds.OutOfBoundsStrategyFactory;
 import net.imglib2.FinalInterval;
-import net.imglib2.FinalRealInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
