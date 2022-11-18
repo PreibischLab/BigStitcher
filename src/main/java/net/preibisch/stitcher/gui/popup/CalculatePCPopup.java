@@ -2,7 +2,7 @@
  * #%L
  * Multiview stitching of large datasets.
  * %%
- * Copyright (C) 2016 - 2021 Big Stitcher developers.
+ * Copyright (C) 2016 - 2022 Big Stitcher developers.
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
