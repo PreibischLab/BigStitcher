@@ -139,11 +139,12 @@ public class RigidWarp implements WarpFunction
 		final ExecutorService service = Executors.newFixedThreadPool( Threads.numThreads() );
 
 		// downsample input
-		RandomAccessibleInterval<FloatType> simple2x1 = Downsample.simple2x(Views.zeroMin(Views.interval(a, interval1)),
-				new ArrayImgFactory<>( new FloatType() ), new boolean[] { false, false }, service );
+		RandomAccessibleInterval<FloatType> simple2x1 = Downsample.simple2x(
+				Views.zeroMin(Views.interval(a, interval1)),
+				new boolean[] { false, false } );
 		RandomAccessibleInterval<FloatType> simple2x2 = Downsample.simple2x(
-				Views.zeroMin(Views.interval(rotated, interval2)), new ArrayImgFactory<>( new FloatType() ),
-				new boolean[] { false, false }, service );
+				Views.zeroMin(Views.interval(rotated, interval2)),
+				new boolean[] { false, false } );
 
 		// align
 

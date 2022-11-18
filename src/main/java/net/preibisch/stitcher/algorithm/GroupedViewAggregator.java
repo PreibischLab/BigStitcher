@@ -378,7 +378,7 @@ public class GroupedViewAggregator
 				if ( !dsAdjusted )
 				{
 					// we only get the transformation for downsampling once (could be three channels averaged here)
-					DownsampleTools.openAndDownsample( sd.getImgLoader(), vid, dsCorrectionT, downsampleFactors, true, false, false, service );
+					DownsampleTools.openAndDownsample( sd.getImgLoader(), vid, dsCorrectionT, downsampleFactors, true, false );
 					dsAdjusted = true;
 				}
 			}

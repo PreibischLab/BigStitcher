@@ -46,8 +46,8 @@ public class PhaseCorrelationTest2
 
 		final ExecutorService service = Executors.newFixedThreadPool( Threads.numThreads() );
 
-		image1 = Downsample.downsample( image1, new long[] {4,4,2}, service );
-		image2 = Downsample.downsample( image2, new long[] {4,4,2}, service );
+		image1 = Downsample.downsample( image1, new long[] {4,4,2} );
+		image2 = Downsample.downsample( image2, new long[] {4,4,2} );
 		
 		//Img<  FloatType > image1 = ImgLib2Util.openAs32Bit( new File( "boats.tif" ) );
 		//Img<  FloatType > image2 = ImgLib2Util.openAs32Bit( new File( "boatsm10,5-m20,5.tif" ) );
