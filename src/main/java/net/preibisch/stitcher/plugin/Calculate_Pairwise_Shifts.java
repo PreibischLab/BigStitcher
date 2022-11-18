@@ -23,7 +23,6 @@ package net.preibisch.stitcher.plugin;
 
 import java.awt.Font;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,6 +50,7 @@ import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Detection;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.TransformationModelGUI;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters.InterestPointOverlapType;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.GroupParameters.InterestpointGroupingType;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.resave.ProgressWriterIJ;
@@ -393,9 +393,20 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 
 			final Interest_Point_Registration reg = new Interest_Point_Registration();
 			// run the registration for this pair, skip saving results if it did not work
-			if ( !reg.processRegistration( setup, brp.pwr,
-					InterestpointGroupingType.ADD_ALL, 0.0, pair.getA().getViews(), null, null, registrationMap,
-					ipMap, brp.labelMap, true ) )
+			if ( !reg.processRegistration(
+					setup,
+					brp.pwr,
+					InterestpointGroupingType.ADD_ALL,
+					InterestPointOverlapType.ALL,
+					0.0,
+					pair.getA().getViews(),
+					null,
+					null,
+					registrationMap,
+					data.getSequenceDescription().getViewDescriptions(),
+					ipMap,
+					brp.labelMap,
+					true ) )
 				continue;
 
 			// get newest Transformation of groupB (the accumulative transform
