@@ -111,15 +111,6 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 
 	private final static String[] dimensionNames = new String[] {"X", "Y", "Z"};
 
-	private final static String[][] imageFiles = new String[][]{
-		{		"/images/row1.png","/images/row2.png","/images/row3.png","/images/row4.png",
-			"/images/column1.png","/images/column2.png","/images/column3.png","/images/column4.png"},
-		{"/images/snake1.png","/images/snake2.png","/images/snake3.png","/images/snake4.png",
-		"/images/snake5.png","/images/snake6.png","/images/snake7.png","/images/snake8.png"}
-		};
-		
-	
-
 	public PreviewRegularGridPanel(ExplorerWindow< AS, ? > parent)
 	{
 		int iconSizeX = 80;
@@ -130,7 +121,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 		{
 			for (int i = 0; i < 2; i++)
 				for (int j = 0; j < 8; j++)
-					images[i][j] = ImageIO.read( getClass().getResource(imageFiles[i][j] ) ).getScaledInstance( iconSizeX, iconSizeY, Image.SCALE_SMOOTH );
+					images[i][j] = ImageIO.read( RegularTranformHelpers.imageFiles.get(i * 8 + j) ).getScaledInstance( iconSizeX, iconSizeY, Image.SCALE_SMOOTH );
 		}
 		catch (IOException e)
 		{
