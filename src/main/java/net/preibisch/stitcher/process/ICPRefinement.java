@@ -684,7 +684,7 @@ public class ICPRefinement
 		int count = 0;
 		for ( final ViewId view : viewIdsToProcess )
 		{
-			final double[] minmax = FusionTools.minMaxApprox( DownsampleTools.openAtLowestLevel( imgLoader, view ) );
+			final double[] minmax = FusionTools.minMaxApprox1( DownsampleTools.openAtLowestLevel( imgLoader, view ) );
 			min = Math.min( min, minmax[ 0 ] );
 			max = Math.max( max, minmax[ 1 ] );
 
