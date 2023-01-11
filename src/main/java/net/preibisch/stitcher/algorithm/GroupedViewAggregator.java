@@ -373,12 +373,13 @@ public class GroupedViewAggregator
 			// if view is not present, add null as the RAIProxy
 			if ( vd.isPresent() )
 			{
-				rai = new RAIProxy< T >( sd.getImgLoader(), vid, downsampleFactors, service );
+				rai = new RAIProxy< T >( sd.getImgLoader(), vid, downsampleFactors );
 
 				if ( !dsAdjusted )
 				{
 					// we only get the transformation for downsampling once (could be three channels averaged here)
-					DownsampleTools.openAndDownsample( sd.getImgLoader(), vid, dsCorrectionT, downsampleFactors, true, false );
+					dsCorrectionT.set( DownsampleTools.getMipMapTransform( sd.getImgLoader(), vid, downsampleFactors) );
+					//DownsampleTools.openAndDownsample( sd.getImgLoader(), vid, dsCorrectionT, downsampleFactors, true, false );
 					dsAdjusted = true;
 				}
 			}

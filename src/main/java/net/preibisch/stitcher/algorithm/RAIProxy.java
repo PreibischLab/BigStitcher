@@ -39,22 +39,20 @@ public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterva
 	private BasicImgLoader imgLoader;
 	private ViewId vid;
 	private long[] downsampleFactors;
-	private ExecutorService service;
 
-	public RAIProxy(BasicImgLoader imgLoader, ViewId vid, long[] downsampleFactors, final ExecutorService service )
+	public RAIProxy(BasicImgLoader imgLoader, ViewId vid, long[] downsampleFactors )
 	{
 		this.rai = null;
 		this.downsampleFactors = downsampleFactors;
 		this.imgLoader = imgLoader;
 		this.vid = vid;
-		this.service = service;
 	}
 	
 	@SuppressWarnings("unchecked")
 	private void loadIfNecessary()
 	{
 		if (rai == null)
-			rai = DownsampleTools.openAndDownsample( imgLoader, vid, null, downsampleFactors, false, false );
+			rai = DownsampleTools.openAndDownsample( imgLoader, vid, downsampleFactors ).getA();
 	}
 	
 	@Override

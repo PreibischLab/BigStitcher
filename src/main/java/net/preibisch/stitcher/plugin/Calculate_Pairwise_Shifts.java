@@ -23,6 +23,7 @@ package net.preibisch.stitcher.plugin;
 
 import java.awt.Font;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import ij.ImageJ;
 import ij.gui.GenericDialog;
 import ij.plugin.PlugIn;
 import mpicbg.spim.data.generic.base.Entity;
@@ -85,6 +87,8 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 	@Override
 	public void run(String arg)
 	{
+		new ImageJ();
+		IOFunctions.printIJLog = true;
 
 		final LoadParseQueryXML result = new LoadParseQueryXML();
 		if ( !result.queryXML( "for pairwise shift calculation", true, true, true, true, true ) )
@@ -158,6 +162,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 		}
 
 		// update XML
+		IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Saving XML ... " );
 		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
 	}
 	
@@ -173,9 +178,12 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			long[] dsFactors)
 	{
 		// getpairs to compare
+		IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Finding pairs to compute overlap ... " );
+
 		List< ? extends Pair< ? extends Group< ? extends ViewId >, ? extends Group< ? extends ViewId > > > pairs =  filteringAndGrouping.getComparisons();
 
 		// calculate
+		IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Computing overlap ... " );
 		final ArrayList< PairwiseStitchingResult< ViewId > > results = TransformationTools.computePairs(
 				(List< Pair< Group< ViewId >, Group< ViewId > > >) pairs, params, filteringAndGrouping.getSpimData().getViewRegistrations(), 
 				filteringAndGrouping.getSpimData().getSequenceDescription(), filteringAndGrouping.getGroupedViewAggregator(),
@@ -184,6 +192,8 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 		// remove old results
 
 		// this is just a cast of pairs to Group<ViewId>
+		IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Organizing resuls ... " );
+
 		final List< ValuePair< Group< ViewId >, Group< ViewId > > > castPairs = pairs.stream().map( p -> {
 			final Group< ViewId > vidGroupA = new Group<>( p.getA().getViews().stream().map( v -> (ViewId) v ).collect( Collectors.toSet() ) );
 			final Group< ViewId > vidGroupB = new Group<>( p.getB().getViews().stream().map( v -> (ViewId) v ).collect( Collectors.toSet() ) );
