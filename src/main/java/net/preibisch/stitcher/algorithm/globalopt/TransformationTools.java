@@ -429,8 +429,8 @@ public class TransformationTools
 
 		// remove non-overlapping comparisons
 		final List< Pair< Group< V >, Group< V > > > removedPairs = filterNonOverlappingPairs( pairs, vrs, sd );
-		removedPairs
-				.forEach( p -> IOFunctions.println( "Skipping non-overlapping pair: " + p.getA() + " -> " + p.getB() ) );
+		//removedPairs.forEach( p -> IOFunctions.println( "Skipping non-overlapping pair: " + p.getA() + " -> " + p.getB() ) );
+		IOFunctions.println( "Skipping " + removedPairs.size() + " non-overlapping pairs.");
 
 		final int nComparisions = pairs.size();
 		AtomicInteger nCompleted = new AtomicInteger();
@@ -546,7 +546,7 @@ public class TransformationTools
 
 		// remove non-overlapping comparisons
 		final List< Pair< Group< V >, Group< V > > > removedPairs = filterNonOverlappingPairs( pairs, vrs, sd );
-		removedPairs.forEach( p -> System.out.println( "Skipping non-overlapping pair: " + p.getA() + " -> " + p.getB() ) );
+		//removedPairs.forEach( p -> System.out.println( "Skipping non-overlapping pair: " + p.getA() + " -> " + p.getB() ) );
 		IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Removed " + removedPairs.size() + " non-overlapping view-pairs for computing." );
 
 		final int nComparisions = pairs.size();
