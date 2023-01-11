@@ -131,7 +131,6 @@ import net.preibisch.stitcher.gui.popup.CalculatePCPopup.Method;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopupExpertBatch;
 import net.preibisch.stitcher.gui.popup.DemoLinkOverlayPopup;
 import net.preibisch.stitcher.gui.popup.FlipAxesPopup;
-import net.preibisch.stitcher.gui.popup.FastFusionPopup;
 import net.preibisch.stitcher.gui.popup.OptimizeGloballyPopup;
 import net.preibisch.stitcher.gui.popup.ReadTileConfigurationPopup;
 import net.preibisch.stitcher.gui.popup.RefineWithICPPopup;
