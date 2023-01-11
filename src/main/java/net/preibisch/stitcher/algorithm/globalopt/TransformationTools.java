@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -47,6 +48,7 @@ import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealInterval;
+import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -77,6 +79,7 @@ import net.preibisch.stitcher.input.GenerateSpimData;
 
 public class TransformationTools
 {
+	public static int maxNumOutputLines = 200;
 
 	public static < A > Pair< A, A > reversePair( final Pair< A, A > pair )
 	{
@@ -156,8 +159,11 @@ public class TransformationTools
 		final AffineTransform resCorrected = new AffineTransform( result.getA().numDimensions() );
 		resCorrected.set( result.getA() );
 
-		System.out.println("shift: " + Util.printCoordinates(result.getA().getTranslationCopy()));
-		System.out.print("cross-corr: " + result.getB());
+		if ( PairwiseStitching.debug )
+		{
+			System.out.println("shift: " + Util.printCoordinates(result.getA().getTranslationCopy()));
+			System.out.print("cross-corr: " + result.getB());
+		}
 
 		return new ValuePair<>( new ValuePair<>( resCorrected, result.getB() ), bbOverlap );
 	}
@@ -236,7 +242,8 @@ public class TransformationTools
 		final AffineTransform resCorrected = new AffineTransform( result.getA().numDimensions() );
 		resCorrected.set( result.getA() );
 
-		IOFunctions.println("resulting transformation: " + Util.printCoordinates(result.getA().getRowPackedCopy()));
+		if ( PairwiseStitching.debug )
+			IOFunctions.println("resulting transformation: " + Util.printCoordinates(result.getA().getRowPackedCopy()));
 
 		return new ValuePair<>( new ValuePair<>( resCorrected, result.getB() ), bbOverlap );
 	}
@@ -304,9 +311,12 @@ public class TransformationTools
 		resTransform.concatenate( vrOld.getModel().inverse() );
 		resTransform.preConcatenate( vrOld.getModel() );
 
-		System.out.println("shift (pixel coordinates): " + Util.printCoordinates(result.getA().getTranslationCopy()));
-		System.out.println("shift (global coordinates): " + Util.printCoordinates(resTransform.getRowPackedCopy()));
-		System.out.print("cross-corr: " + result.getB());
+		if ( PairwiseStitching.debug )
+		{
+			System.out.println("shift (pixel coordinates): " + Util.printCoordinates(result.getA().getTranslationCopy()));
+			System.out.println("shift (global coordinates): " + Util.printCoordinates(resTransform.getRowPackedCopy()));
+			System.out.print("cross-corr: " + result.getB());
+		}
 
 		return new ValuePair<>( new ValuePair<>( resTransform, result.getB() ), bbOverlap );
 	}
@@ -542,22 +552,32 @@ public class TransformationTools
 																		final long[] downsamplingFactors)
 	{
 
+		IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Identifying overlapping image pairs ..." );
+
 		final ArrayList< Callable< Pair< Pair< Group< V >, Group< V > >, Pair<Pair< AffineGet, Double >, RealInterval> > > > tasks = new ArrayList<>();
 
 		// remove non-overlapping comparisons
 		final List< Pair< Group< V >, Group< V > > > removedPairs = filterNonOverlappingPairs( pairs, vrs, sd );
 		//removedPairs.forEach( p -> System.out.println( "Skipping non-overlapping pair: " + p.getA() + " -> " + p.getB() ) );
-		IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Removed " + removedPairs.size() + " non-overlapping view-pairs for computing." );
 
 		final int nComparisions = pairs.size();
-		AtomicInteger nCompleted = new AtomicInteger();
-		
+		final AtomicInteger nCompleted = new AtomicInteger();
+		final Random rnd = new Random( 345 );
+		final double rndThres = (double)maxNumOutputLines / (double)nComparisions;
+
+		IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Removed " + removedPairs.size() + " non-overlapping view-pairs for computing." );
+
+		if ( nComparisions > maxNumOutputLines )
+			IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Total number of comparisons: " + nComparisions + " (this is a lot, logging results in ImageJ log only for ~"+maxNumOutputLines+" randomly selected ones.");
+		else
+			IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Total number of comparisons: " + nComparisions );
+
 		IJ.showProgress( 0.0 );
 
 		// how many pairs of Phase Correlations we run in parallel
 		// it should not be more than max(Threads.numThreads() / 2, 1)
 		// so we can dedicate two threads per PCM pair
-		int batchSize = 
+		final int batchSize = 
 				Math.min(
 						Math.max( 1, Threads.numThreads() / 2 ), // Threads.numThreads() could be 1
 						params.manualNumTasks ? params.numTasks : Math.max( 2, Threads.numThreads() / 6 ) );
@@ -582,7 +602,8 @@ public class TransformationTools
 					
 					if (nonTranslationsEqual)
 					{
-						System.out.println( "non translations equal" );
+						if ( PairwiseStitching.debug )
+							System.out.println( "non translations equal" );
 						result = computeStitching(
 								p.getA(),
 								p.getB(),
@@ -604,7 +625,8 @@ public class TransformationTools
 								gva,
 								downsamplingFactors,
 								serviceLocal );
-						System.out.println( "non translations NOT equal, using virtually fused views for stitching" );
+						if ( PairwiseStitching.debug )
+							System.out.println( "non translations NOT equal, using virtually fused views for stitching" );
 					}
 
 					serviceLocal.shutdown();
@@ -613,10 +635,13 @@ public class TransformationTools
 					int nCompletedI = nCompleted.incrementAndGet();
 					IJ.showProgress( (double) nCompletedI / nComparisions );
 
-					if (result != null)
-						IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": r=" + result.getA().getB() );
-					else
-						IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": No shift found." );
+					if ( nComparisions <= maxNumOutputLines || rnd.nextDouble() < rndThres )
+					{
+						if (result != null)
+							IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": r=" + result.getA().getB() );
+						else
+							IOFunctions.println( new Date( System.currentTimeMillis() ) + ": Compute pairwise: " + p.getA() + " <> " + p.getB() + ": No shift found." );
+					}
 
 					return new ValuePair<>( p,  result );
 				}

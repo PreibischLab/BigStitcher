@@ -45,6 +45,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
+import net.preibisch.stitcher.algorithm.PairwiseStitching;
 
 public class PhaseCorrelation2 {
 	
@@ -215,18 +216,34 @@ public class PhaseCorrelation2 {
 			RandomAccessibleInterval<R> pcm, RandomAccessibleInterval<T> img1, RandomAccessibleInterval<S> img2, int nHighestPeaks,
 			long minOverlap, boolean subpixelAccuracy, boolean interpolateSubpixel, ExecutorService service)
 	{
-		System.out.println( "PCM" );
+		if ( PairwiseStitching.debug )
+			System.out.println( "PCM" );
+
 		List<PhaseCorrelationPeak2> peaks = PhaseCorrelation2Util.getPCMMaxima(pcm, service, nHighestPeaks, subpixelAccuracy);
 		//peaks = PhaseCorrelation2Util.getHighestPCMMaxima(peaks, nHighestPeaks);
-		System.out.println( "expand" );
+
+		if ( PairwiseStitching.debug )
+			System.out.println( "expand" );
+
 		PhaseCorrelation2Util.expandPeakListToPossibleShifts(peaks, pcm, img1, img2);
-		System.out.print( "cross " );
+
+		if ( PairwiseStitching.debug )
+			System.out.print( "cross " );
+
 		long t = System.currentTimeMillis();
+
 		PhaseCorrelation2Util.calculateCrossCorrParallel(peaks, img1, img2, minOverlap, service, interpolateSubpixel);
-		System.out.println( (System.currentTimeMillis() - t) );
-		System.out.println( "sort" );
+
+		if ( PairwiseStitching.debug )
+		{
+			System.out.println( (System.currentTimeMillis() - t) );
+			System.out.println( "sort" );
+		}
+
 		Collections.sort(peaks, Collections.reverseOrder(new PhaseCorrelationPeak2.ComparatorByCrossCorrelation()));
-		System.out.println( "done" );
+
+		if ( PairwiseStitching.debug )
+			System.out.println( "done" );
 
 		if (peaks.size() > 0)
 			return peaks.get(0);
