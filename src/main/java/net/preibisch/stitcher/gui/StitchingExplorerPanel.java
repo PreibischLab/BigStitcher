@@ -730,25 +730,31 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 
 				if ( b != null && b.bdv != null )
 				{
-					// first, re-color sources
-					if (!colorMode)
-						BDVPopupStitching.colorByChannels(b.bdv, getSpimData(), colorOffset );
-					else
-						StitchingExplorerPanel.colorSources( b.bdv.getSetupAssignments().getConverterSetups(), colorOffset );
+					new Thread(() -> {
+						// first, re-color sources
+						// TODO: Why?
+						/*
+						if (!colorMode)
+							BDVPopupStitching.colorByChannels( b.bdv, getSpimData(), colorOffset );
+						else
+							StitchingExplorerPanel.colorSources( b.bdv.getSetupAssignments().getConverterSetups(), colorOffset );
+						*/
+						// link preview mode
+						if ( !previewMode )
+							updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows );
+						else
+							updateBDVPreviewMode();
 
-					if ( !previewMode )
-						updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows );
-					else
-						updateBDVPreviewMode();
+						// color neighbors if we are in translate mode
+						for ( int i = 0; i < listeners.size(); ++i )
+							if (TranslateGroupManuallyPanel.class.isInstance( listeners.get( i ) ) )
+								new BDVVisibilityHandlerNeighborhood( StitchingExplorerPanel.this , colorOffset).updateBDV();
 
-					// color neighbors if we are in translate mode
-					for ( int i = 0; i < listeners.size(); ++i )
-						if (TranslateGroupManuallyPanel.class.isInstance( listeners.get( i ) ) )
-							new BDVVisibilityHandlerNeighborhood( StitchingExplorerPanel.this , colorOffset).updateBDV();
+						// TODO: Separate visibility and coloring
+						if ( demoLinkOverlay.isActive )
+							demoLinkOverlayPopup.colorSources( b.bdv );
 
-					// TODO: Separate visibility and coloring
-					if ( demoLinkOverlay.isActive )
-						demoLinkOverlayPopup.colorSources( b.bdv );
+					}).start();
 				}
 			}
 
