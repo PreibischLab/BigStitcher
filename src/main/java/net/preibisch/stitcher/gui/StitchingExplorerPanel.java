@@ -114,7 +114,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.VisualizeNonRigid;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.util.ColorStream;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.filemap2.FileMapImgLoaderLOCI2;
 import net.preibisch.mvrecon.fiji.spimdata.imgloaders.flatfield.FlatfieldCorrectionWrappedImgLoader;
-import net.preibisch.mvrecon.fiji.spimdata.interestpoints.InterestPointList;
+import net.preibisch.mvrecon.fiji.spimdata.interestpoints.InterestPoints;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPointLists;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPoints;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
@@ -1126,7 +1126,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				{
 					for ( final String label : vipl.getHashMap().keySet() )
 					{
-						final InterestPointList ipl = vipl.getInterestPointList( label );
+						final InterestPoints ipl = vipl.getInterestPointList( label );
 						ipl.saveInterestPoints( false );
 						ipl.saveCorrespondingInterestPoints( false );
 					}
