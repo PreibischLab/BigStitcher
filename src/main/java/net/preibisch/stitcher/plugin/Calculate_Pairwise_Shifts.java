@@ -87,9 +87,6 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 	@Override
 	public void run(String arg)
 	{
-		new ImageJ();
-		IOFunctions.printIJLog = true;
-
 		final LoadParseQueryXML result = new LoadParseQueryXML();
 		if ( !result.queryXML( "for pairwise shift calculation", true, true, true, true, true ) )
 			return;
