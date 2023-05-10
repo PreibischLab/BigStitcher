@@ -51,6 +51,8 @@ import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Detection;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.TransformationModelGUI;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters.GlobalOptType;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters.InterestPointOverlapType;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.GroupParameters.InterestpointGroupingType;
@@ -402,6 +404,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			// run the registration for this pair, skip saving results if it did not work
 			if ( !reg.processRegistration(
 					setup,
+					data.getSequenceDescription().getViewSetups(),
 					brp.pwr,
 					InterestpointGroupingType.ADD_ALL,
 					InterestPointOverlapType.ALL,
@@ -413,6 +416,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 					data.getSequenceDescription().getViewDescriptions(),
 					ipMap,
 					brp.labelMap,
+					new GlobalOptimizationParameters(Double.MAX_VALUE, Double.MAX_VALUE, GlobalOptType.ONE_ROUND_SIMPLE, false ),
 					true ) )
 				continue;
 
