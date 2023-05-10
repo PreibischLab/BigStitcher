@@ -185,12 +185,7 @@ public class BlendedExtendedMirroredRandomAccesible2 <T extends RealType<T>>impl
 		}
 
 		@Override
-		public Sampler<T> copy() {
-			return copyRandomAccess();
-		}
-
-		@Override
-		public RandomAccess<T> copyRandomAccess() {
+		public RandomAccess<T> copy() {
 			BlendedRandomAccess a = new BlendedRandomAccess();
 			a.move(this);
 			return a;

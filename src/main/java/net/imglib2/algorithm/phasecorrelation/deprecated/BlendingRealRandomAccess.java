@@ -265,10 +265,7 @@ public class BlendingRealRandomAccess implements RealRandomAccess< FloatType >
 	public void setPosition( final long position, final int d ) { l[ d ] = position; }
 
 	@Override
-	public Sampler<FloatType> copy() { return copyRealRandomAccess(); }
-
-	@Override
-	public RealRandomAccess<FloatType> copyRealRandomAccess()
+	public RealRandomAccess<FloatType> copy()
 	{
 		final BlendingRealRandomAccess r = new BlendingRealRandomAccess( interval, border, blending );
 		r.setPosition( this );

@@ -106,13 +106,7 @@ public  class  AveragedRandomAccessible <T extends RealType<T >> implements Rand
 		}
 
 		@Override
-		public Sampler< T > copy()
-		{
-			return copyRandomAccess();
-		}
-
-		@Override
-		public RandomAccess< T > copyRandomAccess()
+		public RandomAccess< T > copy()
 		{
 			AverageRandomAccess ra = new AverageRandomAccess(numD);
 			ra.setPosition( this );
