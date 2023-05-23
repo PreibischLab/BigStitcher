@@ -48,7 +48,6 @@ import mpicbg.spim.data.sequence.SequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealInterval;
-import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -749,7 +748,7 @@ public class TransformationTools
 		for ( final ViewId v : fixedViews )
 			System.out.println( "Fixed: " + v );
 
-		GlobalOpt.compute( 
+		GlobalOpt.computeTiles( 
 				new TranslationModel3D(),
 				new ImageCorrelationPointMatchCreator( results, 0.5 ),
 				new ConvergenceStrategy( 5.0 ),

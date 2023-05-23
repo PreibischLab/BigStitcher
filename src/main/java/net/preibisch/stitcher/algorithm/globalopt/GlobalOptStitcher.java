@@ -189,7 +189,7 @@ public class GlobalOptStitcher
 
 			if ( params.method == GlobalOptType.TWO_ROUND_SIMPLE || params.method == GlobalOptType.TWO_ROUND_ITERATIVE )
 			{
-				HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
+				HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOptTwoRound.computeTiles(
 						new TranslationModel3D(),
 						new ImageCorrelationPointMatchCreator( results ),
 						new SimpleIterativeConvergenceStrategy( Double.MAX_VALUE,
@@ -209,7 +209,7 @@ public class GlobalOptStitcher
 							.getViewRegistration( k );
 
 					AffineTransform3D viewTransform = new AffineTransform3D();
-					viewTransform.set( v );
+					viewTransform.set( v.getModel().getMatrix( null ) );
 
 					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform",
 							viewTransform );
@@ -220,7 +220,7 @@ public class GlobalOptStitcher
 			}
 			else if ( params.method == GlobalOptType.ONE_ROUND_ITERATIVE)
 			{
-				HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute(
+				HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.computeTiles(
 						new TranslationModel3D(),
 						new ImageCorrelationPointMatchCreator( results ),
 						new SimpleIterativeConvergenceStrategy( Double.MAX_VALUE,
@@ -244,7 +244,7 @@ public class GlobalOptStitcher
 			}
 			else // Simple global opt
 			{
-				final HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOpt.compute( 
+				final HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOpt.computeTiles(
 						new TranslationModel3D(),
 						new ImageCorrelationPointMatchCreator( results ),
 						new SimpleIterativeConvergenceStrategy( Double.MAX_VALUE,
