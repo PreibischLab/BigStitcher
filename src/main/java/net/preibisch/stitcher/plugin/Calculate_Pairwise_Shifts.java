@@ -54,10 +54,7 @@ import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Detection;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.TransformationModelGUI;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters;
-<<<<<<< HEAD
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters.GlobalOptType;
-=======
->>>>>>> e4e636c63f0a56e60a502927e20a981a9fd7ce93
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters.InterestPointOverlapType;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.GroupParameters.InterestpointGroupingType;
