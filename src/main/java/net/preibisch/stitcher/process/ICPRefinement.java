@@ -575,8 +575,8 @@ public class ICPRefinement
 
 		if ( globalOptParameters.method == GlobalOptType.ONE_ROUND_SIMPLE )
 		{
-			models = GlobalOpt.computeTiles(
-							(Model)icpp.getModel().copy(),
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOpt.computeTiles(
+							(Model)(Object)icpp.getModel().copy(),
 							pmc,
 							new ConvergenceStrategy( icpp.getMaxDistance() ),
 							fixedViews,
@@ -584,8 +584,8 @@ public class ICPRefinement
 		}
 		else if ( globalOptParameters.method == GlobalOptType.ONE_ROUND_ITERATIVE )
 		{
-			models = GlobalOptIterative.computeTiles(
-							(Model)icpp.getModel().copy(),
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOptIterative.computeTiles(
+							(Model)(Object)icpp.getModel().copy(),
 							pmc,
 							new SimpleIterativeConvergenceStrategy( icpp.getMaxDistance(), globalOptParameters.relativeThreshold, globalOptParameters.absoluteThreshold ),
 							new MaxErrorLinkRemoval(),
@@ -595,8 +595,8 @@ public class ICPRefinement
 		}
 		else //if ( globalOptParameters.method == GlobalOptType.TWO_ROUND_SIMPLE || globalOptParameters.method == GlobalOptType.TWO_ROUND_ITERATIVE )
 		{
-			models = GlobalOptTwoRound.computeTiles(
-					(Model & Affine3D)icpp.getModel().copy(),
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOptTwoRound.computeTiles(
+					(Model & Affine3D)(Object)icpp.getModel().copy(),
 					pmc,
 					new SimpleIterativeConvergenceStrategy( icpp.getMaxDistance(), globalOptParameters.relativeThreshold, globalOptParameters.absoluteThreshold ), // if it's simple, both will be Double.MAX
 					new MaxErrorLinkRemoval(),
@@ -693,8 +693,8 @@ public class ICPRefinement
 
 		if ( globalOptParameters.method == GlobalOptType.ONE_ROUND_SIMPLE )
 		{
-			models = GlobalOpt.computeTiles(
-							(Model)icpp.getModel().copy(),
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOpt.computeTiles(
+							(Model)(Object)icpp.getModel().copy(),
 							pmc,
 							new ConvergenceStrategy( icpp.getMaxDistance() ),
 							fixedViews,
@@ -702,8 +702,8 @@ public class ICPRefinement
 		}
 		else if ( globalOptParameters.method == GlobalOptType.ONE_ROUND_ITERATIVE )
 		{
-			models = GlobalOptIterative.computeTiles(
-							(Model)icpp.getModel().copy(),
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOptIterative.computeTiles(
+							(Model)(Object)icpp.getModel().copy(),
 							pmc,
 							new SimpleIterativeConvergenceStrategy( icpp.getMaxDistance(), globalOptParameters.relativeThreshold, globalOptParameters.absoluteThreshold ),
 							new MaxErrorLinkRemoval(),
@@ -713,8 +713,8 @@ public class ICPRefinement
 		}
 		else //if ( globalOptParameters.method == GlobalOptType.TWO_ROUND_SIMPLE || globalOptParameters.method == GlobalOptType.TWO_ROUND_ITERATIVE )
 		{
-			models = GlobalOptTwoRound.computeTiles(
-					(Model & Affine3D)icpp.getModel().copy(),
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOptTwoRound.computeTiles(
+					(Model & Affine3D)(Object)icpp.getModel().copy(),
 					pmc,
 					new SimpleIterativeConvergenceStrategy( icpp.getMaxDistance(), globalOptParameters.relativeThreshold, globalOptParameters.absoluteThreshold ), // if it's simple, both will be Double.MAX
 					new MaxErrorLinkRemoval(),
