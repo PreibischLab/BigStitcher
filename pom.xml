@@ -11,7 +11,7 @@
 
 	<groupId>net.preibisch</groupId>
 	<artifactId>BigStitcher</artifactId>
-	<version>1.1.6-SNAPSHOT</version>
+	<version>1.1.7-SNAPSHOT</version>
 
 	<name>Big Stitcher</name>
 	<description>Multiview stitching of large datasets.</description>
@@ -99,11 +99,18 @@
 
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Big Stitcher developers.</license.copyrightOwners>
-		<multiview-reconstruction.version>2.0.2</multiview-reconstruction.version>
-		<multiview-simulation.version>0.2.0</multiview-simulation.version>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
+
+		<imglib2.version>6.1.0</imglib2.version>
+		<imglib2-algorithm.version>0.13.2</imglib2-algorithm.version>
+		<imglib2-cache.version>1.0.0-beta-17</imglib2-cache.version>
+		<imagej-ops.version>2.0.0</imagej-ops.version>
+		<bigdataviewer-core.version>10.4.6</bigdataviewer-core.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-32</bigdataviewer-vistools.version>
+		<n5-imglib2.version>4.4.1-SNAPSHOT</n5-imglib2.version>
+		<multiview-reconstruction.version>2.0.2</multiview-reconstruction.version>
 	</properties>
 
 	<repositories>
@@ -117,7 +124,6 @@
 		<dependency>
 			<groupId>net.preibisch</groupId>
 			<artifactId>multiview-reconstruction</artifactId>
-			<version>${multiview-reconstruction.version}</version>
 		</dependency>
 
 			<dependency>
@@ -145,7 +151,6 @@
 		<dependency>
 			<groupId>net.preibisch</groupId>
 			<artifactId>multiview-simulation</artifactId>
-			<version>${multiview-simulation.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>mpicbg</groupId>
@@ -162,7 +167,6 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm</artifactId>
-			<version>0.13.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imglib2</groupId>
