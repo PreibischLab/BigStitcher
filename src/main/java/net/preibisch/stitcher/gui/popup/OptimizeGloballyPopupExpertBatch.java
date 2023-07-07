@@ -23,31 +23,15 @@ package net.preibisch.stitcher.gui.popup;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Date;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import mpicbg.spim.data.sequence.Channel;
-import mpicbg.spim.data.sequence.Illumination;
-import mpicbg.spim.data.sequence.Tile;
-import mpicbg.spim.data.sequence.ViewId;
-import net.imglib2.util.Pair;
-import net.preibisch.legacy.io.IOFunctions;
-import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
-import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.globalopt.ExecuteGlobalOpt;
-import net.preibisch.stitcher.algorithm.globalopt.GlobalOptStitcher;
-import net.preibisch.stitcher.algorithm.globalopt.GlobalOptimizationParameters;
-import net.preibisch.stitcher.gui.StitchingExplorerPanel;
-import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 		implements ExplorerWindowSetable

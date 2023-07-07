@@ -146,7 +146,7 @@ public class TestGlobalOptTwoRound
 		});
 		*/
 
-		final HashMap< ViewId, AffineTransform3D > computeResults = GlobalOptTwoRound.compute(
+		final HashMap< ViewId, TranslationModel3D > computeResults = GlobalOptTwoRound.computeModels(
 				new TranslationModel3D(),
 				pmc,
 				cs,
@@ -163,7 +163,7 @@ public class TestGlobalOptTwoRound
 
 		for ( final ViewId viewId : computeResults.keySet() )
 		{
-			final AffineTransform3D transform = computeResults.get( viewId );
+			final AffineTransform3D transform = net.preibisch.mvrecon.process.interestpointregistration.TransformationTools.getAffineTransform( computeResults.get( viewId ) );
 			final ViewRegistration vr = spimData.getViewRegistrations().getViewRegistrations().get( viewId );
 
 			final ViewTransform vt = new ViewTransformAffine( "two-round global opt", transform );

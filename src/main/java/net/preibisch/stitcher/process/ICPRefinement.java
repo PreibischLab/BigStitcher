@@ -34,12 +34,14 @@ import java.util.Set;
 import ij.IJ;
 import ij.gui.GenericDialog;
 import mpicbg.models.AbstractModel;
+import mpicbg.models.Affine3D;
 import mpicbg.models.AffineModel3D;
 import mpicbg.models.InterpolatedAffineModel3D;
 import mpicbg.models.Model;
 import mpicbg.models.RigidModel3D;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
+import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.ImgLoader;
@@ -52,6 +54,8 @@ import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Detection;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.TransformationModelGUI;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters.GlobalOptType;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.AdvancedRegistrationParameters;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.CorrespondingInterestPoints;
@@ -65,9 +69,14 @@ import net.preibisch.mvrecon.process.interestpointdetection.methods.dog.DoG;
 import net.preibisch.mvrecon.process.interestpointdetection.methods.dog.DoGParameters;
 import net.preibisch.mvrecon.process.interestpointregistration.TransformationTools;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOpt;
+import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptIterative;
+import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptTwoRound;
 import net.preibisch.mvrecon.process.interestpointregistration.global.convergence.ConvergenceStrategy;
+import net.preibisch.mvrecon.process.interestpointregistration.global.convergence.SimpleIterativeConvergenceStrategy;
+import net.preibisch.mvrecon.process.interestpointregistration.global.linkremoval.MaxErrorLinkRemoval;
 import net.preibisch.mvrecon.process.interestpointregistration.global.pointmatchcreating.PointMatchCreator;
 import net.preibisch.mvrecon.process.interestpointregistration.global.pointmatchcreating.strong.InterestPointMatchCreator;
+import net.preibisch.mvrecon.process.interestpointregistration.global.pointmatchcreating.weak.MetaDataWeakLinkFactory;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.MatcherPairwiseTools;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.PairwiseResult;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.AllToAll;
@@ -397,6 +406,7 @@ public class ICPRefinement
 	public static void refine(
 			final SpimData2 data,
 			final ICPRefinementParameters params,
+			final GlobalOptimizationParameters globalOptParameters,
 			final DemoLinkOverlay overlay )
 	{
 		IOFunctions.println( params );
@@ -472,12 +482,14 @@ public class ICPRefinement
 			HashMap< ViewId, mpicbg.models.Tile > models;
 
 			if ( Interest_Point_Registration.hasGroups( subsets ) )
-				models = groupedSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, overlay );
+				models = groupedSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, data.getSequenceDescription().getViewSetups(), data.getViewRegistrations().getViewRegistrations(), globalOptParameters, overlay );
 			else
-				models = pairSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, overlay );
+				models = pairSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, data.getSequenceDescription().getViewSetups(), data.getViewRegistrations().getViewRegistrations(), globalOptParameters, overlay );
 
 			if ( models == null )
 				continue;
+
+			IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Fina transformation models (without mapback model):" );
 
 			// pre-concatenate models to spimdata2 viewregistrations (from SpimData(2))
 			for ( final ViewId viewId : subset.getViews() )
@@ -486,6 +498,14 @@ public class ICPRefinement
 				final ViewRegistration vr = data.getViewRegistrations().getViewRegistrations().get( viewId );
 
 				TransformationTools.storeTransformation( vr, viewId, tile, null, params.transformationDescription );
+
+				// TODO: We assume it is Affine3D here
+				String output = Group.pvid( viewId ) + ": " + TransformationTools.printAffine3D( (Affine3D<?>)tile.getModel() );
+
+				if ( tile.getModel() instanceof RigidModel3D )
+					IOFunctions.println( output + ", " + TransformationTools.getRotationAxis( (RigidModel3D)tile.getModel() ) );
+				else
+					IOFunctions.println( output + ", " + TransformationTools.getScaling( (Affine3D<?>)tile.getModel() ) );
 			}
 		}
 	}
@@ -497,6 +517,9 @@ public class ICPRefinement
 			final Map< ViewId, String > labelMap,
 			final IterativeClosestPointParameters icpp,
 			final List< ViewId > fixedViews,
+			final Map< Integer, ? extends BasicViewSetup > viewSetups, // for two-round
+			final Map< ViewId, ViewRegistration > registrations, // for two-round
+			final GlobalOptimizationParameters globalOptParameters,
 			final DemoLinkOverlay overlay )
 	{
 		final List< Pair< ViewId, ViewId > > pairs = subset.getPairs();
@@ -546,11 +569,50 @@ public class ICPRefinement
 			IOFunctions.println( p.getB().getFullDesc() );
 		}
 
-		final ConvergenceStrategy cs = new ConvergenceStrategy( icpp.getMaxDistance() );
+		// multiple solvers for ICP
 		final PointMatchCreator pmc = new InterestPointMatchCreator( resultsPairs );
+		final HashMap< ViewId, mpicbg.models.Tile > models;
+
+		if ( globalOptParameters.method == GlobalOptType.ONE_ROUND_SIMPLE )
+		{
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOpt.computeTiles(
+							(Model)(Object)icpp.getModel().copy(),
+							pmc,
+							new ConvergenceStrategy( icpp.getMaxDistance() ),
+							fixedViews,
+							subset.getGroups() );
+		}
+		else if ( globalOptParameters.method == GlobalOptType.ONE_ROUND_ITERATIVE )
+		{
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOptIterative.computeTiles(
+							(Model)(Object)icpp.getModel().copy(),
+							pmc,
+							new SimpleIterativeConvergenceStrategy( icpp.getMaxDistance(), globalOptParameters.relativeThreshold, globalOptParameters.absoluteThreshold ),
+							new MaxErrorLinkRemoval(),
+							null,
+							fixedViews,
+							subset.getGroups() );
+		}
+		else //if ( globalOptParameters.method == GlobalOptType.TWO_ROUND_SIMPLE || globalOptParameters.method == GlobalOptType.TWO_ROUND_ITERATIVE )
+		{
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOptTwoRound.computeTiles(
+					(Model & Affine3D)(Object)icpp.getModel().copy(),
+					pmc,
+					new SimpleIterativeConvergenceStrategy( icpp.getMaxDistance(), globalOptParameters.relativeThreshold, globalOptParameters.absoluteThreshold ), // if it's simple, both will be Double.MAX
+					new MaxErrorLinkRemoval(),
+					null,
+					new MetaDataWeakLinkFactory(
+							registrations,
+							new SimpleBoundingBoxOverlap<>( viewSetups, registrations ) ),
+					new ConvergenceStrategy( Double.MAX_VALUE ),
+					fixedViews,
+					subset.getGroups() );
+		}
+
+		return models;
 
 		// run global optimization
-		return (HashMap< ViewId, mpicbg.models.Tile >)GlobalOpt.compute( (Model)icpp.getModel().copy(), pmc, cs, fixedViews, subset.getGroups() );
+		//return (HashMap< ViewId, mpicbg.models.Tile >)GlobalOpt.computeTiles( (Model)icpp.getModel().copy(), pmc, cs, fixedViews, subset.getGroups() );
 	}
 
 	public static HashMap< ViewId, mpicbg.models.Tile > groupedSubset(
@@ -560,6 +622,9 @@ public class ICPRefinement
 			final Map< ViewId, String > labelMap,
 			final IterativeClosestPointParameters icpp,
 			final List< ViewId > fixedViews,
+			final Map< Integer, ? extends BasicViewSetup > viewSetups, // for two-round
+			final Map< ViewId, ViewRegistration > registrations, // for two-round
+			final GlobalOptimizationParameters globalOptParameters,
 			final DemoLinkOverlay overlay )
 	{
 		final List< Pair< Group< ViewId >, Group< ViewId > > > groupedPairs = subset.getGroupedPairs();
@@ -621,10 +686,50 @@ public class ICPRefinement
 				MatcherPairwiseTools.addCorrespondencesFromGroups( resultsGroups, spimData.getViewInterestPoints().getViewInterestPoints(), labelMap, cMap );
 
 		// run global optimization
-		final ConvergenceStrategy cs = new ConvergenceStrategy( 10.0 );
 		final PointMatchCreator pmc = new InterestPointMatchCreator( resultG );
 
-		return (HashMap< ViewId, mpicbg.models.Tile >)GlobalOpt.compute( (Model)icpp.getModel().copy(), pmc, cs, fixedViews, groups );
+		// multiple solvers for ICP
+		final HashMap< ViewId, mpicbg.models.Tile > models;
+
+		if ( globalOptParameters.method == GlobalOptType.ONE_ROUND_SIMPLE )
+		{
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOpt.computeTiles(
+							(Model)(Object)icpp.getModel().copy(),
+							pmc,
+							new ConvergenceStrategy( icpp.getMaxDistance() ),
+							fixedViews,
+							groups );
+		}
+		else if ( globalOptParameters.method == GlobalOptType.ONE_ROUND_ITERATIVE )
+		{
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOptIterative.computeTiles(
+							(Model)(Object)icpp.getModel().copy(),
+							pmc,
+							new SimpleIterativeConvergenceStrategy( icpp.getMaxDistance(), globalOptParameters.relativeThreshold, globalOptParameters.absoluteThreshold ),
+							new MaxErrorLinkRemoval(),
+							null,
+							fixedViews,
+							groups );
+		}
+		else //if ( globalOptParameters.method == GlobalOptType.TWO_ROUND_SIMPLE || globalOptParameters.method == GlobalOptType.TWO_ROUND_ITERATIVE )
+		{
+			models = (HashMap< ViewId, mpicbg.models.Tile >)(Object)GlobalOptTwoRound.computeTiles(
+					(Model & Affine3D)(Object)icpp.getModel().copy(),
+					pmc,
+					new SimpleIterativeConvergenceStrategy( icpp.getMaxDistance(), globalOptParameters.relativeThreshold, globalOptParameters.absoluteThreshold ), // if it's simple, both will be Double.MAX
+					new MaxErrorLinkRemoval(),
+					null,
+					new MetaDataWeakLinkFactory(
+							registrations,
+							new SimpleBoundingBoxOverlap<>( viewSetups, registrations ) ),
+					new ConvergenceStrategy( Double.MAX_VALUE ),
+					fixedViews,
+					groups );
+		}
+
+		return models;
+
+		//return (HashMap< ViewId, mpicbg.models.Tile >)GlobalOpt.compute( (Model)icpp.getModel().copy(), pmc, cs, fixedViews, groups );
 	}
 
 	/**

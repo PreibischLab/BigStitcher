@@ -31,10 +31,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import ij.ImageJ;
 import ij.gui.GenericDialog;
 import ij.plugin.PlugIn;
+
 import mpicbg.spim.data.generic.base.Entity;
+import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.sequence.Angle;
@@ -43,6 +44,7 @@ import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
+
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
@@ -51,6 +53,8 @@ import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Detection;
 import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.TransformationModelGUI;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters.GlobalOptType;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters.InterestPointOverlapType;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.GroupParameters.InterestpointGroupingType;
@@ -87,9 +91,6 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 	@Override
 	public void run(String arg)
 	{
-		new ImageJ();
-		IOFunctions.printIJLog = true;
-
 		final LoadParseQueryXML result = new LoadParseQueryXML();
 		if ( !result.queryXML( "for pairwise shift calculation", true, true, true, true, true ) )
 			return;
@@ -405,6 +406,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 			// run the registration for this pair, skip saving results if it did not work
 			if ( !reg.processRegistration(
 					setup,
+					data.getSequenceDescription().getViewSetups(),
 					brp.pwr,
 					InterestpointGroupingType.ADD_ALL,
 					InterestPointOverlapType.ALL,
@@ -416,6 +418,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 					data.getSequenceDescription().getViewDescriptions(),
 					ipMap,
 					brp.labelMap,
+					new GlobalOptimizationParameters(Double.MAX_VALUE, Double.MAX_VALUE, GlobalOptType.ONE_ROUND_SIMPLE, false ),
 					true ) )
 				continue;
 

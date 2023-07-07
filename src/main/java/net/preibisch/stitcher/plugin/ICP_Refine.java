@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import ij.gui.GenericDialog;
 import ij.plugin.PlugIn;
 import mpicbg.spim.data.sequence.ViewId;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
@@ -55,6 +56,8 @@ public class ICP_Refine implements PlugIn
 
 		gd.addChoice( "ICP_Refinement_Type", ICPRefinement.refinementType, ICPRefinement.refinementType[ ICPRefinement.defaultRefinementChoice ] );
 
+		GlobalOptimizationParameters.addSimpleParametersToDialog( gd );
+
 		gd.addMessage( "" );
 		gd.addMessage( "The following parameters are ignored if EXPERT is selected above", GUIHelper.mediumstatusfont );
 		gd.addMessage( "" );
@@ -68,6 +71,7 @@ public class ICP_Refine implements PlugIn
 			return;
 
 		final ICPType icpType = ICPType.values()[ ICPRefinement.defaultRefinementChoice = gd.getNextChoiceIndex() ];
+		final GlobalOptimizationParameters globalOptParams = GlobalOptimizationParameters.parseSimpleParametersFromDialog( gd );
 
 		if ( icpType == ICPType.Expert )
 		{
@@ -84,7 +88,7 @@ public class ICP_Refine implements PlugIn
 				return;
 		}
 
-		ICPRefinement.refine( data, params, null );
+		ICPRefinement.refine( data, params, globalOptParams, null );
 
 		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
 

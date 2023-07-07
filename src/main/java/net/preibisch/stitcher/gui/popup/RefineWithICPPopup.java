@@ -33,6 +33,7 @@ import javax.swing.JMenuItem;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import net.preibisch.legacy.io.IOFunctions;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters;
 import net.preibisch.mvrecon.fiji.plugin.util.MouseOverPopUpStateChanger;
 import net.preibisch.mvrecon.fiji.plugin.util.MouseOverPopUpStateChanger.StateChanger;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
@@ -230,20 +231,27 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 
 				// remember for macro recording
 				ICPRefinement.defaultRefinementChoice = icpType.ordinal();
+				GlobalOptimizationParameters globalOptParams;
 
 				if ( icpType == ICPType.Expert )
 				{
 					if ( !ICPRefinement.getGUIParametersAdvanced( data, params ) )
 						return;
+
+					globalOptParams = GlobalOptimizationParameters.askUserForSimpleParameters();
 				}
 				else
 				{
-					
 					if ( !ICPRefinement.getGUIParametersSimple( icpType, data, params, downsamplingChoice, thresholdChoice, distanceChoice ) )
 						return;
+
+					globalOptParams = GlobalOptimizationParameters.getGlobalOptimizationParametersForSelection( GlobalOptimizationParameters.defaultSimple );
 				}
 
-				ICPRefinement.refine( data, params, overlay );
+				if ( globalOptParams == null )
+					return;
+
+				ICPRefinement.refine( data, params, globalOptParams, overlay );
 
 				panel.updateContent();
 				panel.bdvPopup().updateBDV();

@@ -49,11 +49,12 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import net.preibisch.legacy.io.IOFunctions;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters;
+import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters.GlobalOptType;
 import net.preibisch.mvrecon.fiji.plugin.resave.PluginHelper;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
-import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOpt;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptIterative;
 import net.preibisch.mvrecon.process.interestpointregistration.global.GlobalOptTwoRound;
@@ -67,7 +68,6 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constell
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
-import net.preibisch.stitcher.algorithm.globalopt.GlobalOptimizationParameters.GlobalOptType;
 
 public class GlobalOptStitcher
 {
@@ -187,9 +187,9 @@ public class GlobalOptStitcher
 				continue;
 			}
 
-			if ( params.method == GlobalOptType.TWO_ROUND )
+			if ( params.method == GlobalOptType.TWO_ROUND_SIMPLE || params.method == GlobalOptType.TWO_ROUND_ITERATIVE )
 			{
-				HashMap< ViewId, AffineTransform3D > globalOptResults = GlobalOptTwoRound.compute(
+				HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOptTwoRound.computeTiles(
 						new TranslationModel3D(),
 						new ImageCorrelationPointMatchCreator( results ),
 						new SimpleIterativeConvergenceStrategy( Double.MAX_VALUE,
@@ -209,7 +209,7 @@ public class GlobalOptStitcher
 							.getViewRegistration( k );
 
 					AffineTransform3D viewTransform = new AffineTransform3D();
-					viewTransform.set( v );
+					viewTransform.set( v.getModel().getMatrix( null ) );
 
 					final ViewTransform vt = new ViewTransformAffine( "Stitching Transform",
 							viewTransform );
@@ -218,9 +218,9 @@ public class GlobalOptStitcher
 
 				} );
 			}
-			else if ( params.method == GlobalOptType.ITERATIVE)
+			else if ( params.method == GlobalOptType.ONE_ROUND_ITERATIVE)
 			{
-				HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.compute(
+				HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOptIterative.computeTiles(
 						new TranslationModel3D(),
 						new ImageCorrelationPointMatchCreator( results ),
 						new SimpleIterativeConvergenceStrategy( Double.MAX_VALUE,
@@ -244,7 +244,7 @@ public class GlobalOptStitcher
 			}
 			else // Simple global opt
 			{
-				final HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOpt.compute( 
+				final HashMap< ViewId, mpicbg.models.Tile< TranslationModel3D > > globalOptResults = GlobalOpt.computeTiles(
 						new TranslationModel3D(),
 						new ImageCorrelationPointMatchCreator( results ),
 						new SimpleIterativeConvergenceStrategy( Double.MAX_VALUE,

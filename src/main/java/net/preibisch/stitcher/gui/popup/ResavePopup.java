@@ -150,14 +150,6 @@ public class ResavePopup extends JMenu implements ExplorerWindowSetable
 						final Parameters params = new Parameters();
 
 						params.compress = index != 0;
-
-						if ( AbstractImgFactoryImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) )
-							params.imgFactory = ( (AbstractImgFactoryImgLoader)data.getSequenceDescription().getImgLoader() ).getImgFactory();
-						else if ( MicroManagerImgLoader.class.isInstance( data.getSequenceDescription().getImgLoader() ) )
-							params.imgFactory = new ArrayImgFactory< FloatType >();
-						else
-							params.imgFactory = new CellImgFactory< FloatType >();
-
 						params.xmlFile = panel.xml();
 
 						// write the TIFF's
