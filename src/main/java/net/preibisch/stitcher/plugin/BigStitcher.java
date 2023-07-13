@@ -93,7 +93,7 @@ public class BigStitcher implements Command, PlugIn
 		else if ( !System.getProperty("os.name").toLowerCase().contains( "mac" ) )
 			GenericLoadParseQueryXML.defaultXMLfilename = "/home/preibisch/Documents/Microscopy/SPIM/HisYFP-SPIM//dataset_tp18.xml";
 		else
-			GenericLoadParseQueryXML.defaultXMLfilename = "/Users/spreibi/Documents/BIMSB/Projects/CLARITY/Big Data Sticher/Dros_converted/dataset.xml";
+			GenericLoadParseQueryXML.defaultXMLfilename = "/Users/preibischs/Documents/BIMSB/Projects/CLARITY/Big Data Sticher/Dros_converted/dataset.xml";
 	}
 
 	public static void main( String[] args )
