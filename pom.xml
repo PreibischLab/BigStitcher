@@ -109,8 +109,8 @@
 		<imagej-ops.version>2.0.0</imagej-ops.version>
 		<bigdataviewer-core.version>10.4.6</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-32</bigdataviewer-vistools.version>
-		<n5-imglib2.version>4.4.1-SNAPSHOT</n5-imglib2.version>
-		<multiview-reconstruction.version>3.0.3</multiview-reconstruction.version>
+		<!-- <n5-imglib2.version>4.4.1-SNAPSHOT</n5-imglib2.version> -->
+		<multiview-reconstruction.version>3.1.0</multiview-reconstruction.version>
 	</properties>
 
 	<repositories>
