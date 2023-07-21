@@ -344,8 +344,8 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 						new MissingViews( missingViewsList ) );
 		
 		final ViewInterestPoints viewsInterestPoints = SpimData2.class.isInstance( data ) ? ((SpimData2)data).getViewInterestPoints() : new ViewInterestPoints();
-		if (!(SpimData2.class.isInstance( data )))
-			viewsInterestPoints.createViewInterestPoints( data.getSequenceDescription().getViewDescriptions() );
+		//if (!(SpimData2.class.isInstance( data )))
+		//	viewsInterestPoints.createViewInterestPoints( data.getSequenceDescription().getViewDescriptions() );
 		
 		final BoundingBoxes boundingBoxes = SpimData2.class.isInstance( data ) ? ((SpimData2)data).getBoundingBoxes() : new BoundingBoxes();
 		final PointSpreadFunctions psfs = SpimData2.class.isInstance( data ) ? ((SpimData2)data).getPointSpreadFunctions() : new PointSpreadFunctions();
