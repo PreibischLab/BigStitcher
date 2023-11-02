@@ -721,9 +721,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 					selectedRows.add( (List<BasicViewDescription< ? extends BasicViewSetup >>) (Object) tableModel.getElements().get( row ) );
 				}
 
-				List< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedList = new ArrayList< >();
-				for ( List< BasicViewDescription< ? extends BasicViewSetup > > selectedI : selectedRows )
-					selectedList.add( selectedI );
+				final List< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedList = new ArrayList< >( selectedRows );
+				/*for ( List< BasicViewDescription< ? extends BasicViewSetup > > selectedI : selectedRows )
+					selectedList.add( selectedI );*/
 
 				for ( int i = 0; i < listeners.size(); ++i )
 					listeners.get( i ).selectedViewDescriptions( selectedList );
@@ -741,7 +741,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 						*/
 						// link preview mode
 						if ( !previewMode )
-							updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedRows );
+							updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedList );
 						else
 							updateBDVPreviewMode();
 
