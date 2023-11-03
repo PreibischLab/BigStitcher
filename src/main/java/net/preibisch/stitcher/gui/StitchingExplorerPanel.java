@@ -732,19 +732,19 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 				{
 					new Thread(() -> {
 						// first, re-color sources
-						// TODO: Why?
-						/*
+						// TODO: Why? - because otherwise TranslateGroupManuallyPanel does not work (gray values are not reset when ending)
 						if (!colorMode)
 							BDVPopupStitching.colorByChannels( b.bdv, getSpimData(), colorOffset );
 						else
 							StitchingExplorerPanel.colorSources( b.bdv.getSetupAssignments().getConverterSetups(), colorOffset );
-						*/
+
 						// link preview mode
 						if ( !previewMode )
 							updateBDV( b.bdv, colorMode, data, firstSelectedVD, selectedList );
 						else
 							updateBDVPreviewMode();
 
+						// @pietzscht -- it's happening here, the BDVVisibilityHandlerNeighborhood is implicitly used
 						// color neighbors if we are in translate mode
 						for ( int i = 0; i < listeners.size(); ++i )
 							if (TranslateGroupManuallyPanel.class.isInstance( listeners.get( i ) ) )
