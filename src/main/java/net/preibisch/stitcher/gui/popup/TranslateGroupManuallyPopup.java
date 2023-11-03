@@ -61,7 +61,6 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 	
 	public class MyActionListener implements ActionListener
 	{
-		
 		@Override
 		public void actionPerformed( final ActionEvent e )
 		{
@@ -71,19 +70,17 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 				return;
 			}
 
-			
-			
 			if (!SpimData2.class.isInstance( panel.getSpimData() ))
 			{
 				IOFunctions.println( "Current dataset is not SpimData2, cannot open " + this.getClass().getSimpleName() );
 				return;
 			}
-			
+
 			final List< ViewId > viewIds = ApplyTransformationPopup.getSelectedViews( panel );
-			
+
 			final JFrame theFrame = new JFrame( "Move Views" );			
 			TranslateGroupManuallyPanel tgmp = new TranslateGroupManuallyPanel( (SpimData2) panel.getSpimData(), viewIds, panel.bdvPopup(), theFrame);
-			
+
 			((FilteredAndGroupedExplorerPanel< AbstractSpimData<?>, ? >) panel).addListener(  tgmp );
 
 			// re-select everything
@@ -93,7 +90,7 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 			theFrame.add( tgmp );
 			theFrame.pack();
 			theFrame.setVisible( true );
-			
+
 			theFrame.addWindowListener( new WindowAdapter() 
 			{
 				@Override

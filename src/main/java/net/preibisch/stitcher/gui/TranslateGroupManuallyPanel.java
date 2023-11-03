@@ -334,6 +334,8 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 	@Override
 	public void selectedViewDescriptions(List< List< BasicViewDescription< ? extends BasicViewSetup > > > viewDescriptions)
 	{
+		// @pietzscht
+		// the entire code here has nothing to do with changing colors (I uncommented everything and it still changes colors)
 		final HashSet<ViewId> selectedNew = new HashSet<>();
 		viewDescriptions.forEach( vdl -> selectedNew.addAll( vdl ) );
 		
@@ -348,8 +350,8 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 		// reset and repaint Bdv if necessary
 		if ( bdvPopup.bdvRunning() )
 		{
-			FilteredAndGroupedExplorerPanel.resetBDVManualTransformations( bdvPopup.getBDV() );
-			bdvPopup.getBDV().getViewer().requestRepaint();
+			//FilteredAndGroupedExplorerPanel.resetBDVManualTransformations( bdvPopup.getBDV() );
+			//bdvPopup.getBDV().getViewer().requestRepaint();
 		}
 		
 		// update selection
@@ -360,7 +362,6 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 		
 		theTransform = new AffineTransform3D();
 		resetSliders();
-		
 	}
 	
 	@Override
