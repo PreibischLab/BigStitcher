@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
@@ -43,21 +42,21 @@ import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class ExecuteGlobalOpt implements Runnable
 {
-	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	private ExplorerWindow< ?, ? > panel;
 	private boolean expertMode;
 	private SpimDataFilteringAndGrouping<? extends AbstractSpimData<?> > savedFiltering;
 
 	public ExecuteGlobalOpt(
-			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel, 
+			final ExplorerWindow< ?, ? > panel,
 			final boolean expertMode )
 	{
 		this.panel = panel;
 		this.expertMode = expertMode;
 		this.savedFiltering = null;
 	}
-	
+
 	public ExecuteGlobalOpt(
-			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel,
+			final ExplorerWindow< ?, ? > panel,
 			final SpimDataFilteringAndGrouping<? extends AbstractSpimData<?> > savedFiltering)
 	{
 		this.panel = panel;

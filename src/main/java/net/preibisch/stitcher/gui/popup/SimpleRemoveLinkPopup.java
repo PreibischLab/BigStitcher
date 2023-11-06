@@ -32,8 +32,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 import ij.gui.GenericDialog;
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
@@ -54,11 +52,10 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	ExplorerWindow< ?, ? > panel;
 
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
 	{
 		this.panel = panel;
 		return this;

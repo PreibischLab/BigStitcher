@@ -28,8 +28,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 
@@ -47,8 +45,7 @@ public class SimpleSubMenu extends JMenu implements ExplorerWindowSetable
 	}
 
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
 	{
 		children.forEach( c -> {
 			if (ExplorerWindowSetable.class.isInstance( c ))

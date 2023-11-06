@@ -31,13 +31,8 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import mpicbg.spim.data.sequence.ViewSetup;
-import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.img.cell.CellImgFactory;
-import net.imglib2.type.numeric.real.FloatType;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.ImgLib2Temp.Pair;
 import net.preibisch.mvrecon.fiji.plugin.resave.Generic_Resave_HDF5;
@@ -48,10 +43,7 @@ import net.preibisch.mvrecon.fiji.plugin.resave.Resave_TIFF.Parameters;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.ViewSetupExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import net.preibisch.mvrecon.fiji.spimdata.imgloaders.AbstractImgFactoryImgLoader;
-import net.preibisch.mvrecon.fiji.spimdata.imgloaders.MicroManagerImgLoader;
 import bdv.export.ExportMipmapInfo;
 import bdv.export.ProgressWriter;
 
@@ -86,7 +78,7 @@ public class ResavePopup extends JMenu implements ExplorerWindowSetable
 	}
 
 	@Override
-	public JMenuItem setExplorerWindow(ExplorerWindow<? extends AbstractSpimData<? extends AbstractSequenceDescription<?, ?, ?>>, ?> panel )
+	public JMenuItem setExplorerWindow( ExplorerWindow< ?, ? > panel )
 	{
 		this.panel = (FilteredAndGroupedExplorerPanel< ?, ? >)panel;
 		return this;

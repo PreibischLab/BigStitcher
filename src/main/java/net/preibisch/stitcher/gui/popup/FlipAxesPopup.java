@@ -33,8 +33,6 @@ import javax.swing.JMenuItem;
 
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.SpimData;
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
@@ -44,7 +42,7 @@ import net.preibisch.stitcher.arrangement.FlipAxes;
 
 public class FlipAxesPopup extends JMenuItem implements ExplorerWindowSetable {
 
-	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	ExplorerWindow< ?, ? > panel;
 
 	public FlipAxesPopup()
 	{
@@ -53,8 +51,7 @@ public class FlipAxesPopup extends JMenuItem implements ExplorerWindowSetable {
 	}
 
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
 	{
 		this.panel = panel;
 		return this;

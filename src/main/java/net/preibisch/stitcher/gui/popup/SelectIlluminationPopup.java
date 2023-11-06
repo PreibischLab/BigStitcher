@@ -48,7 +48,6 @@ import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.SpimData;
-import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
@@ -94,10 +93,9 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 	}
 	
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
 	{
-		this.panel = (FilteredAndGroupedExplorerPanel< ?, ? >)panel;
+		this.panel = ( FilteredAndGroupedExplorerPanel< ?, ? > ) panel;
 		return this;
 	}
 
@@ -215,8 +213,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		final boolean previewResults = showPreviewOption ? defaultVerify = gdpParams.getNextBoolean() : false;
 		final ViewSelection< ViewId > viewSelection = getViewSelectionResult( gdpParams, data.getSequenceDescription() );
 
-		final SpimDataFilteringAndGrouping< AbstractSpimData< ? > > grouping =
-				new SpimDataFilteringAndGrouping< AbstractSpimData<?> >(data);
+		final SpimDataFilteringAndGrouping< SpimData > grouping = new SpimDataFilteringAndGrouping<>( data );
 		grouping.addGroupingFactor( Illumination.class );
 
 

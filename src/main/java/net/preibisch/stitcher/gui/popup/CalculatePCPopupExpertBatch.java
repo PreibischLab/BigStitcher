@@ -24,12 +24,8 @@ package net.preibisch.stitcher.gui.popup;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
 
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
-import net.preibisch.stitcher.gui.StitchingResultsSettable;
 import net.preibisch.stitcher.gui.popup.CalculatePCPopup.Method;
 
 public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindowSetable
@@ -64,10 +60,9 @@ public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindow
 	}
 
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
 	{
-		if (!wizardMode)
+		if ( !wizardMode )
 			this.phaseCorrSimple.setExplorerWindow( panel );
 		this.phaseCorr.setExplorerWindow( panel );
 		this.lucasKanade.setExplorerWindow( panel );

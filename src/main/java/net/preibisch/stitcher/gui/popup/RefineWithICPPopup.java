@@ -30,8 +30,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters;
 import net.preibisch.mvrecon.fiji.plugin.util.MouseOverPopUpStateChanger;
@@ -53,7 +51,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 	private static final long serialVersionUID = 1L;
 
 	DemoLinkOverlay overlay;
-	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	ExplorerWindow< ?, ? > panel;
 
 	int downsamplingChoice = ICPRefinement.defaultDownsamplingChoice;
 	int thresholdChoice = ICPRefinement.defaultThresholdChoice;
@@ -176,7 +174,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 	}
 
 	@Override
-	public JComponent setExplorerWindow( final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( final ExplorerWindow< ?, ? > panel )
 	{
 		this.panel = panel;
 

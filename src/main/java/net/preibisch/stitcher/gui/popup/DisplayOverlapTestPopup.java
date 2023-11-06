@@ -35,11 +35,8 @@ import javax.swing.JMenuItem;
 
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.SpimData;
-import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicImgLoader;
-import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Channel;
@@ -72,12 +69,11 @@ import net.preibisch.stitcher.algorithm.GroupedViewAggregator.ActionType;
 
 public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindowSetable {
 
-	
-	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
-	
+
+	ExplorerWindow< ?, ? > panel;
+
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
 	{
 		this.panel = panel;
 		return this;
@@ -177,8 +173,8 @@ public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindow
 		return res;
 	}
 
-	
-	public static <S extends AbstractSequenceDescription< ?,? extends BasicViewDescription<? extends BasicViewSetup>, ?  >>
+
+	public static < S extends AbstractSequenceDescription< ?, ?, ? > >
 		List<RandomAccessibleInterval< FloatType >> openVirtuallyFused(
 				S sd,
 				ViewRegistrations vrs,

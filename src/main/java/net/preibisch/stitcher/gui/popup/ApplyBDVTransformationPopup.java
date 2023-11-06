@@ -27,8 +27,6 @@ import javax.swing.JMenuItem;
 import bdv.BigDataViewer;
 import bdv.tools.transformation.TransformedSource;
 import bdv.viewer.state.SourceState;
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.registration.ViewTransformAffine;
@@ -44,16 +42,16 @@ public class ApplyBDVTransformationPopup extends JMenuItem implements ExplorerWi
 	private static final long serialVersionUID = 5234649267634013390L;
 	public static boolean showWarning = true;
 
-	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	ExplorerWindow< ?, ? > panel;
 
-	public ApplyBDVTransformationPopup() 
+	public ApplyBDVTransformationPopup()
 	{
 		super( "Apply BDV Transformation to Data" );
 		this.addActionListener( new MyActionListener() );
 	}
 
 	@Override
-	public JMenuItem setExplorerWindow( final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel )
+	public JMenuItem setExplorerWindow( final ExplorerWindow< ?, ? > panel )
 	{
 		this.panel = panel;
 		return this;

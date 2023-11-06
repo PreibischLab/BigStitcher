@@ -29,22 +29,8 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
-import bdv.BigDataViewer;
-import bdv.tools.transformation.TransformedSource;
-import bdv.viewer.state.SourceState;
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.data.registration.ViewTransform;
-import mpicbg.spim.data.registration.ViewTransformAffine;
-import mpicbg.spim.data.sequence.ViewId;
-import net.imglib2.realtransform.AffineGet;
-import net.imglib2.realtransform.AffineTransform3D;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import net.preibisch.stitcher.gui.PreviewRegularGridPanel;
 
@@ -53,7 +39,7 @@ public class RegularGridPopup extends JMenuItem implements ExplorerWindowSetable
 	private static final long serialVersionUID = 5234649267634013390L;
 	public static boolean showWarning = true;
 
-	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	ExplorerWindow< ?, ? > panel;
 	PreviewRegularGridPanel< ? > regularGridPanel;
 
 	public RegularGridPopup() 
@@ -63,7 +49,7 @@ public class RegularGridPopup extends JMenuItem implements ExplorerWindowSetable
 	}
 
 	@Override
-	public JMenuItem setExplorerWindow( final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel )
+	public JMenuItem setExplorerWindow( final ExplorerWindow< ?, ? > panel )
 	{
 		this.panel = panel;
 		return this;
