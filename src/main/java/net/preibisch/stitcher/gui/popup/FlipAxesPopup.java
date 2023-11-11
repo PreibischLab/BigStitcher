@@ -42,7 +42,7 @@ import net.preibisch.stitcher.arrangement.FlipAxes;
 
 public class FlipAxesPopup extends JMenuItem implements ExplorerWindowSetable {
 
-	ExplorerWindow< ?, ? > panel;
+	ExplorerWindow< ? > panel;
 
 	public FlipAxesPopup()
 	{
@@ -51,7 +51,7 @@ public class FlipAxesPopup extends JMenuItem implements ExplorerWindowSetable {
 	}
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;

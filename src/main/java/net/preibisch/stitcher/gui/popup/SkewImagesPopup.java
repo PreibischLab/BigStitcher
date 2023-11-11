@@ -43,10 +43,10 @@ import net.preibisch.stitcher.arrangement.SkewImages;
 public class SkewImagesPopup extends JMenuItem implements ExplorerWindowSetable
 {
 	private static String[] axesChoice = new String[] {"X", "Y", "Z"};
-	ExplorerWindow< ?, ? > panel;
+	ExplorerWindow< ? > panel;
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;

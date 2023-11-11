@@ -84,8 +84,8 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 	public static boolean defaultOnlySelection = false;
 	public static boolean defaultVerify = true;
 
-	private FilteredAndGroupedExplorerPanel< ?, ? > panel;
-	
+	private FilteredAndGroupedExplorerPanel< ? > panel;
+
 	public SelectIlluminationPopup()
 	{
 		super( "Select Best Illuminations" );
@@ -93,9 +93,9 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 	}
 	
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
-		this.panel = ( FilteredAndGroupedExplorerPanel< ?, ? > ) panel;
+		this.panel = ( FilteredAndGroupedExplorerPanel< ? > ) panel;
 		return this;
 	}
 
@@ -157,7 +157,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 					}
 
 					final BigDataViewer bdv = panel.bdvPopup().getBDV();
-					final Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selected = ((GroupedRowWindow)panel).selectedRowsGroups();
+					final Collection< List< BasicViewDescription< ? > > > selected = ((GroupedRowWindow)panel).selectedRowsGroups();
 
 					SpimData2 filteredSpimData = processIlluminationSelection( 
 							(SpimData) panel.getSpimData(),

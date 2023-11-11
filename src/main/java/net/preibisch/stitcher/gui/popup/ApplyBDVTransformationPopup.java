@@ -47,7 +47,7 @@ public class ApplyBDVTransformationPopup extends JMenuItem implements ExplorerWi
 	private static final long serialVersionUID = 5234649267634013390L;
 	public static boolean showWarning = true;
 
-	ExplorerWindow< ?, ? > panel;
+	ExplorerWindow< ? > panel;
 
 	public ApplyBDVTransformationPopup()
 	{
@@ -56,7 +56,7 @@ public class ApplyBDVTransformationPopup extends JMenuItem implements ExplorerWi
 	}
 
 	@Override
-	public JMenuItem setExplorerWindow( final ExplorerWindow< ?, ? > panel )
+	public JMenuItem setExplorerWindow( final ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;

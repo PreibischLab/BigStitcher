@@ -35,10 +35,10 @@ import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 public class TogglePreviewPopup extends JMenuItem implements ExplorerWindowSetable
 {
 
-	private ExplorerWindow< ?, ? > panel;
+	private ExplorerWindow< ? > panel;
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;
@@ -61,8 +61,8 @@ public class TogglePreviewPopup extends JMenuItem implements ExplorerWindowSetab
 				return;
 			}
 
-			((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode(false);
-			
+			((StitchingExplorerPanel< ? >) panel).togglePreviewMode(false);
+
 		}
 	}
 

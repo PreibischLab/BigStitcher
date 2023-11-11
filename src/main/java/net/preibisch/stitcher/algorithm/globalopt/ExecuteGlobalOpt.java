@@ -42,12 +42,12 @@ import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class ExecuteGlobalOpt implements Runnable
 {
-	private ExplorerWindow< ?, ? > panel;
+	private ExplorerWindow< ? > panel;
 	private boolean expertMode;
 	private SpimDataFilteringAndGrouping<? extends AbstractSpimData<?> > savedFiltering;
 
 	public ExecuteGlobalOpt(
-			final ExplorerWindow< ?, ? > panel,
+			final ExplorerWindow< ? > panel,
 			final boolean expertMode )
 	{
 		this.panel = panel;
@@ -56,8 +56,8 @@ public class ExecuteGlobalOpt implements Runnable
 	}
 
 	public ExecuteGlobalOpt(
-			final ExplorerWindow< ?, ? > panel,
-			final SpimDataFilteringAndGrouping<? extends AbstractSpimData<?> > savedFiltering)
+			final ExplorerWindow< ? > panel,
+			final SpimDataFilteringAndGrouping< ? > savedFiltering )
 	{
 		this.panel = panel;
 		this.expertMode = savedFiltering.requestExpertSettingsForGlobalOpt;
@@ -83,7 +83,7 @@ public class ExecuteGlobalOpt implements Runnable
 			final SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping;
 			if ( !isSavedFaG )
 			{
-				FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
+				FilteredAndGroupedExplorerPanel< SpimData2 > panelFG = ( FilteredAndGroupedExplorerPanel< SpimData2 > ) panel;
 				filteringAndGrouping = new SpimDataFilteringAndGrouping< SpimData2 >(
 						(SpimData2) panel.getSpimData() );
 
@@ -134,7 +134,7 @@ public class ExecuteGlobalOpt implements Runnable
 			if ( !StitchingExplorerPanel.class.isInstance( panel ) )
 				demoOverlay = null;
 			else
-				demoOverlay = (( StitchingExplorerPanel<?,?> )panel).getDemoLinkOverlay();
+				demoOverlay = ( ( StitchingExplorerPanel< ? > ) panel ).getDemoLinkOverlay();
 
 			if ( demoOverlay != null )
 			{
@@ -150,7 +150,7 @@ public class ExecuteGlobalOpt implements Runnable
 			System.out.println( "resetting savedFilteringAndGrouping" );
 			// remove saved filtering and grouping once we are done here
 			// regardless of whether optimization was successful or not
-			( (StitchingExplorerPanel< ?, ? >) panel ).setSavedFilteringAndGrouping( null );
+			( (StitchingExplorerPanel< ? >) panel ).setSavedFilteringAndGrouping( null );
 		}
 
 		panel.updateContent();

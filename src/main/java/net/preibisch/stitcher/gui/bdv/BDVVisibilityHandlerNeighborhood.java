@@ -48,10 +48,10 @@ import net.preibisch.stitcher.gui.popup.BDVPopupStitching;
 
 public class BDVVisibilityHandlerNeighborhood implements BDVVisibilityHandler
 {
-	private ExplorerWindow< ?, ? > panel;
+	private ExplorerWindow< ? > panel;
 	private long colorOffset;
 
-	public BDVVisibilityHandlerNeighborhood( ExplorerWindow< ?, ? > panel, long colorOffset )
+	public BDVVisibilityHandlerNeighborhood( ExplorerWindow< ? > panel, long colorOffset )
 	{
 		this.panel = panel;
 		this.colorOffset = colorOffset;
@@ -107,7 +107,7 @@ public class BDVVisibilityHandlerNeighborhood implements BDVVisibilityHandler
 		{
 			// get all filters from model
 			final ISpimDataTableModel< ? > tableModel =
-					((FilteredAndGroupedExplorerPanel< ?, ? >)panel).getTableModel();
+					( ( FilteredAndGroupedExplorerPanel< ? > ) panel ).getTableModel();
 			final Map< Class< ? extends Entity >, List< ? extends Entity > > filters = tableModel.getFilters();
 
 			// check all candidates

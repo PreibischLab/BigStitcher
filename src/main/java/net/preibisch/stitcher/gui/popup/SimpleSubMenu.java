@@ -45,7 +45,7 @@ public class SimpleSubMenu extends JMenu implements ExplorerWindowSetable
 	}
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		children.forEach( c -> {
 			if (ExplorerWindowSetable.class.isInstance( c ))

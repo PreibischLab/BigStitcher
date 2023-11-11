@@ -40,7 +40,7 @@ import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable
 {
-	private ExplorerWindow< ?, ? > panel;
+	private ExplorerWindow< ? > panel;
 	private TogglePreviewPopup interactiveExplorer;
 	private SimpleRemoveLinkPopup parameterBasedRemoval;
 	private JMenu removeAllPopup;
@@ -118,7 +118,7 @@ public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable
 	}
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		interactiveExplorer.setExplorerWindow( panel );

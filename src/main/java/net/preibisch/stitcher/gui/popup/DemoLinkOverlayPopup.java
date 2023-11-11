@@ -42,7 +42,7 @@ public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSet
 {
 	private static final long serialVersionUID = 1L;
 
-	ExplorerWindow< ?, ? > panel;
+	ExplorerWindow< ? > panel;
 	DemoLinkOverlay overlay;
 	boolean active = false;
 	MyActionListener actionListener;
@@ -57,7 +57,7 @@ public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSet
 	}
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;

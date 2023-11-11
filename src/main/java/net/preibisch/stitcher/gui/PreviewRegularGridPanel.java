@@ -80,7 +80,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	public static int[] dimensionOrderOld = null;
 	public static Boolean keepMetadataRotationOld = true;
 
-	private ExplorerWindow< AS, ?> parent;
+	private ExplorerWindow< AS > parent;
 
 	// UI elements
 	private List<JCheckBox> alternatingCheckboxes;
@@ -111,7 +111,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 
 	private final static String[] dimensionNames = new String[] {"X", "Y", "Z"};
 
-	public PreviewRegularGridPanel(ExplorerWindow< AS, ? > parent)
+	public PreviewRegularGridPanel(ExplorerWindow< AS > parent)
 	{
 		int iconSizeX = 80;
 		int iconSizeY = 80;
@@ -306,7 +306,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 
 		// add this as a listener for selection changes in parent view explorer
 		// this should trigger update immediately
-		FilteredAndGroupedExplorerPanel< AS,? > FilteredAndGroupedExplorerPanel = (FilteredAndGroupedExplorerPanel< AS,? >)parent;
+		FilteredAndGroupedExplorerPanel< AS > FilteredAndGroupedExplorerPanel = (FilteredAndGroupedExplorerPanel< AS >)parent;
 		FilteredAndGroupedExplorerPanel.addListener( this );
 		
 		if (oldOverlap == null)
@@ -528,7 +528,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 
 	public void quit()
 	{
-		FilteredAndGroupedExplorerPanel< AS,? > panel = (FilteredAndGroupedExplorerPanel< AS,? >)parent;
+		FilteredAndGroupedExplorerPanel< AS > panel = (FilteredAndGroupedExplorerPanel< AS >)parent;
 		panel.getListeners().remove( this );
 		
 		final BigDataViewer bdv = parent.bdvPopup().getBDV();		
@@ -548,8 +548,7 @@ public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends J
 	}
 
 	@Override
-	public void selectedViewDescriptions(
-			List< List< BasicViewDescription< ? extends BasicViewSetup > > > viewDescriptions)
+	public void selectedViewDescriptions( List< List< BasicViewDescription< ? > > > viewDescriptions )
 	{
 		//System.out.println( " selection upd " );
 		selectedVDs = viewDescriptions;

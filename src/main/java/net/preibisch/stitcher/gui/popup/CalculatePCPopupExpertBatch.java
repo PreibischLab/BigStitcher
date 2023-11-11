@@ -60,7 +60,7 @@ public class CalculatePCPopupExpertBatch extends JMenu implements ExplorerWindow
 	}
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		if ( !wizardMode )
 			this.phaseCorrSimple.setExplorerWindow( panel );

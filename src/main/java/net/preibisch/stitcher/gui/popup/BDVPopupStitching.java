@@ -268,7 +268,7 @@ public class BDVPopupStitching extends BDVPopup
 		ScrollableBrightnessDialog.updateBrightnessPanels( bdv );
 	}
 
-	public static BigDataViewer createBDV( final ExplorerWindow< ? , ? > panel , LinkOverlay lo)
+	public static BigDataViewer createBDV( final ExplorerWindow< ? > panel , LinkOverlay lo)
 	{
 		if ( AbstractImgLoader.class.isInstance( panel.getSpimData().getSequenceDescription().getImgLoader() ) )
 		{

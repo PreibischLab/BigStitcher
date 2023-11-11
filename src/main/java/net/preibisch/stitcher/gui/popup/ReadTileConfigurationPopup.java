@@ -39,10 +39,10 @@ import net.preibisch.stitcher.gui.ReadTileConfigurationPanel;
 public class ReadTileConfigurationPopup extends JMenuItem implements ExplorerWindowSetable
 {
 	private static final long serialVersionUID = 8420300257587465114L;
-	private ExplorerWindow< ?, ? > panel;
+	private ExplorerWindow< ? > panel;
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;

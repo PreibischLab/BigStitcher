@@ -64,7 +64,7 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constell
 import net.preibisch.stitcher.algorithm.FilteredStitchingResults;
 import net.preibisch.stitcher.gui.popup.LinkExplorerRemoveLinkPopup;
 
-public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData<?> >
+public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData< ? > >
 {
 	public static double minCorrDefault = 0.7;
 	public static double maxCorrDefault = 1.0;
@@ -99,7 +99,9 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 	}
 
 	private StitchingResults results;
-	private StitchingExplorerPanel< AbstractSpimData< ? >, ? > parent;
+
+	private StitchingExplorerPanel< AbstractSpimData< ? > > parent;
+
 	LinkExplorerTableModel model;
 	protected JTable table;
 	private List<Pair<Group<ViewId>, Group<ViewId>>> activeLinks;
@@ -115,7 +117,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		model.fireTableDataChanged();
 	}
 
-	public LinkExplorerPanel (StitchingResults results, StitchingExplorerPanel< AbstractSpimData< ? >, ? > parent)
+	public LinkExplorerPanel( StitchingResults results, StitchingExplorerPanel< AbstractSpimData< ? > > parent )
 	{
 		this.results = results;
 		this.parent = parent;
@@ -374,8 +376,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 
 
 	@Override
-	public void selectedViewDescriptions(
-			List< List< BasicViewDescription< ? extends BasicViewSetup > > > viewDescriptions)
+	public void selectedViewDescriptions( List< List< BasicViewDescription< ? > > > viewDescriptions )
 	{
 		if (viewDescriptions.size() < 1) // nothing selected
 		{

@@ -223,7 +223,7 @@ public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > e
 	}
 
 	@Override
-	public ExplorerWindow<AS, ?> getPanel() { return decorated.getPanel(); }
+	public ExplorerWindow<AS> getPanel() { return decorated.getPanel(); }
 
 	@Override
 	public void setStitchingResults(StitchingResults res)

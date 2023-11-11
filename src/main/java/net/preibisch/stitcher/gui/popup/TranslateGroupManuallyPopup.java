@@ -45,7 +45,7 @@ import net.preibisch.stitcher.gui.TranslateGroupManuallyPanel;
 public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWindowSetable
 {
 
-	ExplorerWindow< ?, ? > panel;
+	ExplorerWindow< ? > panel;
 
 	public TranslateGroupManuallyPopup()
 	{
@@ -75,10 +75,10 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 			final JFrame theFrame = new JFrame( "Move Views" );			
 			TranslateGroupManuallyPanel tgmp = new TranslateGroupManuallyPanel( (SpimData2) panel.getSpimData(), viewIds, panel.bdvPopup(), theFrame);
 
-			((FilteredAndGroupedExplorerPanel< AbstractSpimData<?>, ? >) panel).addListener(  tgmp );
+			((FilteredAndGroupedExplorerPanel< AbstractSpimData< ? > >) panel).addListener(  tgmp );
 
 			// re-select everything
-			ListSelectionModel lsm = ((FilteredAndGroupedExplorerPanel< ?, ? >) panel).table.getSelectionModel();
+			ListSelectionModel lsm = ((FilteredAndGroupedExplorerPanel< ? >) panel).table.getSelectionModel();
 			reSelect( lsm );
 
 			theFrame.add( tgmp );
@@ -91,10 +91,10 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 				public void windowClosing(WindowEvent e)
 				{
 					System.out.println( "closing" );
-					((FilteredAndGroupedExplorerPanel< ?, ? >) panel).getListeners().remove( tgmp );
+					((FilteredAndGroupedExplorerPanel< ? >) panel).getListeners().remove( tgmp );
 
 					// re-select everything
-					ListSelectionModel lsm = ((FilteredAndGroupedExplorerPanel< ?, ? >) panel).table.getSelectionModel();
+					ListSelectionModel lsm = ((FilteredAndGroupedExplorerPanel< ? >) panel).table.getSelectionModel();
 					reSelect( lsm );
 				}
 			});
@@ -114,7 +114,7 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 	
 	
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;

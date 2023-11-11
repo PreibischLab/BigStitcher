@@ -77,7 +77,7 @@ public class BigStitcher implements Command, PlugIn
 		final String xml = result.getXMLFileName();
 		final XmlIoSpimData2 io = result.getIO();
 
-		final StitchingExplorer< SpimData2, XmlIoSpimData2 > explorer =
+		final StitchingExplorer< SpimData2 > explorer =
 				new StitchingExplorer< >( data, xml, io );
 
 		explorer.getFrame().toFront();

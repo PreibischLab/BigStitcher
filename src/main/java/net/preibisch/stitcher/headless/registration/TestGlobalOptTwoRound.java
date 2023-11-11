@@ -171,8 +171,8 @@ public class TestGlobalOptTwoRound
 			vr.updateModel();
 		}
 
-		final StitchingExplorer< SpimData2, XmlIoSpimData2 > explorer =
-				new StitchingExplorer< SpimData2, XmlIoSpimData2 >( spimData, null, null );
+		final StitchingExplorer< SpimData2 > explorer =
+				new StitchingExplorer<>( spimData, null, null );
 
 		explorer.getFrame().toFront();
 	}

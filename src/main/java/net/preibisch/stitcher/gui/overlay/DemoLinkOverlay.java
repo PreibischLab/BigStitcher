@@ -261,8 +261,7 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 
 
 	@Override
-	public void selectedViewDescriptions(
-			List< List< BasicViewDescription< ? extends BasicViewSetup > > > viewDescriptions)
+	public void selectedViewDescriptions( List< List< BasicViewDescription< ? > > > viewDescriptions )
 	{
 		List<Pair<Group<ViewId>, Group<ViewId>>> res = new ArrayList<>();
 		for (int i = 0; i<viewDescriptions.size(); i++)

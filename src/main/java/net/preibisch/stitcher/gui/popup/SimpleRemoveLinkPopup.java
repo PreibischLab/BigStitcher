@@ -52,10 +52,10 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	ExplorerWindow< ?, ? > panel;
+	ExplorerWindow< ? > panel;
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;
@@ -152,7 +152,7 @@ public class SimpleRemoveLinkPopup extends JMenuItem implements ExplorerWindowSe
 				if (! StitchingExplorerPanel.class.isInstance( panel ) )
 					demoOverlay = null;
 				else
-					demoOverlay = (( StitchingExplorerPanel<?,?> )panel).getDemoLinkOverlay();
+					demoOverlay = ( ( StitchingExplorerPanel< ? > ) panel ).getDemoLinkOverlay();
 
 				SpimData2 data = (SpimData2) panel.getSpimData();
 				List< List< ViewId > > selected = ((GroupedRowWindow)panel).selectedRowsViewIdGroups();

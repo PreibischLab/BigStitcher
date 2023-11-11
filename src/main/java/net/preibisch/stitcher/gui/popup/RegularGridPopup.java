@@ -39,7 +39,7 @@ public class RegularGridPopup extends JMenuItem implements ExplorerWindowSetable
 	private static final long serialVersionUID = 5234649267634013390L;
 	public static boolean showWarning = true;
 
-	ExplorerWindow< ?, ? > panel;
+	ExplorerWindow< ? > panel;
 	PreviewRegularGridPanel< ? > regularGridPanel;
 
 	public RegularGridPopup() 
@@ -49,7 +49,7 @@ public class RegularGridPopup extends JMenuItem implements ExplorerWindowSetable
 	}
 
 	@Override
-	public JMenuItem setExplorerWindow( final ExplorerWindow< ?, ? > panel )
+	public JMenuItem setExplorerWindow( final ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;

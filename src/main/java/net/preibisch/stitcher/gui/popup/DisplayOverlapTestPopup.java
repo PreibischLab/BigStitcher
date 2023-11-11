@@ -70,10 +70,10 @@ import net.preibisch.stitcher.algorithm.GroupedViewAggregator.ActionType;
 public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindowSetable {
 
 
-	ExplorerWindow< ?, ? > panel;
+	ExplorerWindow< ? > panel;
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;

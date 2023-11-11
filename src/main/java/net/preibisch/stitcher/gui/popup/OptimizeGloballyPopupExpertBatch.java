@@ -36,11 +36,11 @@ public class OptimizeGloballyPopupExpertBatch extends JMenuItem
 {
 	private static final long serialVersionUID = 1L;
 
-	private ExplorerWindow< ?, ? > panel;
+	private ExplorerWindow< ? > panel;
 	private boolean expertMode;
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;

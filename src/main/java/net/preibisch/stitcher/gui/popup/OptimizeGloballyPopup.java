@@ -40,10 +40,10 @@ public class OptimizeGloballyPopup extends JMenu implements ExplorerWindowSetabl
 
 	public final OptimizeGloballyPopupExpertBatch simpleOptimize;
 	public final OptimizeGloballyPopupExpertBatch expertOptimize;
-	private ExplorerWindow< ?, ? > panel;
+	private ExplorerWindow< ? > panel;
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 

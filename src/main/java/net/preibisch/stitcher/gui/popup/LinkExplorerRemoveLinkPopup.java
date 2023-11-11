@@ -43,7 +43,7 @@ public class LinkExplorerRemoveLinkPopup extends JMenuItem implements StitchingR
 {
 	private LinkExplorerPanel panel;
 	private StitchingResults results;
-	private ExplorerWindow< ?, ? > stitchingExplorer;
+	private ExplorerWindow< ? > stitchingExplorer;
 
 	public LinkExplorerRemoveLinkPopup(LinkExplorerPanel panel)
 	{
@@ -60,8 +60,8 @@ public class LinkExplorerRemoveLinkPopup extends JMenuItem implements StitchingR
 			{
 				final Pair< Group<ViewId>, Group<ViewId> > pair = panel.getModel().getActiveLinks().get( panel.getTable().getSelectedRow() );
 				results.removePairwiseResultForPair( pair );
-				((StitchingExplorerPanel< ?, ? >)stitchingExplorer).updateBDVPreviewMode();
-				
+				((StitchingExplorerPanel< ? >)stitchingExplorer).updateBDVPreviewMode();
+
 				panel.selectedViewDescriptions( new ArrayList<>(((GroupedRowWindow)stitchingExplorer).selectedRowsGroups()) );
 				panel.getModel().fireTableDataChanged();
 			}
@@ -75,7 +75,7 @@ public class LinkExplorerRemoveLinkPopup extends JMenuItem implements StitchingR
 	}
 
 	@Override
-	public JComponent setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.stitchingExplorer = panel;
 		return this;

@@ -142,8 +142,8 @@ import net.preibisch.stitcher.gui.popup.TranslateGroupManuallyPopup;
 import net.preibisch.stitcher.gui.popup.VerifyLinksPopup;
 import net.preibisch.stitcher.input.FractalImgLoader;
 
-public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS >>
-		extends FilteredAndGroupedExplorerPanel< AS, X > implements ExplorerWindow< AS, X >
+public class StitchingExplorerPanel<AS extends AbstractSpimData< ? > >
+		extends FilteredAndGroupedExplorerPanel< AS > implements ExplorerWindow< AS >
 {
 	public final static double xPosLinkExplorer = 0.6;
 	public final static double yPosLinkExplorer = 0.0;
@@ -172,8 +172,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 	protected JCheckBox checkboxGroupChannels;
 	protected JCheckBox checkboxGroupIllums;
 
-	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS, X > explorer, final AS data, final String xml,
-			final X io, boolean requestStartBDV)
+	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS > explorer, final AS data, final String xml,
+			final XmlIoAbstractSpimData< ?, AS > io, boolean requestStartBDV)
 	{
 		super( explorer, data, xml, io );
 
@@ -717,11 +717,10 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 								break;
 							}
 
-					// FIXME: some generics fixes necessary to avoid this ugly cast (which is necessary for maven to compile)
-					selectedRows.add( (List<BasicViewDescription< ? extends BasicViewSetup >>) (Object) tableModel.getElements().get( row ) );
+					selectedRows.add( tableModel.getElements().get( row ) );
 				}
 
-				final List< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedList = new ArrayList< >( selectedRows );
+				final List< List< BasicViewDescription< ? > > > selectedList = new ArrayList<>( selectedRows );
 				/*for ( List< BasicViewDescription< ? extends BasicViewSetup > > selectedI : selectedRows )
 					selectedList.add( selectedI );*/
 
@@ -767,7 +766,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 		if ( linkExplorer != null )
 			return;
 
-		linkExplorer = new LinkExplorerPanel( stitchingResults, (StitchingExplorerPanel< AbstractSpimData< ? >, ? >) this );
+		linkExplorer = new LinkExplorerPanel( stitchingResults, (StitchingExplorerPanel< AbstractSpimData< ? > >) this );
 		// init the LinkExplorer
 		linkFrame = new JFrame( "Link Explorer" );
 		linkFrame.add( linkExplorer, BorderLayout.CENTER );
@@ -892,8 +891,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? >, X extends 
 			return;
 
 		// in Preview Mode, only one row should be selected
-		List< BasicViewDescription< ? extends BasicViewSetup > > selectedRow = selectedRowsGroups().iterator().next();
-		BasicViewDescription< ? extends BasicViewSetup > firstVD = firstSelectedVD;
+		List< BasicViewDescription< ? > > selectedRow = selectedRowsGroups().iterator().next();
+		BasicViewDescription< ? > firstVD = firstSelectedVD;
 
 		if ( selectedRow == null || selectedRow.size() == 0 )
 			return;

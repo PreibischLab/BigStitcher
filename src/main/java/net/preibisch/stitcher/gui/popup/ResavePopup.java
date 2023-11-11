@@ -53,7 +53,7 @@ public class ResavePopup extends JMenu implements ExplorerWindowSetable
 	public static final int askWhenMoreThan = 5;
 	private static final long serialVersionUID = 5234649267634013390L;
 
-	FilteredAndGroupedExplorerPanel< ?, ? > panel;
+	FilteredAndGroupedExplorerPanel< ? > panel;
 
 	protected static String[] types = new String[]{ "As TIFF ...", "As compressed TIFF ...", "As HDF5 ...", "As compressed HDF5 ..." };
 
@@ -78,9 +78,9 @@ public class ResavePopup extends JMenu implements ExplorerWindowSetable
 	}
 
 	@Override
-	public JMenuItem setExplorerWindow( ExplorerWindow< ?, ? > panel )
+	public JMenuItem setExplorerWindow( ExplorerWindow< ? > panel )
 	{
-		this.panel = (FilteredAndGroupedExplorerPanel< ?, ? >)panel;
+		this.panel = (FilteredAndGroupedExplorerPanel< ? >)panel;
 		return this;
 	}
 

@@ -24,7 +24,6 @@ package net.preibisch.stitcher.algorithm;
 
 import java.awt.Font;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,8 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.swing.JLabel;
 
 import fiji.util.gui.GenericDialogPlus;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -108,7 +105,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		filters.put(cl, instances);
 	}
 
-	public void addFilters(Collection<? extends BasicViewDescription< ? extends BasicViewSetup >> selected)
+	public void addFilters(Collection<? extends BasicViewDescription<?>> selected)
 	{
 		for (Class<? extends Entity> cl : entityClasses)
 			filters.put( cl, new ArrayList<>(getInstancesOfAttribute( selected, cl ) ) );
@@ -298,13 +295,13 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	}
 
 	// convenience method if have a panel (which can give us selected views)
-	public SpimDataFilteringAndGrouping< AS> askUserForFiltering(FilteredAndGroupedExplorerPanel< AS, ?> panel)
+	public SpimDataFilteringAndGrouping< AS> askUserForFiltering(FilteredAndGroupedExplorerPanel< AS > panel)
 	{
-		List< BasicViewDescription< ? extends BasicViewSetup > > views;
-		
+		List< BasicViewDescription< ? > > views;
+
 		if (panel instanceof GroupedRowWindow)
 		{
-			Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedRowsGroups = ((GroupedRowWindow)panel).selectedRowsGroups();
+			Collection< List< BasicViewDescription< ? > > > selectedRowsGroups = ((GroupedRowWindow)panel).selectedRowsGroups();
 			views = selectedRowsGroups.stream().reduce( new ArrayList<>(), (x, y) -> {x.addAll(y); return x;} );
 		}
 		else
@@ -350,19 +347,19 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	
 	}
 
-	public SpimDataFilteringAndGrouping< AS> askUserForGrouping()
+	public SpimDataFilteringAndGrouping< AS > askUserForGrouping()
 	{
 		// use the current filtering as preset
 		return askUserForGrouping( SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), getFilters() ), new ArrayList<>(), new HashSet<>() );
 	}
 
-	public SpimDataFilteringAndGrouping< AS> askUserForGrouping( FilteredAndGroupedExplorerPanel< AS, ?> panel)
+	public SpimDataFilteringAndGrouping< AS > askUserForGrouping( FilteredAndGroupedExplorerPanel< AS > panel)
 	{
-		List< BasicViewDescription< ? extends BasicViewSetup > > views;
+		List< BasicViewDescription< ? > > views;
 
 		if (panel instanceof GroupedRowWindow)
 		{
-			Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selectedRowsGroups = ((GroupedRowWindow)panel).selectedRowsGroups();
+			Collection< List< BasicViewDescription< ? > > > selectedRowsGroups = ((GroupedRowWindow)panel).selectedRowsGroups();
 			views = selectedRowsGroups.stream().reduce( new ArrayList<>(), (x, y) -> {x.addAll(y); return x;} );
 		}
 		else
