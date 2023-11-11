@@ -303,10 +303,9 @@ public class BDVPopupStitching extends BDVPopup
 												null, 
 												options );
 
-		BDVPopup.initTransform( bdv.getViewer() );		
-		// if ( !bdv.tryLoadSettings( panel.xml() ) ) TODO: this should
-		// work, but currently tryLoadSettings is protected. fix that.
-		BDVPopup.initBrightness( 0.001, 0.999, bdv.getViewer().getState(), bdv.getSetupAssignments() );
+		BDVPopup.initTransform( bdv.getViewer() );
+		if ( !bdv.tryLoadSettings( panel.xml() ) )
+			BDVPopup.initBrightness( 0.001, 0.999, bdv.getViewerFrame() );
 
 		FilteredAndGroupedExplorerPanel.setFusedModeSimple( bdv, panel.getSpimData() );
 
