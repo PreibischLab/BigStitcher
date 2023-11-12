@@ -37,7 +37,6 @@ import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.base.NamedEntity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
@@ -171,10 +170,10 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		return Group.combineBy( ungroupedElements, groupingFactors);
 	}
 
-	public List<Pair<? extends Group< ? extends BasicViewDescription< ? extends BasicViewSetup > >, ? extends Group< ? extends BasicViewDescription< ? extends BasicViewSetup >>>> getComparisons()
+	public List<Pair<? extends Group< ? extends BasicViewDescription< ? > >, ? extends Group< ? extends BasicViewDescription< ? >>>> getComparisons()
 	{
-		final List<Pair<? extends Group< ? extends BasicViewDescription< ? extends BasicViewSetup > >, ? extends Group< ? extends BasicViewDescription< ? extends BasicViewSetup >>>> res = new ArrayList<>();
-		
+		final List<Pair<? extends Group< ? extends BasicViewDescription< ? > >, ? extends Group< ? extends BasicViewDescription< ? >>>> res = new ArrayList<>();
+
 		// filter first
 		final List<BasicViewDescription< ? > > ungroupedElements =
 				SpimDataTools.getFilteredViewDescriptions( data.getSequenceDescription(), filters);
@@ -227,16 +226,16 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	 * @param cl Class of entity to get instances of
 	 * @return all instances of cl in the views in vds
 	 */
-	public static Set<Entity> getInstancesOfAttributeGrouped(Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > vds, Class<? extends Entity> cl)
-	{	
+	public static Set<Entity> getInstancesOfAttributeGrouped(Collection< List< BasicViewDescription< ? > > > vds, Class<? extends Entity> cl)
+	{
 		// make one List out of the nested Collection and getInstancesOfAttribute
 		return getInstancesOfAttribute( vds.stream().reduce( new ArrayList<>(), (x, y) -> {x.addAll(y); return x;} ), cl );
 	}
 
-	public static Set<Entity> getInstancesOfAttribute(Collection<? extends BasicViewDescription< ? extends BasicViewSetup >> vds, Class<? extends Entity> cl)
+	public static Set<Entity> getInstancesOfAttribute(Collection<? extends BasicViewDescription< ? >> vds, Class<? extends Entity> cl)
 	{
 		Set<Entity> res = new HashSet<>();
-		for (BasicViewDescription< ? extends BasicViewSetup > vd : vds)
+		for (BasicViewDescription< ? > vd : vds)
 			if (cl == TimePoint.class)
 				res.add( vd.getTimePoint() );
 			else
@@ -250,11 +249,11 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	 * @param cl Class of entity to get instances of
 	 * @return all instances of cl in the views in vds
 	 */
-	public static List<? extends Entity> getInstancesInAllGroups(Collection< ? extends Iterable< BasicViewDescription< ? extends BasicViewSetup > > > vds, Class<? extends Entity> cl)
+	public static List<? extends Entity> getInstancesInAllGroups(Collection< ? extends Iterable< BasicViewDescription< ? > > > vds, Class<? extends Entity> cl)
 	{
 		Set<Entity> res = new HashSet<>();
-		Iterator< ? extends Iterable< BasicViewDescription< ? extends BasicViewSetup > > > it = vds.iterator();
-		for (BasicViewDescription< ? extends BasicViewSetup > vd : it.next())
+		Iterator< ? extends Iterable< BasicViewDescription< ? > > > it = vds.iterator();
+		for (BasicViewDescription< ? > vd : it.next())
 			if (cl == TimePoint.class)
 				res.add( vd.getTimePoint() );
 			else
@@ -262,9 +261,9 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 
 		while (it.hasNext()) 
 		{
-			Iterable< BasicViewDescription< ? extends BasicViewSetup > > vdli = it.next();
+			Iterable< BasicViewDescription< ? > > vdli = it.next();
 			Set<Entity> resI = new HashSet<>();
-			for (BasicViewDescription< ? extends BasicViewSetup > vd : vdli)
+			for (BasicViewDescription< ? > vd : vdli)
 				if (cl == TimePoint.class)
 					resI.add( vd.getTimePoint() );
 				else
@@ -312,7 +311,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 		
 	}
 
-	public SpimDataFilteringAndGrouping< AS> askUserForFiltering(Collection<? extends BasicViewDescription< ? extends BasicViewSetup > > views)
+	public SpimDataFilteringAndGrouping< AS> askUserForFiltering(Collection<? extends BasicViewDescription< ? > > views)
 	{
 
 		GenericDialogPlus gdp1 = new GenericDialogPlus( "Select Views To Process" );

@@ -930,7 +930,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? > >
 		final boolean[] active = new boolean[data.getSequenceDescription().getViewSetupsOrdered().size()];
 
 		// set all views of the selected row visible
-		for ( final BasicViewDescription< ? extends BasicViewSetup > vd : selectedRow )
+		for ( final BasicViewDescription< ? > vd : selectedRow )
 			if ( vd.getTimePointId() == firstTP.getId() )
 				active[getBDVSourceIndex( vd.getViewSetup(), data )] = true;
 

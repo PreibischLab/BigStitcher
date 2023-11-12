@@ -85,7 +85,7 @@ public class GlobalOptStitcher
 				filteringAndGrouping.getFilteredViews().stream().map( x -> (ViewId) x )
 						.collect( Collectors.toList() ),
 				filteringAndGrouping.getGroupedViews( false )
-						.stream().map( x -> new Group< ViewId >( x.getViews().stream()
+						.stream().map( x -> new Group<>( x.getViews().stream()
 								.map( y -> (ViewId) y ).collect( Collectors.toList() ) ) )
 						.collect( Collectors.toSet() ) )
 		{
@@ -102,8 +102,8 @@ public class GlobalOptStitcher
 						{
 							// ugly, but just undoes the casting to
 							// ViewId in constructor
-							BasicViewDescription< ? extends BasicViewSetup > vdA = (BasicViewDescription< ? extends BasicViewSetup >) views.get( i );
-							BasicViewDescription< ? extends BasicViewSetup > vdB = (BasicViewDescription< ? extends BasicViewSetup >) views.get( j );
+							BasicViewDescription< ? > vdA = (BasicViewDescription< ? >) views.get( i );
+							BasicViewDescription< ? > vdB = (BasicViewDescription< ? >) views.get( j );
 
 							if ( cl == TimePoint.class )
 								differInApplicationAxis |= !vdA.getTimePoint().equals( vdB.getTimePoint() );
@@ -112,7 +112,7 @@ public class GlobalOptStitcher
 										.equals( vdB.getViewSetup().getAttribute( cl ) );
 						}
 						if ( !differInApplicationAxis )
-							res.add( new ValuePair< ViewId, ViewId >( views.get( i ), views.get( j ) ) );
+							res.add( new ValuePair<>( views.get( i ), views.get( j ) ) );
 					}
 
 				return res;
