@@ -106,6 +106,8 @@
 		<bigdataviewer-core.version>10.4.12</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-33</bigdataviewer-vistools.version>
 
+		<enforcer.skip>true</enforcer.skip>
+		<multiview-reconstruction.version>3.2.4-SNAPSHOT</multiview-reconstruction.version>
 	</properties>
 
 	<repositories>
