@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 
 import bdv.BigDataViewer;
 import bdv.tools.brightness.ConverterSetup;
-import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
@@ -49,10 +48,10 @@ import net.preibisch.stitcher.gui.popup.BDVPopupStitching;
 
 public class BDVVisibilityHandlerNeighborhood implements BDVVisibilityHandler
 {
-	private ExplorerWindow< ? extends AbstractSpimData< ? >, ? > panel;
+	private ExplorerWindow< ? > panel;
 	private long colorOffset;
 
-	public BDVVisibilityHandlerNeighborhood(ExplorerWindow< ? extends AbstractSpimData< ? >, ? > panel, long colorOffset)
+	public BDVVisibilityHandlerNeighborhood( ExplorerWindow< ? > panel, long colorOffset )
 	{
 		this.panel = panel;
 		this.colorOffset = colorOffset;
@@ -107,8 +106,8 @@ public class BDVVisibilityHandlerNeighborhood implements BDVVisibilityHandler
 		if (FilteredAndGroupedExplorerPanel.class.isInstance( panel ))
 		{
 			// get all filters from model
-			final ISpimDataTableModel< ? extends AbstractSpimData< ? > > tableModel =
-					((FilteredAndGroupedExplorerPanel< ? extends AbstractSpimData< ? >, ? >)panel).getTableModel();
+			final ISpimDataTableModel< ? > tableModel =
+					( ( FilteredAndGroupedExplorerPanel< ? > ) panel ).getTableModel();
 			final Map< Class< ? extends Entity >, List< ? extends Entity > > filters = tableModel.getFilters();
 
 			// check all candidates

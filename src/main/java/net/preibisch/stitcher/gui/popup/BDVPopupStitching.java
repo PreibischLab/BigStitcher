@@ -268,7 +268,7 @@ public class BDVPopupStitching extends BDVPopup
 		ScrollableBrightnessDialog.updateBrightnessPanels( bdv );
 	}
 
-	public static BigDataViewer createBDV( final ExplorerWindow< ? , ? > panel , LinkOverlay lo)
+	public static BigDataViewer createBDV( final ExplorerWindow< ? > panel , LinkOverlay lo)
 	{
 		if ( AbstractImgLoader.class.isInstance( panel.getSpimData().getSequenceDescription().getImgLoader() ) )
 		{
@@ -303,10 +303,9 @@ public class BDVPopupStitching extends BDVPopup
 												null, 
 												options );
 
-		BDVPopup.initTransform( bdv.getViewer() );		
-		// if ( !bdv.tryLoadSettings( panel.xml() ) ) TODO: this should
-		// work, but currently tryLoadSettings is protected. fix that.
-		BDVPopup.initBrightness( 0.001, 0.999, bdv.getViewer().getState(), bdv.getSetupAssignments() );
+		BDVPopup.initTransform( bdv.getViewer() );
+		if ( !bdv.tryLoadSettings( panel.xml() ) )
+			BDVPopup.initBrightness( 0.001, 0.999, bdv.getViewerFrame() );
 
 		FilteredAndGroupedExplorerPanel.setFusedModeSimple( bdv, panel.getSpimData() );
 

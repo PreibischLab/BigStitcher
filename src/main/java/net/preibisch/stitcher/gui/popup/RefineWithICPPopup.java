@@ -30,8 +30,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters;
 import net.preibisch.mvrecon.fiji.plugin.util.MouseOverPopUpStateChanger;
@@ -53,7 +51,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 	private static final long serialVersionUID = 1L;
 
 	DemoLinkOverlay overlay;
-	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	ExplorerWindow< ? > panel;
 
 	int downsamplingChoice = ICPRefinement.defaultDownsamplingChoice;
 	int thresholdChoice = ICPRefinement.defaultThresholdChoice;
@@ -176,7 +174,7 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 	}
 
 	@Override
-	public JComponent setExplorerWindow( final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( final ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 
@@ -218,8 +216,8 @@ public class RefineWithICPPopup extends JMenu implements ExplorerWindowSetable
 				// get selected groups, filter missing views, get all present and selected vids
 				final SpimData2 data = (SpimData2) panel.getSpimData();
 				@SuppressWarnings("unchecked")
-				FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
-				SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< SpimData2 >( (SpimData2) panel.getSpimData() );
+				FilteredAndGroupedExplorerPanel< SpimData2 > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2 >) panel;
+				SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping<>( (SpimData2) panel.getSpimData() );
 
 				// use whatever is selected in panel as filters
 				filteringAndGrouping.addFilters( panelFG.selectedRowsGroups().stream().reduce( new ArrayList<>(), (x,y ) -> {x.addAll( y ); return x;}) );

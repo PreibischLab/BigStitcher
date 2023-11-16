@@ -27,8 +27,6 @@ import java.awt.event.ActionListener;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -37,11 +35,10 @@ import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 public class TogglePreviewPopup extends JMenuItem implements ExplorerWindowSetable
 {
 
-	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	private ExplorerWindow< ? > panel;
 
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;
@@ -64,8 +61,8 @@ public class TogglePreviewPopup extends JMenuItem implements ExplorerWindowSetab
 				return;
 			}
 
-			((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode(false);
-			
+			((StitchingExplorerPanel< ? >) panel).togglePreviewMode(false);
+
 		}
 	}
 

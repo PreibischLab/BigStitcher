@@ -332,7 +332,7 @@ public class TranslateGroupManuallyPanel extends JPanel implements SelectedViewD
 	}
 	
 	@Override
-	public void selectedViewDescriptions(List< List< BasicViewDescription< ? extends BasicViewSetup > > > viewDescriptions)
+	public void selectedViewDescriptions(List< List< BasicViewDescription< ? > > > viewDescriptions)
 	{
 		// @pietzscht
 		// the entire code here has nothing to do with changing colors (I uncommented everything and it still changes colors)

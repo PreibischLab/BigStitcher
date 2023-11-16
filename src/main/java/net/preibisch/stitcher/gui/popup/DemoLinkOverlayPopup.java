@@ -31,8 +31,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 import bdv.BigDataViewer;
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import net.imglib2.type.numeric.ARGBType;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
@@ -44,7 +42,7 @@ public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSet
 {
 	private static final long serialVersionUID = 1L;
 
-	ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	ExplorerWindow< ? > panel;
 	DemoLinkOverlay overlay;
 	boolean active = false;
 	MyActionListener actionListener;
@@ -59,8 +57,7 @@ public class DemoLinkOverlayPopup extends JMenuItem implements ExplorerWindowSet
 	}
 
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;

@@ -64,12 +64,12 @@ import mpicbg.spim.data.XmlIoSpimData;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
 
-public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlIoAbstractSpimData< ?, AS > > extends FilteredAndGroupedExplorer< AS, X >
+public class StitchingExplorer< AS extends AbstractSpimData< ? > > extends FilteredAndGroupedExplorer< AS >
 {
 
 	private AS data;
 	private String xml;
-	private X io;
+	private XmlIoAbstractSpimData< ?, AS > io;
 	private Mode currentMode;
 
 	private JButton bStitching, bMV;
@@ -78,9 +78,9 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 		STITCHING,
 		MULTIVIEW
 	}
-	
-	
-	public StitchingExplorer( final AS data, final String xml, final X io )
+
+
+	public StitchingExplorer( final AS data, final String xml, final XmlIoAbstractSpimData< ?, AS > io )
 	{
 		this.data = data;
 		this.xml = xml;
@@ -111,7 +111,7 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 
 		header.add( buttons, BorderLayout.WEST );
 
-		panel = new StitchingExplorerPanel< AS, X >( this, data, xml, io , true);
+		panel = new StitchingExplorerPanel< AS >( this, data, xml, io , true);
 
 		frame.add( header, BorderLayout.NORTH );
 		frame.add( panel, BorderLayout.CENTER );
@@ -179,9 +179,9 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 			
 			if (mode == Mode.MULTIVIEW)
 			{
-				bdvExisting.getViewer().removeTransformListener( ((StitchingExplorerPanel< AS, X >) panel).linkOverlay );
-				bdvExisting.getViewer().getDisplay().removeOverlayRenderer( ((StitchingExplorerPanel< AS, X >) panel).linkOverlay );
-				((StitchingExplorerPanel< AS, X >) panel).quitLinkExplorer();
+				bdvExisting.getViewer().removeTransformListener( ((StitchingExplorerPanel< AS >) panel).linkOverlay );
+				bdvExisting.getViewer().getDisplay().removeOverlayRenderer( ((StitchingExplorerPanel< AS >) panel).linkOverlay );
+				((StitchingExplorerPanel< AS >) panel).quitLinkExplorer();
 				FilteredAndGroupedExplorerPanel.resetBDVManualTransformations( bdvExisting );
 			}
 //			new Thread( () -> {panel.bdvPopup().closeBDV();} ).start();			
@@ -199,7 +199,7 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 		data = panel.getSpimData();
 		
 		// make new panel
-		panel = mode == Mode.STITCHING ? new StitchingExplorerPanel<AS, X>(  this, data, xml, io , false) : new ViewSetupExplorerPanel<AS, X>(  this, data, xml, io , false );
+		panel = mode == Mode.STITCHING ? new StitchingExplorerPanel<>(  this, data, xml, io , false) : new ViewSetupExplorerPanel<>(  this, data, xml, io , false );
 		frame.add( panel, BorderLayout.CENTER );
 		frame.setSize( panel.getPreferredSize() );
 		frame.pack();
@@ -254,6 +254,6 @@ public class StitchingExplorer< AS extends AbstractSpimData< ? >, X extends XmlI
 	{
 		new ImageJ();
 		//new ViewSetupExplorer<>( GenerateSpimData.grid3x2(), null, null );
-		new StitchingExplorer< SpimData2, XmlIoSpimData2 >( SpimData2.convert( GenerateSpimData.grid3x2()), null, null );
+		new StitchingExplorer<>( SpimData2.convert( GenerateSpimData.grid3x2()), null, null );
 	}
 }

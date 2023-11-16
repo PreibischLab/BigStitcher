@@ -32,9 +32,7 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
@@ -43,13 +41,11 @@ import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.GroupedViewAggregator.ActionType;
 import net.preibisch.stitcher.algorithm.lucaskanade.LucasKanadeParameters;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
-import net.preibisch.stitcher.gui.StitchingResultsSettable;
 import net.preibisch.stitcher.gui.StitchingUIHelper;
 import net.preibisch.stitcher.plugin.Calculate_Pairwise_Shifts;
 
@@ -65,7 +61,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 		LUCASKANADE
 	}
 
-	private ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel;
+	private ExplorerWindow< ? > panel;
 	private boolean simple;
 	private boolean wizardMode;
 	private Method method;
@@ -80,8 +76,7 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 	}
 
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;
@@ -119,8 +114,8 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 					final boolean expertGrouping = method == Method.PHASECORRELATION ? params.showExpertGrouping : LKParams.showExpertGrouping;
 
 					@SuppressWarnings("unchecked")
-					FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
-					SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< SpimData2 >( (SpimData2) panel.getSpimData() );
+					FilteredAndGroupedExplorerPanel< SpimData2 > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2 >) panel;
+					SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping<>( (SpimData2) panel.getSpimData() );
 
 					if (simple || !expertGrouping)
 					{
@@ -194,8 +189,8 @@ public class CalculatePCPopup extends JMenuItem implements ExplorerWindowSetable
 							final int choice = JOptionPane.showConfirmDialog( (Component) panel, "Pairwise shift calculation done. Switch to preview mode?", "Preview Mode", JOptionPane.YES_NO_OPTION );
 							if (choice == JOptionPane.YES_OPTION)
 							{
-								((StitchingExplorerPanel< ?, ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
-								((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode(false);
+								((StitchingExplorerPanel< ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
+								((StitchingExplorerPanel< ? >) panel).togglePreviewMode(false);
 							}
 						}
 					}

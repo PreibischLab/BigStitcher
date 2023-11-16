@@ -22,17 +22,10 @@
 package net.preibisch.stitcher.gui.popup;
 
 import java.awt.Component;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
@@ -42,42 +35,18 @@ import javax.swing.JOptionPane;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
-import ij.gui.GenericDialog;
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewSetup;
-import mpicbg.spim.data.registration.ViewRegistration;
-import mpicbg.spim.data.registration.ViewTransform;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
 import mpicbg.spim.data.sequence.Tile;
-import mpicbg.spim.data.sequence.TimePoint;
 import mpicbg.spim.data.sequence.ViewId;
-import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.util.Pair;
-import net.imglib2.util.Util;
-import net.imglib2.util.ValuePair;
 import net.preibisch.legacy.io.IOFunctions;
-import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Detection;
-import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
-import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.TransformationModelGUI;
-import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.BasicRegistrationParameters;
-import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.GroupParameters.InterestpointGroupingType;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
-import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
-import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPointLists;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPoints;
-import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
-import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
-import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.PairwiseSetup;
-import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
-import net.preibisch.stitcher.algorithm.globalopt.TransformationTools;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 import net.preibisch.stitcher.gui.StitchingUIHelper;
 import net.preibisch.stitcher.plugin.Calculate_Pairwise_Shifts;
@@ -86,7 +55,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 {
 
 	private static final long serialVersionUID = -396274656320474433L;
-	ExplorerWindow< ?, ? > panel;
+	ExplorerWindow< ? > panel;
 
 	private JMenuItem withDetection;
 	private JMenuItem withoutDetection;
@@ -148,8 +117,7 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 	}
 
 	@Override
-	public JComponent setExplorerWindow(
-			final ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel )
+	public JComponent setExplorerWindow( final ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		return this;
@@ -190,8 +158,8 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 				// get selected groups, filter missing views, get all present and selected vids
 				final SpimData2 data = (SpimData2) panel.getSpimData();
 				@SuppressWarnings("unchecked")
-				FilteredAndGroupedExplorerPanel< SpimData2, ? > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2, ? >) panel;
-				SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping< SpimData2 >( (SpimData2) panel.getSpimData() );
+				FilteredAndGroupedExplorerPanel< SpimData2 > panelFG = (FilteredAndGroupedExplorerPanel< SpimData2 >) panel;
+				SpimDataFilteringAndGrouping< SpimData2 > filteringAndGrouping = 	new SpimDataFilteringAndGrouping<>( (SpimData2) panel.getSpimData() );
 
 				if (!expertGrouping.isSelected())
 				{
@@ -244,8 +212,8 @@ public class PairwiseInterestPointRegistrationPopup extends JMenu implements Exp
 							final int choice = JOptionPane.showConfirmDialog( (Component) panel, "Pairwise shift calculation done. Switch to preview mode?", "Preview Mode", JOptionPane.YES_NO_OPTION );
 							if (choice == JOptionPane.YES_OPTION)
 							{
-								((StitchingExplorerPanel< ?, ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
-								((StitchingExplorerPanel< ?, ? >) panel).togglePreviewMode(false);
+								((StitchingExplorerPanel< ? >) panel).setSavedFilteringAndGrouping( filteringAndGrouping );
+								((StitchingExplorerPanel< ? >) panel).togglePreviewMode(false);
 							}
 						}
 					}

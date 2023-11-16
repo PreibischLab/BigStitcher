@@ -48,7 +48,6 @@ import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.gui.GenericDialog;
 import mpicbg.spim.data.SpimData;
-import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
@@ -85,8 +84,8 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 	public static boolean defaultOnlySelection = false;
 	public static boolean defaultVerify = true;
 
-	private FilteredAndGroupedExplorerPanel< ?, ? > panel;
-	
+	private FilteredAndGroupedExplorerPanel< ? > panel;
+
 	public SelectIlluminationPopup()
 	{
 		super( "Select Best Illuminations" );
@@ -94,10 +93,9 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 	}
 	
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
-		this.panel = (FilteredAndGroupedExplorerPanel< ?, ? >)panel;
+		this.panel = ( FilteredAndGroupedExplorerPanel< ? > ) panel;
 		return this;
 	}
 
@@ -159,7 +157,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 					}
 
 					final BigDataViewer bdv = panel.bdvPopup().getBDV();
-					final Collection< List< BasicViewDescription< ? extends BasicViewSetup > > > selected = ((GroupedRowWindow)panel).selectedRowsGroups();
+					final Collection< List< BasicViewDescription< ? > > > selected = ((GroupedRowWindow)panel).selectedRowsGroups();
 
 					SpimData2 filteredSpimData = processIlluminationSelection( 
 							(SpimData) panel.getSpimData(),
@@ -215,8 +213,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		final boolean previewResults = showPreviewOption ? defaultVerify = gdpParams.getNextBoolean() : false;
 		final ViewSelection< ViewId > viewSelection = getViewSelectionResult( gdpParams, data.getSequenceDescription() );
 
-		final SpimDataFilteringAndGrouping< AbstractSpimData< ? > > grouping =
-				new SpimDataFilteringAndGrouping< AbstractSpimData<?> >(data);
+		final SpimDataFilteringAndGrouping< SpimData > grouping = new SpimDataFilteringAndGrouping<>( data );
 		grouping.addGroupingFactor( Illumination.class );
 
 

@@ -28,24 +28,19 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
-import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
-import net.imglib2.util.ValuePair;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
-import net.preibisch.mvrecon.fiji.spimdata.explorer.StitchingResultsSettable;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
-import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 
 public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable
 {
-	private ExplorerWindow< ?, ? > panel;
+	private ExplorerWindow< ? > panel;
 	private TogglePreviewPopup interactiveExplorer;
 	private SimpleRemoveLinkPopup parameterBasedRemoval;
 	private JMenu removeAllPopup;
@@ -123,8 +118,7 @@ public class VerifyLinksPopup extends JMenu implements ExplorerWindowSetable
 	}
 
 	@Override
-	public JComponent setExplorerWindow(
-			ExplorerWindow< ? extends AbstractSpimData< ? extends AbstractSequenceDescription< ?, ?, ? > >, ? > panel)
+	public JComponent setExplorerWindow( ExplorerWindow< ? > panel )
 	{
 		this.panel = panel;
 		interactiveExplorer.setExplorerWindow( panel );
