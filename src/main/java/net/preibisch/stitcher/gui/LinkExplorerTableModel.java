@@ -24,12 +24,14 @@ package net.preibisch.stitcher.gui;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.swing.table.AbstractTableModel;
 
+import ij.IJ;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
@@ -109,10 +111,51 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 	{
 		if (columnIndex == 0)
 		{
+			/*
+			IJ.log( "" + new Date( System.currentTimeMillis() ) );
+			IJ.log( "filteredResults: " + filteredResults );
+			IJ.log( "activeLinksAfterFilter: " + activeLinksAfterFilter.size() );
+			IJ.log( "fetching activeLinksAfterFilter: i="+rowIndex + "=" + activeLinksAfterFilter.get( rowIndex ) );
+			Group<ViewId> a = activeLinksAfterFilter.get( rowIndex ).getA();
+			Group<ViewId> b = activeLinksAfterFilter.get( rowIndex ).getB();
+
+			for ( final ViewId v : a.getViews() )
+				IJ.log( "a: " + Group.pvid( v ) );
+
+			for ( final ViewId v : b.getViews() )
+				IJ.log( "b: " + Group.pvid( v ) );
+
+			if ( filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ) == null )
+			{
+				IJ.log( "--- the following pairs exist in filteredResults.getPairwiseResults() #keys=" + filteredResults.getPairwiseResults().keySet().size() );
+
+				int i = 0;
+				for ( Pair< Group<ViewId>, Group<ViewId> > pair : filteredResults.getPairwiseResults().keySet() )
+				{
+					IJ.log( "i=" + i );
+					for ( final ViewId v : pair.getA().getViews() )
+						IJ.log( "a: " + Group.pvid( v ) );
+
+					for ( final ViewId v : pair.getA().getViews() )
+						IJ.log( "b: " + Group.pvid( v ) );
+				}
+
+				return null;
+			}
+
+			IJ.log( "getPairwiseResults: " + filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ) );
+			IJ.log( "pair: " + filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).pair() );
+			IJ.log( "getA: " + filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).pair().getA() );
+			*/
+			// THIS IS A HACK, sometimes the pair from activeLinksAfterFilter.get( rowIndex ) does not exist in filteredResults.getPairwiseResults()
+			// TODO: figure out why :)
+			if ( filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ) == null )
+				return null;
+
 			final Group< ViewId > views = filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).pair().getA();
+
 			return views.toString();
 		}
-			
 		else if (columnIndex == 1)
 		{
 			final Group< ViewId > views = filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).pair().getB();
