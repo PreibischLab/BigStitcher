@@ -150,7 +150,7 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 			// THIS IS A HACK, sometimes the pair from activeLinksAfterFilter.get( rowIndex ) does not exist in filteredResults.getPairwiseResults()
 			// TODO: figure out why :)
 			if ( filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ) == null )
-				return null;
+				return "";
 
 			final Group< ViewId > views = filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).pair().getA();
 
@@ -158,13 +158,30 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 		}
 		else if (columnIndex == 1)
 		{
+			// THIS IS A HACK, sometimes the pair from activeLinksAfterFilter.get( rowIndex ) does not exist in filteredResults.getPairwiseResults()
+			// TODO: figure out why :)
+			if ( filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ) == null )
+				return "";
+
 			final Group< ViewId > views = filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).pair().getB();
 			return views.toString();
 		}
 		else if (columnIndex == 2)
+		{
+			// THIS IS A HACK, sometimes the pair from activeLinksAfterFilter.get( rowIndex ) does not exist in filteredResults.getPairwiseResults()
+			// TODO: figure out why :)
+			if ( filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ) == null )
+				return "";
+
 			return filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).r();
+		}
 		else if (columnIndex == 3)
 		{
+			// THIS IS A HACK, sometimes the pair from activeLinksAfterFilter.get( rowIndex ) does not exist in filteredResults.getPairwiseResults()
+			// TODO: figure out why :)
+			if ( filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ) == null )
+				return "";
+
 			double[] shift = filteredResults.getPairwiseResults().get( activeLinksAfterFilter.get( rowIndex ) ).getTransform().getRowPackedCopy();
 			
 			StringBuilder res = new StringBuilder();
@@ -180,13 +197,9 @@ public class LinkExplorerTableModel extends AbstractTableModel implements Stitch
 			res.append(df.format( shift[11]) );
 			return res.toString();
 		}
-			
 		else
 			return "";
-		
 	}
-	
-	
 
 	@Override
 	public void setStitchingResults(StitchingResults res)
