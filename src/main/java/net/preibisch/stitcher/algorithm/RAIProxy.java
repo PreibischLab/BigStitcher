@@ -52,7 +52,7 @@ public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterva
 	private void loadIfNecessary()
 	{
 		if (rai == null)
-			rai = DownsampleTools.openAndDownsample( imgLoader, vid, downsampleFactors ).getA();
+			rai = DownsampleTools.openAndDownsample( imgLoader, vid, downsampleFactors, false ).getA();
 	}
 	
 	@Override
