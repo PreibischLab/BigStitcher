@@ -66,7 +66,13 @@ public  class  AveragedRandomAccessible <T extends RealType<T >> implements Rand
 	{
 		return new AverageRandomAccess(numD);
 	}
-	
+
+	@Override
+	public T getType()
+	{
+		return randomAccessibles.isEmpty() ? null : randomAccessibles.get( 0 ).getType();
+	}
+
 	class AverageRandomAccess /* extends Point */ implements RandomAccess< T >
 	{
 		final ArrayList< RandomAccess< T > > RAs;
