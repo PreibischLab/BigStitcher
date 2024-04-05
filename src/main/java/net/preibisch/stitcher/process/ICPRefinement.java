@@ -420,6 +420,7 @@ public class ICPRefinement
 						params.maxError * 2,
 						100,
 						true,
+						IterativeClosestPointParameters.defaultMinInlierRatio,
 						params.maxError,
 						200,
 						IterativeClosestPointParameters.defaultMinNumPoints );
