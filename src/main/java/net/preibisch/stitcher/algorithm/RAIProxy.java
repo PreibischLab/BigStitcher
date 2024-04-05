@@ -181,4 +181,10 @@ public class RAIProxy <T extends RealType<T>> implements RandomAccessibleInterva
 		return rai.dimension( d );
 	}
 
+	@Override
+	public T getType()
+	{
+		loadIfNecessary();
+		return rai.getType();
+	}
 }

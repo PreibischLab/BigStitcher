@@ -148,4 +148,10 @@ public class JuliaRealRandomAccessible implements RealRandomAccessible< LongType
 	{
 		return realRandomAccess();
 	}
+
+	@Override
+	public LongType getType()
+	{
+		return new LongType();
+	}
 }
