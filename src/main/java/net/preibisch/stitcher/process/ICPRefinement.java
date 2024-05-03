@@ -89,6 +89,7 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constell
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.overlap.SimpleBoundingBoxOverlap;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.methods.icp.IterativeClosestPointPairwise;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.methods.icp.IterativeClosestPointParameters;
+import net.preibisch.mvrecon.process.interestpointregistration.pairwise.methods.ransac.RANSACParameters;
 import net.preibisch.stitcher.gui.StitchingUIHelper;
 import net.preibisch.stitcher.gui.overlay.DemoLinkOverlay;
 import net.preibisch.stitcher.gui.popup.RefineWithICPPopup;
@@ -420,6 +421,7 @@ public class ICPRefinement
 						params.maxError * 2,
 						100,
 						true,
+						RANSACParameters.min_inlier_factor,
 						params.maxError,
 						200,
 						IterativeClosestPointParameters.defaultMinNumPoints );
