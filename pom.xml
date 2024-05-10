@@ -107,7 +107,7 @@
 		<bigdataviewer-vistools.version>1.0.0-beta-33</bigdataviewer-vistools.version>
 
 		<!-- <enforcer.skip>true</enforcer.skip> -->
-		<multiview-reconstruction.version>3.2.14</multiview-reconstruction.version>
+		<multiview-reconstruction.version>3.2.16</multiview-reconstruction.version>
 	</properties>
 
 	<repositories>
