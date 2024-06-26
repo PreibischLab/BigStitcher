@@ -426,13 +426,17 @@ public class ICPRefinement
 						200,
 						IterativeClosestPointParameters.defaultMinNumPoints );
 
-		final Map< ViewId, String > labelMap = new HashMap<>();
+		final Map< ViewId, HashMap< String, Double > > labelMap = new HashMap<>();
 
 		for ( final ViewId viewId : params.viewIds )
-			labelMap.put( viewId, params.label );
+		{
+			final HashMap< String, Double > map = new HashMap<>();
+			map.put( params.label, 1.0 );
+			labelMap.put( viewId, map );
+		}
 
 		// load & transform all interest points
-		final Map< ViewId, List< InterestPoint > > interestpoints =
+		final Map< ViewId, HashMap< String, List< InterestPoint > > > interestpoints =
 				TransformationTools.getAllTransformedInterestPoints(
 					params.viewIds,
 					data.getViewRegistrations().getViewRegistrations(),
@@ -484,9 +488,9 @@ public class ICPRefinement
 			HashMap< ViewId, mpicbg.models.Tile > models;
 
 			if ( Interest_Point_Registration.hasGroups( subsets ) )
-				models = groupedSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, data.getSequenceDescription().getViewSetups(), data.getViewRegistrations().getViewRegistrations(), globalOptParameters, overlay );
+				models = groupedSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, data.getSequenceDescription().getViewSetups(), data.getViewRegistrations().getViewRegistrations(), globalOptParameters, overlay, false );
 			else
-				models = pairSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, data.getSequenceDescription().getViewSetups(), data.getViewRegistrations().getViewRegistrations(), globalOptParameters, overlay );
+				models = pairSubset( data, subset, interestpoints, labelMap, icpp, fixedViews, data.getSequenceDescription().getViewSetups(), data.getViewRegistrations().getViewRegistrations(), globalOptParameters, overlay, false );
 
 			if ( models == null )
 				continue;
@@ -515,14 +519,15 @@ public class ICPRefinement
 	public static final HashMap< ViewId, mpicbg.models.Tile > pairSubset(
 			final SpimData2 spimData,
 			final Subset< ViewId > subset,
-			final Map< ViewId, List< InterestPoint > > interestpoints,
-			final Map< ViewId, String > labelMap,
+			final Map< ViewId, HashMap< String, List< InterestPoint > > > interestpoints,
+			final Map< ViewId, HashMap< String, Double > > labelMap,
 			final IterativeClosestPointParameters icpp,
 			final List< ViewId > fixedViews,
 			final Map< Integer, ? extends BasicViewSetup > viewSetups, // for two-round
 			final Map< ViewId, ViewRegistration > registrations, // for two-round
 			final GlobalOptimizationParameters globalOptParameters,
-			final DemoLinkOverlay overlay )
+			final DemoLinkOverlay overlay,
+			final boolean matchAcrossLabels )
 	{
 		final List< Pair< ViewId, ViewId > > pairs = subset.getPairs();
 
@@ -537,7 +542,7 @@ public class ICPRefinement
 
 		// compute all pairwise matchings
 		final List< Pair< Pair< ViewId, ViewId >, PairwiseResult< InterestPoint > > > resultsPairs =
-				MatcherPairwiseTools.computePairs( pairs, interestpoints, new IterativeClosestPointPairwise< InterestPoint >( icpp ) );
+				MatcherPairwiseTools.computePairs( pairs, interestpoints, new IterativeClosestPointPairwise< InterestPoint >( icpp ), matchAcrossLabels );
 
 		if ( overlay != null )
 		{
@@ -563,16 +568,26 @@ public class ICPRefinement
 			final ViewId vA = p.getA().getA();
 			final ViewId vB = p.getA().getB();
 
+			/*
 			final InterestPoints listA = spimData.getViewInterestPoints().getViewInterestPoints().get( vA ).getInterestPointList( labelMap.get( vA ) );
 			final InterestPoints listB = spimData.getViewInterestPoints().getViewInterestPoints().get( vB ).getInterestPointList( labelMap.get( vB ) );
 
 			MatcherPairwiseTools.addCorrespondences( p.getB().getInliers(), vA, vB, labelMap.get( vA ), labelMap.get( vB ), listA, listB );
+			*/
+
+			final String labelA = p.getB().getLabelA();
+			final String labelB = p.getB().getLabelB();
+
+			final InterestPoints listA = spimData.getViewInterestPoints().getViewInterestPoints().get( vA ).getInterestPointList( labelA );
+			final InterestPoints listB = spimData.getViewInterestPoints().getViewInterestPoints().get( vB ).getInterestPointList( labelB );
+
+			MatcherPairwiseTools.addCorrespondences( p.getB().getInliers(), vA, vB, labelA, labelB, listA, listB );
 
 			IOFunctions.println( p.getB().getFullDesc() );
 		}
 
 		// multiple solvers for ICP
-		final PointMatchCreator pmc = new InterestPointMatchCreator( resultsPairs );
+		final PointMatchCreator pmc = new InterestPointMatchCreator( resultsPairs, labelMap );
 		final HashMap< ViewId, mpicbg.models.Tile > models;
 
 		if ( globalOptParameters.method == GlobalOptType.ONE_ROUND_SIMPLE )
@@ -620,17 +635,18 @@ public class ICPRefinement
 	public static HashMap< ViewId, mpicbg.models.Tile > groupedSubset(
 			final SpimData2 spimData,
 			final Subset< ViewId > subset,
-			final Map< ViewId, List< InterestPoint > > interestpoints,
-			final Map< ViewId, String > labelMap,
+			final Map< ViewId, HashMap< String, List< InterestPoint > > > interestpoints,
+			final Map< ViewId, HashMap< String, Double > > labelMap,
 			final IterativeClosestPointParameters icpp,
 			final List< ViewId > fixedViews,
 			final Map< Integer, ? extends BasicViewSetup > viewSetups, // for two-round
 			final Map< ViewId, ViewRegistration > registrations, // for two-round
 			final GlobalOptimizationParameters globalOptParameters,
-			final DemoLinkOverlay overlay )
+			final DemoLinkOverlay overlay,
+			final boolean matchAcrossLabels )
 	{
 		final List< Pair< Group< ViewId >, Group< ViewId > > > groupedPairs = subset.getGroupedPairs();
-		final Map< Group< ViewId >, List< GroupedInterestPoint< ViewId > > > groupedInterestpoints = new HashMap<>();
+		final Map< Group< ViewId >, HashMap< String, List< GroupedInterestPoint< ViewId > > > > groupedInterestpoints = new HashMap<>();
 		final InterestPointGrouping< ViewId > ipGrouping = new InterestPointGroupingMinDistance<>( interestpoints );
 
 		if ( groupedPairs.size() <= 0 )
@@ -667,7 +683,7 @@ public class ICPRefinement
 		}
 
 		final List< Pair< Pair< Group< ViewId >, Group< ViewId > >, PairwiseResult< GroupedInterestPoint< ViewId > > > > resultsGroups =
-				MatcherPairwiseTools.computePairs( groupedPairs, groupedInterestpoints, new IterativeClosestPointPairwise< GroupedInterestPoint< ViewId > >( icpp ) );
+				MatcherPairwiseTools.computePairs( groupedPairs, groupedInterestpoints, new IterativeClosestPointPairwise< GroupedInterestPoint< ViewId > >( icpp ), false );
 
 		if ( overlay != null )
 		{
@@ -681,14 +697,15 @@ public class ICPRefinement
 		}
 
 		// clear correspondences and get a map linking ViewIds to the correspondence lists
-		final Map< ViewId, List< CorrespondingInterestPoints > > cMap = MatcherPairwiseTools.clearCorrespondences( subset.getViews(), spimData.getViewInterestPoints().getViewInterestPoints(), labelMap );
+		final Map< ViewId, HashMap< String, List< CorrespondingInterestPoints > > > cMap =
+				MatcherPairwiseTools.clearCorrespondences( subset.getViews(), spimData.getViewInterestPoints().getViewInterestPoints(), labelMap );
 
 		// add the corresponding detections and output result
 		final List< Pair< Pair< ViewId, ViewId >, PairwiseResult< GroupedInterestPoint< ViewId > > > > resultG =
-				MatcherPairwiseTools.addCorrespondencesFromGroups( resultsGroups, spimData.getViewInterestPoints().getViewInterestPoints(), labelMap, cMap );
+				MatcherPairwiseTools.addCorrespondencesFromGroups( resultsGroups, spimData.getViewInterestPoints().getViewInterestPoints(), cMap );
 
 		// run global optimization
-		final PointMatchCreator pmc = new InterestPointMatchCreator( resultG );
+		final PointMatchCreator pmc = new InterestPointMatchCreator( resultG, labelMap );
 
 		// multiple solvers for ICP
 		final HashMap< ViewId, mpicbg.models.Tile > models;

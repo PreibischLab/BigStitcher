@@ -419,6 +419,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 					ipMap,
 					brp.labelMap,
 					new GlobalOptimizationParameters(Double.MAX_VALUE, Double.MAX_VALUE, GlobalOptType.ONE_ROUND_SIMPLE, false ),
+					false, //matchacrosslabels
 					true ) )
 				continue;
 
