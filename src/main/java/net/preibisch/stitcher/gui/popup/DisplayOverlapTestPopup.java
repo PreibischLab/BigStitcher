@@ -59,6 +59,7 @@ import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
 import net.preibisch.mvrecon.process.downsampling.DownsampleTools;
 import net.preibisch.mvrecon.process.fusion.FusionTools;
 import net.preibisch.mvrecon.process.fusion.transformed.FusedRandomAccessibleInterval;
+import net.preibisch.mvrecon.process.fusion.transformed.FusedRandomAccessibleInterval.Fusion;
 import net.preibisch.mvrecon.process.fusion.transformed.TransformView;
 import net.preibisch.mvrecon.process.fusion.transformed.TransformVirtual;
 import net.preibisch.mvrecon.process.fusion.transformed.TransformWeight;
@@ -218,7 +219,7 @@ public class DisplayOverlapTestPopup extends JMenuItem implements ExplorerWindow
 				weights.add( TransformWeight.transformBlending( inputImg, border, blending, model, bbSc ) );
 			}
 			
-			openImgs.add( new FusedRandomAccessibleInterval( new FinalInterval( dim ), images, weights ) );
+			openImgs.add( new FusedRandomAccessibleInterval( new FinalInterval( dim ), Fusion.AVG, images, weights ) );
 			
 		}		
 		
