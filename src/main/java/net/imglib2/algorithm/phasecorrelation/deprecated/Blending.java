@@ -69,4 +69,10 @@ public class Blending implements RealRandomAccessible< FloatType >
 	{
 		return realRandomAccess();
 	}
+
+	@Override
+	public FloatType getType()
+	{
+		return new FloatType();
+	}
 }

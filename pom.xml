@@ -103,11 +103,14 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
-		<bigdataviewer-core.version>10.4.12</bigdataviewer-core.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-33</bigdataviewer-vistools.version>
-
-		<!-- <enforcer.skip>true</enforcer.skip> -->
-		<multiview-reconstruction.version>3.3.0</multiview-reconstruction.version>
+		<imglib2.version>7.1.0</imglib2.version>
+		<imglib2-realtransform.version>4.0.3</imglib2-realtransform.version>
+		<imglib2-cache.version>1.0.0-beta-18</imglib2-cache.version>
+		<imglib2-algorithm.version>0.15.3</imglib2-algorithm.version>
+		<imglib2-roi.version>0.15.0</imglib2-roi.version>
+		<bigdataviewer-core.version>10.6.0</bigdataviewer-core.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-36</bigdataviewer-vistools.version>
+		<multiview-reconstruction.version>3.4.0</multiview-reconstruction.version>
 	</properties>
 
 	<repositories>
