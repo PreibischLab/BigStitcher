@@ -80,6 +80,12 @@ public class BlendedExtendedMirroredRandomAccesible2 <T extends RealType<T>>impl
 		return extDims;
 	}
 
+	@Override
+	public T getType()
+	{
+		return img.getType();
+	}
+
 	/**
 	 * TODO: For efficiency reasons we should implement it as a RandomAccess that actually updates the underlying
 	 * imgRA for every move. This way, the outofbounds can work very efficiently when it is iterated through Views.iterable().cursor()
