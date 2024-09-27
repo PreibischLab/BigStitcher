@@ -61,6 +61,7 @@ import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.parameters.Gr
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.resave.ProgressWriterIJ;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPointLists;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
@@ -164,7 +165,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 
 		// update XML
 		IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Saving XML ... " );
-		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
+		new XmlIoSpimData2().saveWithFilename( data, result.getXMLFileName() );
 	}
 	
 	public static void main(String[] args)
@@ -301,7 +302,7 @@ public class Calculate_Pairwise_Shifts implements PlugIn
 
 		// query basic registration parameters
 		final BasicRegistrationParameters brp = new Interest_Point_Registration().basicRegistrationParameters(
-				timepointToProcess, nAllTimepoints, true, data, (List< ViewId >) viewIds );
+				timepointToProcess, nAllTimepoints, data, (List< ViewId >) viewIds );
 		if ( brp == null )
 			return false;
 

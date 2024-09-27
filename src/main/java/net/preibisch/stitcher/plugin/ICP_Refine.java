@@ -31,6 +31,7 @@ import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.Global
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.process.ICPRefinement;
 import net.preibisch.stitcher.process.ICPRefinement.ICPRefinementParameters;
 import net.preibisch.stitcher.process.ICPRefinement.ICPType;
@@ -90,8 +91,7 @@ public class ICP_Refine implements PlugIn
 
 		ICPRefinement.refine( data, params, globalOptParams, null );
 
-		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
-
+		new XmlIoSpimData2().saveWithFilename( data, result.getXMLFileName() );
 	}
 
 

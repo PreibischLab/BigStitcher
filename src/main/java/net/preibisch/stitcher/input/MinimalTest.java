@@ -21,13 +21,13 @@
  */
 package net.preibisch.stitcher.input;
 
-import ij.ImageJ;
-
-import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Random;
 
-import mpicbg.spim.data.SpimData;
+import bdv.BigDataViewer;
+import bdv.viewer.ViewerOptions;
+import ij.ImageJ;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
@@ -53,12 +53,16 @@ import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.real.FloatType;
-import bdv.BigDataViewer;
-import bdv.viewer.ViewerOptions;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBoxes;
+import net.preibisch.mvrecon.fiji.spimdata.intensityadjust.IntensityAdjustments;
+import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPoints;
+import net.preibisch.mvrecon.fiji.spimdata.pointspreadfunctions.PointSpreadFunctions;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class MinimalTest
 {
-	public static SpimData twoAngles()
+	public static SpimData2 twoAngles()
 	{
 		final ArrayList< ViewSetup > setups = new ArrayList< ViewSetup >();
 		final ArrayList< ViewRegistration > registrations = new ArrayList< ViewRegistration >();
@@ -113,7 +117,15 @@ public class MinimalTest
 		}
 
 		final SequenceDescription sd = new SequenceDescription( timepoints, setups, imgLoader, missingViews );
-		final SpimData data = new SpimData( new File( "" ), sd, new ViewRegistrations( registrations ) );
+		final SpimData2 data = new SpimData2(
+				URI.create( "/" ),
+				sd,
+				new ViewRegistrations( registrations ),
+				new ViewInterestPoints(),
+				new BoundingBoxes(),
+				new PointSpreadFunctions(),
+				new StitchingResults(),
+				new IntensityAdjustments() );
 
 		return data;
 	}
@@ -168,7 +180,7 @@ public class MinimalTest
 	public static void main( String[] args )
 	{
 		new ImageJ();
-		SpimData spimData = twoAngles();
+		SpimData2 spimData = twoAngles();
 		
 		// crashes for version 2.0.0
 		// with version 2.2.0-SNAPSHOT it crashes when calling the brightness dialog, silently

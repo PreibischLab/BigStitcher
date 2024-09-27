@@ -21,13 +21,11 @@
  */
 package net.preibisch.stitcher.input;
 
-import ij.ImagePlus;
-
-import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import mpicbg.spim.data.SpimData;
+import ij.ImagePlus;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHints;
 import mpicbg.spim.data.registration.ViewRegistration;
@@ -60,10 +58,16 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBoxes;
+import net.preibisch.mvrecon.fiji.spimdata.intensityadjust.IntensityAdjustments;
+import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPoints;
+import net.preibisch.mvrecon.fiji.spimdata.pointspreadfunctions.PointSpreadFunctions;
+import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 
 public class GenerateSpimData
 {
-	public static SpimData grid3x2()
+	public static SpimData2 grid3x2()
 	{
 		final ArrayList< ViewSetup > setups = new ArrayList< ViewSetup >();
 		final ArrayList< ViewRegistration > registrations = new ArrayList< ViewRegistration >();
@@ -150,7 +154,15 @@ public class GenerateSpimData
 		}
 
 		final SequenceDescription sd = new SequenceDescription( timepoints, setups, imgLoader, missingViews );
-		final SpimData data = new SpimData( new File( "" ), sd, new ViewRegistrations( registrations ) );
+		final SpimData2 data = new SpimData2(
+				URI.create( "/" ),
+				sd,
+				new ViewRegistrations( registrations ),
+				new ViewInterestPoints(),
+				new BoundingBoxes(),
+				new PointSpreadFunctions(),
+				new StitchingResults(),
+				new IntensityAdjustments() );
 
 		return data;
 	}
@@ -294,7 +306,7 @@ public class GenerateSpimData
 
 	public static void main( String[] args )
 	{
-		SpimData spimData = grid3x2();
+		SpimData2 spimData = grid3x2();
 		SequenceDescription sd = spimData.getSequenceDescription();
 		ImgLoader i = sd.getImgLoader();
 

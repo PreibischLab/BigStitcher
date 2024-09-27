@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 
 import fiji.util.gui.GenericDialogPlus;
-import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.base.NamedEntity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
@@ -46,6 +45,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import net.preibisch.mvrecon.fiji.datasetmanager.FileListDatasetDefinition;
 import net.preibisch.mvrecon.fiji.plugin.util.GUIHelper;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.SpimDataTools;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
@@ -53,7 +53,7 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constell
 import net.preibisch.stitcher.algorithm.GroupedViewAggregator.ActionType;
 import net.preibisch.stitcher.gui.StitchingExplorerPanel;
 
-public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
+public class SpimDataFilteringAndGrouping < AS extends SpimData2 >
 {
 
 	public static List<Class<? extends Entity>> entityClasses = new ArrayList<>();
@@ -294,7 +294,7 @@ public class SpimDataFilteringAndGrouping < AS extends AbstractSpimData< ? > >
 	}
 
 	// convenience method if have a panel (which can give us selected views)
-	public SpimDataFilteringAndGrouping< AS> askUserForFiltering(FilteredAndGroupedExplorerPanel< AS > panel)
+	public SpimDataFilteringAndGrouping< AS > askUserForFiltering(FilteredAndGroupedExplorerPanel< AS > panel)
 	{
 		List< BasicViewDescription< ? > > views;
 

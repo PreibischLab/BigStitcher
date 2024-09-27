@@ -23,7 +23,7 @@ package net.preibisch.stitcher.gui.popup;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,10 +47,8 @@ import bdv.BigDataViewer;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.gui.GenericDialog;
-import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.Angle;
 import mpicbg.spim.data.sequence.Channel;
@@ -68,6 +66,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPa
 import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.BDVPopup;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
+import net.preibisch.mvrecon.fiji.spimdata.intensityadjust.IntensityAdjustments;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPoints;
 import net.preibisch.mvrecon.fiji.spimdata.pointspreadfunctions.PointSpreadFunctions;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
@@ -160,7 +159,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 					final Collection< List< BasicViewDescription< ? > > > selected = ((GroupedRowWindow)panel).selectedRowsGroups();
 
 					SpimData2 filteredSpimData = processIlluminationSelection( 
-							(SpimData) panel.getSpimData(),
+							panel.getSpimData(),
 							selected.stream().reduce( new ArrayList<>(), (x,y) -> {x.addAll( y ); return x;}),
 							true,
 							bdv != null,
@@ -188,7 +187,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 	}
 	
 	public static SpimData2 processIlluminationSelection(
-			SpimData data,
+			SpimData2 data,
 			Collection< ? extends BasicViewDescription< ? > > selected,
 			boolean showOnlySelectedOption,
 			boolean showPreviewOption,
@@ -213,7 +212,7 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 		final boolean previewResults = showPreviewOption ? defaultVerify = gdpParams.getNextBoolean() : false;
 		final ViewSelection< ViewId > viewSelection = getViewSelectionResult( gdpParams, data.getSequenceDescription() );
 
-		final SpimDataFilteringAndGrouping< SpimData > grouping = new SpimDataFilteringAndGrouping<>( data );
+		final SpimDataFilteringAndGrouping< SpimData2 > grouping = new SpimDataFilteringAndGrouping<>( data );
 		grouping.addGroupingFactor( Illumination.class );
 
 
@@ -316,14 +315,14 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 
 	}
 
-	public static SpimData2 getCopyWithMissingViews(SpimData data, Collection< ? extends ViewId > missingViews)
+	public static SpimData2 getCopyWithMissingViews(SpimData2 data, Collection< ? extends ViewId > missingViews)
 	{
 		return getCopyWithMissingViews( data, missingViews, false );
 	}
 
-	public static SpimData2 getCopyWithMissingViews(SpimData data, Collection< ? extends ViewId > missingViews, boolean ignoreOldMissingViews)
+	public static SpimData2 getCopyWithMissingViews(SpimData2 data, Collection< ? extends ViewId > missingViews, boolean ignoreOldMissingViews)
 	{
-		final File basePath = data.getBasePath();
+		final URI basePath = data.getBasePathURI();
 		final ViewRegistrations viewRegistrations = data.getViewRegistrations();
 		
 		final SequenceDescription sdOld = data.getSequenceDescription();
@@ -340,15 +339,16 @@ public class SelectIlluminationPopup extends JMenuItem implements ExplorerWindow
 						sdOld.getImgLoader(),
 						new MissingViews( missingViewsList ) );
 		
-		final ViewInterestPoints viewsInterestPoints = SpimData2.class.isInstance( data ) ? ((SpimData2)data).getViewInterestPoints() : new ViewInterestPoints();
+		final ViewInterestPoints viewsInterestPoints = data.getViewInterestPoints();
 		//if (!(SpimData2.class.isInstance( data )))
 		//	viewsInterestPoints.createViewInterestPoints( data.getSequenceDescription().getViewDescriptions() );
 		
-		final BoundingBoxes boundingBoxes = SpimData2.class.isInstance( data ) ? ((SpimData2)data).getBoundingBoxes() : new BoundingBoxes();
-		final PointSpreadFunctions psfs = SpimData2.class.isInstance( data ) ? ((SpimData2)data).getPointSpreadFunctions() : new PointSpreadFunctions();
-		final StitchingResults stitchingResults = SpimData2.class.isInstance( data ) ? ((SpimData2)data).getStitchingResults() : new StitchingResults();
-				
-		final SpimData2 dataNew = new SpimData2( basePath, sequenceDescription, viewRegistrations, viewsInterestPoints, boundingBoxes, psfs, stitchingResults );
+		final BoundingBoxes boundingBoxes = data.getBoundingBoxes();
+		final PointSpreadFunctions psfs = data.getPointSpreadFunctions();
+		final StitchingResults stitchingResults = data.getStitchingResults();
+		final IntensityAdjustments ia = data.getIntensityAdjustments();
+
+		final SpimData2 dataNew = new SpimData2( basePath, sequenceDescription, viewRegistrations, viewsInterestPoints, boundingBoxes, psfs, stitchingResults, ia );
 		return dataNew;
 	}
 

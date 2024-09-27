@@ -33,6 +33,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.arrangement.SkewImages;
 
 @Plugin(type = Command.class, menuPath = "Plugins>BigStitcher>Batch Processing>Tools>(De-)Skew Images")
@@ -75,7 +76,7 @@ public class SkewImagesCommand implements Command
 		SkewImages.applySkewToData( data.getViewRegistrations(), dims, views, direction, skewAxis, angle );
 
 		// save result
-		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
+		new XmlIoSpimData2().saveWithFilename( data, result.getXMLFileName() );
 	}
 
 }

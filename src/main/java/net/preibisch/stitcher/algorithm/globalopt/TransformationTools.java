@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 import bdv.export.ProgressWriter;
 import ij.IJ;
 import mpicbg.models.TranslationModel3D;
-import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.registration.ViewRegistration;
@@ -60,6 +59,7 @@ import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.Threads;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBox;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.PairwiseStitchingResult;
 import net.preibisch.mvrecon.process.boundingbox.BoundingBoxMaximalGroupOverlap;
@@ -710,7 +710,7 @@ public class TransformationTools
 
 	public static void main( String[] args )
 	{
-		final SpimData d = GenerateSpimData.grid3x2();
+		final SpimData2 d = GenerateSpimData.grid3x2();
 		final SequenceDescription sd = d.getSequenceDescription();
 
 		// select views to process

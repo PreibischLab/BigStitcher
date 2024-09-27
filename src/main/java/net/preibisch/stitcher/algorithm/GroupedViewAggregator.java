@@ -485,9 +485,7 @@ public class GroupedViewAggregator
 		}
 
 		final SequenceDescription sd = new SequenceDescription( timepoints, setups, imgLoader, missingViews );
-		//final SpimData data = new SpimData( new File( "" ), sd, new ViewRegistrations( registrations ) );
-		
-		
+
 		final GroupedViewAggregator gva = new GroupedViewAggregator();
 		//gva.addAction( ActionType.PICK_SPECIFIC, Illumination.class, new Illumination( 0 ) );
 		//gva.addAction( ActionType.PICK_SPECIFIC, Illumination.class, new Illumination( 1 ) );

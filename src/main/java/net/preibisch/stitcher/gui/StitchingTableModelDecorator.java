@@ -47,7 +47,7 @@ import net.preibisch.mvrecon.fiji.spimdata.explorer.ISpimDataTableModel;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
 import net.preibisch.stitcher.algorithm.TransformTools;
 
-public class StitchingTableModelDecorator < AS extends AbstractSpimData< ? > > extends AbstractTableModel implements ISpimDataTableModel<AS>, StitchingResultsSettable{
+public class StitchingTableModelDecorator < AS extends SpimData2 > extends AbstractTableModel implements ISpimDataTableModel<AS>, StitchingResultsSettable{
 
 	/**
 	 * 

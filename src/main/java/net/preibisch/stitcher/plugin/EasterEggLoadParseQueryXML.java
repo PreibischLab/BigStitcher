@@ -21,6 +21,7 @@
  */
 package net.preibisch.stitcher.plugin;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -38,9 +39,9 @@ public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 	boolean isEasterEgg;
 
 	@Override
-	protected boolean tryParsing( final String xmlfile, final boolean parseAllTypes )
+	protected boolean tryParsing( final URI xmlURI, final boolean parseAllTypes )
 	{
-		final String input = xmlfile.toLowerCase().trim();
+		final String input = xmlURI.toString().toLowerCase().trim();
 
 		if ( input.equals( "define" ) )
 		{
@@ -106,7 +107,7 @@ public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 		else
 		{
 			this.message2 = "To access simulated datasets type 'fractal' or 'beads'";
-			return super.tryParsing( xmlfile, parseAllTypes );
+			return super.tryParsing( xmlURI, parseAllTypes );
 		}
 	}
 }

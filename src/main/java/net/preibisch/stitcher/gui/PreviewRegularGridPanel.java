@@ -50,26 +50,25 @@ import javax.swing.SpinnerNumberModel;
 import bdv.BigDataViewer;
 import bdv.tools.transformation.TransformedSource;
 import bdv.viewer.state.SourceState;
-import net.preibisch.legacy.io.IOFunctions;
-import net.preibisch.mvrecon.fiji.datasetmanager.grid.RegularTranformHelpers;
-import net.preibisch.mvrecon.fiji.datasetmanager.grid.RegularTranformHelpers.GridPreset;
-import net.preibisch.mvrecon.fiji.datasetmanager.grid.RegularTranformHelpers.RegularTranslationParameters;
-import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.sequence.Angle;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Translation3D;
 import net.imglib2.util.Pair;
+import net.preibisch.legacy.io.IOFunctions;
+import net.preibisch.mvrecon.fiji.datasetmanager.grid.RegularTranformHelpers;
+import net.preibisch.mvrecon.fiji.datasetmanager.grid.RegularTranformHelpers.GridPreset;
+import net.preibisch.mvrecon.fiji.datasetmanager.grid.RegularTranformHelpers.RegularTranslationParameters;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.SelectedViewDescriptionListener;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 
-public class PreviewRegularGridPanel <AS extends AbstractSpimData<?> > extends JPanel implements SelectedViewDescriptionListener< AS >
+public class PreviewRegularGridPanel <AS extends SpimData2 > extends JPanel implements SelectedViewDescriptionListener< AS >
 {
 	public static boolean expertMode = false;
 

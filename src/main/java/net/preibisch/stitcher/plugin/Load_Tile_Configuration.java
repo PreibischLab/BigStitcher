@@ -30,6 +30,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.realtransform.Translation3D;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.gui.TileConfigurationHelpers;
 
 public class Load_Tile_Configuration implements PlugIn
@@ -66,7 +67,7 @@ public class Load_Tile_Configuration implements PlugIn
 		TileConfigurationHelpers.applyToData( transformsForData, pixelUnits, metadataRotate, data );
 
 		// save result
-		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
+		new XmlIoSpimData2().saveWithFilename( data, result.getXMLFileName() );
 	}
 
 	public static void main(String[] args)

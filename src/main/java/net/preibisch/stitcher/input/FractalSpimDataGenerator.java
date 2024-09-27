@@ -21,12 +21,11 @@
  */
 package net.preibisch.stitcher.input;
 
-import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import bdv.BigDataViewer;
-import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.registration.ViewTransform;
@@ -61,6 +60,7 @@ import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.boundingbox.BoundingBoxes;
+import net.preibisch.mvrecon.fiji.spimdata.intensityadjust.IntensityAdjustments;
 import net.preibisch.mvrecon.fiji.spimdata.interestpoints.ViewInterestPoints;
 import net.preibisch.mvrecon.fiji.spimdata.pointspreadfunctions.PointSpreadFunctions;
 import net.preibisch.mvrecon.fiji.spimdata.stitchingresults.StitchingResults;
@@ -200,7 +200,7 @@ public class FractalSpimDataGenerator
 	 * @param intervals list of intervals
 	 * @return generated SpimData
 	 */
-	public SpimData generateSpimData(final List<Interval> intervals)
+	public SpimData2 generateSpimData(final List<Interval> intervals)
 	{
 		final List<RealLocalizable> mins = new ArrayList<>();
 		for(Interval iv : intervals)
@@ -285,7 +285,16 @@ public class FractalSpimDataGenerator
 		}
 
 		final SequenceDescription sd = new SequenceDescription( timepoints, setups, imgLoader, missingViews );
-		final SpimData2 data = new SpimData2( new File( "" ), sd, new ViewRegistrations( registrations ), new ViewInterestPoints(), new BoundingBoxes(), new PointSpreadFunctions(), new StitchingResults() );
+		final SpimData2 data = 
+				new SpimData2(
+						URI.create( "/" ),
+						sd,
+						new ViewRegistrations( registrations ),
+						new ViewInterestPoints(),
+						new BoundingBoxes(),
+						new PointSpreadFunctions(),
+						new StitchingResults(),
+						new IntensityAdjustments() );
 
 		return data;
 		

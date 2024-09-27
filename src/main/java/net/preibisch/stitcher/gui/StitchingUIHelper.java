@@ -266,7 +266,7 @@ public class StitchingUIHelper
 	{
 		String xml = "/Users/spreibi/Documents/Grants and CV/BIMSB/Projects/CLARITY/Big Data Sticher/Dros_converted/dataset.xml";
 
-		XmlIoSpimData2 io = new XmlIoSpimData2( null );
+		XmlIoSpimData2 io = new XmlIoSpimData2();
 		final SpimData2 data = io.load( xml );
 		System.out.println(  "chosen ds: " + Util.printCoordinates( askForDownsampling( data, false ) ) );
 		System.exit( 0 );

@@ -47,6 +47,7 @@ import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.sequence.Channel;
 import mpicbg.spim.data.sequence.Illumination;
+import mpicbg.spim.data.sequence.ViewDescription;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.type.numeric.ARGBType;
 import net.preibisch.legacy.io.IOFunctions;
@@ -282,9 +283,9 @@ public class BDVPopupStitching extends BDVPopup
 		}
 
 		boolean allViews2D = true;
-		@SuppressWarnings("unchecked")
-		final Collection< BasicViewDescription< ? > > viewDescriptions =
-			(Collection< BasicViewDescription< ? > >) panel.getSpimData().getSequenceDescription().getViewDescriptions().values();
+		final Collection< ViewDescription > viewDescriptions =
+			panel.getSpimData().getSequenceDescription().getViewDescriptions().values();
+
 		for (final BasicViewDescription< ? > vd : viewDescriptions)
 			if (vd.isPresent() && vd.getViewSetup().hasSize() && vd.getViewSetup().getSize().dimension( 2 ) != 1)
 			{
@@ -304,7 +305,7 @@ public class BDVPopupStitching extends BDVPopup
 												options );
 
 		BDVPopup.initTransform( bdv.getViewer() );
-		if ( !bdv.tryLoadSettings( panel.xml() ) )
+		if ( !bdv.tryLoadSettings( panel.xml().toString() ) )
 			BDVPopup.initBrightness( 0.001, 0.999, bdv.getViewerFrame() );
 
 		FilteredAndGroupedExplorerPanel.setFusedModeSimple( bdv, panel.getSpimData() );

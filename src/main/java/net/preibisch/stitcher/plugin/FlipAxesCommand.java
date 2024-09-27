@@ -33,6 +33,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.arrangement.FlipAxes;
 
 @Plugin(type = Command.class, menuPath = "Plugins>BigStitcher>Batch Processing>Tools>Flip Axes")
@@ -70,8 +71,7 @@ public class FlipAxesCommand implements Command
 		FlipAxes.applyFlipToData( data.getViewRegistrations(), dims, views, flipAxes );
 
 		// save result
-		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
-
+		new XmlIoSpimData2().saveWithFilename( data, result.getXMLFileName() );
 	}
 
 }

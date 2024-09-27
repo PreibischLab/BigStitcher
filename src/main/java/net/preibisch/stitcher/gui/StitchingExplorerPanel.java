@@ -67,7 +67,6 @@ import bdv.viewer.VisibilityAndGrouping;
 import bdv.viewer.state.SourceState;
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.generic.AbstractSpimData;
-import mpicbg.spim.data.generic.XmlIoAbstractSpimData;
 import mpicbg.spim.data.generic.base.Entity;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
@@ -86,6 +85,7 @@ import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.util.MultiWindowLayoutHelper;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.SpimDataTools;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorer;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.FilteredAndGroupedExplorerPanel;
@@ -142,9 +142,10 @@ import net.preibisch.stitcher.gui.popup.TranslateGroupManuallyPopup;
 import net.preibisch.stitcher.gui.popup.VerifyLinksPopup;
 import net.preibisch.stitcher.input.FractalImgLoader;
 
-public class StitchingExplorerPanel<AS extends AbstractSpimData< ? > >
+public class StitchingExplorerPanel<AS extends SpimData2 >
 		extends FilteredAndGroupedExplorerPanel< AS > implements ExplorerWindow< AS >
 {
+	private static final long serialVersionUID = -2530434669783247921L;
 	public final static double xPosLinkExplorer = 0.6;
 	public final static double yPosLinkExplorer = 0.0;
 
@@ -172,8 +173,8 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? > >
 	protected JCheckBox checkboxGroupChannels;
 	protected JCheckBox checkboxGroupIllums;
 
-	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS > explorer, final AS data, final String xml,
-			final XmlIoAbstractSpimData< ?, AS > io, boolean requestStartBDV)
+	public StitchingExplorerPanel(final FilteredAndGroupedExplorer< AS > explorer, final AS data, final URI xml,
+			final XmlIoSpimData2 io, boolean requestStartBDV)
 	{
 		super( explorer, data, xml, io );
 
@@ -308,7 +309,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? > >
 			// remember whole selection
 			if (savedFilteringAndGrouping == null)
 			{
-				savedFilteringAndGrouping = new SpimDataFilteringAndGrouping< AbstractSpimData<?> >( data );
+				savedFilteringAndGrouping = new SpimDataFilteringAndGrouping< SpimData2 >( data );
 				savedFilteringAndGrouping.addFilters( getSelectedRows().stream().reduce( new ArrayList<>(), (x,y) -> {x.addAll( y ); return x;}) );
 				for (Class<? extends Entity> groupingFactor : tableModel.getGroupingFactors())
 					savedFilteringAndGrouping.addGroupingFactor( groupingFactor );
@@ -766,7 +767,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? > >
 		if ( linkExplorer != null )
 			return;
 
-		linkExplorer = new LinkExplorerPanel( stitchingResults, (StitchingExplorerPanel< AbstractSpimData< ? > >) this );
+		linkExplorer = new LinkExplorerPanel( stitchingResults, (StitchingExplorerPanel< SpimData2 >) this );
 		// init the LinkExplorer
 		linkFrame = new JFrame( "Link Explorer" );
 		linkFrame.add( linkExplorer, BorderLayout.CENTER );
@@ -1104,7 +1105,7 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? > >
 
 	public void showInfoBox()
 	{
-		new ViewSetupExplorerInfoBox< AS >( data, xml );
+		new ViewSetupExplorerInfoBox< AS >( data );
 	}
 
 	@Override
@@ -1117,24 +1118,9 @@ public class StitchingExplorerPanel<AS extends AbstractSpimData< ? > >
 			for ( final SelectedViewDescriptionListener< AS > l : listeners )
 				l.save();
 
-			if ( SpimData2.class.isInstance( data ) )
-			{
-				final ViewInterestPoints vip = ( (SpimData2) data ).getViewInterestPoints();
-
-				for ( final ViewInterestPointLists vipl : vip.getViewInterestPoints().values() )
-				{
-					for ( final String label : vipl.getHashMap().keySet() )
-					{
-						final InterestPoints ipl = vipl.getInterestPointList( label );
-						ipl.saveInterestPoints( false );
-						ipl.saveCorrespondingInterestPoints( false );
-					}
-				}
-			}
-
 			IOFunctions.println( "Saved XML '" + xml + "'." );
 		}
-		catch ( SpimDataException e )
+		catch ( Exception e )
 		{
 			IOFunctions.println( "Failed to save XML '" + xml + "': " + e );
 			e.printStackTrace();

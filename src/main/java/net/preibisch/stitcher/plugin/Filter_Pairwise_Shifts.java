@@ -24,6 +24,7 @@ package net.preibisch.stitcher.plugin;
 import ij.plugin.PlugIn;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.gui.popup.SimpleRemoveLinkPopup;
 
 public class Filter_Pairwise_Shifts implements PlugIn
@@ -38,7 +39,7 @@ public class Filter_Pairwise_Shifts implements PlugIn
 		final SpimData2 data = result.getData();
 
 		SimpleRemoveLinkPopup.filterPairwiseShifts( data, false, null, null );
-		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
+		new XmlIoSpimData2().saveWithFilename( data, result.getXMLFileName() );
 	}
 
 	public static void main(String[] args)

@@ -35,6 +35,7 @@ import net.preibisch.mvrecon.Threads;
 import net.preibisch.mvrecon.process.downsampling.Downsample;
 import net.preibisch.stitcher.algorithm.PairwiseStitching;
 import net.preibisch.stitcher.algorithm.PairwiseStitchingParameters;
+import net.preibisch.stitcher.input.GenerateSpimData;
 
 public class PhaseCorrelationTest2
 {
@@ -52,11 +53,10 @@ public class PhaseCorrelationTest2
 		//Img<  FloatType > image1 = ImgLib2Util.openAs32Bit( new File( "boats.tif" ) );
 		//Img<  FloatType > image2 = ImgLib2Util.openAs32Bit( new File( "boatsm10,5-m20,5.tif" ) );
 		//Img<  FloatType > image2 = ImgLib2Util.openAs32Bit( new File( "boatsm5,75-10,25.tif" ) );
-		
-		
+
 		//new ImageJ();
 		/*
-		SpimData mySd = GenerateSpimData.grid3x2();
+		SpimData2 mySd = GenerateSpimData.grid3x2();
 		RandomAccessibleInterval< UnsignedShortType > image1 = (RandomAccessibleInterval< UnsignedShortType >) mySd.getSequenceDescription()
 																					.getImgLoader().getSetupImgLoader( 0 ).getImage( 0, null );
 		RandomAccessibleInterval< UnsignedShortType > image2 = (RandomAccessibleInterval< UnsignedShortType >) mySd.getSequenceDescription()

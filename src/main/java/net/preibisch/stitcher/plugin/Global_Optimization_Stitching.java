@@ -37,6 +37,7 @@ import net.imglib2.util.Pair;
 import net.preibisch.mvrecon.fiji.plugin.interestpointregistration.global.GlobalOptimizationParameters;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constellation.grouping.Group;
 import net.preibisch.stitcher.algorithm.SpimDataFilteringAndGrouping;
 import net.preibisch.stitcher.algorithm.globalopt.GlobalOptStitcher;
@@ -89,8 +90,7 @@ public class Global_Optimization_Stitching implements PlugIn
 
 		GlobalOptStitcher.removeInconsistentLinks( removedInconsistentPairs, data.getStitchingResults().getPairwiseResults() );
 
-		SpimData2.saveXML( data, result.getXMLFileName(), result.getClusterExtension() );
-
+		new XmlIoSpimData2().saveWithFilename( data, result.getXMLFileName() );
 	}
 
 	public static void main(String[] args)

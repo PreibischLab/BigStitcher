@@ -75,7 +75,7 @@ public class TranslateGroupManuallyPopup extends JMenuItem implements ExplorerWi
 			final JFrame theFrame = new JFrame( "Move Views" );			
 			TranslateGroupManuallyPanel tgmp = new TranslateGroupManuallyPanel( (SpimData2) panel.getSpimData(), viewIds, panel.bdvPopup(), theFrame);
 
-			((FilteredAndGroupedExplorerPanel< AbstractSpimData< ? > >) panel).addListener(  tgmp );
+			((FilteredAndGroupedExplorerPanel) panel).addListener( tgmp );
 
 			// re-select everything
 			ListSelectionModel lsm = ((FilteredAndGroupedExplorerPanel< ? >) panel).table.getSelectionModel();

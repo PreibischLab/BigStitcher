@@ -30,6 +30,7 @@ import java.awt.TextField;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URI;
 
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
@@ -74,7 +75,7 @@ public class BigStitcher implements Command, PlugIn
 			return;
 
 		final SpimData2 data = result.getData();
-		final String xml = result.getXMLFileName();
+		final URI xml = result.getXMLURI();
 		final XmlIoSpimData2 io = result.getIO();
 
 		final StitchingExplorer< SpimData2 > explorer =
@@ -88,12 +89,8 @@ public class BigStitcher implements Command, PlugIn
 		IOFunctions.printIJLog = true;
 		new ImageJ();
 
-		if ( System.getProperty("os.name").toLowerCase().contains( "win" ) )
-			GenericLoadParseQueryXML.defaultXMLfilename = "Z:\\Data\\Expansion Microscopy/dataset.xml";
-		else if ( !System.getProperty("os.name").toLowerCase().contains( "mac" ) )
-			GenericLoadParseQueryXML.defaultXMLfilename = "/home/preibisch/Documents/Microscopy/SPIM/HisYFP-SPIM//dataset_tp18.xml";
-		else
-			GenericLoadParseQueryXML.defaultXMLfilename = "/Users/preibischs/Documents/BIMSB/Projects/CLARITY/Big Data Sticher/Dros_converted/dataset.xml";
+		if ( !System.getProperty("os.name").toLowerCase().contains( "mac" ) )
+			GenericLoadParseQueryXML.defaultXMLURI = "/Users/preibischs/SparkTest/Stitching/dataset.xml";
 	}
 
 	public static void main( String[] args )

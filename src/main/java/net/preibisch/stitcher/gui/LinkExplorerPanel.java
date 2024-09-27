@@ -51,7 +51,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 import mpicbg.spim.data.generic.AbstractSpimData;
 import mpicbg.spim.data.generic.sequence.BasicViewDescription;
-import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.util.Pair;
 import net.preibisch.legacy.io.IOFunctions;
@@ -64,7 +63,7 @@ import net.preibisch.mvrecon.process.interestpointregistration.pairwise.constell
 import net.preibisch.stitcher.algorithm.FilteredStitchingResults;
 import net.preibisch.stitcher.gui.popup.LinkExplorerRemoveLinkPopup;
 
-public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< AbstractSpimData< ? > >
+public class LinkExplorerPanel extends JPanel implements SelectedViewDescriptionListener< SpimData2 >
 {
 	public static double minCorrDefault = 0.7;
 	public static double maxCorrDefault = 1.0;
@@ -100,7 +99,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 
 	private StitchingResults results;
 
-	private StitchingExplorerPanel< AbstractSpimData< ? > > parent;
+	private StitchingExplorerPanel< SpimData2 > parent;
 
 	LinkExplorerTableModel model;
 	protected JTable table;
@@ -117,7 +116,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 		model.fireTableDataChanged();
 	}
 
-	public LinkExplorerPanel( StitchingResults results, StitchingExplorerPanel< AbstractSpimData< ? > > parent )
+	public LinkExplorerPanel( StitchingResults results, StitchingExplorerPanel< SpimData2 > parent )
 	{
 		this.results = results;
 		this.parent = parent;
@@ -393,7 +392,7 @@ public class LinkExplorerPanel extends JPanel implements SelectedViewDescription
 
 
 	@Override
-	public void updateContent(AbstractSpimData< ? > data) {} // not implemented yet
+	public void updateContent(SpimData2 data) {} // not implemented yet
 
 
 	@Override

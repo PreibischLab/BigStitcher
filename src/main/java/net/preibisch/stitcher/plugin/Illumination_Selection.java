@@ -28,6 +28,7 @@ import ij.plugin.PlugIn;
 import mpicbg.spim.data.sequence.ViewId;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
+import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.gui.popup.SelectIlluminationPopup;
 
 public class Illumination_Selection implements PlugIn
@@ -51,10 +52,7 @@ public class Illumination_Selection implements PlugIn
 				null );
 
 		if (filteredSpimData != null)
-		{
-			SpimData2.saveXML( filteredSpimData, result.getXMLFileName(), result.getClusterExtension() );
-		}
-
+			new XmlIoSpimData2().saveWithFilename( filteredSpimData, result.getXMLFileName() );
 	}
 
 

@@ -32,9 +32,9 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 import ij.gui.GenericDialog;
-import mpicbg.spim.data.SpimData;
 import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.Dimensions;
+import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.ExplorerWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.GroupedRowWindow;
 import net.preibisch.mvrecon.fiji.spimdata.explorer.popup.ExplorerWindowSetable;
@@ -63,7 +63,7 @@ public class SkewImagesPopup extends JMenuItem implements ExplorerWindowSetable
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			final SpimData spimData = (SpimData)panel.getSpimData();
+			final SpimData2 spimData = panel.getSpimData();
 			final List< ViewId > views = ((GroupedRowWindow) panel).selectedRowsViewIdGroups().stream().reduce(new ArrayList<>(),  (a,b) -> {a.addAll( b ); return a;} );
 
 			final Map<ViewId, Dimensions> dims = new HashMap<>();
