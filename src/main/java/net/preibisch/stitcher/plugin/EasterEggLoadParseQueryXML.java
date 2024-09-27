@@ -106,7 +106,7 @@ public class EasterEggLoadParseQueryXML extends LoadParseQueryXML
 		}
 		else
 		{
-			this.message2 = "To access simulated datasets type 'fractal' or 'beads'";
+			this.message2 = "To access simulated datasets type 'fractal' or 'beads'; and now with cloud support (AWS & Google Cloud)";
 			return super.tryParsing( xmlURI, parseAllTypes );
 		}
 	}
