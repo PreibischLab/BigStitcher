@@ -111,7 +111,7 @@
 		<bigdataviewer-core.version>10.6.1</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-36</bigdataviewer-vistools.version>
 		<spim_data.version>2.3.3</spim_data.version>
-		<multiview-reconstruction.version>4.0.0</multiview-reconstruction.version>
+		<multiview-reconstruction.version>4.1.1</multiview-reconstruction.version>
 	</properties>
 
 	<repositories>
