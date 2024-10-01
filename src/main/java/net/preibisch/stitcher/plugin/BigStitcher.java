@@ -71,7 +71,7 @@ public class BigStitcher implements Command, PlugIn
 			}
 		});
 
-		if ( !result.queryXML( "Stitching Explorer", "", false, false, false, false, false ) && !newDataset )
+		if ( !result.queryXML( "BigStitcher", "", false, false, false, false, false ) && !newDataset )
 			return;
 
 		final SpimData2 data = result.getData();
