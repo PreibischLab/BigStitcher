@@ -89,8 +89,8 @@ public class BigStitcher implements Command, PlugIn
 		IOFunctions.printIJLog = true;
 		new ImageJ();
 
-		if ( !System.getProperty("os.name").toLowerCase().contains( "mac" ) )
-			GenericLoadParseQueryXML.defaultXMLURI = "/Users/preibischs/SparkTest/Stitching/dataset.xml";
+		if ( System.getProperty("os.name").toLowerCase().contains( "mac" ) )
+			GenericLoadParseQueryXML.defaultXMLURI = "/Users/preibischs/SparkTest/IP/dataset.xml";
 	}
 
 	public static void main( String[] args )
