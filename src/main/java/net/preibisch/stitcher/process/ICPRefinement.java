@@ -421,7 +421,7 @@ public class ICPRefinement
 						params.maxError * 2,
 						100,
 						true,
-						RANSACParameters.min_inlier_factor,
+						RANSACParameters.min_inlier_ratio,
 						params.maxError,
 						200,
 						IterativeClosestPointParameters.defaultMinNumPoints );
@@ -495,7 +495,7 @@ public class ICPRefinement
 			if ( models == null )
 				continue;
 
-			IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Fina transformation models (without mapback model):" );
+			IOFunctions.println( "(" + new Date( System.currentTimeMillis() ) + "): Final transformation models (without mapback model):" );
 
 			// pre-concatenate models to spimdata2 viewregistrations (from SpimData(2))
 			for ( final ViewId viewId : subset.getViews() )
