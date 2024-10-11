@@ -22,9 +22,6 @@
 package net.preibisch.stitcher.plugin;
 
 
-import ij.ImageJ;
-import ij.plugin.PlugIn;
-
 import java.awt.Button;
 import java.awt.TextField;
 import java.awt.Toolkit;
@@ -32,15 +29,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URI;
 
+import org.scijava.command.Command;
+import org.scijava.plugin.Plugin;
+
+import ij.ImageJ;
+import ij.plugin.PlugIn;
 import net.preibisch.legacy.io.IOFunctions;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import net.preibisch.mvrecon.fiji.spimdata.XmlIoSpimData2;
 import net.preibisch.stitcher.gui.StitchingExplorer;
-
-import org.scijava.command.Command;
-import org.scijava.plugin.Plugin;
 
 @Plugin(type = Command.class, menuPath = "Plugins>BigStitcher>BigStitcher")
 public class BigStitcher implements Command, PlugIn
@@ -90,7 +89,7 @@ public class BigStitcher implements Command, PlugIn
 		new ImageJ();
 
 		if ( System.getProperty("os.name").toLowerCase().contains( "mac" ) )
-			GenericLoadParseQueryXML.defaultXMLURI = "/Users/preibischs/SparkTest/IP/dataset.xml";
+			GenericLoadParseQueryXML.defaultXMLURI = "/Users/preibischs/SparkTest/Stitching/dataset.xml";
 	}
 
 	public static void main( String[] args )
