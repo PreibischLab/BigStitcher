@@ -141,6 +141,7 @@ import net.preibisch.stitcher.gui.popup.SkewImagesPopup;
 import net.preibisch.stitcher.gui.popup.TranslateGroupManuallyPopup;
 import net.preibisch.stitcher.gui.popup.VerifyLinksPopup;
 import net.preibisch.stitcher.input.FractalImgLoader;
+import util.URITools;
 
 public class StitchingExplorerPanel<AS extends SpimData2 >
 		extends FilteredAndGroupedExplorerPanel< AS > implements ExplorerWindow< AS >
@@ -863,12 +864,7 @@ public class StitchingExplorerPanel<AS extends SpimData2 >
 
 		// add link to wiki
 		popups.add( new LabelPopUp( "Help" ) );
-		try
-		{
-			popups.add( new SimpleHyperlinkPopup("Browse Wiki...", new URI( "https://imagej.net/BigStitcher#Documentation" )) );
-		}
-		catch ( URISyntaxException e ) { e.printStackTrace(); }
-
+		popups.add( new SimpleHyperlinkPopup("Browse Wiki...", URITools.toURI( "https://imagej.net/BigStitcher#Documentation" )) );
 
 		return popups;
 	}
