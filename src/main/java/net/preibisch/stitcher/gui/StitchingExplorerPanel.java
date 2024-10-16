@@ -553,7 +553,7 @@ public class StitchingExplorerPanel<AS extends SpimData2 >
 		buttons.add( save, BorderLayout.EAST );
 
 		final JPanel header = new JPanel( new BorderLayout() );
-		header.add( ViewSetupExplorerPanel.getXMLLabel( xml ), BorderLayout.WEST );
+		header.add( xmlLabel = ViewSetupExplorerPanel.getXMLLabel( xml ), BorderLayout.WEST );
 
 		header.add( buttons, BorderLayout.EAST );
 		this.add( header, BorderLayout.NORTH );
