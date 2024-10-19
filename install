@@ -1,0 +1,139 @@
+#!/bin/bash
+
+# This script is shamelessly extended from https://github.com/saalfeldlab/n5-utils, thanks @axtimwalde & co!
+
+USERTHREADS="-1"
+USERMEM="-1"
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -t|--threads)
+      USERTHREADS="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -m|--mem)
+      USERMEM="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+  esac
+done
+
+if [ $USERTHREADS == "-1" ]; then
+  echo "You did not define the number of threads for Java/Spark can use, will be set automatically. You could do it by e.g.: './install -t 8' for 8 threads."
+fi
+
+if [ $USERMEM == "-1" ]; then
+  echo "You did not define the memory that Java/Spark can use, will be set automatically. You could do it by e.g.: './install -m 64' for 64GB of RAM."
+fi
+
+
+if [ $USERMEM == "-1" ]; then
+  # check for operating system
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    echo "Assuming on Linux operating system"
+    MEM=$(cat /proc/meminfo | grep MemTotal | sed s/^MemTotal:\\\s*\\\|\\\s\\+[^\\\s]*$//g)
+    MEMGB=$(($MEM/1024/1024))
+    MEM=$((($MEMGB/5)*4))
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "Assuming on MacOS X operating system"
+    # sysctl returns total hardware memory size in bytes
+    MEM=$(sysctl hw.memsize | grep hw.memsize | sed s/hw.memsize://g)
+    MEMGB=$(($MEM/1024/1024/1024))
+    MEM=$((($MEMGB/5)*4))
+  else
+    echo "ERROR - Operating system (arg2) must be either linux or osx to determine max memory. Please specify max memory by e.g.: './install -m 64' for 64GB of RAM"
+    exit
+  fi
+
+  echo "Available memory:" $MEMGB "GB, setting Java memory limit to" $MEM "GB"
+else
+  MEM=$USERMEM
+  echo "Setting Java memory limit to" $MEM "GB"
+fi
+
+if [ $USERTHREADS == "-1" ]; then
+  # check for operating system
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    if [ $USERMEM != "-1" ]; then
+      echo "Assuming on Linux operating system"
+    fi
+    THREADS=$(nproc --all)
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    if [ $USERMEM != "-1" ]; then
+      echo "Assuming on MacOS X operating system"
+    fi
+    # sysctl returns number of physical cores
+    THREADS=$(sysctl -n hw.ncpu)
+  else
+    echo "ERROR - Operating system (arg2) must be either linux or osx to determine number of physical cores. Please specify physical by e.g.: './install -t 8' to use 8 threads."
+    exit
+  fi
+  echo "Available threads:" $THREADS", setting Java/Sparks threads accordingly."
+else
+  THREADS=$USERTHREADS
+  echo "Setting Java/Spark number of threads to" $THREADS
+fi
+
+
+VERSION="2.1.1-SNAPSHOT"
+INSTALL_DIR=$(pwd)
+#INSTALL_DIR=${1:-$(pwd)}
+
+echo ""
+echo "Installing into $INSTALL_DIR (for local execution)"
+
+echo 'Building the code'
+
+sleep 2
+
+mvn clean install
+#echo 'Building a farjar, which can also be used for cluster/cloud execution' 
+#mvn clean install -P fatjar
+mvn -Dmdep.outputFile=cp.txt -Dmdep.includeScope=runtime dependency:build-classpath
+
+# function that installs one command
+# $1 - command name
+# $2 - java class containing the functionality
+install_command () {
+	echo "Installing '$1' command into" $INSTALL_DIR
+
+	echo '#!/bin/bash' > $1
+	echo '' >> $1
+	echo "JAR=\$HOME/.m2/repository/net/preibisch/BigStitcher/${VERSION}/BigStitcher-${VERSION}.jar" >> $1
+	echo 'java \' >> $1
+	echo "  -Xmx${MEM}g -Dspark.master=local[${THREADS}] \\" >> $1
+#	echo '  -XX:+UseConcMarkSweepGC \' >> $1
+	echo -n '  -cp $JAR:' >> $1
+	echo -n $(cat cp.txt) >> $1
+	echo ' \' >> $1
+	echo '  '$2' "$@"' >> $1
+
+	chmod a+x $1
+}
+
+echo 'Installing BigStitcher ...'
+
+install_command bigstitcher "net.preibisch.stitcher.plugin.BigStitcher"
+
+# echo 'Installing utils ...'
+
+#install_command downsample "net.preibisch.bigstitcher.spark.SparkDownsample"
+
+
+if [ $(pwd) == "$INSTALL_DIR" ]; then
+    echo "Installation directory equals current directory, we are done."
+else
+	echo "Creating directory $INSTALL_DIR and moving files..."
+    mkdir -p $INSTALL_DIR
+    mv affine-fusion $INSTALL_DIR/
+fi
+
+rm cp.txt
+
+echo "Installation finished."
