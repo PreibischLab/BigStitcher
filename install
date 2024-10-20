@@ -107,7 +107,8 @@ install_command () {
 	echo '' >> $1
 	echo "JAR=\$HOME/.m2/repository/net/preibisch/BigStitcher/${VERSION}/BigStitcher-${VERSION}.jar" >> $1
 	echo 'java \' >> $1
-	echo "  -Xmx${MEM}g -Dspark.master=local[${THREADS}] \\" >> $1
+	echo "  -Xmx${MEM}g \\" >> $1
+#	echo "  -Xmx${MEM}g -Dspark.master=local[${THREADS}] \\" >> $1
 #	echo '  -XX:+UseConcMarkSweepGC \' >> $1
 	echo -n '  -cp $JAR:' >> $1
 	echo -n $(cat cp.txt) >> $1
