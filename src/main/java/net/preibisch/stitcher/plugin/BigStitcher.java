@@ -87,7 +87,6 @@ public class BigStitcher implements Command, PlugIn
 	public static void setupTesting()
 	{
 		IOFunctions.printIJLog = true;
-		new net.imagej.ImageJ();
 		new ImageJ();
 
 		//if ( System.getProperty("os.name").toLowerCase().contains( "mac" ) )
