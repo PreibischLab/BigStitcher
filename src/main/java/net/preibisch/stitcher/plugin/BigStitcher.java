@@ -23,19 +23,42 @@ package net.preibisch.stitcher.plugin;
 
 
 import java.awt.Button;
+import java.awt.Menu;
+import java.awt.MenuBar;
 import java.awt.TextField;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
+import org.scijava.plugin.PluginIndex;
 
+import ij.IJ;
 import ij.ImageJ;
+import ij.Menus;
 import ij.plugin.PlugIn;
 import net.preibisch.legacy.io.IOFunctions;
+import net.preibisch.legacy.io.TextFileAccess;
+import net.preibisch.mvrecon.fiji.plugin.Interest_Point_Registration;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.GenericLoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.plugin.queryXML.LoadParseQueryXML;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
@@ -87,10 +110,52 @@ public class BigStitcher implements Command, PlugIn
 	public static void setupTesting()
 	{
 		IOFunctions.printIJLog = true;
-		new ImageJ();
 
+		//new net.imagej.ImageJ();
+		new ImageJ();
+		/*
+		try
+		{
+			final String bigstitcher =
+					new File(BigStitcher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+
+			System.out.println( "bigstitcher jar: " + bigstitcher );
+			installPluginsMenu(bigstitcher);
+
+			System.out.println( );
+
+			final String mvr =
+					new File(Interest_Point_Registration.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+
+			System.out.println( "multiview-reconstruction jar: " + mvr );
+			installPluginsMenu(mvr);
+
+			System.exit( 0 );
+		}
+		catch (Exception e)
+		{
+			System.out.println( "Could not load bigstitcher and multiview-reconstruction locations; unable to install menu.");
+			e.printStackTrace();
+		}
+
+		MenuBar mbar = ij.getMenuBar();
+		System.out.println( mbar.getMenuCount() );
+
+		for ( int i = 0; i < mbar.getMenuCount(); ++i )
+		{
+			Menu menu = mbar.getMenu(i);
+			System.out.println( menu );
+			if ( menu.getLabel().equals( "Plugins" ) )
+			{
+				System.out.println( "plugins menu found ...");
+				menu.addSeparator();
+				menu.add("hallo");
+				menu.addSeparator();
+			}
+		}
+		//System.exit(0);
 		//if ( System.getProperty("os.name").toLowerCase().contains( "mac" ) )
-		//	GenericLoadParseQueryXML.defaultXMLURI = "/Users/preibischs/SparkTest/Stitching/dataset.xml";
+		//	GenericLoadParseQueryXML.defaultXMLURI = "/Users/preibischs/SparkTest/Stitching/dataset.xml";*/
 	}
 
 	public static void main( String[] args )
