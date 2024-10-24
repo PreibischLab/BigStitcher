@@ -115,7 +115,7 @@
 		-->
 
 		<spim_data.version>2.3.5</spim_data.version>
-		<multiview-reconstruction.version>4.2.6</multiview-reconstruction.version>
+		<multiview-reconstruction.version>4.2.7</multiview-reconstruction.version>
 	</properties>
 
 	<repositories>
