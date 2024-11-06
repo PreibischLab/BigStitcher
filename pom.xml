@@ -110,12 +110,12 @@
 		<imglib2-algorithm.version>0.16.0</imglib2-algorithm.version>
 		<imglib2-roi.version>0.15.1</imglib2-roi.version>
 		<n5-imglib2.version>7.0.2</n5-imglib2.version>
-		<bigdataviewer-core.version>10.6.1</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-36</bigdataviewer-vistools.version>
 		-->
 
+		<bigdataviewer-core.version>10.6.3</bigdataviewer-core.version>
 		<spim_data.version>2.3.5</spim_data.version>
-		<multiview-reconstruction.version>4.2.9</multiview-reconstruction.version>
+		<multiview-reconstruction.version>4.3.0</multiview-reconstruction.version>
 	</properties>
 
 	<repositories>
