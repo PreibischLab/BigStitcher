@@ -536,6 +536,7 @@ public class StitchingExplorerPanel<AS extends SpimData2 >
 					saveXML();
 			}
 		} );
+		save.setComponentPopupMenu( addRightClickSaveAs() );
 
 		final JButton info = new JButton( "Info" );
 		info.addActionListener( new ActionListener()
