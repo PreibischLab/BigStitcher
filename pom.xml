@@ -115,7 +115,7 @@
 
 		<bigdataviewer-core.version>10.6.3</bigdataviewer-core.version>
 		<spim_data.version>2.3.5</spim_data.version>
-		<multiview-reconstruction.version>5.0.5</multiview-reconstruction.version>
+		<multiview-reconstruction.version>5.1.0</multiview-reconstruction.version>
 	</properties>
 
 	<repositories>
