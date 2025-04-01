@@ -203,7 +203,7 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 		}
 	}
 
-	public static boolean overlapsWith( final Pair<Group<ViewId>, Group<ViewId>> p1, final Collection< Pair<Group<ViewId>, Group<ViewId>>> pairList )
+	private static boolean overlapsWith( final Pair<Group<ViewId>, Group<ViewId>> p1, final Collection< Pair<Group<ViewId>, Group<ViewId>>> pairList )
 	{
 		for ( final Pair<Group<ViewId>, Group<ViewId>> p2 : pairList )
 			if ( overlapsWith( p1, p2 ) )
@@ -212,7 +212,7 @@ public class DemoLinkOverlay implements OverlayRenderer, TransformListener< Affi
 		return false;
 	}
 
-	public static boolean overlapsWith( final Pair<Group<ViewId>, Group<ViewId>> p1, final Pair<Group<ViewId>, Group<ViewId>> p2 )
+	private static boolean overlapsWith( final Pair<Group<ViewId>, Group<ViewId>> p1, final Pair<Group<ViewId>, Group<ViewId>> p2 )
 	{
 		boolean overlap1 = false;
 		boolean overlap2 = false;
