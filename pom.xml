@@ -113,13 +113,16 @@
 		<bigdataviewer-vistools.version>1.0.0-beta-36</bigdataviewer-vistools.version>
 		-->
 
-		<bigdataviewer-core.version>10.6.3</bigdataviewer-core.version>
-		<spim_data.version>2.3.5</spim_data.version>
-		<multiview-reconstruction.version>5.3.0</multiview-reconstruction.version>
+		<imglib2.version>7.1.4</imglib2.version>
+		<imglib2-algorithm.version>0.18.0</imglib2-algorithm.version>
+		<bigdataviewer-core.version>10.6.4</bigdataviewer-core.version>
 
 		<n5-universe.version>2.1.0</n5-universe.version>
 		<n5-version>3.4.1</n5-version>
 		<n5-zarr-version>1.5.0</n5-zarr-version>
+
+		<multiview-reconstruction.version>5.3.0</multiview-reconstruction.version>
+
 	</properties>
 
 	<repositories>
