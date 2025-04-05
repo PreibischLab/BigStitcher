@@ -121,7 +121,7 @@
 		<n5-version>3.4.1</n5-version>
 		<n5-zarr-version>1.5.0</n5-zarr-version>
 
-		<multiview-reconstruction.version>5.3.0</multiview-reconstruction.version>
+		<multiview-reconstruction.version>5.4.0</multiview-reconstruction.version>
 
 	</properties>
 
