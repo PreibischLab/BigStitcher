@@ -203,7 +203,13 @@ public class StitchingExplorerPanel<AS extends SpimData2 >
 				|| FileMapImgLoaderLOCI2.class.isInstance( data.getSequenceDescription().getImgLoader() ) ) )
 		{
 			if (!bdvPopup().bdvRunning())
+			{
 				bdvPopup().bdv = BDVPopupStitching.createBDV( this, linkOverlay );
+				
+				// Update BDV to show all grouped tiles based on initial table selection
+				if ( !selectedRows.isEmpty() )
+					updateBDV( bdvPopup().bdv, colorMode, data, firstSelectedVD, selectedRows );
+			}
 		}
 
 		if ( data instanceof SpimData2 )
