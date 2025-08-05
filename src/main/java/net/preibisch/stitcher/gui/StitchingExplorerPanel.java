@@ -523,6 +523,7 @@ public class StitchingExplorerPanel<AS extends SpimData2 >
 		addColorMode(); // 'c' or 'C'
 		addDemoLink(); // 'l' or 'L'
 		addHelp(); // F1
+		addViewSetupIdShortcut(); // 'v' or 'V'
 
 		addScreenshot(); // 's' or 'S'
 
