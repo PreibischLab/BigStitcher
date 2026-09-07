@@ -134,25 +134,10 @@
 		<jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
 	</properties>
 
-	<!--
 	<repositories>
 		<repository>
 			<id>scijava.public</id>
 			<url>https://maven.scijava.org/content/groups/public</url>
-		</repository>
-	</repositories>
-	-->
-
-	<repositories>
-		<repository>
-		<id>scijava.public</id>
-			<url>https://maven.scijava.org/content/groups/public</url>
-			<releases><checksumPolicy>fail</checksumPolicy></releases>
-			<snapshots><checksumPolicy>fail</checksumPolicy></snapshots>
-		</repository>
-		<repository>
-			<id>ome</id>
-			<url>https://artifacts.openmicroscopy.org/artifactory/maven</url>
 		</repository>
 	</repositories>
 
